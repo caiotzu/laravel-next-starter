@@ -1,3 +1,5 @@
+"use client"
+
 import { AppSidebar } from "@/components/layouts/app-sidebar"
 import { ChartAreaInteractive } from "@/components/chart-area-interactive"
 import { DataTable } from "@/components/data-table"
