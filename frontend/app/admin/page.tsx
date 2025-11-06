@@ -26,7 +26,7 @@ export default function LoginPage() {
 
   async function handleSubmit(data: LoginData) {
     try {
-      const response = await axios.post("/api/auth/admin", {
+      const response = await axios.post("/api/auth/admin/login", {
         email: data.email,
         senha: data.password,
       });

@@ -31,7 +31,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     const { url, method = "GET", data, headers: clientHeaders } = body;
 
     const cookieStore = await cookies();
-    const token = cookieStore.get("access_token")?.value;
+    const token = cookieStore.get("admin_access_token")?.value;
 
     const backendResponse = await axios.request<BackendResponse>({
       url: `${process.env.BACKEND_URL}${url}`,
