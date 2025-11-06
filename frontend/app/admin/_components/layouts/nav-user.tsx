@@ -1,5 +1,9 @@
 "use client"
 
+import axios from "axios"
+import { useRouter } from "next/navigation"
+import { useUserAdmin } from "@/hooks/use-user-admin"
+
 import {
   BadgeCheck,
   Bell,
@@ -30,6 +34,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
+
 export function NavUser({
   user,
 }: {
@@ -39,7 +44,18 @@ export function NavUser({
     avatar: string
   }
 }) {
-  const { isMobile } = useSidebar()
+  const router = useRouter();
+  const { isMobile } = useSidebar();
+  const { data: userAdmin, isLoading } = useUserAdmin();
+
+  const handleLogout = async () => {
+    try {
+      await axios.post("/api/auth/admin/logout");
+      router.push("/admin")
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error)
+    }
+  }
 
   return (
     <SidebarMenu>
@@ -102,9 +118,9 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
-              Log out
+              Sair
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
