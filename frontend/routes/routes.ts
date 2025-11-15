@@ -8,13 +8,17 @@
 export type RoutePermission = {
   path: string;
   protected: boolean;
-  cookieName?: string;
+  isLoginRoute?: boolean;
+  cookieName: string;
   regex?: RegExp;
 };
 
 export const protectedRoutes: RoutePermission[] = [
-  { path: "/admin", protected: false },
-  { path: "/admin/dashboard", protected: true, cookieName: "admin_access_token" }
+  { path: "/admin", protected: false, isLoginRoute: true, cookieName: "admin_access_token" },
+  { path: "/admin/dashboard", protected: true, cookieName: "admin_access_token" },
+
+  { path: "/", protected: false, isLoginRoute: true, cookieName: "private_access_token" },
+  { path: "/dashboard", protected: true, cookieName: "private_access_token" }
 ];
 
 /**

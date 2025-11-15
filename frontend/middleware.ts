@@ -16,6 +16,28 @@ export function middleware(req: NextRequest) {
   // Se não for rota definida -> libera
   if (!route) return NextResponse.next();
 
+  // Se tiver token e for rota de login -> redireciona para dashboard correto
+  if (route.isLoginRoute) {
+    const token = route.cookieName ? req.cookies.get(route.cookieName)?.value : null;
+
+    if (token && isTokenValid(token)) {
+      let redirectPath = "/dashboard";
+      switch (route.cookieName) {
+        case "admin_access_token":
+          redirectPath = "/admin/dashboard";
+          break;
+        case "private_access_token":
+          redirectPath = "/dashboard";
+          break;
+      }
+
+      return NextResponse.redirect(new URL(redirectPath, req.url));
+    }
+
+    // Rota de login pública → libera
+    return NextResponse.next();
+  }
+
   // Se rota não for protegida -> libera
   if (!route.protected) return NextResponse.next();
 
@@ -28,6 +50,9 @@ export function middleware(req: NextRequest) {
     switch (route.cookieName) {
       case "admin_access_token":
         loginPath = "/admin";
+        break;
+      case "private_access_token":
+        loginPath = "/";
         break;
     }
 
@@ -52,6 +77,9 @@ function isTokenValid(token: string) {
 // Define quais rotas passam pelo middleware
 export const config = {
   matcher: [
-    "/admin/:path*"
+    "/",
+    "/admin",
+    "/admin/:path*",
+    "/:path*"
   ],
 };
