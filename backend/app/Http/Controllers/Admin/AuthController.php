@@ -1,19 +1,24 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
+use App\Http\Controllers\Controller;
+
+use App\Http\Requests\Auth\LoginRequest;
+
 use App\Models\Usuario;
 
 class AuthController extends Controller
 {
-    public function login(Request $request)
+    public function login(LoginRequest $request): JsonResponse
     {
         $usuario = Usuario::where('email', $request->email)->where('ativo', true)->first();
 
@@ -31,7 +36,7 @@ class AuthController extends Controller
         ]);
     }
 
-    public function logout()
+    public function logout(): JsonResponse
     {
         try {
             JWTAuth::invalidate(JWTAuth::getToken());
@@ -44,7 +49,7 @@ class AuthController extends Controller
         }
     }
 
-    public function me()
+    public function me(): JsonResponse
     {
         try {
             $user = Auth::user();
@@ -55,5 +60,13 @@ class AuthController extends Controller
         } catch (JWTException $e) {
             return response()->json(['error' => 'Failed to fetch user profile'], 500);
         }
+    }
+
+    public function refresh(): JsonResponse
+    {
+        return response()->json([
+            'token' => JWTAuth::parseToken()->refresh(),
+            'expires_in' => JWTAuth::factory()->getTTL() * 60
+        ]);
     }
 }
