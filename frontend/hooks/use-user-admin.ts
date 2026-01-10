@@ -16,7 +16,7 @@ export function useUserAdmin() {
     queryKey: ["userAdmin"],
     queryFn: async () => {
       const res = await axios.post('/api/proxy/admin', {
-        url: '/webrenave/despachante/me',
+        url: '/admin/me',
         method: 'GET'
       });
       return res.data?.data ?? res.data;

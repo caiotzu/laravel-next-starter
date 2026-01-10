@@ -16,7 +16,7 @@ export function useUserPrivate() {
     queryKey: ["userPrivate"],
     queryFn: async () => {
       const res = await axios.post('/api/proxy/private', {
-        url: '/webrenave/despachante/me',
+        url: '/me',
         method: 'GET'
       });
       return res.data?.data ?? res.data;

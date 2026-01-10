@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     const body = await req.json()
 
     const res = await axios.post(
-      `${process.env.BACKEND_URL}/webrenave/despachante/login`,
+      `${process.env.BACKEND_URL}/login`,
       body,
       {
         headers: { 'Content-Type': 'application/json' },
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
     const data = res.data;
     const cookieStore = await cookies();
-    cookieStore.set('private_access_token', data.access_token, {
+    cookieStore.set('private_access_token', data.token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',

@@ -12,9 +12,7 @@ export async function POST(req: Request) {
     const cookieStore = await cookies();
     const token = cookieStore.get("admin_access_token")?.value;
 
-    console.log('chegou no backend do logout', token);
-
-    await axios.post(`${process.env.BACKEND_URL}/webrenave/despachante/logout`,
+    await axios.post(`${process.env.BACKEND_URL}/admin/logout`,
       {},
       {
         headers: { 

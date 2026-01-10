@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
     console.log('chegou no backend do logout', token);
 
-    await axios.post(`${process.env.BACKEND_URL}/webrenave/despachante/logout`,
+    await axios.post(`${process.env.BACKEND_URL}/logout`,
       {},
       {
         headers: { 
