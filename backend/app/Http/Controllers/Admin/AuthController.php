@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -16,24 +15,35 @@ use App\Http\Requests\Auth\LoginRequest;
 
 use App\Models\Usuario;
 
+use App\Services\UsuarioService;
+
+use Exception;
+
 class AuthController extends Controller
 {
+    public function __construct(
+        protected UsuarioService $usuarioService,
+    ) {}
+
     public function login(LoginRequest $request): JsonResponse
     {
-        $usuario = Usuario::where('email', $request->email)->where('ativo', true)->first();
+        try {
+            $usuario = $this->usuarioService->obterUsuarioAdminAtivoPorEmail($request->email);
 
-        if (!$usuario || !Hash::check($request->senha, $usuario->senha)) {
+            if (!$usuario || !Hash::check($request->senha, $usuario->senha))
+                throw new Exception('Credenciais informadas são inválidas');
+
+            $token = JWTAuth::fromUser($usuario);
+
             return response()->json([
-                'messages' => ['Não autorizado']
+                'token' => $token,
+                'expires_in' => JWTAuth::factory()->getTTL() * 60,
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'messages' => [$e->getMessage()]
             ], 401);
         }
-
-        $token = JWTAuth::fromUser($usuario);
-
-        return response()->json([
-            'token' => $token,
-            'expires_in' => JWTAuth::factory()->getTTL() * 60,
-        ]);
     }
 
     public function logout(): JsonResponse

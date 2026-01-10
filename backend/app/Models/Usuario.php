@@ -29,6 +29,10 @@ class Usuario extends Authenticatable implements JWTSubject
         'remember_token',
     ];
 
+    public function grupo() {
+        return $this->belongsTo(Grupo::class, 'grupo_id', 'id');
+    }
+
     public function getAuthPassword()
     {
         return $this->senha;
