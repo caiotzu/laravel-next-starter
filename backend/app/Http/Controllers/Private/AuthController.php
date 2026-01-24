@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Private;
 
 use App\Http\Controllers\Controller;
 
@@ -28,7 +28,7 @@ class AuthController extends Controller
     public function login(LoginRequest $request): JsonResponse
     {
         try {
-            $usuario = $this->usuarioService->obterUsuarioAtivoPorEmail($request->email, EntidadeTipo::ADMIN);
+            $usuario = $this->usuarioService->obterUsuarioAtivoPorEmail($request->email, EntidadeTipo::PRIVATE);
 
             if (!$usuario || !Hash::check($request->senha, $usuario->senha))
                 throw new Exception('Credenciais informadas são inválidas');

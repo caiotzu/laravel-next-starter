@@ -11,16 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('grupo_permissoes', function (Blueprint $table) {
+        Schema::create('empresa_contatos', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('grupo_id');
-            $table->foreign('grupo_id')
+            $table->uuid('empresa_id');
+            $table->foreign('empresa_id')
                 ->references('id')
-                ->on('grupos');
-            $table->uuid('permissao_id');
-            $table->foreign('permissao_id')
-                ->references('id')
-                ->on('permissoes');
+                ->on('empresas');
+            $table->enum('tipo', ['T', 'E'])->comment('T - Telefone, E - E-mail');
+            $table->string('valor', 100);
+            $table->boolean('ativo')->default(true);
+            $table->boolean('principal')->default(false);
             $table->timestamps($precision = 0);
             $table->softDeletes();
         });
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('grupo_permissoes');
+        Schema::dropIfExists('empresa_enderecos');
     }
 };

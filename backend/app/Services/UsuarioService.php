@@ -10,11 +10,13 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 use App\Models\Usuario;
 
+use App\Enums\EntidadeTipo;
+
 class UsuarioService {
-    public function obterUsuarioAdminAtivoPorEmail(string $email): Usuario | null {
+    public function obterUsuarioAtivoPorEmail(string $email, EntidadeTipo $entidadeTipo): Usuario | null {
         return Usuario::with('grupo.entidadeTipo')
-            ->whereHas('grupo.entidadeTipo', function (Builder $query) {
-                return $query->where('chave', 'admin');
+            ->whereHas('grupo.entidadeTipo', function (Builder $query) use ($entidadeTipo) {
+                return $query->where('chave', $entidadeTipo->value);
             })
             ->where('email', $email)
             ->where('ativo', true)

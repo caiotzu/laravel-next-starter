@@ -9,15 +9,15 @@ use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 
-class AdminGrupoPermissaoSeeder extends Seeder
+class PrivateGrupoPermissaoSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        $grupo = DB::table("grupos")->where("descricao", "Desenvolvimento")->first();
-        $permissoes = DB::table("permissoes")->where("chave", "like", "admin.%")->get();
+        $grupo = DB::table("grupos")->where("descricao", "Administração")->first();
+        $permissoes = DB::table("permissoes")->where("chave", "like", "private.%")->get();
         $grupoPermissoes = [];
 
         foreach($permissoes as $permissao) {

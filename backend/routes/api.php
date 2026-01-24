@@ -6,7 +6,12 @@ use App\Http\Controllers\Admin\ {
   AuthController
 };
 
-Route::post('admin/login', [AuthController::class, 'login']);
+use App\Http\Controllers\Private\ {
+  AuthController as PrivateAuthController
+};
+
+Route::post('/admin/login', [AuthController::class, 'login']);
+Route::post('/login', [PrivateAuthController::class, 'login']);
 
 Route::middleware('jwt')->group(function () {
     Route::prefix('admin')->group(function() {
@@ -14,4 +19,8 @@ Route::middleware('jwt')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/refresh', [AuthController::class, 'refresh']);
     });
+
+    Route::get('/me', [PrivateAuthController::class, 'me']);
+    Route::post('/logout', [PrivateAuthController::class, 'logout']);
+    Route::post('/refresh', [PrivateAuthController::class, 'refresh']);
 });

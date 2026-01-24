@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('chave')->unique();
             $table->text('descricao');
             $table->timestamps($precision = 0);
+            $table->softDeletes();
         });
     }
 

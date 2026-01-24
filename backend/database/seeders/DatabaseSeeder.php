@@ -12,13 +12,22 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            MunicipioSeeder::class,
+
             EntidadeTipoSeeder::class,
             AdminPermissaoSeeder::class,
             AdminGrupoSeeder::class,
             AdminGrupoPermissaoSeeder::class,
             AdminUsuarioSeeder::class,
 
-            PrivatePermissaoSeeder::class
+            PrivatePermissaoSeeder::class,
+            PrivateGrupoEmpresaSeeder::class,
+            PrivateEmpresaSeeder::class,
+            PrivateEmpresaEnderecoSeeder::class,
+            PrivateEmpresaContatoSeeder::class,
+            PrivateGrupoSeeder::class,
+            PrivateGrupoPermissaoSeeder::class,
+            PrivateUsuarioSeeder::class
         ]);
     }
 }

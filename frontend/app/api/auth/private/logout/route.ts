@@ -12,8 +12,6 @@ export async function POST(req: Request) {
     const cookieStore = await cookies();
     const token = cookieStore.get("private_access_token")?.value;
 
-    console.log('chegou no backend do logout', token);
-
     await axios.post(`${process.env.BACKEND_URL}/logout`,
       {},
       {

@@ -16,10 +16,10 @@ class AdminUsuarioSeeder extends Seeder
      */
     public function run(): void
     {
-        $grupo = DB::table('grupos')->where('descricao', 'Desenvolvimento')->orderBy('created_at')->first();
+        $grupo = DB::table("grupos")->where("descricao", "Desenvolvimento")->orderBy("created_at")->first();
 
         DB::table("usuarios")->insert([
-            'id' => Str::uuid(),
+            "id" => Str::uuid(),
             "grupo_id" => $grupo->id,
             "nome" => "Caio Costa",
             "email" => "admin@admin.com.br",

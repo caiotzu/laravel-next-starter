@@ -9,20 +9,22 @@ use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 
-class AdminGrupoSeeder extends Seeder
+class PrivateUsuarioSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        $entidadeTipo = DB::table("entidade_tipos")->where("chave", "admin")->first();
+        $grupo = DB::table("grupos")->where("descricao", "Administração")->orderBy("created_at")->first();
 
-        DB::table("grupos")->insert([
+        DB::table("usuarios")->insert([
             "id" => Str::uuid(),
-            "descricao" => "Desenvolvimento",
-            "entidade_tipo_id" => $entidadeTipo->id,
-            "entidade_id" => null,
+            "grupo_id" => $grupo->id,
+            "nome" => "Caio Costa",
+            "email" => "private@private.com.br",
+            "senha" => bcrypt("Private123@"),
+            "ativo" => true,
             "created_at" => date("Y-m-d H:i:s"),
             "updated_at" => date("Y-m-d H:i:s")
         ]);
