@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 
 class EntidadeTipo extends Model
@@ -15,6 +16,15 @@ class EntidadeTipo extends Model
         'chave',
         'entidade_tabela'
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (! $model->id) {
+                $model->id = (string) Str::uuid();
+            }
+        });
+    }
 
     public function grupos() {
         return $this->hasMany(Grupo::class, 'entidade_tipo_id', 'id');

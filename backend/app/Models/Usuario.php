@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Str;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
@@ -28,6 +29,15 @@ class Usuario extends Authenticatable implements JWTSubject
         'senha',
         'remember_token',
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (! $model->id) {
+                $model->id = (string) Str::uuid();
+            }
+        });
+    }
 
     public function grupo() {
         return $this->belongsTo(Grupo::class, 'grupo_id', 'id');

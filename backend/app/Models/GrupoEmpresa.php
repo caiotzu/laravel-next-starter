@@ -5,16 +5,15 @@ namespace App\Models;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 
-class Permissao extends Model
+class GrupoEmpresa extends Model
 {
-    protected $table = 'permissoes';
+    protected $table = 'grupo_empresas';
     protected $keyType = 'string';
     public $incrementing = false;
 
     protected $fillable = [
         'id',
-        'chave',
-        'descricao'
+        'nome',
     ];
 
     protected static function booted()
@@ -24,9 +23,5 @@ class Permissao extends Model
                 $model->id = (string) Str::uuid();
             }
         });
-    }
-
-    public function grupoPermissoes() {
-        return $this->hasMany(GrupoPermissao::class, 'permissao_id', 'id');
     }
 }

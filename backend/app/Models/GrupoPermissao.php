@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 
 class GrupoPermissao extends Model
@@ -15,6 +16,15 @@ class GrupoPermissao extends Model
         'grupo_id',
         'permissao_id'
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (! $model->id) {
+                $model->id = (string) Str::uuid();
+            }
+        });
+    }
 
     public function grupo() {
         return $this->belongsTo(Grupo::class, 'grupo_id', 'id');
