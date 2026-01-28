@@ -1,28 +1,19 @@
 <?php
 
-namespace App\DTO;
+namespace App\DTO\GrupoEmpresa;
 
 use App\DTO\Common\PaginationDTO;
 
-final class GrupoEmpresaDTO
+final class GrupoEmpresaFiltroDTO
 {
-    public function __construct(
+    private function __construct(
         public readonly ?string $id = null,
         public readonly ?string $nome = null,
-        public readonly ?PaginationDTO $paginacao = null
+        public readonly PaginationDTO $paginacao
     ) {}
-
-    public static function criarParaCadastro(array $dados): self
-    {
-        return new self(
-            nome: $dados['nome']
-        );
-    }
 
     public static function criarParaFiltro(array $dados): self
     {
-        // $porPagina = $dados['porPagina'] ?? 10;
-
         return new self(
             id: $dados['id'] ?? null,
             nome: $dados['nome'] ?? null,

@@ -4,10 +4,13 @@ namespace App\Models;
 
 use Illuminate\Support\Str;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class Usuario extends Authenticatable implements JWTSubject
 {
+    use SoftDeletes;
+
     protected $table = 'usuarios';
     protected $keyType = 'string';
     public $incrementing = false;
