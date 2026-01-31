@@ -21,8 +21,9 @@ Route::middleware('jwt')->group(function () {
         Route::post('/refresh', [AuthController::class, 'refresh']);
 
         Route::patch('/grupos-empresas/{id}/ativar', [GrupoEmpresaController::class, 'ativar']);
-        Route::delete('/grupos-empresas/{id}', [GrupoEmpresaController::class, 'excluir']);
         Route::patch('/grupos-empresas/{id}', [GrupoEmpresaController::class, 'atualizar']);
+        Route::delete('/grupos-empresas/{id}', [GrupoEmpresaController::class, 'excluir']);
+        Route::get('/grupos-empresas/{id}', [GrupoEmpresaController::class, 'visualizar']);
         Route::get('/grupos-empresas', [GrupoEmpresaController::class, 'listar']);
         Route::post('/grupos-empresas', [GrupoEmpresaController::class, 'cadastrar']);
     });

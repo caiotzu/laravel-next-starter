@@ -36,14 +36,23 @@ class GrupoEmpresaController extends Controller
     {
         $this->authorize('admin.grupo_empresa.atualizar');
 
-        $grupo = $this->grupoEmpresaService->atualizar(
+        $grupoEmpresa = $this->grupoEmpresaService->atualizar(
             GrupoEmpresaAtualizacaoDTO::criarParaAtualizacao(
                 $id,
                 $request->validated()
             )
         );
 
-        return response()->json($grupo);
+        return response()->json($grupoEmpresa);
+    }
+
+    public function visualizar(string $id): JsonResponse
+    {
+        $this->authorize('admin.grupo_empresa.visualizar');
+
+        $grupoEmpresa = $this->grupoEmpresaService->visualizar($id);
+
+        return response()->json($grupoEmpresa, 200);
     }
 
     public function excluir(string $id): JsonResponse
@@ -59,9 +68,9 @@ class GrupoEmpresaController extends Controller
     {
         $this->authorize('admin.grupo_empresa.ativar');
 
-        $grupo = $this->grupoEmpresaService->ativar($id);
+        $grupoEmpresa = $this->grupoEmpresaService->ativar($id);
 
-        return response()->json($grupo, 200);
+        return response()->json($grupoEmpresa, 200);
     }
 
     public function listar(ListarRequest $request): JsonResponse
@@ -72,4 +81,5 @@ class GrupoEmpresaController extends Controller
 
         return response()->json($grupoEmpresas, 200);
     }
+
 }

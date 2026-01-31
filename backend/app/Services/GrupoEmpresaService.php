@@ -44,6 +44,22 @@ class GrupoEmpresaService {
         });
     }
 
+    public function visualizar(string $id): GrupoEmpresa
+    {
+        return DB::transaction(function () use ($id) {
+            $grupoEmpresa = GrupoEmpresa::find($id);
+
+            if (! $grupoEmpresa) {
+                throw new Exception(
+                    'Grupo empresa não encontrado.',
+                    ErrorCode::GRUPO_EMPRESA_NOT_FOUND->value
+                );
+            }
+
+            return $grupoEmpresa;
+        });
+    }
+
     public function excluir(string $id): void
     {
         DB::transaction(function () use ($id) {

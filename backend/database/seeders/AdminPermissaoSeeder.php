@@ -40,6 +40,13 @@ class AdminPermissaoSeeder extends Seeder
                 ],
                 [
                     "id" => Str::uuid(),
+                    "chave" => "admin.grupo_empresa.visualizar",
+                    "descricao" => "Permite visualizar um grupo de empresas",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
                     "chave" => "admin.grupo_empresa.excluir",
                     "descricao" => "Permite excluir um grupo de empresas",
                     "created_at" => date("Y-m-d H:i:s"),
