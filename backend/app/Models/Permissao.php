@@ -30,7 +30,8 @@ class Permissao extends Model
         });
     }
 
-    public function grupoPermissoes() {
-        return $this->hasMany(GrupoPermissao::class, 'permissao_id', 'id');
+    public function grupos()
+    {
+        return $this->belongsToMany(Grupo::class,'grupo_permissoes');
     }
 }

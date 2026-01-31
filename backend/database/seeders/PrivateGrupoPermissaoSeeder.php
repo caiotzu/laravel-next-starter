@@ -22,7 +22,6 @@ class PrivateGrupoPermissaoSeeder extends Seeder
 
         foreach($permissoes as $permissao) {
             array_push($grupoPermissoes, [
-                "id" => Str::uuid(),
                 "grupo_id" => $grupo->id,
                 "permissao_id" => $permissao->id,
                 "created_at" => date("Y-m-d H:i:s"),

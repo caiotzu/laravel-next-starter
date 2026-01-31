@@ -25,6 +25,8 @@ class GrupoEmpresaController extends Controller
 
     public function cadastrar(CadastrarRequest $request): JsonResponse
     {
+        $this->authorize('admin.grupo_empresa.cadastrar');
+
         $grupoEmpresa = $this->grupoEmpresaService->cadastrar(GrupoEmpresaCadastroDTO::criarParaCadastro($request->validated()));
 
         return response()->json($grupoEmpresa, 201);
@@ -32,6 +34,8 @@ class GrupoEmpresaController extends Controller
 
     public function atualizar(AtualizarRequest $request, string $id): JsonResponse
     {
+        $this->authorize('admin.grupo_empresa.atualizar');
+
         $grupo = $this->grupoEmpresaService->atualizar(
             GrupoEmpresaAtualizacaoDTO::criarParaAtualizacao(
                 $id,
@@ -44,6 +48,8 @@ class GrupoEmpresaController extends Controller
 
     public function excluir(string $id): JsonResponse
     {
+        $this->authorize('admin.grupo_empresa.excluir');
+
         $this->grupoEmpresaService->excluir($id);
 
         return response()->json(null, 204);
@@ -51,6 +57,8 @@ class GrupoEmpresaController extends Controller
 
     public function ativar(string $id): JsonResponse
     {
+        $this->authorize('admin.grupo_empresa.ativar');
+
         $grupo = $this->grupoEmpresaService->ativar($id);
 
         return response()->json($grupo, 200);
@@ -58,6 +66,8 @@ class GrupoEmpresaController extends Controller
 
     public function listar(ListarRequest $request): JsonResponse
     {
+        $this->authorize('admin.grupo_empresa.listar');
+
         $grupoEmpresas = $this->grupoEmpresaService->listar(GrupoEmpresaFiltroDTO::criarParaFiltro($request->validated()));
 
         return response()->json($grupoEmpresas, 200);

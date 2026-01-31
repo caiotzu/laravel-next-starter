@@ -46,6 +46,45 @@ class Usuario extends Authenticatable implements JWTSubject
         return $this->belongsTo(Grupo::class, 'grupo_id', 'id');
     }
 
+    private function carregarGrupoComPermissoes(): ?Grupo
+    {
+        if ($this->relationLoaded('grupo')) {
+            return $this->grupo;
+        }
+
+        return $this->grupo()
+            ->with('permissoes')
+            ->first();
+    }
+
+    public function permissoesCache(): array
+    {
+        $grupo = $this->carregarGrupoComPermissoes();
+
+        if (! $grupo) {
+            return [];
+        }
+
+        return cache()->remember(
+            "permissao:u:{$this->id}:g:{$grupo->id}:v:{$grupo->versao}",
+            now()->addHour(),
+            function () use ($grupo) {
+
+                // transforma em lookup O(1)
+                return $grupo->permissoes
+                    ->pluck('chave')
+                    ->flip()
+                    ->map(fn() => true)
+                    ->toArray();
+            }
+        );
+    }
+
+   public function temPermissao(string $permissao): bool
+    {
+        return isset($this->permissoesCache()[$permissao]);
+    }
+
     public function getAuthPassword()
     {
         return $this->senha;
@@ -58,6 +97,11 @@ class Usuario extends Authenticatable implements JWTSubject
 
     public function getJWTCustomClaims()
     {
-        return [];
+        $grupo = $this->carregarGrupoComPermissoes();
+
+        return [
+            'grupo_id' => $grupo?->id,
+            'grupo_versao' => $grupo?->versao,
+        ];
     }
 }

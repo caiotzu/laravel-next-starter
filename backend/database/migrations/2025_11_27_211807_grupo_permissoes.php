@@ -12,17 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('grupo_permissoes', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('grupo_id');
-            $table->foreign('grupo_id')
-                ->references('id')
-                ->on('grupos');
-            $table->uuid('permissao_id');
-            $table->foreign('permissao_id')
-                ->references('id')
-                ->on('permissoes');
+            $table->foreignUuid('grupo_id')
+                ->constrained('grupos')
+                ->cascadeOnDelete()
+                ->restrictOnDelete();
+            $table->foreignUuid('permissao_id')
+                ->constrained('permissoes')
+                ->cascadeOnDelete()
+                ->restrictOnDelete();
+            $table->primary(['grupo_id', 'permissao_id']);
             $table->timestamps($precision = 0);
-            $table->softDeletes();
         });
     }
 

@@ -13,14 +13,21 @@ return new class extends Migration
     {
         Schema::create('grupos', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('descricao');
-            $table->uuid('entidade_tipo_id');
-            $table->foreign('entidade_tipo_id')
-                ->references('id')
-                ->on('entidade_tipos');
-            $table->uuid('entidade_id')->nullable(true)->comment('Representa o identificador (id) da tabela que foi referenciada em entidade_tipo coluna (entidade_tabela)');
+            $table->string('descricao', 100);
+            $table->unsignedInteger('versao')->default(1)->index()->comment('Sempre que atualizar os dados do grupo incrementar na versão. Será usado para controle de permissões no cache.');
+            $table->foreignUuid('entidade_tipo_id')
+                ->constrained('entidade_tipos')
+                ->cascadeOnUpdate()
+                ->restrictOnDelete();
+            $table->uuid('entidade_id')->nullable(true)->index()->comment('Representa o identificador (id) da tabela que foi referenciada em entidade_tipo coluna (entidade_tabela)');
             $table->timestamps($precision = 0);
             $table->softDeletes();
+            $table->unique([
+                'descricao',
+                'entidade_tipo_id',
+                'entidade_id',
+                'deleted_at'
+            ])->comment('Evita de ser criado para a mesma entidade o grupo com mesmo nome, desde que não esteja deletado.');
         });
     }
 

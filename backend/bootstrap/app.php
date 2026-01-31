@@ -1,13 +1,15 @@
 <?php
 
 use Illuminate\Foundation\Application;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 use Throwable;
 
@@ -28,6 +30,13 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (Throwable $e, $request) {
             if ($request->is('api/*')) {
+
+                // Validação das permissões
+                if ($e instanceof AccessDeniedHttpException) {
+                    return response()->json([
+                        'messages' => ['Você não tem permissão para executar esta ação.'],
+                    ], Response::HTTP_FORBIDDEN);
+                }
 
                 // Validação
                 if ($e instanceof ValidationException) {

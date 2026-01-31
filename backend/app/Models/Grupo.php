@@ -21,6 +21,10 @@ class Grupo extends Model
         'entidade_id'
     ];
 
+    protected $guarded = [
+        'versao'
+    ];
+
     protected static function booted()
     {
         static::creating(function ($model) {
@@ -28,14 +32,18 @@ class Grupo extends Model
                 $model->id = (string) Str::uuid();
             }
         });
+
+        static::updating(function ($model) {
+            $model->versao++;
+        });
+    }
+
+    public function permissoes() {
+        return $this->belongsToMany(Permissao::class, 'grupo_permissoes', 'grupo_id', 'permissao_id')->withTimestamps();
     }
 
     public function usuarios() {
         return $this->hasMany(Usuario::class, 'grupo_id', 'id');
-    }
-
-    public function grupoPermissoes() {
-        return $this->hasMany(GrupoPermissao::class, 'grupo_id', 'id');
     }
 
     public function entidadeTipo() {
