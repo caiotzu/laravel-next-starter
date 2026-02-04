@@ -38,7 +38,7 @@ const data = {
       items: [
         {
           title: "Grupos Empresas",
-          url: "#",
+          url: "/admin/grupos-empresas",
         },
         {
           title: "Empresas",
