@@ -103,7 +103,7 @@ class GrupoEmpresaService {
                 $q->where('id', $filtro->id)
             )
             ->when($filtro->nome, fn ($q) =>
-                $q->where('nome', 'like', "%{$filtro->nome}%")
+                $q->where('nome', 'ilike', "%{$filtro->nome}%")
             )
             ->orderBy('nome')
             ->paginate($filtro->paginacao->porPagina);

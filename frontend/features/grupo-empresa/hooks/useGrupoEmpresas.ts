@@ -8,7 +8,6 @@ export function useGrupoEmpresas(
   params?: ListarGrupoEmpresasRequest
 ) {
   const safeParams = params ?? {};
-
   return useQuery({
     queryKey: ["grupo-empresas", safeParams],
     queryFn: ({ queryKey }) => {

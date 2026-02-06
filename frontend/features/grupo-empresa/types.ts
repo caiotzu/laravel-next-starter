@@ -28,6 +28,7 @@ import { LaravelPagination } from "@/types/laravel";
         id?: string;
         nome?: string;
         porPagina?: number;
+        page?: number;
     }
 
     export type ListarGrupoEmpresasResponse = LaravelPagination<GrupoEmpresa>;

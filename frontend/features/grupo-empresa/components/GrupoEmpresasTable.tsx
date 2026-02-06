@@ -1,69 +1,93 @@
 "use client";
 
-import { useState } from "react";
-import { useGrupoEmpresas } from "../hooks/useGrupoEmpresas";
-import { GrupoEmpresasSkeleton } from "./GrupoEmpresaSkeleton";
+import { GrupoEmpresa } from "../types";
+import { GrupoEmpresasTableSkeleton } from "./GrupoEmpresasTableSkeleton";
 
-export default function GrupoEmpresasTable() {
-  const [page, setPage] = useState(1);
-  const [nome, setNome] = useState("");
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-  const { data, isLoading } = useGrupoEmpresas();
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-  if (isLoading) return <GrupoEmpresasSkeleton />;
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+
+interface Props {
+  data: GrupoEmpresa[];
+  isLoading: boolean;
+}
+
+export default function GrupoEmpresasTable({
+  data,
+  isLoading,
+}: Props) {
+  if (isLoading) return <GrupoEmpresasTableSkeleton />;
+
+  if (!data.length) {
+    return (
+      <div className="rounded-2xl border bg-background shadow-sm p-8 text-center text-muted-foreground">
+        Nenhum registro encontrado
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
+    <div className="rounded-2xl border bg-background shadow-sm">
+      <Table>
+        <TableHeader className="bg-muted/50">
+          <TableRow>
+            <TableHead>Nome</TableHead>
+            <TableHead>Data Cadastro</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
+          </TableRow>
+        </TableHeader>
 
-      <input
-        placeholder="Filtrar por nome..."
-        className="border p-2 rounded-lg"
-        value={nome}
-        onChange={(e) => {
-          setPage(1);
-          setNome(e.target.value);
-        }}
-      />
+        <TableBody>
+          {data.map((grupo) => (
+            <TableRow key={grupo.id}>
+              <TableCell className="font-medium">
+                {grupo.nome}
+              </TableCell>
 
-      <table className="w-full border rounded-xl overflow-hidden">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-3 text-left">Nome</th>
-            <th className="p-3 text-left">Data Cadastro</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {data?.data.map((grupo: any) => (
-            <tr key={grupo.id} className="border-t">
-              <td className="p-3">{grupo.nome}</td>
-              <td className="p-3">
+              <TableCell>
                 {new Date(grupo.created_at).toLocaleDateString()}
-              </td>
-            </tr>
+              </TableCell>
+
+              <TableCell className="text-right">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Editar
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem className="text-red-500 focus:text-red-500">
+                      <Trash className="mr-2 h-4 w-4" />
+                      Excluir
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-
-      <div className="flex gap-3 items-center">
-        <button
-          disabled={page === 1}
-          onClick={() => setPage((p) => p - 1)}
-        >
-          Anterior
-        </button>
-
-        <span>
-          Página {data?.current_page} de {data?.last_page}
-        </span>
-
-        <button
-          disabled={page === data?.last_page}
-          onClick={() => setPage((p) => p + 1)}
-        >
-          Próxima
-        </button>
-      </div>
+        </TableBody>
+      </Table>
     </div>
   );
 }
