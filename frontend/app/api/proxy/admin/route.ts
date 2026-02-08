@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+
 import axios, { AxiosError, Method } from "axios";
 
 interface ProxyRequestBody<T = unknown> {
@@ -42,7 +43,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         ...(clientHeaders || {}),
       },
       data: ["GET", "HEAD"].includes(method.toUpperCase()) ? undefined : data,
-      validateStatus: () => true, // nunca lança erro por status
+      // validateStatus: () => true, // nunca lança erro por status
     });
 
     if (backendResponse.status === 401) {

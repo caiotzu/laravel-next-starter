@@ -1,15 +1,12 @@
 // import { proxyRequest } from "@/lib/proxy";
 
 import qs from "qs";
-import {
-  CadastrarGrupoEmpresaRequest,
-  CadastrarGrupoEmpresaResponse,
-  ListarGrupoEmpresasRequest,
-  ListarGrupoEmpresasResponse,
-  GrupoEmpresa
-} from "../types";
+
 import { proxyAdminRequest } from "@/lib/proxy-admin";
 
+import { GrupoEmpresa } from "../types/grupoEmpresa.model";
+import { CadastrarGrupoEmpresaRequest, ListarGrupoEmpresasRequest } from "../types/grupoEmpresa.requests";
+import { CadastrarGrupoEmpresaResponse, ListarGrupoEmpresasResponse } from "../types/grupoEmpresa.responses";
 
 export function cadastrarGrupoEmpresa(
   dto: CadastrarGrupoEmpresaRequest

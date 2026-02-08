@@ -1,4 +1,6 @@
-import axios, { Method } from "axios";
+import axios, { AxiosError, Method } from "axios";
+
+import { ApiErrorResponse } from "@/types/errors";
 
 interface ProxyPayload {
   url: string;
@@ -16,15 +18,21 @@ export async function proxyAdminRequest<T>({
   method = "GET",
   data,
 }: ProxyPayload): Promise<T> {
+  try {
+    const response = await axios.post<ProxyResponse<T>>(
+      "/api/proxy/admin",
+      { url, method, data }
+    );
 
-  const response = await axios.post<ProxyResponse<T>>(
-    "/api/proxy/admin",
-    {
-      url,
-      method,
-      data,
+    return response.data.data;
+  } catch (err) {
+    const error = err as AxiosError<ApiErrorResponse>;
+
+    if (error.response?.status === 401) {
+      window.location.href = "/admin";
+      return Promise.reject(error);
     }
-  );
 
-  return response.data.data;
+    throw error;
+  }
 }

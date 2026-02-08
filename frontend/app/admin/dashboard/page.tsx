@@ -3,9 +3,9 @@
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar"
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header"
 
+import { ChartAreaInteractive } from "@/components/chart-area-interactive"
 import { DataTable } from "@/components/data-table"
 import { SectionCards } from "@/components/section-cards"
-import { ChartAreaInteractive } from "@/components/chart-area-interactive"
 import {
   SidebarInset,
   SidebarProvider,

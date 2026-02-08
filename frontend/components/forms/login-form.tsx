@@ -1,9 +1,9 @@
 "use client"
 
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { Loader2 } from "lucide-react"
+import { useForm } from "react-hook-form"
 
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Field,
@@ -12,8 +12,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 
-import { Loader2 } from "lucide-react"
-
+import { cn } from "@/lib/utils"
 import { loginSchema, type LoginData } from "@/lib/validations/auth/login-schema"
 
 interface LoginFormProps {

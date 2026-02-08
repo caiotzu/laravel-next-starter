@@ -1,8 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+
 import { listarGrupoEmpresas } from "../services/grupoEmpresaService";
-import { ListarGrupoEmpresasRequest } from "../types";
+import { ListarGrupoEmpresasRequest } from "../types/grupoEmpresa.requests";
+
 
 export function useGrupoEmpresas(
   params?: ListarGrupoEmpresasRequest
@@ -16,6 +18,6 @@ export function useGrupoEmpresas(
         queryParams as ListarGrupoEmpresasRequest
       );
     },
-    placeholderData: (previousData) => previousData,
+    placeholderData: (previousData) => previousData
   });
 }

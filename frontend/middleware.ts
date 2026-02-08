@@ -1,8 +1,10 @@
 // middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { protectedRoutes } from "./routes/routes";
+
 import jwt from "jsonwebtoken";
+
+import { protectedRoutes } from "./routes/routes";
 
 export function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;

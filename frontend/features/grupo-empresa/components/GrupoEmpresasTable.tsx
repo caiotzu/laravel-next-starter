@@ -1,8 +1,14 @@
 "use client";
 
-import { GrupoEmpresa } from "../types";
-import { GrupoEmpresasTableSkeleton } from "./GrupoEmpresasTableSkeleton";
+import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -12,22 +18,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { GrupoEmpresa } from "../types/grupoEmpresa.model";
 
-import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+import { GrupoEmpresasTableSkeleton } from "./GrupoEmpresasTableSkeleton";
 
 interface Props {
   data: GrupoEmpresa[];
   isLoading: boolean;
 }
 
-export default function GrupoEmpresasTable({
+export function GrupoEmpresasTable({
   data,
   isLoading,
 }: Props) {

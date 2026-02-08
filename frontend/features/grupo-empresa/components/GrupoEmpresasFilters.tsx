@@ -1,18 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
+import { PerPage } from "@/components/data-tables/PerPage";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { PerPage } from "@/components/data-tables/PerPage";
 
 interface Props {
   nome: string;
@@ -34,8 +27,10 @@ export function GrupoEmpresasFilters({
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Filtros</CardTitle>
 
-        <Button onClick={() => router.push("/admin/grupos-empresas/cadastrar")}>
-          <Plus className="mr-2 h-4 w-4" />
+        <Button 
+          onClick={() => router.push("/admin/grupos-empresas/cadastrar")} 
+          className="cursor-pointer"
+        >
           Cadastrar
         </Button>
       </CardHeader>

@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
-import axios, { AxiosError } from 'axios';
 import { NextResponse } from 'next/server';
+
+import axios, { AxiosError } from 'axios';
 
 type ApiErrorResponse = {
   error: boolean

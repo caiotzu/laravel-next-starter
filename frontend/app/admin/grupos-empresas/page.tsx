@@ -1,21 +1,26 @@
 "use client";
 
+// React / libs externas
 import { useState } from "react";
 
-import GrupoEmpresasTable from "@/features/grupo-empresa/components/GrupoEmpresasTable";
-import { GrupoEmpresasFilters } from "@/features/grupo-empresa/components/GrupoEmpresasFilters";
-import { Pagination } from "@/components/data-tables/Pagination";
-
-import { useGrupoEmpresas } from "@/features/grupo-empresa/hooks/useGrupoEmpresas";
-import { GrupoEmpresa } from "@/features/grupo-empresa/types";
+// Tipos globais
 import { LaravelPagination } from "@/types/laravel";
 
+// Layout / Shared components
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
+
+import { Pagination } from "@/components/data-tables/Pagination";
 import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar";
+
+// Feature: grupo-empresa
+import { GrupoEmpresasFilters } from "@/features/grupo-empresa/components/GrupoEmpresasFilters";
+import { GrupoEmpresasTable } from "@/features/grupo-empresa/components/GrupoEmpresasTable";
+import { useGrupoEmpresas } from "@/features/grupo-empresa/hooks/useGrupoEmpresas";
+import { GrupoEmpresa } from "@/features/grupo-empresa/types/grupoEmpresa.model";
 
 export default function Page() {
   const [page, setPage] = useState(1);

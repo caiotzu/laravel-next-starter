@@ -1,22 +1,22 @@
 "use client"
 
-import axios from 'axios';
-import Image from "next/image"
 import { useState } from 'react'
+
+import Image from "next/image"
 import { useRouter } from "next/navigation";
 
+import axios from 'axios';
 import { 
   Monitor,
    CircleAlert 
 } from "lucide-react"
 
+import { LoginForm } from "@/components/forms/login-form"
 import { 
   Alert,
   AlertTitle,
   AlertDescription
 } from "@/components/ui/alert"
-
-import { LoginForm } from "@/components/forms/login-form"
 
 import { type LoginData } from "@/lib/validations/auth/login-schema"
 
