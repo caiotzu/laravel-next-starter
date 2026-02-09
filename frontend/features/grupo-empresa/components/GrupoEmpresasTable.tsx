@@ -1,7 +1,23 @@
 "use client";
 
-import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+import { toast } from "sonner";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -18,6 +34,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import { excluirGrupoEmpresa } from "@/features/grupo-empresa/services/grupoEmpresaService";
+
 import { GrupoEmpresa } from "../types/grupoEmpresa.model";
 
 import { GrupoEmpresasTableSkeleton } from "./GrupoEmpresasTableSkeleton";
@@ -31,6 +49,20 @@ export function GrupoEmpresasTable({
   data,
   isLoading,
 }: Props) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const { mutateAsync: deletar, isPending: isDeleting } = useMutation({
+    mutationFn: excluirGrupoEmpresa,
+    onSuccess: () => {
+      toast.success("Grupo excluído com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["grupo-empresas"] });
+    },
+    onError: () => {
+      toast.error("Erro ao excluir grupo.");
+    },
+  });
+
   if (isLoading) return <GrupoEmpresasTableSkeleton />;
 
   if (!data.length) {
@@ -72,15 +104,51 @@ export function GrupoEmpresasTable({
                   </DropdownMenuTrigger>
 
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem>
-                      <Pencil className="mr-2 h-4 w-4" />
-                      Editar
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href={`/admin/grupos-empresas/${grupo.id}`}
+                        className="flex items-center gap-2 cursor-pointer w-full"
+                      >
+                        <Pencil className="h-4 w-4" />
+                        Editar
+                      </Link>
                     </DropdownMenuItem>
 
-                    <DropdownMenuItem className="text-red-500 focus:text-red-500">
-                      <Trash className="mr-2 h-4 w-4" />
-                      Excluir
-                    </DropdownMenuItem>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem
+                          onSelect={(e) => e.preventDefault()}
+                          className="cursor-pointer flex items-center"
+                        >
+                          <Trash className="gap-2 h-4 w-4" />
+                          Excluir
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            Confirmar exclusão
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Essa ação não poderá ser desfeita!
+                            <br />
+                            Deseja realmente excluir o grupo ({grupo.nome}) ?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deletar(grupo.id)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Confirmar
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

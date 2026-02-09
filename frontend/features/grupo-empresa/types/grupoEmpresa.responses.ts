@@ -9,4 +9,11 @@ export interface CadastrarGrupoEmpresaResponse {
   updated_at: string;
 }
 
+export interface EditarGrupoEmpresaResponse {
+  id: string;
+  nome: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export type ListarGrupoEmpresasResponse = LaravelPagination<GrupoEmpresa>;

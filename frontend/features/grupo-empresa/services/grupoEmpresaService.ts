@@ -1,12 +1,10 @@
-// import { proxyRequest } from "@/lib/proxy";
-
 import qs from "qs";
 
 import { proxyAdminRequest } from "@/lib/proxy-admin";
 
 import { GrupoEmpresa } from "../types/grupoEmpresa.model";
-import { CadastrarGrupoEmpresaRequest, ListarGrupoEmpresasRequest } from "../types/grupoEmpresa.requests";
-import { CadastrarGrupoEmpresaResponse, ListarGrupoEmpresasResponse } from "../types/grupoEmpresa.responses";
+import { CadastrarGrupoEmpresaRequest, EditarGrupoEmpresaRequest, ListarGrupoEmpresasRequest } from "../types/grupoEmpresa.requests";
+import { CadastrarGrupoEmpresaResponse, EditarGrupoEmpresaResponse, ListarGrupoEmpresasResponse } from "../types/grupoEmpresa.responses";
 
 export function cadastrarGrupoEmpresa(
   dto: CadastrarGrupoEmpresaRequest
@@ -15,6 +13,26 @@ export function cadastrarGrupoEmpresa(
     url: "/admin/grupos-empresas",
     method: "POST",
     data: dto,
+  });
+}
+
+export function editarGrupoEmpresa(
+  id: string,
+  dto: EditarGrupoEmpresaRequest
+) {
+  return proxyAdminRequest<EditarGrupoEmpresaResponse>({
+    url: `/admin/grupos-empresas/${id}`,
+    method: "PATCH",
+    data: dto,
+  });
+}
+
+export async function excluirGrupoEmpresa(
+  id: string
+) {
+  return proxyAdminRequest<EditarGrupoEmpresaResponse>({
+    url: `/admin/grupos-empresas/${id}`,
+    method: "DELETE"
   });
 }
 

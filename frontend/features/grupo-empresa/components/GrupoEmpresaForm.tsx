@@ -67,10 +67,9 @@ export function GrupoEmpresaForm({
   console.log(backendErrors)
   return (
     <Card className="w-full">
-      {/* HEADER */}
       <CardHeader>
         <CardTitle>
-          {defaultValues ? "Editar Grupo de Empresas" : "Cadastro de Grupo de Empresas"}
+          {defaultValues ? "Editar Grupo de Empresas" : "Cadastrar Grupo de Empresas"}
         </CardTitle>
       </CardHeader>
 
