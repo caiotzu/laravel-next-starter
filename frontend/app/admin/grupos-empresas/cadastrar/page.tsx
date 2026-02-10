@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
+import { UseFormSetError } from "react-hook-form";
 import { toast } from "sonner";
 
 import { ApiErrorResponse } from "@/types/errors";
@@ -26,7 +27,9 @@ import { CadastrarGrupoEmpresaResponse } from "@/features/grupo-empresa/types/gr
 
 export default function Page() {
   const router = useRouter();
+
   const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
+  const [setFormError, setSetFormError] = useState<UseFormSetError<GrupoEmpresasFormData> | null>(null);
 
   const { mutateAsync, isPending } = useMutation<
     CadastrarGrupoEmpresaResponse,
@@ -34,20 +37,37 @@ export default function Page() {
     GrupoEmpresasFormData
   >({
     mutationFn: cadastrarGrupoEmpresa,
+
     onSuccess: () => {
       toast.success("Grupo cadastrado com sucesso!");
-      
       router.push("/admin/grupos-empresas");
     },
-    onError: (error) => {
-      const apiData = error.response?.data;
-      
-      const messages: string[] =
-        apiData?.messages?.length
-          ? apiData.messages
-          : ["Erro ao cadastrar grupo."];
 
-      setBackendErrors(messages);
+    onError: (error) => {
+      const apiErrors = error.response?.data?.errors;
+
+      if (!apiErrors) {
+        setBackendErrors(["Erro ao cadastrar grupo."]);
+        return;
+      }
+
+      // 🔴 1️⃣ BUSINESS → ALERT
+      if (apiErrors.business) {
+        setBackendErrors(apiErrors.business);
+        return;
+      }
+
+      // 🟡 2️⃣ ERRO DE CAMPO
+      if (setFormError) {
+        Object.entries(apiErrors).forEach(([field, messages]) => {
+          if (!messages || field === "business") return;
+
+          setFormError(field as keyof GrupoEmpresasFormData, {
+            type: "server",
+            message: messages[0],
+          });
+        });
+      }
     },
   });
 
@@ -77,6 +97,7 @@ export default function Page() {
               isLoading={isPending}
               backendErrors={backendErrors}
               clearBackendErrors={() => setBackendErrors(null)}
+              registerSetError={(fn) => setSetFormError(() => fn)}
             />
 
           </div>

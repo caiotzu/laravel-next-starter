@@ -27,50 +27,72 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (Throwable $e, $request) {
+
             if ($request->is('api/*')) {
 
-                // Validação das permissões
-                if ($e instanceof AccessDeniedHttpException) {
-                    return response()->json([
-                        'messages' => ['Você não tem permissão para executar esta ação.'],
-                    ], Response::HTTP_FORBIDDEN);
-                }
-
-                // Validação
+                // Validação de formulário (campos)
                 if ($e instanceof ValidationException) {
                     return response()->json([
-                        'messages' => collect($e->errors())->flatten()->values(),
+                        'errors' => $e->errors()
                     ], Response::HTTP_UNPROCESSABLE_ENTITY);
                 }
 
-                // Não encontrado
+                // Permissão → business
+                if ($e instanceof AccessDeniedHttpException) {
+                    return response()->json([
+                        'errors' => [
+                            'business' => ['Você não tem permissão para executar esta ação.']
+                        ]
+                    ], Response::HTTP_FORBIDDEN);
+                }
+
+                // Não encontrado → business
                 if ($e instanceof ModelNotFoundException) {
                     return response()->json([
-                        'messages' => ['Registro não encontrado.'],
+                        'errors' => [
+                            'business' => ['Registro não encontrado.']
+                        ]
                     ], Response::HTTP_NOT_FOUND);
                 }
 
-                // HttpException (abort, auth, etc)
+                // Regra de negócio customizada
+                if ($e instanceof \App\Exceptions\BusinessException) {
+                    return response()->json([
+                        'errors' => [
+                            'business' => [$e->getMessage()]
+                        ]
+                    ], Response::HTTP_BAD_REQUEST);
+                }
+
+                // HttpException
                 if ($e instanceof HttpExceptionInterface) {
                     return response()->json([
-                        'messages' => [$e->getMessage() ?: 'Erro na requisição.'],
+                        'errors' => [
+                            'business' => [
+                                $e->getMessage() ?: 'Erro na requisição.'
+                            ]
+                        ]
                     ], $e->getStatusCode());
                 }
 
-                // Regra de negócio → 400
+                // Exception geral
                 if ($e instanceof \RuntimeException || $e instanceof \InvalidArgumentException) {
                     return response()->json([
-                        'messages' => explode('|', $e->getMessage()),
+                        'errors' => [
+                            'business' => [$e->getMessage()]
+                        ]
                     ], Response::HTTP_BAD_REQUEST);
                 }
 
                 // Erro inesperado
                 return response()->json([
-                    'messages' => [
-                        app()->isProduction()
-                            ? 'Erro interno do servidor.'
-                            : $e->getMessage()
-                    ],
+                    'errors' => [
+                        'business' => [
+                            app()->isProduction()
+                                ? 'Erro interno do servidor.'
+                                : $e->getMessage()
+                        ]
+                    ]
                 ], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
             return null;

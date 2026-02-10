@@ -16,7 +16,6 @@ use App\DTO\GrupoEmpresa\GrupoEmpresaFiltroDTO;
 use App\DTO\GrupoEmpresa\GrupoEmpresaCadastroDTO;
 use App\DTO\GrupoEmpresa\GrupoEmpresaAtualizacaoDTO;
 
-
 class GrupoEmpresaController extends Controller
 {
     public function __construct(

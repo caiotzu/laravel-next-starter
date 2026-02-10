@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, X, CircleAlert } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, UseFormSetError } from "react-hook-form";
 
 import {
   Alert,
@@ -36,6 +36,7 @@ interface GrupoEmpresaFormProps {
   isLoading?: boolean;
   backendErrors?: string[] | null;
   clearBackendErrors?: () => void;
+  registerSetError?: (fn: UseFormSetError<GrupoEmpresasFormData>) => void;
 }
 
 export function GrupoEmpresaForm({
@@ -44,6 +45,7 @@ export function GrupoEmpresaForm({
   isLoading = false,
   backendErrors = null,
   clearBackendErrors,
+  registerSetError,
 }: GrupoEmpresaFormProps) {
   const router = useRouter();
 
@@ -52,6 +54,7 @@ export function GrupoEmpresaForm({
     handleSubmit,
     formState: { errors },
     reset,
+    setError,
   } = useForm<GrupoEmpresasFormData>({
     resolver: zodResolver(grupoEmpresaSchema),
     defaultValues,
@@ -63,13 +66,20 @@ export function GrupoEmpresaForm({
     }
   }, [defaultValues, reset]);
 
+  // 🔥 registra setError para o Page usar
+  useEffect(() => {
+    if (registerSetError) {
+      registerSetError(setError);
+    }
+  }, [registerSetError, setError]);
 
-  console.log(backendErrors)
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle>
-          {defaultValues ? "Editar Grupo de Empresas" : "Cadastrar Grupo de Empresas"}
+          {defaultValues
+            ? "Editar Grupo de Empresas"
+            : "Cadastrar Grupo de Empresas"}
         </CardTitle>
       </CardHeader>
 
@@ -106,6 +116,7 @@ export function GrupoEmpresaForm({
                 id="nome"
                 placeholder="Digite o nome do grupo"
                 disabled={isLoading}
+                className={errors.nome ? "border-red-500 focus-visible:ring-red-500" : ""}
                 {...register("nome")}
               />
               {errors.nome && (
@@ -128,9 +139,9 @@ export function GrupoEmpresaForm({
             Cancelar
           </Button>
 
-          <Button 
-            type="submit" 
-            disabled={isLoading} 
+          <Button
+            type="submit"
+            disabled={isLoading}
             className="cursor-pointer"
           >
             {isLoading && (

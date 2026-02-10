@@ -37,30 +37,15 @@ class ListarRequest extends FormRequest
 
     public function messages(): array {
         return [
-            'id.uuid'   => 'O (id) informado não é um UUID válido',
-            'id.exists' => 'O (id) informado não foi encontrado',
+            'id.uuid'   => 'O identificador do grupo informado não é um UUID válido',
+            'id.exists' => 'O identificador do grupo informado não foi encontrado',
 
-            'nome.string' => 'O (nome) deve ser um texto',
-            'nome.max'    => 'O (nome) deve ter no máximo 255 caracteres',
+            'nome.string' => 'O nome do grupo deve ser um texto',
+            'nome.max'    => 'O nome do grupo deve ter no máximo 255 caracteres',
 
-            'porPagina.integer' => 'O (porPagina) deve ser um número inteiro',
-            'porPagina.min'     => 'O (porPagina) deve ser no mínimo 1',
-            'porPagina.max'     => 'O (porPagina) deve ser no máximo 100',
+            'porPagina.integer' => 'A quantidade por página deve ser um número inteiro',
+            'porPagina.min'     => 'A quantidade por página deve ser no mínimo 1',
+            'porPagina.max'     => 'A quantidade por página deve ser no máximo 100',
         ];
-    }
-
-    public function failedValidation(Validator $validator) {
-        $errorsValidator = $validator->errors()->toArray();
-        $messages = [];
-
-        foreach($errorsValidator as $errors) {
-            foreach($errors as $error) {
-                array_push($messages, $error);
-            }
-        }
-
-        throw new HttpResponseException(response()->json([
-            'messages' => $messages
-        ], 400));
     }
 }

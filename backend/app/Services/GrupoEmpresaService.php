@@ -13,8 +13,7 @@ use App\DTO\GrupoEmpresa\GrupoEmpresaCadastroDTO;
 use App\DTO\GrupoEmpresa\GrupoEmpresaAtualizacaoDTO;
 
 use App\Enums\ErrorCode;
-
-use Exception;
+use App\Exceptions\BusinessException;
 
 class GrupoEmpresaService {
 
@@ -33,10 +32,10 @@ class GrupoEmpresaService {
 
             $grupoEmpresa = GrupoEmpresa::find($dto->id);
             if(!$grupoEmpresa)
-                throw new Exception('Grupo empresa não encontrado.', ErrorCode::GRUPO_EMPRESA_NOT_FOUND->value);
+                throw new BusinessException('Grupo empresa não encontrado.', ErrorCode::GRUPO_EMPRESA_NOT_FOUND->value);
 
             if (! $dto->temAlteracoes())
-                throw new Exception('Nenhum dado informado para atualização.', ErrorCode::GRUPO_EMPRESA_REQUIRED->value);
+                throw new BusinessException('Nenhum dado informado para atualização.', ErrorCode::GRUPO_EMPRESA_REQUIRED->value);
 
             $grupoEmpresa->update($dto->paraPersistencia());
 
@@ -50,7 +49,7 @@ class GrupoEmpresaService {
             $grupoEmpresa = GrupoEmpresa::find($id);
 
             if (! $grupoEmpresa) {
-                throw new Exception(
+                throw new BusinessException(
                     'Grupo empresa não encontrado.',
                     ErrorCode::GRUPO_EMPRESA_NOT_FOUND->value
                 );
@@ -67,7 +66,7 @@ class GrupoEmpresaService {
             $grupoEmpresa = GrupoEmpresa::find($id);
 
             if (! $grupoEmpresa) {
-                throw new Exception(
+                throw new BusinessException(
                     'Grupo empresa não encontrado para exclusão.',
                     ErrorCode::GRUPO_EMPRESA_NOT_FOUND->value
                 );
@@ -84,7 +83,7 @@ class GrupoEmpresaService {
             $grupoEmpresa = GrupoEmpresa::onlyTrashed()->find($id);
 
             if (! $grupoEmpresa) {
-                throw new Exception(
+                throw new BusinessException(
                     'Grupo empresa não encontrado para ativação.',
                     ErrorCode::GRUPO_EMPRESA_NOT_FOUND->value
                 );

@@ -17,7 +17,7 @@ use App\Http\Requests\Auth\LoginRequest;
 
 use App\Enums\EntidadeTipo;
 
-use Exception;
+use App\Exceptions\BusinessException;
 
 class AuthController extends Controller
 {
@@ -31,7 +31,7 @@ class AuthController extends Controller
             $usuario = $this->usuarioService->obterUsuarioAtivoPorEmail($request->email, EntidadeTipo::PRIVATE);
 
             if (!$usuario || !Hash::check($request->senha, $usuario->senha))
-                throw new Exception('Credenciais informadas são inválidas');
+                throw new BusinessException('Credenciais informadas são inválidas');
 
             $token = JWTAuth::fromUser($usuario);
 
@@ -39,9 +39,11 @@ class AuthController extends Controller
                 'token' => $token,
                 'expires_in' => JWTAuth::factory()->getTTL() * 60,
             ]);
-        } catch (Exception $e) {
+        } catch (BusinessException $e) {
             return response()->json([
-                'messages' => [$e->getMessage()]
+                'errors' => [
+                    'business' => [$e->getMessage()]
+                ]
             ], 401);
         }
     }

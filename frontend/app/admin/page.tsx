@@ -1,18 +1,15 @@
 "use client"
 
-import { useState } from 'react'
+import { useState } from "react"
 
 import Image from "next/image"
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation"
 
-import axios from 'axios';
-import { 
-  Monitor,
-   CircleAlert 
-} from "lucide-react"
+import axios from "axios"
+import { Monitor, CircleAlert } from "lucide-react"
 
 import { LoginForm } from "@/components/forms/login-form"
-import { 
+import {
   Alert,
   AlertTitle,
   AlertDescription
@@ -20,36 +17,37 @@ import {
 
 import { type LoginData } from "@/lib/validations/auth/login-schema"
 
+type BackendErrorResponse = {
+  errors?: Record<string, string[]>
+}
+
 export default function LoginPage() {
-  const [errors, setErrors] = useState<string[]>([]);
-  const router = useRouter();
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
+  const router = useRouter()
 
   async function handleSubmit(data: LoginData) {
     try {
-      const response = await axios.post("/api/auth/admin/login", {
+      setFieldErrors({})
+
+      await axios.post("/api/auth/admin/login", {
         email: data.email,
-        senha: data.password,
-      });
+        senha: data.senha,
+      })
 
-      if(response.status !== 200)
-        throw new Error('Credenciais informadas são inválidas');
-
-      router.push("/admin/dashboard");
+      router.push("/admin/dashboard")
     } catch (err: unknown) {
-      console.error("Erro no login:", err)
-
-      if (axios.isAxiosError(err)) {
-        const msgs =
-          err.response?.data?.messages ||
-          [err.response?.statusText || "Erro ao se conectar ao servidor"];
-        setErrors(msgs);
-      } else if (err instanceof Error) {
-        setErrors([err.message]);
+      if (axios.isAxiosError<BackendErrorResponse>(err)) {
+        const backendErrors = err.response?.data?.errors || {}
+        setFieldErrors(backendErrors)
       } else {
-        setErrors(["Erro interno desconhecido."]);
+        setFieldErrors({
+          business: ["Erro interno desconhecido."]
+        })
       }
     }
   }
+
+  const businessErrors = fieldErrors.business ?? []
 
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
@@ -62,33 +60,41 @@ export default function LoginPage() {
             Área Administrativa
           </a>
         </div>
+
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
-            {errors.length > 0 && (
+
+            {businessErrors.length > 0 && (
               <Alert variant="destructive" className="relative mb-8">
                 <CircleAlert className="h-5 w-5" />
                 <AlertTitle>Erro</AlertTitle>
                 <AlertDescription>
                   <ul className="list-inside list-disc text-sm">
-                    {errors.map((msg, i) => (
+                    {businessErrors.map((msg, i) => (
                       <li key={i}>{msg}</li>
                     ))}
                   </ul>
                 </AlertDescription>
               </Alert>
             )}
-            <LoginForm onSubmit={handleSubmit} />
+
+            <LoginForm
+              onSubmit={handleSubmit}
+              fieldErrors={fieldErrors}
+            />
+
           </div>
         </div>
       </div>
+
       <div className="bg-muted flex flex-1 items-center justify-center hidden lg:block">
-         <Image  
-            src="/next.svg" 
-            alt="logo" 
-            width={100}
-            height={100}
-            className="inset-0 px-32 h-full w-full dark:brightness-[0.2] dark:grayscale"
-          />
+        <Image
+          src="/next.svg"
+          alt="logo"
+          width={100}
+          height={100}
+          className="inset-0 px-32 h-full w-full dark:brightness-[0.2] dark:grayscale"
+        />
       </div>
     </div>
   )

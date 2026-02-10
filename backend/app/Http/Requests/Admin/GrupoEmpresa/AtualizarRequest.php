@@ -28,24 +28,10 @@ class AtualizarRequest extends FormRequest
 
     public function messages(): array {
         return [
-            'nome.required' => 'O (nome) é obrigatório',
-            'nome.string'   => 'O (nome) deve ser um texto',
-            'nome.unique'   => 'O (nome) já está cadastrado para outro grupo',
+            'nome.required' => 'O nome do grupo é obrigatório',
+            'nome.string'   => 'O nome do grupo deve ser um texto',
+            'nome.max'      => 'O nome do grupo deve ter no máximo 255 caracteres',
+            'nome.unique'   => 'O nome do grupo já está cadastrado para outro grupo',
         ];
-    }
-
-    public function failedValidation(Validator $validator) {
-        $errorsValidator = $validator->errors()->toArray();
-        $messages = [];
-
-        foreach($errorsValidator as $errors) {
-            foreach($errors as $error) {
-                array_push($messages, $error);
-            }
-        }
-
-        throw new HttpResponseException(response()->json([
-            'messages' => $messages
-        ], 400));
     }
 }

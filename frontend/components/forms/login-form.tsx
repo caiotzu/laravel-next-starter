@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect } from "react"
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
@@ -18,13 +20,20 @@ import { loginSchema, type LoginData } from "@/lib/validations/auth/login-schema
 interface LoginFormProps {
   onSubmit?: (data: LoginData) => void
   className?: string
+  fieldErrors?: Record<string, string[]>
 }
 
-export function LoginForm({ className, onSubmit, ...props }: LoginFormProps) {
+export function LoginForm({
+  className,
+  onSubmit,
+  fieldErrors,
+  ...props
+}: LoginFormProps) {
 
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -33,10 +42,24 @@ export function LoginForm({ className, onSubmit, ...props }: LoginFormProps) {
   async function handleFormSubmit(data: LoginData) {
     await onSubmit?.(data)
   }
-  
+
+  // 🔥 Injeta erros do backend direto nos campos
+  useEffect(() => {
+    if (!fieldErrors) return
+
+    Object.entries(fieldErrors).forEach(([field, messages]) => {
+      if (field === "business") return
+
+      setError(field as keyof LoginData, {
+        type: "server",
+        message: messages[0],
+      })
+    })
+  }, [fieldErrors, setError])
+
   return (
-    <form 
-      className={cn("flex flex-col gap-6", className)} 
+    <form
+      className={cn("flex flex-col gap-6", className)}
       onSubmit={handleSubmit(handleFormSubmit)}
       {...props}
     >
@@ -47,43 +70,44 @@ export function LoginForm({ className, onSubmit, ...props }: LoginFormProps) {
             Digite seu e-mail abaixo para entrar na sua conta
           </p>
         </div>
+
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
-          <Input 
-            id="email" 
-            type="email" 
-            placeholder="m@example.com" 
-            required 
+          <Input
+            id="email"
+            type="email"
+            placeholder="m@example.com"
             {...register("email")}
           />
-          {errors.email && (<p className="text-red-500 text-sm">{errors.email.message}</p>)}
+          {errors.email && (
+            <p className="text-red-500 text-sm">
+              {errors.email.message}
+            </p>
+          )}
         </Field>
+
         <Field>
-          <div className="flex items-center">
-            <FieldLabel htmlFor="password">Senha</FieldLabel>
-            <a
-              href="#"
-              className="ml-auto text-sm underline-offset-4 hover:underline"
-            >
-              Esqueceu sua senha?
-            </a>
-          </div>
-          <Input 
-            id="password" 
-            type="password" 
-            required 
-            {...register("password")}
+          <FieldLabel htmlFor="senha">Senha</FieldLabel>
+          <Input
+            id="senha"
+            type="password"
+            {...register("senha")}
           />
-          {errors.password && (<p className="text-red-500 text-sm">{errors.password.message}</p>)}
+          {errors.senha && (
+            <p className="text-red-500 text-sm">
+              {errors.senha.message}
+            </p>
+          )}
         </Field>
+
         <Field>
-          <Button 
+          <Button
             type="submit"
             disabled={isSubmitting}
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 Entrando
               </>
             ) : (

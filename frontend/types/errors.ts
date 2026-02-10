@@ -1,3 +1,6 @@
 export interface ApiErrorResponse {
-	messages: string[];
+	errors: {
+		business?: string[];
+		[field: string]: string[] | undefined;
+	};
 }

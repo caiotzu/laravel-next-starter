@@ -1,51 +1,55 @@
-import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 
-import axios, { AxiosError } from 'axios';
-
-type ApiErrorResponse = {
-  error: boolean
-  messages: string[]
-}
+import axios from "axios";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json()
+    const body = await req.json();
 
-    const res = await axios.post(
+    const response = await axios.post(
       `${process.env.BACKEND_URL}/admin/login`,
       body,
       {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         timeout: 10000,
+        validateStatus: () => true, // nunca lança erro por status
       }
     );
 
-    const data = res.data;
+    const data = response.data;
+
+    // Se for erro (400+), repassa o erro exatamente como veio
+    if (response.status >= 400) {
+      return NextResponse.json(
+        data,
+        { status: response.status }
+      );
+    }
+
     const cookieStore = await cookies();
-    cookieStore.set('admin_access_token', data.token, {
+
+    cookieStore.set("admin_access_token", data.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      path: '/',
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      path: "/",
       maxAge: 60 * 60,
     });
 
-    return NextResponse.json({ 
-      error: false,
-      messages: ['Usuário autenticado com sucesso']
+    return NextResponse.json({
+      status: response.status,
+      data: data,
     });
-  } catch (err: unknown) { 
-    const error = err as AxiosError<ApiErrorResponse>
 
+  } catch (error: unknown) {
     return NextResponse.json(
-      { 
-        error: true,
-        messages: error.response?.data?.messages || ['Credenciais informadas são inválidas']
-      }, 
-      { 
-        status: error.response?.status || 500 
-      }
+      {
+        errors: {
+          business: ["Erro inesperado ao realizar login."],
+        },
+      },
+      { status: 500 }
     );
   }
 }

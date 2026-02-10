@@ -27,26 +27,11 @@ class LoginRequest extends FormRequest
 
     public function messages(): array {
         return [
-            'email.required' => 'O (email) é obrigatório',
-            'email.email' => 'O (email) está com formato inválido',
-            'email.exists' => 'O (email) não foi encontrado',
+            'email.required' => 'O e-mail é obrigatório',
+            'email.email' => 'O e-mail está com formato inválido',
+            'email.exists' => 'O e-mail não foi encontrado',
 
-            'senha' => 'O (senha) é obrigatório',
+            'senha.required' => 'A senha é obrigatória',
         ];
-    }
-
-    public function failedValidation(Validator $validator) {
-        $errorsValidator = $validator->errors()->toArray();
-        $messages = [];
-
-        foreach($errorsValidator as $errors) {
-            foreach($errors as $error) {
-                array_push($messages, $error);
-            }
-        }
-
-        throw new HttpResponseException(response()->json([
-            'messages' => $messages
-        ], 400));
     }
 }
