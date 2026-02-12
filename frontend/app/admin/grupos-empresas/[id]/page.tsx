@@ -17,6 +17,7 @@ import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 import { GrupoEmpresaForm } from "@/features/admin/grupo-empresa/components/GrupoEmpresaForm";
+import { GrupoEmpresaFormSkeleton } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormSkeleton";
 import { useGrupoEmpresa } from "@/features/admin/grupo-empresa/hooks/useGrupoEmpresa";
 import { GrupoEmpresasFormData } from "@/features/admin/grupo-empresa/schemas/grupoEmpresa.schema";
 import { editarGrupoEmpresa } from "@/features/admin/grupo-empresa/services/grupoEmpresaService";
@@ -103,8 +104,10 @@ export default function Page() {
         <AppSidebar variant="inset" />
         <SidebarInset>
           <SiteHeader />
-          <div className="flex flex-1 items-center justify-center p-8 text-muted-foreground">
-            Carregando...
+          <div className="flex flex-1 flex-col">
+            <div className="flex flex-col gap-6 py-6 px-4 lg:px-6">
+              <GrupoEmpresaFormSkeleton />
+            </div>
           </div>
         </SidebarInset>
       </SidebarProvider>

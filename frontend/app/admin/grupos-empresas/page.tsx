@@ -1,16 +1,11 @@
 "use client";
 
-// React / libs externas
 import { useState } from "react";
 
 import { useRouter } from "next/navigation";
 
-// Tipos globais
-import { Lock } from "lucide-react";
-
 import { LaravelPagination } from "@/types/laravel";
 
-// Layout / Shared components
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
 import { useAdminPermission } from "@/app/admin/providers/admin-permission-provider";
@@ -22,7 +17,7 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 
-// Feature: grupo-empresa
+
 import { GrupoEmpresasFilters } from "@/features/admin/grupo-empresa/components/GrupoEmpresasFilters";
 import { GrupoEmpresasTable } from "@/features/admin/grupo-empresa/components/GrupoEmpresasTable";
 import { useGrupoEmpresas } from "@/features/admin/grupo-empresa/hooks/useGrupoEmpresas";
