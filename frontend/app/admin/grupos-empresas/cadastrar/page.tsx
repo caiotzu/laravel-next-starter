@@ -19,10 +19,10 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 
-import { GrupoEmpresaForm } from "@/features/grupo-empresa/components/GrupoEmpresaForm";
-import { GrupoEmpresasFormData } from "@/features/grupo-empresa/schemas/grupoEmpresa.schema";
-import { cadastrarGrupoEmpresa } from "@/features/grupo-empresa/services/grupoEmpresaService";
-import { CadastrarGrupoEmpresaResponse } from "@/features/grupo-empresa/types/grupoEmpresa.responses";
+import { GrupoEmpresaForm } from "@/features/admin/grupo-empresa/components/GrupoEmpresaForm";
+import { GrupoEmpresasFormData } from "@/features/admin/grupo-empresa/schemas/grupoEmpresa.schema";
+import { cadastrarGrupoEmpresa } from "@/features/admin/grupo-empresa/services/grupoEmpresaService";
+import { CadastrarGrupoEmpresaResponse } from "@/features/admin/grupo-empresa/types/grupoEmpresa.responses";
 
 import { AdminPermissionGuard } from "../../_components/guard/AdminPermissionGuard";
 import { useAdminPermission } from "../../providers/admin-permission-provider";

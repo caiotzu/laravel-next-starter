@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useUserPrivate } from "@/hooks/use-user-private"
+
 
 import {
   FolderKanban,
@@ -11,6 +11,7 @@ import {
 
 import { NavMain } from "@/app/(private)/_components/layouts/nav-main"
 import { NavUser } from "@/app/(private)/_components/layouts/nav-user"
+
 import {
   Sidebar,
   SidebarContent,
@@ -22,12 +23,14 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
+import { useUserPrivate } from "@/hooks/use-user-private"
+
 // This is sample data.
 const data = {
   user: {
     name: "shadcn",
     email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    avatar: ''//"/avatars/shadcn.jpg",
   },
   navMain: [
     {
@@ -59,7 +62,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = {
     name: userPrivate?.nome || 'shadcn',
     email: userPrivate?.email || 'm@example.com',
-    avatar: "/avatars/shadcn.jpg",
+    avatar: ''//"/avatars/shadcn.jpg",
   };
 
   return (

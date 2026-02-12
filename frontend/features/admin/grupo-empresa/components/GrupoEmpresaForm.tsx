@@ -1,19 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, X, CircleAlert, CircleX } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useForm, UseFormSetError } from "react-hook-form";
 
 import { AppAlert } from "@/components/feedback/AppAlert";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -54,11 +49,24 @@ export function GrupoEmpresaForm({
     handleSubmit,
     formState: { errors },
     setError,
+    reset,
   } = useForm<GrupoEmpresasFormData>({
     resolver: zodResolver(grupoEmpresaSchema),
     defaultValues,
   });
 
+  // Controla se o form já foi inicializado com os dados da API
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Inicializa o form apenas uma vez com os dados da API
+  useEffect(() => {
+    if (defaultValues && !isInitialized) {
+      reset(defaultValues);
+      setIsInitialized(true);
+    }
+  }, [defaultValues, isInitialized, reset]);
+
+  // Registra setError para lidar com erros do backend
   useEffect(() => {
     if (registerSetError) {
       registerSetError(setError);
@@ -77,7 +85,6 @@ export function GrupoEmpresaForm({
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-6 pt-6">
-
           {backendErrors && backendErrors.length > 0 && (
             <AppAlert
               variant="error"
@@ -95,17 +102,11 @@ export function GrupoEmpresaForm({
                 id="nome"
                 placeholder="Digite o nome do grupo"
                 disabled={isLoading}
-                className={
-                  errors.nome
-                    ? "border-red-700 focus-visible:ring-red-700"
-                    : ""
-                }
+                className={errors.nome ? "border-red-700 focus-visible:ring-red-700" : ""}
                 {...register("nome")}
               />
               {errors.nome && (
-                <p className="text-sm text-red-700">
-                  {errors.nome.message}
-                </p>
+                <p className="text-sm text-red-700">{errors.nome.message}</p>
               )}
             </div>
           </div>
@@ -122,14 +123,8 @@ export function GrupoEmpresaForm({
             Cancelar
           </Button>
 
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="cursor-pointer"
-          >
-            {isLoading && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
+          <Button type="submit" disabled={isLoading} className="cursor-pointer">
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {defaultValues ? "Salvar Alterações" : "Cadastrar"}
           </Button>
         </CardFooter>

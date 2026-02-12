@@ -23,10 +23,10 @@ import {
 } from "@/components/ui/sidebar";
 
 // Feature: grupo-empresa
-import { GrupoEmpresasFilters } from "@/features/grupo-empresa/components/GrupoEmpresasFilters";
-import { GrupoEmpresasTable } from "@/features/grupo-empresa/components/GrupoEmpresasTable";
-import { useGrupoEmpresas } from "@/features/grupo-empresa/hooks/useGrupoEmpresas";
-import { GrupoEmpresa } from "@/features/grupo-empresa/types/grupoEmpresa.model";
+import { GrupoEmpresasFilters } from "@/features/admin/grupo-empresa/components/GrupoEmpresasFilters";
+import { GrupoEmpresasTable } from "@/features/admin/grupo-empresa/components/GrupoEmpresasTable";
+import { useGrupoEmpresas } from "@/features/admin/grupo-empresa/hooks/useGrupoEmpresas";
+import { GrupoEmpresa } from "@/features/admin/grupo-empresa/types/grupoEmpresa.model";
 
 import { AdminPermissionGuard } from "../_components/guard/AdminPermissionGuard";
 

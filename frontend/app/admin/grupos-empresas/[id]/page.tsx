@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 import { useRouter, useParams } from "next/navigation";
 
@@ -14,18 +14,13 @@ import { ApiErrorResponse } from "@/types/errors";
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
 
-import {
-  SidebarInset,
-  SidebarProvider,
-} from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
-import { GrupoEmpresaForm } from "@/features/grupo-empresa/components/GrupoEmpresaForm";
-import { useGrupoEmpresa } from "@/features/grupo-empresa/hooks/useGrupoEmpresa";
-import { GrupoEmpresasFormData } from "@/features/grupo-empresa/schemas/grupoEmpresa.schema";
-import {
-  editarGrupoEmpresa,
-} from "@/features/grupo-empresa/services/grupoEmpresaService";
-import { EditarGrupoEmpresaResponse } from "@/features/grupo-empresa/types/grupoEmpresa.responses";
+import { GrupoEmpresaForm } from "@/features/admin/grupo-empresa/components/GrupoEmpresaForm";
+import { useGrupoEmpresa } from "@/features/admin/grupo-empresa/hooks/useGrupoEmpresa";
+import { GrupoEmpresasFormData } from "@/features/admin/grupo-empresa/schemas/grupoEmpresa.schema";
+import { editarGrupoEmpresa } from "@/features/admin/grupo-empresa/services/grupoEmpresaService";
+import { EditarGrupoEmpresaResponse } from "@/features/admin/grupo-empresa/types/grupoEmpresa.responses";
 
 import { AdminPermissionGuard } from "../../_components/guard/AdminPermissionGuard";
 
@@ -35,12 +30,20 @@ export default function Page() {
   const id = params.id as string;
 
   const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
-  const [formSetError, setFormSetError] =
-    useState<UseFormSetError<GrupoEmpresasFormData> | null>(null);
+  const [formSetError, setFormSetError] = useState<UseFormSetError<GrupoEmpresasFormData> | null>(null);
 
-  const { data, isLoading } = useGrupoEmpresa(id);
+  const { data, isLoading, error } = useGrupoEmpresa(id);
 
-  // 🔥 Memoriza defaultValues para não recriar objeto
+  // Se ocorrer erro ao buscar os dados, mostra toast e redireciona
+  useEffect(() => {
+    if (error) {
+      const axiosError = error as AxiosError<ApiErrorResponse>; // garante o tipo
+      toast.error(axiosError.response?.data?.errors.business || "Grupo não encontrado.");
+      router.push("/admin/grupos-empresas");
+    }
+  }, [error, router]);
+
+  // Prepara os valores iniciais para o form
   const defaultValues = useMemo(() => {
     if (!data) return undefined;
     return { nome: data.nome };
@@ -88,14 +91,32 @@ export default function Page() {
     await mutateAsync(data);
   }
 
-  return (
-    <SidebarProvider
-      style={
-        {
+  // Enquanto carrega ou não há dados ainda
+  if (isLoading || !data) {
+    return (
+      <SidebarProvider
+        style={{
           "--sidebar-width": "calc(var(--spacing) * 72)",
           "--header-height": "calc(var(--spacing) * 12)",
-        } as React.CSSProperties
-      }
+        } as React.CSSProperties}
+      >
+        <AppSidebar variant="inset" />
+        <SidebarInset>
+          <SiteHeader />
+          <div className="flex flex-1 items-center justify-center p-8 text-muted-foreground">
+            Carregando...
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
+    );
+  }
+
+  return (
+    <SidebarProvider
+      style={{
+        "--sidebar-width": "calc(var(--spacing) * 72)",
+        "--header-height": "calc(var(--spacing) * 12)",
+      } as React.CSSProperties}
     >
       <AppSidebar variant="inset" />
       <SidebarInset>
@@ -103,7 +124,6 @@ export default function Page() {
 
         <div className="flex flex-1 flex-col">
           <div className="flex flex-col gap-6 py-6 px-4 lg:px-6">
-
             <AdminPermissionGuard permission="admin.grupo_empresa.atualizar">
               <GrupoEmpresaForm
                 defaultValues={defaultValues}
@@ -114,7 +134,6 @@ export default function Page() {
                 registerSetError={(fn) => setFormSetError(() => fn)}
               />
             </AdminPermissionGuard>
-
           </div>
         </div>
       </SidebarInset>
