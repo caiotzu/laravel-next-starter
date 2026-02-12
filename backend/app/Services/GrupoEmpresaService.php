@@ -2,10 +2,13 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
+use App\Models\Grupo;
+use App\Models\Usuario;
+use App\Models\Permissao;
+use App\Models\EntidadeTipo;
 use App\Models\GrupoEmpresa;
 
 use App\DTO\GrupoEmpresa\GrupoEmpresaFiltroDTO;
@@ -20,11 +23,34 @@ class GrupoEmpresaService {
     public function cadastrar(GrupoEmpresaCadastroDTO $dto): GrupoEmpresa
     {
         return DB::transaction(function () use ($dto) {
-            return GrupoEmpresa::create([
+
+            $entidadeTipo = EntidadeTipo::where('chave', 'private')->firstOrFail();
+            $permissoesIds = Permissao::where('chave', 'like', 'private.%')->pluck('id');
+
+            $grupoEmpresa = GrupoEmpresa::create([
                 'nome' => $dto->nome
             ]);
+
+            $grupo = Grupo::create([
+                'descricao' => 'Administrador',
+                'entidade_tipo_id' => $entidadeTipo->id,
+                'entidade_id' => $grupoEmpresa->id
+            ]);
+
+            $grupo->permissoes()->sync($permissoesIds);
+
+            Usuario::create([
+                'grupo_id' => $grupo->id,
+                'nome' => $dto->usuario->nome,
+                'email' => $dto->usuario->email,
+                'senha' => bcrypt('mudar123@'),
+                'ativo' => true
+            ]);
+
+            return $grupoEmpresa;
         });
     }
+
 
     public function atualizar(GrupoEmpresaAtualizacaoDTO $dto): GrupoEmpresa
     {
@@ -46,7 +72,7 @@ class GrupoEmpresaService {
     public function visualizar(string $id): GrupoEmpresa
     {
         return DB::transaction(function () use ($id) {
-            $grupoEmpresa = GrupoEmpresa::find($id);
+            $grupoEmpresa = GrupoEmpresa::with(['grupos.usuarios'])->find($id);
 
             if (! $grupoEmpresa) {
                 throw new BusinessException(

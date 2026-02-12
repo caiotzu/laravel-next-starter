@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 
 class EntidadeTipo extends Model
 {
@@ -29,7 +31,8 @@ class EntidadeTipo extends Model
         });
     }
 
-    public function grupos() {
+    public function grupos(): HasMany
+    {
         return $this->hasMany(Grupo::class, 'entidade_tipo_id', 'id');
     }
 }

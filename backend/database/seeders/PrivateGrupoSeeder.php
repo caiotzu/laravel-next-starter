@@ -17,13 +17,13 @@ class PrivateGrupoSeeder extends Seeder
     public function run(): void
     {
         $entidadeTipo = DB::table("entidade_tipos")->where("chave", "private")->first();
-        $empresa = DB::table("empresas")->where("cnpj", "12345678000190")->first();
+        $grupoEmpresa = DB::table("grupo_empresas")->where("nome", "Grupos Nexus")->first();
 
         DB::table("grupos")->insert([
             "id" => Str::uuid(),
-            "descricao" => "Administração",
+            "descricao" => "Administrador",
             "entidade_tipo_id" => $entidadeTipo->id,
-            "entidade_id" => $empresa->id,
+            "entidade_id" => $grupoEmpresa->id,
             "created_at" => date("Y-m-d H:i:s"),
             "updated_at" => date("Y-m-d H:i:s")
         ]);

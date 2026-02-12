@@ -26,7 +26,7 @@ class EntidadeTipoSeeder extends Seeder
             [
                 "id" => Str::uuid(),
                 "chave" => "private",
-                "entidade_tabela" => "empresas",
+                "entidade_tabela" => "grupo_empresas",
                 "created_at" => date("Y-m-d H:i:s"),
                 "updated_at" => date("Y-m-d H:i:s")
             ]

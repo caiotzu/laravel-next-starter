@@ -16,7 +16,7 @@ class PrivateGrupoPermissaoSeeder extends Seeder
      */
     public function run(): void
     {
-        $grupo = DB::table("grupos")->where("descricao", "Administração")->first();
+        $grupo = DB::table("grupos")->where("descricao", "Administrador")->first();
         $permissoes = DB::table("permissoes")->where("chave", "like", "private.%")->get();
         $grupoPermissoes = [];
 

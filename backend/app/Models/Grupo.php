@@ -5,6 +5,11 @@ namespace App\Models;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
+
 
 class Grupo extends Model
 {
@@ -38,15 +43,18 @@ class Grupo extends Model
         });
     }
 
-    public function permissoes() {
+    public function permissoes(): BelongsToMany
+    {
         return $this->belongsToMany(Permissao::class, 'grupo_permissoes', 'grupo_id', 'permissao_id')->withTimestamps();
     }
 
-    public function usuarios() {
+    public function usuarios(): HasMany
+    {
         return $this->hasMany(Usuario::class, 'grupo_id', 'id');
     }
 
-    public function entidadeTipo() {
+    public function entidadeTipo(): BelongsTo
+    {
         return $this->belongsTo(EntidadeTipo::class, 'entidade_tipo_id', 'id');
     }
 }

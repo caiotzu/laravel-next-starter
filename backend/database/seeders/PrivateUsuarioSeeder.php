@@ -16,7 +16,7 @@ class PrivateUsuarioSeeder extends Seeder
      */
     public function run(): void
     {
-        $grupo = DB::table("grupos")->where("descricao", "Administração")->orderBy("created_at")->first();
+        $grupo = DB::table("grupos")->where("descricao", "Administrador")->orderBy("created_at")->first();
 
         DB::table("usuarios")->insert([
             "id" => Str::uuid(),

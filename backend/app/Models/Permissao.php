@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
 
 
 class Permissao extends Model
@@ -30,7 +32,7 @@ class Permissao extends Model
         });
     }
 
-    public function grupos()
+    public function grupos(): BelongsToMany
     {
         return $this->belongsToMany(Grupo::class,'grupo_permissoes');
     }

@@ -6,6 +6,8 @@ use Illuminate\Support\Str;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 
 class Usuario extends Authenticatable implements JWTSubject
 {
@@ -42,7 +44,8 @@ class Usuario extends Authenticatable implements JWTSubject
         });
     }
 
-    public function grupo() {
+    public function grupo(): BelongsTo
+    {
         return $this->belongsTo(Grupo::class, 'grupo_id', 'id');
     }
 

@@ -80,5 +80,4 @@ class GrupoEmpresaController extends Controller
 
         return response()->json($grupoEmpresas, 200);
     }
-
 }
