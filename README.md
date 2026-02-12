@@ -26,6 +26,7 @@ Tecnologias, frameworks e ferramentas utilizadas na construção da aplicação:
 - **JavaScript** — Linguagem base do frontend
 - **Vite** — Ferramenta de build e desenvolvimento
 - **Tailwind CSS** — Estilização utilitária e responsiva
+- **shadcn/ui** — Componentes UI prontos, acessíveis e estilizados com Tailwind CSS
 
 ---
 
