@@ -104,7 +104,10 @@ class GrupoEmpresaService {
             ->when($filtro->nome, fn ($q) =>
                 $q->where('nome', 'ilike', "%{$filtro->nome}%")
             )
-            ->orderBy('nome')
+             ->when($filtro->excluido, fn ($q) =>
+                $q->withTrashed()
+            )
+            ->orderBy('created_at', 'DESC')
             ->paginate($filtro->paginacao->porPagina);
     }
 }

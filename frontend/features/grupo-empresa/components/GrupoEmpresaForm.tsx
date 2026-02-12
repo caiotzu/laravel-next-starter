@@ -5,9 +5,10 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, X, CircleAlert } from "lucide-react";
+import { Loader2, X, CircleAlert, CircleX } from "lucide-react";
 import { useForm, UseFormSetError } from "react-hook-form";
 
+import { AppAlert } from "@/components/feedback/AppAlert";
 import {
   Alert,
   AlertDescription,
@@ -28,7 +29,6 @@ import {
   grupoEmpresaSchema,
   GrupoEmpresasFormData,
 } from "../schemas/grupoEmpresa.schema";
-
 
 interface GrupoEmpresaFormProps {
   defaultValues?: GrupoEmpresasFormData;
@@ -53,20 +53,12 @@ export function GrupoEmpresaForm({
     register,
     handleSubmit,
     formState: { errors },
-    reset,
     setError,
   } = useForm<GrupoEmpresasFormData>({
     resolver: zodResolver(grupoEmpresaSchema),
     defaultValues,
   });
 
-  useEffect(() => {
-    if (defaultValues) {
-      reset(defaultValues);
-    }
-  }, [defaultValues, reset]);
-
-  // 🔥 registra setError para o Page usar
   useEffect(() => {
     if (registerSetError) {
       registerSetError(setError);
@@ -87,26 +79,13 @@ export function GrupoEmpresaForm({
         <CardContent className="space-y-6 pt-6">
 
           {backendErrors && backendErrors.length > 0 && (
-            <Alert variant="destructive" className="relative mb-8">
-              {clearBackendErrors && (
-                <button
-                  type="button"
-                  onClick={clearBackendErrors}
-                  className="absolute right-4 top-4 text-red-700 hover:text-red-900 transition cursor-pointer"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-              <CircleAlert className="h-5 w-5" />
-              <AlertTitle>Erro</AlertTitle>
-              <AlertDescription>
-                <ul className="list-inside list-disc text-sm">
-                  {backendErrors.map((msg, i) => (
-                    <li key={i}>{msg}</li>
-                  ))}
-                </ul>
-              </AlertDescription>
-            </Alert>
+            <AppAlert
+              variant="error"
+              subtitle="Ocorreu um erro durante a operação"
+              messages={backendErrors}
+              onClose={clearBackendErrors}
+              className="mb-6"
+            />
           )}
 
           <div className="grid grid-cols-12 gap-6">
@@ -116,11 +95,15 @@ export function GrupoEmpresaForm({
                 id="nome"
                 placeholder="Digite o nome do grupo"
                 disabled={isLoading}
-                className={errors.nome ? "border-red-500 focus-visible:ring-red-500" : ""}
+                className={
+                  errors.nome
+                    ? "border-red-700 focus-visible:ring-red-700"
+                    : ""
+                }
                 {...register("nome")}
               />
               {errors.nome && (
-                <p className="text-sm text-red-500">
+                <p className="text-sm text-red-700">
                   {errors.nome.message}
                 </p>
               )}
@@ -147,13 +130,7 @@ export function GrupoEmpresaForm({
             {isLoading && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-            {isLoading
-              ? defaultValues
-                ? "Salvando"
-                : "Cadastrando"
-              : defaultValues
-              ? "Salvar Alterações"
-              : "Cadastrar"}
+            {defaultValues ? "Salvar Alterações" : "Cadastrar"}
           </Button>
         </CardFooter>
       </form>

@@ -9,6 +9,7 @@ export interface EditarGrupoEmpresaRequest {
 export interface ListarGrupoEmpresasRequest {
   id?: string;
   nome?: string;
+  excluido?: boolean;
   porPagina?: number;
   page?: number;
 }

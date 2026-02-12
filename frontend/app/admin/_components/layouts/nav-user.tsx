@@ -1,9 +1,8 @@
 "use client"
 
-import axios from "axios"
 import { useRouter } from "next/navigation"
-import { useUserAdmin } from "@/hooks/use-user-admin"
 
+import axios from "axios"
 import {
   BadgeCheck,
   Bell,
@@ -33,6 +32,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+
+import { useUserAdmin } from "@/hooks/use-user-admin"
 
 
 export function NavUser({

@@ -62,16 +62,39 @@ class AuthController extends Controller
         }
     }
 
-    public function me(): JsonResponse
+  public function me(): JsonResponse
     {
         try {
+            /** @var \App\Models\Usuario $user */
             $user = Auth::user();
+
             if (!$user) {
                 return response()->json(['error' => 'User not found'], 404);
             }
-            return response()->json($user);
+
+            $user->load([
+                'grupo.permissoes:id,chave'
+            ]);
+
+            $permissoes = $user->grupo
+                ? $user->grupo->permissoes
+                    ->pluck('chave')
+                    ->values()
+                : collect();
+
+            return response()->json([
+                'id' => $user->id,
+                'nome' => $user->nome,
+                'email' => $user->email,
+                'avatar' => $user->avatar,
+                'grupo' => $user->grupo->descricao,
+                'permissoes' => $permissoes
+            ]);
+
         } catch (JWTException $e) {
-            return response()->json(['error' => 'Failed to fetch user profile'], 500);
+            return response()->json([
+                'error' => 'Failed to fetch user profile'
+            ], 500);
         }
     }
 

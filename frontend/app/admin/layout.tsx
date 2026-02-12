@@ -6,6 +6,8 @@ import { Toaster } from "sonner";
 import { ReactQueryProvider } from "@/components/providers/react-query-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 
+import { AdminPermissionProvider } from "./providers/admin-permission-provider";
+
 import "@/app/globals.css";
 
 const geistSans = Geist({
@@ -40,7 +42,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <AdminPermissionProvider>
+              {children}
+            </AdminPermissionProvider>
             <Toaster
               position="top-right"
               richColors

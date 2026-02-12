@@ -9,6 +9,7 @@ final class GrupoEmpresaFiltroDTO
     private function __construct(
         public readonly ?string $id = null,
         public readonly ?string $nome = null,
+        public readonly ?bool $excluido = null,
         public readonly PaginationDTO $paginacao
     ) {}
 
@@ -17,7 +18,8 @@ final class GrupoEmpresaFiltroDTO
         return new self(
             id: $dados['id'] ?? null,
             nome: $dados['nome'] ?? null,
-            paginacao: PaginationDTO::criarParaPaginar($dados)
+            excluido: $dados['excluido'] ?? null,
+            paginacao: PaginationDTO::criarParaPaginar($dados),
         );
     }
 }

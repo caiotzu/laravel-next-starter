@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useRouter, useParams } from "next/navigation";
 
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
+import { UseFormSetError } from "react-hook-form";
 import { toast } from "sonner";
 
 import { ApiErrorResponse } from "@/types/errors";
@@ -21,11 +22,12 @@ import {
 import { GrupoEmpresaForm } from "@/features/grupo-empresa/components/GrupoEmpresaForm";
 import { useGrupoEmpresa } from "@/features/grupo-empresa/hooks/useGrupoEmpresa";
 import { GrupoEmpresasFormData } from "@/features/grupo-empresa/schemas/grupoEmpresa.schema";
-import { 
-    visualizarGrupoEmpresa, 
-    editarGrupoEmpresa 
+import {
+  editarGrupoEmpresa,
 } from "@/features/grupo-empresa/services/grupoEmpresaService";
 import { EditarGrupoEmpresaResponse } from "@/features/grupo-empresa/types/grupoEmpresa.responses";
+
+import { AdminPermissionGuard } from "../../_components/guard/AdminPermissionGuard";
 
 export default function Page() {
   const router = useRouter();
@@ -33,16 +35,23 @@ export default function Page() {
   const id = params.id as string;
 
   const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
+  const [formSetError, setFormSetError] =
+    useState<UseFormSetError<GrupoEmpresasFormData> | null>(null);
 
   const { data, isLoading } = useGrupoEmpresa(id);
+
+  // 🔥 Memoriza defaultValues para não recriar objeto
+  const defaultValues = useMemo(() => {
+    if (!data) return undefined;
+    return { nome: data.nome };
+  }, [data]);
 
   const { mutateAsync, isPending } = useMutation<
     EditarGrupoEmpresaResponse,
     AxiosError<ApiErrorResponse>,
     GrupoEmpresasFormData
   >({
-    mutationFn: (formData) =>
-      editarGrupoEmpresa(id, formData),
+    mutationFn: (formData) => editarGrupoEmpresa(id, formData),
 
     onSuccess: () => {
       toast.success("Grupo atualizado com sucesso!");
@@ -50,14 +59,27 @@ export default function Page() {
     },
 
     onError: (error) => {
-      const apiData = error.response?.data;
+      const apiErrors = error.response?.data?.errors;
 
-      const messages: string[] =
-        apiData?.messages?.length
-          ? apiData.messages
-          : ["Erro ao atualizar grupo."];
+      if (!apiErrors) {
+        setBackendErrors(["Erro ao atualizar grupo."]);
+        return;
+      }
 
-      setBackendErrors(messages);
+      if (apiErrors.business) {
+        setBackendErrors(apiErrors.business);
+      }
+
+      if (formSetError) {
+        Object.entries(apiErrors).forEach(([field, messages]) => {
+          if (!messages || field === "business") return;
+
+          formSetError(field as keyof GrupoEmpresasFormData, {
+            type: "server",
+            message: messages[0],
+          });
+        });
+      }
     },
   });
 
@@ -65,8 +87,6 @@ export default function Page() {
     setBackendErrors(null);
     await mutateAsync(data);
   }
-
-  const defaultValues: GrupoEmpresasFormData | undefined = data ? { nome: data.nome }: undefined;
 
   return (
     <SidebarProvider
@@ -84,13 +104,16 @@ export default function Page() {
         <div className="flex flex-1 flex-col">
           <div className="flex flex-col gap-6 py-6 px-4 lg:px-6">
 
-            <GrupoEmpresaForm
-              defaultValues={defaultValues}
-              onSubmit={handleSubmit}
-              isLoading={isPending || isLoading}
-              backendErrors={backendErrors}
-              clearBackendErrors={() => setBackendErrors(null)}
-            />
+            <AdminPermissionGuard permission="admin.grupo_empresa.atualizar">
+              <GrupoEmpresaForm
+                defaultValues={defaultValues}
+                onSubmit={handleSubmit}
+                isLoading={isPending || isLoading}
+                backendErrors={backendErrors}
+                clearBackendErrors={() => setBackendErrors(null)}
+                registerSetError={(fn) => setFormSetError(() => fn)}
+              />
+            </AdminPermissionGuard>
 
           </div>
         </div>

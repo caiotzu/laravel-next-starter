@@ -24,12 +24,17 @@ import { GrupoEmpresasFormData } from "@/features/grupo-empresa/schemas/grupoEmp
 import { cadastrarGrupoEmpresa } from "@/features/grupo-empresa/services/grupoEmpresaService";
 import { CadastrarGrupoEmpresaResponse } from "@/features/grupo-empresa/types/grupoEmpresa.responses";
 
+import { AdminPermissionGuard } from "../../_components/guard/AdminPermissionGuard";
+import { useAdminPermission } from "../../providers/admin-permission-provider";
+
 
 export default function Page() {
   const router = useRouter();
+  const { can } = useAdminPermission();
+  
 
   const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
-  const [setFormError, setSetFormError] = useState<UseFormSetError<GrupoEmpresasFormData> | null>(null);
+  const [formError, setFormError] = useState<UseFormSetError<GrupoEmpresasFormData> | null>(null);
 
   const { mutateAsync, isPending } = useMutation<
     CadastrarGrupoEmpresaResponse,
@@ -51,18 +56,16 @@ export default function Page() {
         return;
       }
 
-      // 🔴 1️⃣ BUSINESS → ALERT
       if (apiErrors.business) {
         setBackendErrors(apiErrors.business);
         return;
       }
 
-      // 🟡 2️⃣ ERRO DE CAMPO
-      if (setFormError) {
+      if (formError) {
         Object.entries(apiErrors).forEach(([field, messages]) => {
           if (!messages || field === "business") return;
 
-          setFormError(field as keyof GrupoEmpresasFormData, {
+          formError(field as keyof GrupoEmpresasFormData, {
             type: "server",
             message: messages[0],
           });
@@ -92,14 +95,15 @@ export default function Page() {
         <div className="flex flex-1 flex-col">
           <div className="flex flex-col gap-6 py-6 px-4 lg:px-6">
 
-            <GrupoEmpresaForm
-              onSubmit={handleSubmit}
-              isLoading={isPending}
-              backendErrors={backendErrors}
-              clearBackendErrors={() => setBackendErrors(null)}
-              registerSetError={(fn) => setSetFormError(() => fn)}
-            />
-
+            <AdminPermissionGuard permission="admin.grupo_empresa.cadastrar">
+              <GrupoEmpresaForm
+                onSubmit={handleSubmit}
+                isLoading={isPending}
+                backendErrors={backendErrors}
+                clearBackendErrors={() => setBackendErrors(null)}
+                registerSetError={(fn) => setFormError(() => fn)}
+              />
+            </AdminPermissionGuard>
           </div>
         </div>
       </SidebarInset>

@@ -6,9 +6,10 @@ import axios from "axios"
 type UserAdmin = {
   id: number
   nome: string
-  cpf: string
   email: string
   avatar?: string
+  grupo: string
+  permissoes: string[]
 }
 
 export function useUserAdmin() {
@@ -25,3 +26,4 @@ export function useUserAdmin() {
     retry: false,
   })
 }
+

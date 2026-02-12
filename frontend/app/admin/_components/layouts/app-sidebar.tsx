@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { useUserAdmin } from "@/hooks/use-user-admin"
+
+import { usePathname } from "next/navigation"
 
 import {
   FolderKanban,
@@ -11,6 +12,7 @@ import {
 
 import { NavMain } from "@/app/admin/_components/layouts/nav-main"
 import { NavUser } from "@/app/admin/_components/layouts/nav-user"
+
 import {
   Sidebar,
   SidebarContent,
@@ -22,27 +24,27 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-// This is sample data.
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
+import { useUserAdmin } from "@/hooks/use-user-admin"
+
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname()
+  const { data: userAdmin, isLoading } = useUserAdmin();
+  
+  const navMain = [
     {
       title: "Cadastros",
       url: "#",
       icon: FolderKanban,
-      isActive: true,
       items: [
         {
           title: "Grupos Empresas",
           url: "/admin/grupos-empresas",
+          permission: "admin.grupo_empresa.menu"
         },
         {
           title: "Empresas",
           url: "#",
+          permission: null
         },
       ],
     },
@@ -50,23 +52,20 @@ const data = {
       title: "Configurações",
       url: "#",
       icon: Settings2,
-      isActive: true,
       items: [
         {
           title: "Grupos",
           url: "#",
+          permission: null
         },
         {
           title: "Usuários",
           url: "#",
+          permission: null
         },
       ],
     }
-  ],
-}
-
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { data: userAdmin, isLoading } = useUserAdmin();
+  ]
   
   const user = {
     name: userAdmin?.nome || 'shadcn',
@@ -95,7 +94,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navMain} />
       </SidebarContent>
 
       <SidebarFooter>

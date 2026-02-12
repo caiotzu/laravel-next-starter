@@ -36,6 +36,15 @@ export async function excluirGrupoEmpresa(
   });
 }
 
+export function ativarGrupoEmpresa(
+  id: string
+) {
+  return proxyAdminRequest<EditarGrupoEmpresaResponse>({
+    url: `/admin/grupos-empresas/${id}/ativar`,
+    method: "PATCH"
+  });
+}
+
 export function listarGrupoEmpresas(
   dto: ListarGrupoEmpresasRequest
 ) {

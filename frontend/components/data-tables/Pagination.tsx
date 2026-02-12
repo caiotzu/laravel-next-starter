@@ -3,6 +3,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 interface PaginationProps {
   currentPage: number;
@@ -43,49 +44,53 @@ export function Pagination({
   if (lastPage <= 1) return null;
 
   return (
-    <div className="flex items-center justify-between border-t pt-4">
-      {/* ESQUERDA */}
-      <div className="text-sm text-muted-foreground">
-        Mostrando <strong>{from}</strong>–<strong>{to}</strong> de{" "}
-        <strong>{total}</strong> resultados
-      </div>
+    <Card className="w-full rounded-2xl border shadow-sm p-3">
 
-      {/* DIREITA */}
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={currentPage === 1}
-          onClick={() => onPageChange(currentPage - 1)}
-          className="cursor-pointer"
-        >
-          <ChevronLeft className="h-4 w-4 mr-1" />
-          Anterior
-        </Button>
+      <div className="flex items-center justify-between">
+        {/* ESQUERDA */}
+        <div className="text-sm text-muted-foreground">
+          Mostrando <strong>{from}</strong>–<strong>{to}</strong> de{" "}
+          <strong>{total}</strong> resultados
+        </div>
 
-        {generatePages().map((page) => (
+        {/* DIREITA */}
+        <div className="flex items-center gap-2">
           <Button
-            key={page}
+            variant="outline"
             size="sm"
-            variant={page === currentPage ? "default" : "outline"}
-            onClick={() => onPageChange(page)}
+            disabled={currentPage === 1}
+            onClick={() => onPageChange(currentPage - 1)}
             className="cursor-pointer"
           >
-            {page}
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Anterior
           </Button>
-        ))}
 
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={currentPage === lastPage}
-          onClick={() => onPageChange(currentPage + 1)}
-          className="cursor-pointer"
-        >
-          Próximo
-          <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
+          {generatePages().map((page) => (
+            <Button
+              key={page}
+              size="sm"
+              variant={page === currentPage ? "default" : "outline"}
+              onClick={() => onPageChange(page)}
+              className="cursor-pointer"
+            >
+              {page}
+            </Button>
+          ))}
+
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === lastPage}
+            onClick={() => onPageChange(currentPage + 1)}
+            className="cursor-pointer"
+          >
+            Próximo
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
       </div>
-    </div>
+    </Card>
+
   );
 }
