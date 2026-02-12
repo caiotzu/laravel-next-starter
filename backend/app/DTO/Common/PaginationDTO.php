@@ -5,7 +5,7 @@ namespace App\DTO\Common;
 final class PaginationDTO
 {
     private function __construct(
-        public readonly int $porPagina,
+        public readonly int $por_pagina,
     ) {}
 
     public static function criarParaPaginar(array $dados): self
@@ -14,10 +14,10 @@ final class PaginationDTO
         $max     = config('api.pagination.max');
         $min     = config('api.pagination.min');
 
-        $porPagina = (int) ($dados['porPagina'] ?? $default);
+        $por_pagina = (int) ($dados['por_pagina'] ?? $default);
 
         return new self(
-            porPagina: min(max($porPagina, $min), $max)
+            por_pagina: min(max($por_pagina, $min), $max)
         );
     }
 }

@@ -108,6 +108,6 @@ class GrupoEmpresaService {
                 $q->withTrashed()
             )
             ->orderBy('created_at', 'DESC')
-            ->paginate($filtro->paginacao->porPagina);
+            ->paginate($filtro->paginacao->por_pagina);
     }
 }

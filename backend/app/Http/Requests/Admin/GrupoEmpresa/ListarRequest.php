@@ -39,7 +39,7 @@ class ListarRequest extends FormRequest
                 'string',
                 'max:255',
             ],
-            'porPagina' => [
+            'por_pagina' => [
                 'nullable',
                 'integer',
                 'min:1',
@@ -60,9 +60,9 @@ class ListarRequest extends FormRequest
             'nome.string' => 'O nome do grupo deve ser um texto',
             'nome.max'    => 'O nome do grupo deve ter no máximo 255 caracteres',
 
-            'porPagina.integer' => 'A quantidade por página deve ser um número inteiro',
-            'porPagina.min'     => 'A quantidade por página deve ser no mínimo 1',
-            'porPagina.max'     => 'A quantidade por página deve ser no máximo 100',
+            'por_pagina.integer' => 'A quantidade por página deve ser um número inteiro',
+            'por_pagina.min'     => 'A quantidade por página deve ser no mínimo 1',
+            'por_pagina.max'     => 'A quantidade por página deve ser no máximo 100',
 
             'excluido.boolean' => 'O filtro excluído deve do tipo boolean',
         ];
