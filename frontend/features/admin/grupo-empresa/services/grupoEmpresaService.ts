@@ -4,7 +4,7 @@ import { proxyAdminRequest } from "@/lib/proxy-admin";
 
 import { GrupoEmpresa } from "../types/grupoEmpresa.model";
 import { CadastrarGrupoEmpresaRequest, EditarGrupoEmpresaRequest, ListarGrupoEmpresasRequest } from "../types/grupoEmpresa.requests";
-import { CadastrarGrupoEmpresaResponse, EditarGrupoEmpresaResponse, ListarGrupoEmpresasResponse } from "../types/grupoEmpresa.responses";
+import { CadastrarGrupoEmpresaResponse, EditarGrupoEmpresaResponse, ListarGrupoEmpresasResponse, VisualizarGrupoEmpresaResponse } from "../types/grupoEmpresa.responses";
 
 export function cadastrarGrupoEmpresa(
   dto: CadastrarGrupoEmpresaRequest
@@ -57,7 +57,7 @@ export function listarGrupoEmpresas(
 }
 
 export function visualizarGrupoEmpresa(id: string) {
-  return proxyAdminRequest<GrupoEmpresa>({
+  return proxyAdminRequest<VisualizarGrupoEmpresaResponse>({
     url: `/admin/grupos-empresas/${id}`,
     method: "GET",
   });

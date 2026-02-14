@@ -5,6 +5,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 
 import { useMutation } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { UseFormSetError } from "react-hook-form";
 import { toast } from "sonner";
@@ -14,12 +15,13 @@ import { ApiErrorResponse } from "@/types/errors";
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
 
+import { PageHeader } from "@/components/layouts/page-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
-import { GrupoEmpresaForm } from "@/features/admin/grupo-empresa/components/GrupoEmpresaForm";
-import { GrupoEmpresaFormSkeleton } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormSkeleton";
+import { GrupoEmpresaFormEdicao } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormEdicao";
+import { GrupoEmpresaFormEdicaoSkeleton } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormEdicaoSkeleton";
 import { useGrupoEmpresa } from "@/features/admin/grupo-empresa/hooks/useGrupoEmpresa";
-import { GrupoEmpresasFormData } from "@/features/admin/grupo-empresa/schemas/grupoEmpresa.schema";
+import { GrupoEmpresasFormDataEdicao } from "@/features/admin/grupo-empresa/schemas/grupoEmpresa.schema";
 import { editarGrupoEmpresa } from "@/features/admin/grupo-empresa/services/grupoEmpresaService";
 import { EditarGrupoEmpresaResponse } from "@/features/admin/grupo-empresa/types/grupoEmpresa.responses";
 
@@ -29,22 +31,21 @@ export default function Page() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
+  const queryClient = useQueryClient();
 
   const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
-  const [formSetError, setFormSetError] = useState<UseFormSetError<GrupoEmpresasFormData> | null>(null);
+  const [formSetError, setFormSetError] = useState<UseFormSetError<GrupoEmpresasFormDataEdicao> | null>(null);
 
   const { data, isLoading, error } = useGrupoEmpresa(id);
 
-  // Se ocorrer erro ao buscar os dados, mostra toast e redireciona
   useEffect(() => {
     if (error) {
-      const axiosError = error as AxiosError<ApiErrorResponse>; // garante o tipo
+      const axiosError = error as AxiosError<ApiErrorResponse>;
       toast.error(axiosError.response?.data?.errors.business || "Grupo não encontrado.");
       router.push("/admin/grupos-empresas");
     }
   }, [error, router]);
 
-  // Prepara os valores iniciais para o form
   const defaultValues = useMemo(() => {
     if (!data) return undefined;
     return { nome: data.nome };
@@ -53,15 +54,14 @@ export default function Page() {
   const { mutateAsync, isPending } = useMutation<
     EditarGrupoEmpresaResponse,
     AxiosError<ApiErrorResponse>,
-    GrupoEmpresasFormData
+    GrupoEmpresasFormDataEdicao
   >({
     mutationFn: (formData) => editarGrupoEmpresa(id, formData),
-
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["grupo-empresa", id] });
       toast.success("Grupo atualizado com sucesso!");
       router.push("/admin/grupos-empresas");
     },
-
     onError: (error) => {
       const apiErrors = error.response?.data?.errors;
 
@@ -78,7 +78,7 @@ export default function Page() {
         Object.entries(apiErrors).forEach(([field, messages]) => {
           if (!messages || field === "business") return;
 
-          formSetError(field as keyof GrupoEmpresasFormData, {
+          formSetError(field as keyof GrupoEmpresasFormDataEdicao, {
             type: "server",
             message: messages[0],
           });
@@ -87,12 +87,11 @@ export default function Page() {
     },
   });
 
-  async function handleSubmit(data: GrupoEmpresasFormData) {
+  async function handleSubmit(data: GrupoEmpresasFormDataEdicao) {
     setBackendErrors(null);
     await mutateAsync(data);
   }
 
-  // Enquanto carrega ou não há dados ainda
   if (isLoading || !data) {
     return (
       <SidebarProvider
@@ -106,7 +105,7 @@ export default function Page() {
           <SiteHeader />
           <div className="flex flex-1 flex-col">
             <div className="flex flex-col gap-6 py-6 px-4 lg:px-6">
-              <GrupoEmpresaFormSkeleton />
+              <GrupoEmpresaFormEdicaoSkeleton />
             </div>
           </div>
         </SidebarInset>
@@ -127,8 +126,14 @@ export default function Page() {
 
         <div className="flex flex-1 flex-col">
           <div className="flex flex-col gap-6 py-6 px-4 lg:px-6">
+
+            <PageHeader
+              title="Grupos de Empresas"
+              description="Gerencie os grupos de empresas cadastrados."
+            />
+
             <AdminPermissionGuard permission="admin.grupo_empresa.atualizar">
-              <GrupoEmpresaForm
+              <GrupoEmpresaFormEdicao
                 defaultValues={defaultValues}
                 onSubmit={handleSubmit}
                 isLoading={isPending || isLoading}

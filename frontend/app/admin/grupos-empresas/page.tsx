@@ -2,21 +2,20 @@
 
 import { useState } from "react";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { LaravelPagination } from "@/types/laravel";
 
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
-import { useAdminPermission } from "@/app/admin/providers/admin-permission-provider";
 
 import { Pagination } from "@/components/data-tables/Pagination";
+import { PageHeader } from "@/components/layouts/page-header";
 import { Button } from "@/components/ui/button";
 import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar";
-
 
 import { GrupoEmpresasFilters } from "@/features/admin/grupo-empresa/components/GrupoEmpresasFilters";
 import { GrupoEmpresasTable } from "@/features/admin/grupo-empresa/components/GrupoEmpresasTable";
@@ -26,9 +25,6 @@ import { GrupoEmpresa } from "@/features/admin/grupo-empresa/types/grupoEmpresa.
 import { AdminPermissionGuard } from "../_components/guard/AdminPermissionGuard";
 
 export default function Page() {
-  const router = useRouter();
-  const { can } = useAdminPermission();
-
   const [page, setPage] = useState(1);
   const [nome, setNome] = useState("");
   const [excluido, setExcluido] = useState(false);
@@ -58,26 +54,20 @@ export default function Page() {
 
         <div className="flex flex-1 flex-col">
           <div className="flex flex-col gap-6 py-6 px-4 lg:px-6">
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-semibold tracking-tight">
-                  Grupos de Empresas
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  Gerencie os grupos de empresas cadastrados.
-                </p>
-              </div>
-
-              <AdminPermissionGuard permission="admin.grupo_empresa.cadastrar" disableFallback={true}>
-                <Button 
-                  onClick={() => router.push("/admin/grupos-empresas/cadastrar")} 
-                  className="cursor-pointer"
-                >
-                  Cadastrar
-                </Button>
-              </AdminPermissionGuard>
-            </div>
+            
+            <PageHeader
+              title="Grupos de Empresas"
+              description="Gerencie os grupos de empresas cadastrados."
+              actions={[
+                {
+                  label: "Cadastrar",
+                  href: "/admin/grupos-empresas/cadastrar",
+                  icon: null,
+                  permission: "admin.grupo_empresa.cadastrar",
+                  variant: "default"
+                },
+              ]}
+            />
 
             <AdminPermissionGuard permission="admin.grupo_empresa.listar">
               <GrupoEmpresasFilters

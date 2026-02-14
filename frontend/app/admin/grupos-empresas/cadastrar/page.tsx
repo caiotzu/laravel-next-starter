@@ -14,35 +14,30 @@ import { ApiErrorResponse } from "@/types/errors";
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
 
+import { PageHeader } from "@/components/layouts/page-header";
 import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar";
 
-import { GrupoEmpresaForm } from "@/features/admin/grupo-empresa/components/GrupoEmpresaForm";
-import { GrupoEmpresasFormData } from "@/features/admin/grupo-empresa/schemas/grupoEmpresa.schema";
+import { GrupoEmpresaFormCadastro } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormCadastro";
+import {GrupoEmpresasFormDataCadastro} from "@/features/admin/grupo-empresa/schemas/grupoEmpresa.schema";
 import { cadastrarGrupoEmpresa } from "@/features/admin/grupo-empresa/services/grupoEmpresaService";
 import { CadastrarGrupoEmpresaResponse } from "@/features/admin/grupo-empresa/types/grupoEmpresa.responses";
 
 import { AdminPermissionGuard } from "../../_components/guard/AdminPermissionGuard";
-import { useAdminPermission } from "../../providers/admin-permission-provider";
-
 
 export default function Page() {
   const router = useRouter();
-  const { can } = useAdminPermission();
-  
-
   const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
-  const [formError, setFormError] = useState<UseFormSetError<GrupoEmpresasFormData> | null>(null);
+  const [formError, setFormError] = useState<UseFormSetError<GrupoEmpresasFormDataCadastro> | null>(null);
 
   const { mutateAsync, isPending } = useMutation<
     CadastrarGrupoEmpresaResponse,
     AxiosError<ApiErrorResponse>,
-    GrupoEmpresasFormData
+    GrupoEmpresasFormDataCadastro
   >({
     mutationFn: cadastrarGrupoEmpresa,
-
     onSuccess: () => {
       toast.success("Grupo cadastrado com sucesso!");
       router.push("/admin/grupos-empresas");
@@ -65,7 +60,7 @@ export default function Page() {
         Object.entries(apiErrors).forEach(([field, messages]) => {
           if (!messages || field === "business") return;
 
-          formError(field as keyof GrupoEmpresasFormData, {
+          formError(field as keyof GrupoEmpresasFormDataCadastro, {
             type: "server",
             message: messages[0],
           });
@@ -74,7 +69,7 @@ export default function Page() {
     },
   });
 
-  async function handleSubmit(data: GrupoEmpresasFormData) {
+  async function handleSubmit(data: GrupoEmpresasFormDataCadastro) {
     setBackendErrors(null);
     await mutateAsync(data);
   }
@@ -95,8 +90,13 @@ export default function Page() {
         <div className="flex flex-1 flex-col">
           <div className="flex flex-col gap-6 py-6 px-4 lg:px-6">
 
+            <PageHeader
+              title="Grupos de Empresas"
+              description="Gerencie os grupos de empresas cadastrados."
+            />
+
             <AdminPermissionGuard permission="admin.grupo_empresa.cadastrar">
-              <GrupoEmpresaForm
+              <GrupoEmpresaFormCadastro
                 onSubmit={handleSubmit}
                 isLoading={isPending}
                 backendErrors={backendErrors}

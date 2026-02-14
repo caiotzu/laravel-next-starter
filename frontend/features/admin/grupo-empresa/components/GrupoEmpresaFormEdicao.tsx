@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -10,55 +10,37 @@ import { useForm, UseFormSetError } from "react-hook-form";
 
 import { AppAlert } from "@/components/feedback/AppAlert";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardFooter,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardFooter, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import {
-  grupoEmpresaSchema,
-  GrupoEmpresasFormData,
-} from "../schemas/grupoEmpresa.schema";
+import { grupoEmpresaSchemaEdicao, GrupoEmpresasFormDataEdicao } from "../schemas/grupoEmpresa.schema";
 
-interface GrupoEmpresaFormProps {
-  defaultValues?: GrupoEmpresasFormData;
-  onSubmit: (data: GrupoEmpresasFormData) => Promise<void>;
+interface GrupoEmpresaFormEdicaoProps {
+  defaultValues?: GrupoEmpresasFormDataEdicao;
+  onSubmit: (data: GrupoEmpresasFormDataEdicao) => Promise<void>;
   isLoading?: boolean;
   backendErrors?: string[] | null;
   clearBackendErrors?: () => void;
-  registerSetError?: (fn: UseFormSetError<GrupoEmpresasFormData>) => void;
+  registerSetError?: (fn: UseFormSetError<GrupoEmpresasFormDataEdicao>) => void;
 }
 
-export function GrupoEmpresaForm({
+export function GrupoEmpresaFormEdicao({
   defaultValues,
   onSubmit,
   isLoading = false,
   backendErrors = null,
   clearBackendErrors,
   registerSetError,
-}: GrupoEmpresaFormProps) {
-  const router = useRouter();
+}: GrupoEmpresaFormEdicaoProps) {
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setError,
-    reset,
-  } = useForm<GrupoEmpresasFormData>({
-    resolver: zodResolver(grupoEmpresaSchema),
+  const { register, handleSubmit, formState: { errors }, setError, reset } = useForm<GrupoEmpresasFormDataEdicao>({
+    resolver: zodResolver(grupoEmpresaSchemaEdicao),
     defaultValues,
   });
 
-  // Controla se o form já foi inicializado com os dados da API
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Inicializa o form apenas uma vez com os dados da API
   useEffect(() => {
     if (defaultValues && !isInitialized) {
       reset(defaultValues);
@@ -66,7 +48,6 @@ export function GrupoEmpresaForm({
     }
   }, [defaultValues, isInitialized, reset]);
 
-  // Registra setError para lidar com erros do backend
   useEffect(() => {
     if (registerSetError) {
       registerSetError(setError);
@@ -76,11 +57,7 @@ export function GrupoEmpresaForm({
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>
-          {defaultValues
-            ? "Editar Grupo de Empresas"
-            : "Cadastrar Grupo de Empresas"}
-        </CardTitle>
+        <CardTitle>Editar Grupo de Empresas</CardTitle>
       </CardHeader>
 
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -97,7 +74,7 @@ export function GrupoEmpresaForm({
 
           <div className="grid grid-cols-12 gap-6">
             <div className="col-span-12 md:col-span-4 space-y-2">
-              <Label htmlFor="nome">Nome do Grupo</Label>
+              <Label htmlFor="nome">Nome do Grupo <span className="text-red-600">*</span></Label>
               <Input
                 id="nome"
                 placeholder="Digite o nome do grupo"
@@ -105,27 +82,21 @@ export function GrupoEmpresaForm({
                 className={errors.nome ? "border-red-700 focus-visible:ring-red-700" : ""}
                 {...register("nome")}
               />
-              {errors.nome && (
-                <p className="text-sm text-red-700">{errors.nome.message}</p>
-              )}
+              {errors.nome && <p className="text-sm text-red-700">{errors.nome.message}</p>}
             </div>
           </div>
         </CardContent>
 
         <CardFooter className="flex justify-end gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isLoading}
-            className="cursor-pointer"
-            onClick={() => router.push("/admin/grupos-empresas")}
-          >
-            Cancelar
+          <Button asChild variant="outline">
+            <Link href="/admin/grupos-empresas" className="gap-2">
+              Cancelar
+            </Link>
           </Button>
 
           <Button type="submit" disabled={isLoading} className="cursor-pointer">
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {defaultValues ? "Salvar Alterações" : "Cadastrar"}
+            Salvar Alterações
           </Button>
         </CardFooter>
       </form>

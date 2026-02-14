@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MoreHorizontal, Pencil, Trash, Check } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash, Check, Eye } from "lucide-react";
 import { toast } from "sonner";
 
 import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
@@ -56,11 +56,8 @@ type ModalState = {
 
 export function GrupoEmpresasTable({ data, isLoading }: Props) {
   const queryClient = useQueryClient();
-
-  // Estado único de modal
   const [modal, setModal] = useState<ModalState>({ tipo: null, grupoId: null });
 
-  // Mutations
   const { mutateAsync: deletar } = useMutation({
     mutationFn: excluirGrupoEmpresa,
     onSuccess: () => {
@@ -85,13 +82,12 @@ export function GrupoEmpresasTable({ data, isLoading }: Props) {
 
   if (!data.length) {
     return (
-      <div className="rounded-2xl border bg-background shadow-sm p-8 text-center text-muted-foreground">
+      <Card className="rounded-2xl border shadow-sm p-8 text-center text-muted-foreground">
         Nenhum registro encontrado
-      </div>
+      </Card>
     );
   }
 
-  // Objeto do grupo que está no modal
   const grupoSelecionado = data.find((g) => g.id === modal.grupoId);
 
   return (
@@ -102,10 +98,10 @@ export function GrupoEmpresasTable({ data, isLoading }: Props) {
             <TableHead className="text-primary-foreground tracking-wider font-semibold py-4">
               Nome
             </TableHead>
-            <TableHead className="text-primary-foreground tracking-wider font-semibold py-4">
-              Data Cadastro
+            <TableHead className="text-primary-foreground tracking-wider font-semibold py-4 text-center">
+              Criado em
             </TableHead>
-            <TableHead className="text-primary-foreground tracking-wider font-semibold py-4">
+            <TableHead className="text-primary-foreground tracking-wider font-semibold py-4 text-center">
               Status
             </TableHead>
             <TableHead className="text-primary-foreground tracking-wider font-semibold py-4 text-right">
@@ -122,7 +118,7 @@ export function GrupoEmpresasTable({ data, isLoading }: Props) {
             >
               <TableCell className="font-medium">{grupo.nome}</TableCell>
 
-              <TableCell className="text-sm text-muted-foreground">
+              <TableCell className="text-sm text-muted-foreground text-center">
                 {new Date(grupo.created_at).toLocaleDateString("pt-BR")} •{" "}
                 {new Date(grupo.created_at).toLocaleTimeString("pt-BR", {
                   hour: "2-digit",
@@ -130,7 +126,7 @@ export function GrupoEmpresasTable({ data, isLoading }: Props) {
                 })}
               </TableCell>
 
-              <TableCell>
+              <TableCell className="text-center">
                 {grupo.deleted_at ? (
                   <Badge className="bg-red-100 text-red-700">Excluído</Badge>
                 ) : (
@@ -147,6 +143,19 @@ export function GrupoEmpresasTable({ data, isLoading }: Props) {
                   </DropdownMenuTrigger>
 
                   <DropdownMenuContent align="end">
+                    {/* Visualizar */}
+                    <AdminPermissionGuard permission="admin.grupo_empresa.visualizar" disableFallback={true}>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href={`/admin/grupos-empresas/${grupo.id}/visualizar`}
+                          className="flex items-center cursor-pointer"
+                        >
+                          <Eye className="h-4 w-4"/>
+                          Visualizar
+                        </Link>
+                      </DropdownMenuItem>
+                    </AdminPermissionGuard>
+
                     {/* Editar */}
                     {!grupo.deleted_at && (
                       <AdminPermissionGuard permission="admin.grupo_empresa.atualizar" disableFallback={true}>
