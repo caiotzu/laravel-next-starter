@@ -20,6 +20,12 @@ class GrupoEmpresa extends Model
         'nome',
     ];
 
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime'
+    ];
+
     protected static function booted()
     {
         static::creating(function ($model) {

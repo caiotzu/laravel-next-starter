@@ -7,8 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-
-
 class Permissao extends Model
 {
     use SoftDeletes;
@@ -21,6 +19,12 @@ class Permissao extends Model
         'id',
         'chave',
         'descricao'
+    ];
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime'
     ];
 
     protected static function booted()

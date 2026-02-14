@@ -5,8 +5,10 @@ namespace App\Models;
 use Illuminate\Support\Str;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+
 
 
 class Usuario extends Authenticatable implements JWTSubject
@@ -27,12 +29,21 @@ class Usuario extends Authenticatable implements JWTSubject
         'remember_token',
         'avatar',
         'google2fa_enable',
-        'google2fa_secret'
+        'google2fa_secret',
+        'ultimo_login_em',
+        'ultimo_ip'
     ];
 
     protected $hidden = [
         'senha',
         'remember_token',
+    ];
+
+    protected $casts = [
+        'ultimo_login_em' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime'
     ];
 
     protected static function booted()
@@ -47,6 +58,11 @@ class Usuario extends Authenticatable implements JWTSubject
     public function grupo(): BelongsTo
     {
         return $this->belongsTo(Grupo::class, 'grupo_id', 'id');
+    }
+
+    public function usuarioSessoes(): HasMany
+    {
+        return $this->hasMany(UsuarioSessao::class, 'usuario_id', 'id');
     }
 
     private function carregarGrupoComPermissoes(): ?Grupo
@@ -83,7 +99,7 @@ class Usuario extends Authenticatable implements JWTSubject
         );
     }
 
-   public function temPermissao(string $permissao): bool
+    public function temPermissao(string $permissao): bool
     {
         return isset($this->permissoesCache()[$permissao]);
     }

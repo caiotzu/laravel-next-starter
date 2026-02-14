@@ -38,3 +38,82 @@ Para executar o projeto em ambiente de desenvolvimento, é necessário possuir o
 - **NPM ou Yarn** (gerenciador de pacotes)
 - **Docker** (execução do ambiente em containers)
 - **Composer** (gerenciamento de dependências PHP)
+
+---
+
+## :computer: Execução do Projeto
+
+### Backend
+
+1. Acesse a pasta do backend:
+```
+cd backend
+```
+
+2. Instale as dependências:
+```
+composer install
+```
+
+3. Inicialize o Docker usando o Sail:
+```
+./vendor/bin/sail up -d
+```
+
+4. Entre no container do backend:
+```
+docker exec -it backend-laravel.test-1 /bin/bash
+```
+
+5. Configure o arquivo `.env` conforme necessário (copie de `.env.example`):
+```
+cp .env.example .env
+```
+
+6. Gere a chave do Laravel:
+```
+php artisan key:generate
+```
+
+7. Gere a chave do JWT:
+```
+php artisan jwt:secret
+```
+
+8. Execute as migrations e seeders:
+```
+php artisan migrate --seed
+```
+
+8. Certifique-se de **configurar e executar os JOBs** para processar tarefas assíncronas e filas, caso necessário.
+
+---
+
+### Frontend
+
+1. Acesse a pasta do frontend:
+```
+cd frontend
+```
+
+2. Instale as dependências:
+```
+npm install
+# ou
+yarn install
+```
+
+3. Configure o arquivo `.env.local` conforme necessário (copie de `.env.local.example`):
+```
+cp .env.local.example .env.local
+```
+
+4. Execute o servidor de desenvolvimento:
+```
+npm run dev
+# ou
+yarn dev
+```
+
+5. O frontend estará disponível normalmente em **http://localhost:3000**
+

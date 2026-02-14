@@ -7,11 +7,21 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+    // Pega o user-agent original do navegador
+    const userAgent = req.headers.get("user-agent") || "";
+    const forwardedFor = req.headers.get("x-forwarded-for") || "";
+    const realIp = req.headers.get("x-real-ip") || "";
+
     const response = await axios.post(
       `${process.env.BACKEND_URL}/admin/login`,
       body,
       {
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "User-Agent": userAgent,
+          "X-Forwarded-For": forwardedFor,
+          "X-Real-IP": realIp,
+        },
         timeout: 10000,
         validateStatus: () => true, // nunca lança erro por status
       }

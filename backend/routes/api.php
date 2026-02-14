@@ -19,13 +19,17 @@ Route::middleware('jwt')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/refresh', [AuthController::class, 'refresh']);
+        Route::get('/sessoes', [AuthController::class, 'sessoes']);
+        Route::delete('/sessoes/{id}/encerrar', [AuthController::class, 'encerrarSessao']);
 
-        Route::patch('/grupos-empresas/{id}/ativar', [GrupoEmpresaController::class, 'ativar']);
-        Route::patch('/grupos-empresas/{id}', [GrupoEmpresaController::class, 'atualizar']);
-        Route::delete('/grupos-empresas/{id}', [GrupoEmpresaController::class, 'excluir']);
-        Route::get('/grupos-empresas/{id}', [GrupoEmpresaController::class, 'visualizar']);
-        Route::get('/grupos-empresas', [GrupoEmpresaController::class, 'listar']);
-        Route::post('/grupos-empresas', [GrupoEmpresaController::class, 'cadastrar']);
+        Route::prefix('grupos-empresas')->group(function () {
+            Route::patch('/{id}/ativar', [GrupoEmpresaController::class, 'ativar']);
+            Route::patch('/{id}', [GrupoEmpresaController::class, 'atualizar']);
+            Route::delete('/{id}', [GrupoEmpresaController::class, 'excluir']);
+            Route::get('/{id}', [GrupoEmpresaController::class, 'visualizar']);
+            Route::get('/', [GrupoEmpresaController::class, 'listar']);
+            Route::post('/', [GrupoEmpresaController::class, 'cadastrar']);
+        });
     });
 
     Route::get('/me', [PrivateAuthController::class, 'me']);

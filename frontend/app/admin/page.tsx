@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import axios from "axios"
 import { Monitor, CircleAlert } from "lucide-react"
 
+import { AppAlert } from "@/components/feedback/AppAlert"
 import { LoginForm } from "@/components/forms/login-form"
 import {
   Alert,
@@ -65,17 +66,13 @@ export default function LoginPage() {
           <div className="w-full max-w-xs">
 
             {businessErrors.length > 0 && (
-              <Alert variant="destructive" className="relative mb-8">
-                <CircleAlert className="h-5 w-5" />
-                <AlertTitle>Erro</AlertTitle>
-                <AlertDescription>
-                  <ul className="list-inside list-disc text-sm">
-                    {businessErrors.map((msg, i) => (
-                      <li key={i}>{msg}</li>
-                    ))}
-                  </ul>
-                </AlertDescription>
-              </Alert>
+              <AppAlert
+                variant="error"
+                subtitle="Ocorreu um erro durante a autenticação"
+                messages={businessErrors}
+                onClose={() => setFieldErrors({})}
+                className="mb-6"
+              />
             )}
 
             <LoginForm

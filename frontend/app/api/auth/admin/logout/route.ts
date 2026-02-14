@@ -3,10 +3,15 @@ import { NextResponse } from "next/server";
 
 import axios from "axios";
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("admin_access_token")?.value;
+
+    // Pega o user-agent original do navegador
+    const userAgent = req.headers.get("user-agent") || "";
+    const forwardedFor = req.headers.get("x-forwarded-for") || "";
+    const realIp = req.headers.get("x-real-ip") || "";
 
     const response = await axios.post(
       `${process.env.BACKEND_URL}/admin/logout`,
@@ -14,6 +19,9 @@ export async function POST() {
       {
         headers: {
           "Content-Type": "application/json",
+          "User-Agent": userAgent,
+          "X-Forwarded-For": forwardedFor,
+          "X-Real-IP": realIp,
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         timeout: 10000,

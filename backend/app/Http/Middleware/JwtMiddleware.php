@@ -2,40 +2,67 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Http\Request;
-
-use Symfony\Component\HttpFoundation\Response;
-
-use Tymon\JWTAuth\Facades\JWTAuth;
-
 use Closure;
 use Exception;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Tymon\JWTAuth\Facades\JWTAuth;
+
+use App\Services\UsuarioSessaoService;
+use App\Exceptions\BusinessException;
 
 class JwtMiddleware
 {
-    // public function handle(Request $request, Closure $next)
-    // {
-    //     try {
-    //         dd('calma');
-    //         JWTAuth::parseToken()->authenticate();
-    //     } catch (Exception $e) {
-    //         return response()->json(['messages' => ['Não autorizado']], 401);
-    //     }
+    public function __construct(
+        protected UsuarioSessaoService $usuarioSessaoService
+    ) {}
 
-    //     return $next($request);
-    // }
-
-
-    public function handle(Request $request, Closure $next): Response {
+    public function handle(Request $request, Closure $next): Response
+    {
         try {
+
             $user = JWTAuth::parseToken()->authenticate();
-        } catch(Exception $e) {
-            if($e instanceof \Tymon\JWTAuth\Exceptions\TokenInvalidException)
-                return response()->json(['error' => true, 'messages' => ['O token é inválido']], 401);
-            else if($e instanceof \Tymon\JWTAuth\Exceptions\TokenExpiredException)
-                return response()->json(['error' => true, 'messages' => ['O token expirou']], 401);
-            else
-                return response()->json(['error' => true, 'messages' => ['O token de autorização não foi encontrado']], 401);
+            $payload = JWTAuth::getPayload();
+
+            $sessionId = $payload->get('session_id');
+
+            if (!$sessionId) {
+                throw new BusinessException('Sessão não encontrada no token.');
+            }
+
+            $this->usuarioSessaoService->validarSessaoAtiva($sessionId);
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+
+            return response()->json([
+                'errors' => [
+                    'business' => 'O token é inválido'
+                ]
+            ], 401);
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+
+            return response()->json([
+                'errors' => [
+                    'business' => 'O token expirou'
+                ]
+            ], 401);
+
+        } catch (BusinessException $e) {
+
+            return response()->json([
+                'errors' => [
+                    'business' => $e->getMessage()
+                ]
+            ], 401);
+
+        } catch (Exception $e) {
+
+            return response()->json([
+                'errors' => [
+                    'business' => 'O token de autorização não foi encontrado'
+                ]
+            ], 401);
         }
 
         return $next($request);

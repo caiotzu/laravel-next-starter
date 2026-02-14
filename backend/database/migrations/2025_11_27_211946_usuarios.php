@@ -25,6 +25,8 @@ return new class extends Migration
             $table->string('avatar')->nullable(true);
             $table->boolean('google2fa_enable')->default(false);
             $table->string('google2fa_secret')->nullable(true);
+            $table->timestamp('ultimo_login_em', 0)->nullable();
+            $table->string('ultimo_ip', 45)->nullable();
             $table->timestamps($precision = 0);
             $table->softDeletes();
         });
