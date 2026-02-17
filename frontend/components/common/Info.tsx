@@ -5,7 +5,7 @@ interface InfoProps {
 
 export function Info({ label, value }: InfoProps) {
   return (
-    <div>
+    <div className="text-sm">
       <p className="font-medium text-black">{label}</p>
       <p className="text-muted-foreground">{value}</p>
     </div>

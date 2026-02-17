@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 
+use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 use Jenssegers\Agent\Agent;
 
@@ -196,6 +196,11 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'avatar' => $user->avatar ? url(Storage::url($user->avatar)) : null,
                 'grupo' => $user->grupo->descricao,
+                'ativo' => $user->ativo,
+                'google2fa_enable' => $user->google2fa_enable,
+                'google2fa_confirmado_em' => $user->google2fa_confirmado_em,
+                'ultimo_login_em' => $user->ultimo_login_em,
+                'ultimo_ip' => $user->ultimo_ip,
                 'permissoes' => $permissoes
             ]);
 

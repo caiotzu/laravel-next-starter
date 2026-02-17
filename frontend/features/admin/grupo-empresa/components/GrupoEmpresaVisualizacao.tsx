@@ -11,18 +11,12 @@ import {
   User,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Info } from "@/components/common/Info";
+
+import { formatDate } from "@/lib/utils";
 
 import { VisualizarGrupoEmpresaResponse } from "../types/grupoEmpresa.responses";
 
-import { Info } from "./Info";
 import { UsuarioCard } from "./UsuarioCard";
 
 interface GrupoEmpresaVisualizacaoProps {
@@ -41,17 +35,6 @@ export function GrupoEmpresaVisualizacao({
       else newSet.add(groupId);
       return newSet;
     });
-  }
-
-  function formatDate(date?: string | null) {
-    if (!date) return "---";
-    const d = new Date(date);
-    return isNaN(d.getTime())
-      ? "---"
-      : `${d.toLocaleDateString("pt-BR")} • ${d.toLocaleTimeString(
-          "pt-BR",
-          { hour: "2-digit", minute: "2-digit" }
-        )}`;
   }
 
   return (

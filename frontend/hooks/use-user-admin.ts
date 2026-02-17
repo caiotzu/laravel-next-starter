@@ -3,17 +3,10 @@
 import { useQuery } from "@tanstack/react-query"
 import axios from "axios"
 
-type UserAdmin = {
-  id: number
-  nome: string
-  email: string
-  avatar?: string
-  grupo: string
-  permissoes: string[]
-}
+import { Usuario } from "@/types/usuario.model";
 
 export function useUserAdmin() {
-  return useQuery<UserAdmin>({
+  return useQuery<Usuario>({
     queryKey: ["userAdmin"],
     queryFn: async () => {
       const res = await axios.post('/api/proxy/admin', {

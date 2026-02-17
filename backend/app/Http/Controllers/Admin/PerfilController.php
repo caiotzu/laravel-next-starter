@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 use App\Services\UsuarioService;
 use App\Services\UsuarioSessaoService;
@@ -51,6 +52,9 @@ class PerfilController extends Controller
                 $request->avatar
             )
         );
+
+        // Ajusta a URL de retorno
+        $usuarioAtualizado->avatar = $usuarioAtualizado->avatar ? url(Storage::url($usuarioAtualizado->avatar)) : null;
 
         return response()->json([
             'message' => 'Avatar atualizado com sucesso.',
