@@ -1,19 +1,21 @@
 <?php
 
-namespace App\DTO\GrupoEmpresa;
+namespace App\DTO\Usuario;
 
-final class GrupoEmpresaAtualizacaoDTO
+final class UsuarioAtualizacaoDTO
 {
     private function __construct(
         public readonly string $id,
-        public readonly string $nome
+        public readonly ?string $nome,
+        public readonly ?string $email
     ) {}
 
     public static function criarParaAtualizacao(string $id, array $dados): self
     {
         return new self(
             id: $id,
-            nome: $dados['nome']
+            nome: $dados['nome'] ?? null,
+            email: $dados['email'] ?? null
         );
     }
 
@@ -21,11 +23,12 @@ final class GrupoEmpresaAtualizacaoDTO
     {
         return array_filter([
             'nome' => $this->nome,
+            'email' => $this->email
         ], fn ($valor) => ! is_null($valor));
     }
 
     public function temAlteracoes(): bool
     {
-        return ! empty($this->paraPersistencia());
+        return count($this->paraPersistencia()) > 0;
     }
 }

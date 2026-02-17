@@ -15,4 +15,8 @@ enum ErrorCode: int
     // Usuário Sessão (model) -> 02
     case USUARIO_SESSAO_UNAUTHORIZED = 40102;
     case USUARIO_SESSAO_NOT_FOUND = 40402;
+
+    // Usuário (model) -> 03
+    case USUARIO_UNAUTHORIZED = 40103;
+    case USUARIO_NOT_FOUND = 40403;
 }

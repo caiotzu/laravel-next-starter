@@ -30,6 +30,7 @@ class Usuario extends Authenticatable implements JWTSubject
         'avatar',
         'google2fa_enable',
         'google2fa_secret',
+        'google2fa_confirmado_em',
         'ultimo_login_em',
         'ultimo_ip'
     ];
@@ -40,6 +41,8 @@ class Usuario extends Authenticatable implements JWTSubject
     ];
 
     protected $casts = [
+        'google2fa_secret' => 'encrypted',
+        'google2fa_confirmado_em' => 'datetime',
         'ultimo_login_em' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

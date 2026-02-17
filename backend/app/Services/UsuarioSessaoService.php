@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 
 use App\Models\UsuarioSessao;
 
+use App\Models\Usuario;
+
 use App\DTO\UsuarioSessao\UsuarioSessaoCadastroDTO;
 use App\DTO\UsuarioSessao\UsuarioSessaoAtualizacaoDTO;
 
@@ -79,5 +81,20 @@ class UsuarioSessaoService {
         $sessao->update([
             'ultimo_acesso_em' => now(),
         ]);
+    }
+
+    public function encerrarSessao(Usuario $user, string $id): void
+    {
+        $sessao = $user->usuarioSessoes()->where('id', $id)->firstOrFail();
+
+        $sessao->update([
+            'ativo' => false,
+            'logout_em' => now(),
+        ]);
+    }
+
+    public function listarSessoesAtivas(Usuario $usuario)
+    {
+        return $usuario->usuarioSessoes()->where('ativo', true)->get();
     }
 }

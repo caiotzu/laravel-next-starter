@@ -2,25 +2,31 @@
 
 namespace App\Http\Controllers\Admin;
 
-
 use App\Http\Controllers\Controller;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 use Jenssegers\Agent\Agent;
 
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
+use App\Models\Usuario;
+
 use App\Services\UsuarioService;
 use App\Services\UsuarioSessaoService;
+use App\Services\AutenticacaoDoisFatoresService;
 
 use App\DTO\UsuarioSessao\UsuarioSessaoCadastroDTO;
 use App\DTO\UsuarioSessao\UsuarioSessaoAtualizacaoDTO;
 
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\Verificar2faRequest;
 
 use App\Enums\EntidadeTipo;
 
@@ -30,7 +36,8 @@ class AuthController extends Controller
 {
     public function __construct(
         protected UsuarioService $usuarioService,
-        protected UsuarioSessaoService $usuarioSessaoService
+        protected UsuarioSessaoService $usuarioSessaoService,
+        protected AutenticacaoDoisFatoresService $autenticacaoDoisFatoresService
     ) {}
 
     public function login(LoginRequest $request): JsonResponse
@@ -42,35 +49,90 @@ class AuthController extends Controller
                 throw new BusinessException('Credenciais informadas são inválidas');
             }
 
-            $agent = new Agent();
-            $agent->setUserAgent($request->userAgent());
+            if ($usuario->google2fa_enable) {
+                $tempToken = Str::uuid()->toString();
 
-            $sessao = $this->usuarioSessaoService->cadastrar(
-                UsuarioSessaoCadastroDTO::criarParaCadastro(
+                Cache::put(
+                    "2fa_login:{$tempToken}",
                     $usuario->id,
-                    $request->ip(),
-                    $request->userAgent(),
-                    $agent->browser(),
-                    $agent->platform(),
-                    $agent->device()
-                )
-            );
+                    now()->addMinutes(5)
+                );
 
-            $customClaims = ['session_id' => $sessao->id];
-            $token = JWTAuth::claims($customClaims)->fromUser($usuario);
+                return response()->json(['temp_token' => $tempToken]);
+            }
 
-            $this->usuarioService->registrarLogin($usuario, $request->ip());
-
-            return response()->json([
-                'token' => $token,
-                'expires_in' => JWTAuth::factory()->getTTL() * 60,
-            ]);
+            return $this->finalizarLogin($usuario, $request);
 
         } catch (BusinessException $e) {
             return response()->json([
                 'errors' => ['business' => [$e->getMessage()]]
             ], 401);
         }
+    }
+
+    public function verificar2fa(Verificar2faRequest $request): JsonResponse
+    {
+        try {
+
+            $userId = Cache::get("2fa_login:{$request->temp_token}");
+            if (!$userId)
+                throw new BusinessException('Token inválido ou expirado');
+
+
+            $usuario = $this->usuarioService->obterUsuarioAtivoPorId($userId, EntidadeTipo::ADMIN);
+
+            if (!$usuario)
+                throw new BusinessException('Credenciais inválidas');
+
+
+            if (!$usuario->google2fa_enable)
+                throw new BusinessException('2FA não está ativo.');
+
+            $valido = $this->autenticacaoDoisFatoresService->verificar(
+                $usuario->google2fa_secret,
+                $request->codigo
+            );
+
+            if (!$valido)
+                throw new BusinessException('Código inválido.');
+
+            Cache::forget("2fa_login:{$request->temp_token}");
+
+            return $this->finalizarLogin($usuario, $request);
+
+        } catch (BusinessException $e) {
+            return response()->json([
+                'errors' => ['business' => [$e->getMessage()]]
+            ], 422);
+        }
+    }
+
+    private function finalizarLogin(Usuario $usuario, $request): JsonResponse
+    {
+        $agent = new Agent();
+        $agent->setUserAgent($request->userAgent());
+
+        $sessao = $this->usuarioSessaoService->cadastrar(
+            UsuarioSessaoCadastroDTO::criarParaCadastro(
+                $usuario->id,
+                $request->ip(),
+                $request->userAgent(),
+                $agent->browser(),
+                $agent->platform(),
+                $agent->device()
+            )
+        );
+
+        $customClaims = ['session_id' => $sessao->id];
+
+        $token = JWTAuth::claims($customClaims)->fromUser($usuario);
+
+        $this->usuarioService->registrarLogin($usuario, $request->ip());
+
+        return response()->json([
+            'token' => $token,
+            'expires_in' => JWTAuth::factory()->getTTL() * 60,
+        ]);
     }
 
     public function logout(): JsonResponse
@@ -132,7 +194,7 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'nome' => $user->nome,
                 'email' => $user->email,
-                'avatar' => $user->avatar,
+                'avatar' => $user->avatar ? url(Storage::url($user->avatar)) : null,
                 'grupo' => $user->grupo->descricao,
                 'permissoes' => $permissoes
             ]);
@@ -150,27 +212,5 @@ class AuthController extends Controller
             'token' => JWTAuth::parseToken()->refresh(),
             'expires_in' => JWTAuth::factory()->getTTL() * 60
         ]);
-    }
-
-    public function sessoes(): JsonResponse
-    {
-        $user = Auth::user();
-        $sessoes = $this->usuarioService->listarSessoesAtivas($user);
-
-        return response()->json($sessoes);
-    }
-
-    public function encerrarSessao(string $id): JsonResponse
-    {
-        $user = Auth::user();
-
-        try {
-            $this->usuarioService->encerrarSessao($user, $id);
-            return response()->json(['message' => 'Sessão encerrada']);
-        } catch (\Exception $e) {
-            return response()->json([
-                'errors' => ['business' => ['Não foi possível encerrar a sessão ('.$id.')']]
-            ], 500);
-        }
     }
 }

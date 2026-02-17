@@ -4,7 +4,9 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Admin\ {
     AuthController,
-    GrupoEmpresaController
+    PerfilController,
+    GrupoEmpresaController,
+    AutenticacaoDoisFatoresController
 };
 
 use App\Http\Controllers\Private\ {
@@ -12,6 +14,8 @@ use App\Http\Controllers\Private\ {
 };
 
 Route::post('/admin/login', [AuthController::class, 'login']);
+Route::post('/admin/2fa/verificar', [AuthController::class, 'verificar2fa']);
+
 Route::post('/login', [PrivateAuthController::class, 'login']);
 
 Route::middleware('jwt')->group(function () {
@@ -19,8 +23,19 @@ Route::middleware('jwt')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/refresh', [AuthController::class, 'refresh']);
-        Route::get('/sessoes', [AuthController::class, 'sessoes']);
-        Route::delete('/sessoes/{id}/encerrar', [AuthController::class, 'encerrarSessao']);
+
+        Route::prefix('2fa')->group(function () {
+            Route::post('/habilitar', [AutenticacaoDoisFatoresController::class, 'habilitar']);
+            Route::post('/confirmar', [AutenticacaoDoisFatoresController::class, 'confirmar']);
+            Route::delete('/desabilitar', [AutenticacaoDoisFatoresController::class, 'desabilitar']);
+        });
+
+        Route::prefix('perfil')->group(function () {
+            Route::delete('/sessoes/{id}/encerrar', [PerfilController::class, 'encerrarSessao']);
+            Route::patch('/avatar', [PerfilController::class, 'atualizarAvatarBase64']);
+            Route::get('/sessoes', [PerfilController::class, 'sessoes']);
+            Route::patch('/atualizar', [PerfilController::class, 'atualizar']);
+        });
 
         Route::prefix('grupos-empresas')->group(function () {
             Route::patch('/{id}/ativar', [GrupoEmpresaController::class, 'ativar']);
