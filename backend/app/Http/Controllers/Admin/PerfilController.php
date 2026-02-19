@@ -8,19 +8,21 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
-use App\Services\UsuarioService;
+use App\Services\PerfilService;
 use App\Services\UsuarioSessaoService;
 
-use App\DTO\Usuario\UsuarioAtualizacaoDTO;
-use App\DTO\Usuario\UsuarioAvatarBase64AtualizacaoDTO;
+use App\DTO\Perfil\PerfilAtualizacaoDTO;
+use App\DTO\Perfil\PerfilAtualizacaoSenhaDTO;
+use App\DTO\Perfil\PerfilAvatarBase64AtualizacaoDTO;
 
-use App\Http\Requests\Admin\usuario\AtualizarRequest;
-use App\Http\Requests\Admin\Usuario\AtualizarAvatarBase64Request;
+use App\Http\Requests\Admin\Perfil\AtualizarRequest;
+use App\Http\Requests\Admin\Perfil\AtualizarAvatarBase64Request;
+use App\Http\Requests\Admin\Perfil\AtualizarSenhaRequest;
 
 class PerfilController extends Controller
 {
     public function __construct(
-        protected UsuarioService $usuarioService,
+        protected PerfilService $perfilService,
         protected UsuarioSessaoService $usuarioSessaoService
     ) {}
 
@@ -29,9 +31,27 @@ class PerfilController extends Controller
         /** @var \App\Models\Usuario $usuario */
         $usuario = Auth::user();
 
-        $usuarioAtualizado = $this->usuarioService->atualizar(
-            UsuarioAtualizacaoDTO::criarParaAtualizacao(
-                $usuario->id,
+        $usuarioAtualizado = $this->perfilService->atualizar(
+            PerfilAtualizacaoDTO::criarParaAtualizacao(
+                $usuario,
+                $request->validated()
+            )
+        );
+
+        return response()->json([
+            'message' => 'Dados do usuário autenticado atualizado com sucesso.',
+            'data' => $usuarioAtualizado,
+        ]);
+    }
+
+    public function atualizarSenha(AtualizarSenhaRequest $request)
+    {
+        /** @var \App\Models\Usuario $usuario */
+        $usuario = Auth::user();
+
+        $usuarioAtualizado = $this->perfilService->atualizarSenha(
+            PerfilAtualizacaoSenhaDTO::criarParaAtualizacaoSenha(
+                $usuario,
                 $request->validated()
             )
         );
@@ -44,11 +64,12 @@ class PerfilController extends Controller
 
     public function atualizarAvatarBase64(AtualizarAvatarBase64Request $request)
     {
+        /** @var \App\Models\Usuario $usuario */
         $usuario = Auth::user();
 
-        $usuarioAtualizado = $this->usuarioService->atualizarAvatarBase64(
-            UsuarioAvatarBase64AtualizacaoDTO::criarParaAtualizacao(
-                $usuario->id,
+        $usuarioAtualizado = $this->perfilService->atualizarAvatarBase64(
+            PerfilAvatarBase64AtualizacaoDTO::criarParaAtualizacao(
+                $usuario,
                 $request->avatar
             )
         );
@@ -64,7 +85,9 @@ class PerfilController extends Controller
 
     public function sessoes(): JsonResponse
     {
+        /** @var \App\Models\Usuario $usuario */
         $user = Auth::user();
+
         $sessoes = $this->usuarioSessaoService->listarSessoesAtivas($user);
 
         return response()->json($sessoes);
@@ -72,6 +95,7 @@ class PerfilController extends Controller
 
     public function encerrarSessao(string $id): JsonResponse
     {
+        /** @var \App\Models\Usuario $usuario */
         $user = Auth::user();
 
         try {

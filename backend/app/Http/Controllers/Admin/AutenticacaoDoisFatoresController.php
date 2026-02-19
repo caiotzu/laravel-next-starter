@@ -8,9 +8,11 @@ use Illuminate\Support\Facades\Auth;
 
 use App\Services\AutenticacaoDoisFatoresService;
 
+use App\Http\Requests\Admin\AutenticacaoDoisFatores\HabilitarRequest;
 use App\Http\Requests\Admin\AutenticacaoDoisFatores\ConfirmarRequest;
 use App\Http\Requests\Admin\AutenticacaoDoisFatores\DesabilitarRequest;
 
+use App\DTO\AutenticacaoDoisFatores\AutenticacaoDoisFatoresHabilitacaoDTO;
 use App\DTO\AutenticacaoDoisFatores\AutenticacaoDoisFatoresConfirmacaoDTO;
 use App\DTO\AutenticacaoDoisFatores\AutenticacaoDoisFatoresDesabilitacaoDTO;
 
@@ -20,12 +22,18 @@ class AutenticacaoDoisFatoresController extends Controller
         protected AutenticacaoDoisFatoresService $autenticacaoDoisFatoresService
     ) {}
 
-    public function habilitar(): JsonResponse
+    public function habilitar(HabilitarRequest $request): JsonResponse
     {
         /** @var \App\Models\Usuario $user */
         $user = Auth::user();
 
-        $dados = $this->autenticacaoDoisFatoresService->habilitar($user);
+
+        $dto = new AutenticacaoDoisFatoresHabilitacaoDTO(
+            usuario: $user,
+            senha: $request->senha
+        );
+
+        $dados = $this->autenticacaoDoisFatoresService->habilitar($dto);
 
         return response()->json($dados);
     }

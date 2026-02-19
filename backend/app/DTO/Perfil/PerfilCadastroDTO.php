@@ -1,8 +1,8 @@
 <?php
 
-namespace App\DTO\Usuario;
+namespace App\DTO\Perfil;
 
-final class UsuarioCadastroDTO
+final class PerfilCadastroDTO
 {
     public function __construct(
         public readonly string $nome,

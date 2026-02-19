@@ -6,8 +6,7 @@ use Illuminate\Support\Facades\Hash;
 
 use PragmaRX\Google2FA\Google2FA;
 
-use App\Models\Usuario;
-
+use App\DTO\AutenticacaoDoisFatores\AutenticacaoDoisFatoresHabilitacaoDTO;
 use App\DTO\AutenticacaoDoisFatores\AutenticacaoDoisFatoresConfirmacaoDTO;
 use App\DTO\AutenticacaoDoisFatores\AutenticacaoDoisFatoresDesabilitacaoDTO;
 
@@ -20,8 +19,14 @@ class AutenticacaoDoisFatoresService
         protected Google2FA $google2fa,
     ) {}
 
-    public function habilitar(Usuario $usuario): array
+    public function habilitar(AutenticacaoDoisFatoresHabilitacaoDTO $dto): array
     {
+        $usuario = $dto->usuario;
+
+        if (!Hash::check($dto->senha, $usuario->senha)) {
+            throw new BusinessException('Senha incorreta.');
+        }
+
         if ($usuario->google2fa_secret && $usuario->google2fa_enable) {
             throw new BusinessException('2FA já está habilitado.');
         }

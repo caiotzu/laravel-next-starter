@@ -33,8 +33,9 @@ Route::middleware('jwt')->group(function () {
         Route::prefix('perfil')->group(function () {
             Route::delete('/sessoes/{id}/encerrar', [PerfilController::class, 'encerrarSessao']);
             Route::patch('/avatar', [PerfilController::class, 'atualizarAvatarBase64']);
+            Route::patch('/senha', [PerfilController::class, 'atualizarSenha']);
             Route::get('/sessoes', [PerfilController::class, 'sessoes']);
-            Route::patch('/atualizar', [PerfilController::class, 'atualizar']);
+            Route::patch('/', [PerfilController::class, 'atualizar']);
         });
 
         Route::prefix('grupos-empresas')->group(function () {

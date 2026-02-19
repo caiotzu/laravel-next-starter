@@ -1,19 +1,21 @@
 <?php
 
-namespace App\DTO\Usuario;
+namespace App\DTO\Perfil;
 
-final class UsuarioAtualizacaoDTO
+use App\Models\Usuario;
+
+final class PerfilAtualizacaoDTO
 {
     private function __construct(
-        public readonly string $id,
+        public readonly Usuario $usuario,
         public readonly ?string $nome,
         public readonly ?string $email
     ) {}
 
-    public static function criarParaAtualizacao(string $id, array $dados): self
+    public static function criarParaAtualizacao(Usuario $usuario, array $dados): self
     {
         return new self(
-            id: $id,
+            usuario: $usuario,
             nome: $dados['nome'] ?? null,
             email: $dados['email'] ?? null
         );
