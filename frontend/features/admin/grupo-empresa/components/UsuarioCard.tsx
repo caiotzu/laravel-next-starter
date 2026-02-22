@@ -1,7 +1,6 @@
-import Image from "next/image";
-
 import { MoreHorizontal, User } from "lucide-react";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,7 +19,7 @@ interface UsuarioCardProps {
 export function UsuarioCard({ usuario, formatDate }: UsuarioCardProps) {
   return (
     <div
-      className={`relative rounded-xl shadow-sm border-l-4 ${
+      className={`relative rounded-xl shadow-sm border-l-4 bg-card ${
         usuario.deleted_at || !usuario.ativo
           ? "border-red-500"
           : "border-emerald-500"
@@ -46,23 +45,20 @@ export function UsuarioCard({ usuario, formatDate }: UsuarioCardProps) {
       </div>
 
       <div className="flex justify-center mb-2">
-        <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-          {usuario.avatar ? (
-            <Image
-              src={usuario.avatar}
-              alt={usuario.nome}
-              width={48}
-              height={48}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <User className="h-6 w-6 text-gray-400" />
-          )}
+        <div className="h-18 w-18 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+          <Avatar className="h-18 w-18 transition-all duration-300 group-hover:scale-105">
+            <AvatarImage src={usuario.avatar ?? undefined} />
+            <AvatarFallback>
+                <User className="h-6 w-6 text-muted-foreground" />
+            </AvatarFallback>
+          </Avatar>
         </div>
       </div>
 
       <div className="text-center mb-2">
-        <p className="font-medium text-sm">{usuario.nome}</p>
+        <p className="font-medium text-sm text-foreground">
+          {usuario.nome}
+        </p>
         <p className="text-xs text-muted-foreground truncate">
           {usuario.email}
         </p>
@@ -70,22 +66,21 @@ export function UsuarioCard({ usuario, formatDate }: UsuarioCardProps) {
 
       <div className="text-xs space-y-1">
         <p>
-          <span className="font-medium text-black">Criado:</span>{" "}
+          <span className="font-medium text-foreground">Criado:</span>{" "}
           <span className="text-muted-foreground">
             {formatDate(usuario.created_at)}
           </span>
         </p>
 
         <p>
-          <span className="font-medium text-black">Ultimo Acesso:</span>{" "}
+          <span className="font-medium text-foreground">Último Acesso:</span>{" "}
           <span className="text-muted-foreground">
-            {/* {formatDate(usuario.created_at)} */}
             ---
           </span>
         </p>
 
         <p>
-          <span className="font-medium text-black">2FA:</span>{" "}
+          <span className="font-medium text-foreground">2FA:</span>{" "}
           <span className="text-muted-foreground">
             {usuario.google2fa_enable
               ? "Ativado"

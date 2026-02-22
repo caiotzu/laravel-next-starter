@@ -58,7 +58,10 @@ class AuthController extends Controller
                     now()->addMinutes(5)
                 );
 
-                return response()->json(['temp_token' => $tempToken]);
+                return response()->json([
+                    '2fa_enable' => true,
+                    'temp_token' => $tempToken
+                ]);
             }
 
             return $this->finalizarLogin($usuario, $request);
@@ -130,6 +133,7 @@ class AuthController extends Controller
         $this->usuarioService->registrarLogin($usuario, $request->ip());
 
         return response()->json([
+            '2fa_enable' => $usuario->google2fa_enable,
             'token' => $token,
             'expires_in' => JWTAuth::factory()->getTTL() * 60,
         ]);
@@ -194,7 +198,7 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'nome' => $user->nome,
                 'email' => $user->email,
-                'avatar' => $user->avatar ? url(Storage::url($user->avatar)) : null,
+                'avatar' => $user->avatar,
                 'grupo' => $user->grupo->descricao,
                 'ativo' => $user->ativo,
                 'google2fa_enable' => $user->google2fa_enable,

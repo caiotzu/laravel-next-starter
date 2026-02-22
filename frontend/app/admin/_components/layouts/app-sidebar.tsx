@@ -70,7 +70,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = {
     name: userAdmin?.nome || 'shadcn',
     email: userAdmin?.email || 'm@example.com',
-    avatar: ''//"/avatars/shadcn.jpg",
+    avatar: userAdmin?.avatar || '',
   };
 
   return (

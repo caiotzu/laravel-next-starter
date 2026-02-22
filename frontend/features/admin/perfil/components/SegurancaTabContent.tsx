@@ -4,7 +4,17 @@ import { useEffect, useMemo, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
-import { ShieldCheck, ShieldOff, Loader2, Lock, Check, Monitor } from "lucide-react";
+import {
+  ShieldCheck,
+  ShieldOff,
+  Loader2,
+  Lock,
+  Check,
+  Monitor,
+  LogOut,
+  Eye, 
+  EyeOff
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import QRCode from "react-qr-code";
 import { toast } from "sonner";
@@ -12,11 +22,21 @@ import { toast } from "sonner";
 import { ApiErrorResponse } from "@/types/errors";
 
 import { AppAlert } from "@/components/feedback/AppAlert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input";
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupAddon,
+  InputGroupButton,
+} from "@/components/ui/input-group"
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+
+import { formatDate } from "@/lib/utils";
 
 import { useAtualizarPerfil } from "../hooks/useAtualizarPerfil";
 import { useAtualizarSenhaPerfil } from "../hooks/useAtualizarSenha";
@@ -25,6 +45,8 @@ import {
   useConfirmar2FA,
   useDesabilitar2FA,
 } from "../hooks/useAutenticacaoDoisFatores";
+import { useEncerrarSessao } from "../hooks/useEncerrarSessao";
+import { useUsuarioSessoes } from "../hooks/useUsuarioSessoes";
 import {
   atualizarSenhaSchema,
   AtualizarSenhaFormData,
@@ -49,6 +71,10 @@ export function SegurancaTabContent({
   const [openHabilitar, setOpenHabilitar] = useState(false);
   const [openDesabilitar, setOpenDesabilitar] = useState(false);
 
+  const [showSenhaAtual, setShowSenhaAtual] = useState(false);
+  const [showSenhaNova, setShowSenhaNova] = useState(false);
+  const [showSenhaConfirmacao, setShowSenhaConfirmacao] = useState(false);
+
   const [senhaHabilitar, setSenhaHabilitar] = useState("");
   const [senhaDesabilitar, setSenhaDesabilitar] = useState("");
   const [codigo, setCodigo] = useState("");
@@ -61,6 +87,16 @@ export function SegurancaTabContent({
   const habilitarMutation = useHabilitar2FA();
   const confirmarMutation = useConfirmar2FA();
   const desabilitarMutation = useDesabilitar2FA();
+
+  /* ---------------- SESSÕES ---------------- */
+
+  const {
+    data: sessoes,
+    isLoading: loadingSessoes,
+    isError: erroSessoes,
+  } = useUsuarioSessoes();
+
+  const encerrarSessaoMutation = useEncerrarSessao();
 
   /* ---------------- ALTERAR SENHA ---------------- */
 
@@ -96,12 +132,15 @@ export function SegurancaTabContent({
       onSuccess: () => {
         toast.success("Senha atualizada com sucesso!");
         reset();
+        setShowSenhaAtual(false);
+        setShowSenhaNova(false);
+        setShowSenhaConfirmacao(false);
       },
       onError: (error: AxiosError<ApiErrorResponse>) => {
         const apiErrors = error.response?.data?.errors;
 
         if (!apiErrors) {
-          setHabilitarErrors(["Erro ao habilitar 2FA."]);
+          setHabilitarErrors(["Erro ao atualizar senha."]);
           return;
         }
 
@@ -215,10 +254,7 @@ export function SegurancaTabContent({
   function Requisito({ valido, texto }: { valido: boolean; texto: string }) {
     return (
       <div className="flex items-center gap-2 text-sm">
-        <Check
-          size={16}
-          className={valido ? "text-green-500" : "text-gray-400"}
-        />
+        <Check size={16} className={valido ? "text-green-500" : "text-gray-400"} />
         <span className={valido ? "text-green-600" : "text-gray-500"}>
           {texto}
         </span>
@@ -226,12 +262,10 @@ export function SegurancaTabContent({
     );
   }
 
-  /* ---------------- UI ---------------- */
-
   return (
     <div className="grid grid-cols-12 gap-6">
 
-      {/* ================= COLUNA ESQUERDA ================= */}
+      {/* COLUNA ESQUERDA */}
       <div className="col-span-12 md:col-span-8 space-y-6">
 
         {/* 2FA */}
@@ -249,10 +283,7 @@ export function SegurancaTabContent({
                 Habilitar 2FA
               </Button>
             ) : (
-              <Button
-                variant="destructive"
-                onClick={() => setOpenDesabilitar(true)}
-              >
+              <Button variant="destructive" onClick={() => setOpenDesabilitar(true)}>
                 <ShieldOff size={16} />
                 Desabilitar 2FA
               </Button>
@@ -271,13 +302,49 @@ export function SegurancaTabContent({
 
           <CardContent className="space-y-4">
             <form onSubmit={handleSubmit(onSubmitSenha)} className="space-y-4">
-              <Input type="password" placeholder="Senha atual" {...register("senha_atual")} />
-              {errors.senha_atual && (
-                <p className="text-sm text-red-500">{errors.senha_atual.message}</p>
-              )}
+              <Field>
+                <InputGroup>
+                  <InputGroupInput
+                    type={showSenhaAtual ? "text" : "password"}
+                    placeholder="Senha atual" 
+                    {...register("senha_atual")} 
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton
+                      aria-label="visualizar"
+                      title="visualizar"
+                      size="icon-xs"
+                      onClick={() => setShowSenhaAtual(prev => !prev)}
+                    >
+                      {showSenhaAtual ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+                {errors.senha_atual && (
+                  <p className="text-sm text-red-500">{errors.senha_atual.message}</p>
+                )}
+              </Field>
 
               <div>
-                <Input type="password" placeholder="Nova senha" {...register("senha_nova")} />
+                <Field>
+                  <InputGroup>
+                    <InputGroupInput
+                      type={showSenhaNova ? "text" : "password"}
+                      placeholder="Nova senha" 
+                      {...register("senha_nova")} 
+                    />
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupButton
+                        aria-label="visualizar"
+                        title="visualizar"
+                        size="icon-xs"
+                        onClick={() => setShowSenhaNova(prev => !prev)}
+                      >
+                        {showSenhaNova ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </InputGroupButton>
+                    </InputGroupAddon>
+                  </InputGroup>
+                </Field>
 
                 <div className="mt-3 space-y-1">
                   <Requisito valido={requisitos.length} texto="Mínimo 8 caracteres" />
@@ -292,11 +359,25 @@ export function SegurancaTabContent({
                 )}
               </div>
 
-              <Input
-                type="password"
-                placeholder="Confirmar nova senha"
-                {...register("senha_nova_confirma")}
-              />
+              <Field>
+                <InputGroup>
+                  <InputGroupInput
+                    type={showSenhaConfirmacao ? "text" : "password"}
+                    placeholder="Confirmar nova senha" 
+                    {...register("senha_nova_confirma")} 
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton
+                      aria-label="Confirmar nova senha"
+                      title="Confirmar nova senha"
+                      size="icon-xs"
+                      onClick={() => setShowSenhaConfirmacao(prev => !prev)}
+                    >
+                      {showSenhaConfirmacao ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+              </Field>
               {errors.senha_nova_confirma && (
                 <p className="text-sm text-red-500">
                   {errors.senha_nova_confirma.message}
@@ -318,7 +399,7 @@ export function SegurancaTabContent({
         </Card>
       </div>
 
-      {/* ================= COLUNA DIREITA ================= */}
+      {/* COLUNA DIREITA */}
       <div className="col-span-12 md:col-span-4">
         <Card className="rounded-2xl h-full">
           <CardHeader>
@@ -328,16 +409,75 @@ export function SegurancaTabContent({
             </CardTitle>
           </CardHeader>
 
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Em breve será possível visualizar e encerrar sessões ativas.
-            </p>
+          <CardContent className="space-y-4">
+
+            {loadingSessoes && (
+              <div className="flex justify-center">
+                <Loader2 className="h-5 w-5 animate-spin" />
+              </div>
+            )}
+
+            {erroSessoes && (
+              <p className="text-sm text-red-500">
+                Erro ao carregar sessões.
+              </p>
+            )}
+
+            {!loadingSessoes && sessoes?.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Nenhuma sessão ativa encontrada.
+              </p>
+            )}
+
+            {sessoes?.map((sessao) => (
+              <div
+                key={sessao.id}
+                className="flex items-center justify-between border rounded-xl p-3"
+              >
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">
+                    {sessao.dispositivo ? sessao.dispositivo : "---"}
+                    {sessao.plataforma ? ` - ${sessao.plataforma}` : ""}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    ID: {sessao.id} <br />
+                    IP: {sessao.ip} <br />
+                    Navegador: {sessao.browser} <br />
+                    Ultimo Acesso: {formatDate(sessao.ultimo_acesso_em)} <br />
+                  </p>
+                  {sessao.atual && (
+                    <Badge className="bg-emerald-100 text-emerald-700">Sessão atual</Badge>
+                  )}
+                </div>
+
+                {!sessao.atual && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() =>
+                      encerrarSessaoMutation.mutate(sessao.id, {
+                        onSuccess: () =>
+                          toast.success("Sessão encerrada com sucesso!"),
+                      })
+                    }
+                    disabled={encerrarSessaoMutation.isPending}
+                  >
+                    {encerrarSessaoMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <LogOut size={14} />
+                    )}
+                  </Button>
+                )}
+              </div>
+            ))}
+
           </CardContent>
         </Card>
       </div>
 
-      {/* ================= DIALOGS (INALTERADOS) ================= */}
-      {/* -------- HABILITAR -------- */}
+      {/* DIALOGS COMPLETOS */}
+
       <Dialog
         open={openHabilitar}
         onOpenChange={(open) => {
@@ -408,7 +548,6 @@ export function SegurancaTabContent({
         </DialogContent>
       </Dialog>
 
-      {/* -------- DESABILITAR -------- */}
       <Dialog
         open={openDesabilitar}
         onOpenChange={(open) => {
@@ -457,6 +596,7 @@ export function SegurancaTabContent({
           </Button>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }

@@ -5,6 +5,8 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
 
+use Tymon\JWTAuth\Facades\JWTAuth;
+
 use App\Models\UsuarioSessao;
 
 use App\Models\Usuario;
@@ -95,6 +97,28 @@ class UsuarioSessaoService {
 
     public function listarSessoesAtivas(Usuario $usuario)
     {
-        return $usuario->usuarioSessoes()->where('ativo', true)->get();
+        $sessionIdAtual = null;
+
+        try {
+            $payload = JWTAuth::parseToken()->getPayload();
+            $sessionIdAtual = $payload->get('session_id');
+        } catch (\Exception $e) {
+            throw new BusinessException(
+                'Sessão expirada ou inválida.',
+                ErrorCode::USUARIO_SESSAO_UNAUTHORIZED->value
+            );
+        }
+
+        $query = $usuario->usuarioSessoes()
+            ->where('ativo', true);
+
+        if ($sessionIdAtual) {
+            $query->orderByRaw('id = ? DESC', [$sessionIdAtual]);
+        }
+
+        return $query->get()->map(function ($sessao) use ($sessionIdAtual) {
+            $sessao->atual = $sessao->id === $sessionIdAtual;
+            return $sessao;
+        });
     }
 }

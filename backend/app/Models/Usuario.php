@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Support\Str;
-use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
-
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class Usuario extends Authenticatable implements JWTSubject
 {
@@ -56,6 +57,14 @@ class Usuario extends Authenticatable implements JWTSubject
                 $model->id = (string) Str::uuid();
             }
         });
+    }
+
+     protected function avatar(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) =>
+                $value ? url(Storage::url($value)) : null
+        );
     }
 
     public function grupo(): BelongsTo

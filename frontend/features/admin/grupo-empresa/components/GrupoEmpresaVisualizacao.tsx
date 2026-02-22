@@ -40,7 +40,7 @@ export function GrupoEmpresaVisualizacao({
   return (
     <div className="flex flex-1 flex-col py-6 space-y-6">
       <div
-        className={`rounded-xl shadow-sm border-l-4 bg-white p-6 ${
+        className={`rounded-xl shadow-sm border-l-4 bg-card p-6 ${
           grupoEmpresa.deleted_at
             ? "border-red-500"
             : "border-emerald-500"
@@ -64,7 +64,7 @@ export function GrupoEmpresaVisualizacao({
       {grupoEmpresa.grupos.map((grupo) => (
         <div
           key={grupo.id}
-          className={`rounded-xl shadow-sm border-l-4 bg-white ${
+          className={`rounded-xl shadow-sm border-l-4 bg-card ${
             grupo.deleted_at
               ? "border-red-500"
               : "border-emerald-500"

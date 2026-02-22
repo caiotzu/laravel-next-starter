@@ -7,6 +7,7 @@ export interface UsuarioSessoes {
   dispositivo: string | null;
   ativo: boolean;
   ultimo_acesso_em: string | null;
+  atual: boolean;
   created_at: string;
   updated_at: string | null;
   deleted_at: string | null;
