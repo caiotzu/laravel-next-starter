@@ -10,7 +10,7 @@ import { ApiErrorResponse } from "@/types/errors";
 import { Usuario } from "@/types/usuario.model";
 
 import { atualizarAvatar } from "../services/usuarioService";
-import { AtualizarAvatarRequest } from "../types/usario.requests";
+import { AtualizarAvatarRequest } from "../types/usuario.requests";
 import { AtualizarAvatarResponse } from "../types/usuario.responses";
 
 export function useAvatarUpload(initialAvatar: string | null) {

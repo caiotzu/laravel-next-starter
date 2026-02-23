@@ -1,6 +1,6 @@
 import { proxyAdminRequest } from "@/lib/proxy-admin";
 
-import { AtualizarRequest, AtualizarAvatarRequest, AtualizarSenhaRequest } from "../types/usario.requests";
+import { AtualizarRequest, AtualizarAvatarRequest, AtualizarSenhaRequest } from "../types/usuario.requests";
 import { AtualizarResponse, AtualizarAvatarResponse, AtualizarSenhaResponse } from "../types/usuario.responses";
 
 export function atualizarAvatar(

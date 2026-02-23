@@ -14,8 +14,8 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 
-import { useGrupoEmpresas } from "@/domain/admin/grupo-empresa/hooks/useGrupoEmpresas";
-import { GrupoEmpresa } from "@/domain/admin/grupo-empresa/types/grupoEmpresa.model";
+import { useGrupoEmpresas } from "@/domains/admin/grupo-empresa/hooks/useGrupoEmpresas";
+import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
 
 import { GrupoEmpresasFilters } from "@/features/admin/grupo-empresa/components/GrupoEmpresasFilters";
 import { GrupoEmpresasTable } from "@/features/admin/grupo-empresa/components/GrupoEmpresasTable";

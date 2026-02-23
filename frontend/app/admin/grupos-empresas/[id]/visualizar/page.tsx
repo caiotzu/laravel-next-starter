@@ -16,7 +16,7 @@ import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
 import { PageHeader } from "@/components/layouts/page-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
-import { useGrupoEmpresa } from "@/domain/admin/grupo-empresa/hooks/useGrupoEmpresa";
+import { useGrupoEmpresa } from "@/domains/admin/grupo-empresa/hooks/useGrupoEmpresa";
 
 import { GrupoEmpresaVisualizacao } from "@/features/admin/grupo-empresa/components/GrupoEmpresaVisualizacao";
 import { GrupoEmpresaVisualizacaoSkeleton } from "@/features/admin/grupo-empresa/components/GrupoEmpresaVisualizacaoSkeleton";

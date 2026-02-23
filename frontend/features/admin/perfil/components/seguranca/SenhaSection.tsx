@@ -21,7 +21,7 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 
-import { useAtualizarSenhaPerfil } from "@/domain/admin/perfil/hooks/useAtualizarSenha";
+import { useAtualizarSenhaPerfil } from "@/domains/admin/perfil/usuario/hooks/useAtualizarSenha";
 
 import {
   atualizarSenhaSchema,

@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { useEncerrarSessao } from "@/domain/admin/perfil/hooks/useEncerrarSessao";
-import { useUsuarioSessoes } from "@/domain/admin/perfil/hooks/useUsuarioSessoes";
+import { useEncerrarSessao } from "@/domains/admin/perfil/sessoes/hooks/useEncerrarSessao";
+import { useUsuarioSessoes } from "@/domains/admin/perfil/sessoes/hooks/useUsuarioSessoes";
 import { formatDate } from "@/lib/utils";
+
+import { SessoesSectionSkeleton } from "./SessoesSectionSkeleton";
 
 export function SessoesSection() {
   const {
@@ -19,6 +21,10 @@ export function SessoesSection() {
   } = useUsuarioSessoes();
 
   const encerrarSessaoMutation = useEncerrarSessao();
+
+  if (loadingSessoes) {
+    return <SessoesSectionSkeleton />;
+  }
 
   return (
     <Card className="rounded-2xl h-full">
@@ -30,12 +36,6 @@ export function SessoesSection() {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {loadingSessoes && (
-          <div className="flex justify-center">
-            <Loader2 className="h-5 w-5 animate-spin" />
-          </div>
-        )}
-
         {erroSessoes && <p className="text-sm text-red-500">Erro ao carregar sessões.</p>}
 
         {!loadingSessoes && sessoes?.length === 0 && (

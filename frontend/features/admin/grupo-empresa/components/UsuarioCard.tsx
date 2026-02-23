@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { VisualizarGrupoEmpresaResponse } from "@/domain/admin/grupo-empresa/types/grupoEmpresa.responses";
+import { VisualizarGrupoEmpresaResponse } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.responses";
 
 interface UsuarioCardProps {
   usuario: VisualizarGrupoEmpresaResponse["grupos"][number]["usuarios"][number];

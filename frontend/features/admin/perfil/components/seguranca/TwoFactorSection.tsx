@@ -20,7 +20,7 @@ import {
   useConfirmar2FA,
   useDesabilitar2FA,
   useHabilitar2FA,
-} from "@/domain/admin/perfil/hooks/useAutenticacaoDoisFatores";
+} from "@/domains/admin/perfil/autenticacao-dois-fatores/hooks/useAutenticacaoDoisFatores";
 
 interface TwoFactorSectionProps {
   twoFactorEnabled: boolean;

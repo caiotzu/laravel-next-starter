@@ -38,8 +38,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { excluirGrupoEmpresa, ativarGrupoEmpresa } from "@/domain/admin/grupo-empresa/services/grupoEmpresaService";
-import { GrupoEmpresa } from "@/domain/admin/grupo-empresa/types/grupoEmpresa.model";
+import { excluirGrupoEmpresa, ativarGrupoEmpresa } from "@/domains/admin/grupo-empresa/services/grupoEmpresaService";
+import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
 
 import { GrupoEmpresasTableSkeleton } from "./GrupoEmpresasTableSkeleton";
 

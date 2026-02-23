@@ -18,9 +18,9 @@ import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
 import { PageHeader } from "@/components/layouts/page-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
-import { useGrupoEmpresa } from "@/domain/admin/grupo-empresa/hooks/useGrupoEmpresa";
-import { editarGrupoEmpresa } from "@/domain/admin/grupo-empresa/services/grupoEmpresaService";
-import { EditarGrupoEmpresaResponse } from "@/domain/admin/grupo-empresa/types/grupoEmpresa.responses";
+import { useGrupoEmpresa } from "@/domains/admin/grupo-empresa/hooks/useGrupoEmpresa";
+import { editarGrupoEmpresa } from "@/domains/admin/grupo-empresa/services/grupoEmpresaService";
+import { EditarGrupoEmpresaResponse } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.responses";
 
 import { GrupoEmpresaFormEdicao } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormEdicao";
 import { GrupoEmpresaFormEdicaoSkeleton } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormEdicaoSkeleton";

@@ -7,7 +7,7 @@ import { Usuario } from "@/types/usuario.model";
 import { Info } from "@/components/common/Info";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-import { useAvatarUpload } from "@/domain/admin/perfil/hooks/useAvatarUpload";
+import { useAvatarUpload } from "@/domains/admin/perfil/usuario/hooks/useAvatarUpload";
 import { formatDate } from "@/lib/utils";
 
 

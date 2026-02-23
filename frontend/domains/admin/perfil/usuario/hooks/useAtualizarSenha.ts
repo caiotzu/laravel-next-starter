@@ -6,7 +6,7 @@ import { AxiosError } from "axios";
 import { ApiErrorResponse } from "@/types/errors";
 
 import { atualizarSenha } from "../services/usuarioService";
-import { AtualizarSenhaRequest } from "../types/usario.requests";
+import { AtualizarSenhaRequest } from "../types/usuario.requests";
 import { AtualizarSenhaResponse } from "../types/usuario.responses";
 
 export function useAtualizarSenhaPerfil() {

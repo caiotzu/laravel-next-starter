@@ -9,7 +9,7 @@ import {
 
 import { Info } from "@/components/common/Info";
 
-import { VisualizarGrupoEmpresaResponse } from "@/domain/admin/grupo-empresa/types/grupoEmpresa.responses";
+import { VisualizarGrupoEmpresaResponse } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.responses";
 import { formatDate } from "@/lib/utils";
 
 import { UsuarioCard } from "./UsuarioCard";
