@@ -1,7 +1,5 @@
 "use client";
 
-import { useAdminPermission } from "@/app/admin/providers/admin-permission-provider";
-
 import { PerPage } from "@/components/data-tables/PerPage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,10 +23,6 @@ export function GrupoEmpresasFilters({
   porPagina,
   setPorPagina
 }: Props) {
-  
-  const { can } = useAdminPermission();
-  
-
   return (
     <Card className="shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between">

@@ -2,7 +2,6 @@ import qs from "qs";
 
 import { proxyAdminRequest } from "@/lib/proxy-admin";
 
-import { GrupoEmpresa } from "../types/grupoEmpresa.model";
 import { CadastrarGrupoEmpresaRequest, EditarGrupoEmpresaRequest, ListarGrupoEmpresasRequest } from "../types/grupoEmpresa.requests";
 import { CadastrarGrupoEmpresaResponse, EditarGrupoEmpresaResponse, ListarGrupoEmpresasResponse, VisualizarGrupoEmpresaResponse } from "../types/grupoEmpresa.responses";
 

@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-import Link from "next/link";
-
 import { LaravelPagination } from "@/types/laravel";
 
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
@@ -11,16 +9,16 @@ import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
 
 import { Pagination } from "@/components/data-tables/Pagination";
 import { PageHeader } from "@/components/layouts/page-header";
-import { Button } from "@/components/ui/button";
 import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar";
 
+import { useGrupoEmpresas } from "@/domain/admin/grupo-empresa/hooks/useGrupoEmpresas";
+import { GrupoEmpresa } from "@/domain/admin/grupo-empresa/types/grupoEmpresa.model";
+
 import { GrupoEmpresasFilters } from "@/features/admin/grupo-empresa/components/GrupoEmpresasFilters";
 import { GrupoEmpresasTable } from "@/features/admin/grupo-empresa/components/GrupoEmpresasTable";
-import { useGrupoEmpresas } from "@/features/admin/grupo-empresa/hooks/useGrupoEmpresas";
-import { GrupoEmpresa } from "@/features/admin/grupo-empresa/types/grupoEmpresa.model";
 
 import { AdminPermissionGuard } from "../_components/guard/AdminPermissionGuard";
 

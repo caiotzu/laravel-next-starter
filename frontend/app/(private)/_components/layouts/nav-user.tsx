@@ -1,9 +1,8 @@
 "use client"
 
-import axios from "axios"
 import { useRouter } from "next/navigation"
-import { useUserPrivate } from "@/hooks/use-user-private"
 
+import axios from "axios"
 import {
   BadgeCheck,
   Bell,
@@ -34,7 +33,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-
 export function NavUser({
   user,
 }: {
@@ -46,7 +44,6 @@ export function NavUser({
 }) {
   const router = useRouter();
   const { isMobile } = useSidebar();
-  const { data: userPrivate, isLoading } = useUserPrivate();
 
   const handleLogout = async () => {
     try {

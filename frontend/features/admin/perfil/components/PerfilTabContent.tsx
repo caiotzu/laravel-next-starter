@@ -17,7 +17,8 @@ import { Card, CardContent, CardHeader, CardFooter, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { useAtualizarPerfil } from "../hooks/useAtualizarPerfil";
+import { useAtualizarPerfil } from "@/domain/admin/perfil/hooks/useAtualizarPerfil";
+
 import { usuarioPerfilSchema, UsuarioPerfilFormData } from "../schemas/usuarioPerfil.schema";
 
 interface PerfilTabContentProps {

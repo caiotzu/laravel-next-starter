@@ -2,9 +2,7 @@
 
 import * as React from "react"
 
-
 import {
-  FolderKanban,
   Command,
   Settings2,
 } from "lucide-react"
@@ -57,7 +55,7 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { data: userPrivate, isLoading } = useUserPrivate();
+  const { data: userPrivate } = useUserPrivate();
 
   const user = {
     name: userPrivate?.nome || 'shadcn',

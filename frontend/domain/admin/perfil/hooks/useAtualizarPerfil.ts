@@ -18,7 +18,7 @@ export function useAtualizarPerfil() {
     AtualizarRequest
   >({
     mutationFn: atualizar,
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userAdmin"] });
       queryClient.invalidateQueries({ queryKey: ["usuarioSessoes"] });
     },

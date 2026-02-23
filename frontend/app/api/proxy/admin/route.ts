@@ -84,7 +84,7 @@ export async function POST(req: Request): Promise<NextResponse> {
       data: backendResponse.data,
     });
 
-  } catch (error: unknown) {
+  } catch {
     return NextResponse.json(
       {
         errors: {

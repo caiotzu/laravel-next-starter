@@ -2,8 +2,6 @@
 
 import * as React from "react"
 
-import { usePathname } from "next/navigation"
-
 import {
   FolderKanban,
   Command,
@@ -27,8 +25,7 @@ import {
 import { useUserAdmin } from "@/hooks/use-user-admin"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname()
-  const { data: userAdmin, isLoading } = useUserAdmin();
+  const { data: userAdmin } = useUserAdmin();
   
   const navMain = [
     {

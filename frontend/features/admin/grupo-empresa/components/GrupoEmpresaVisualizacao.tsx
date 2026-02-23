@@ -2,20 +2,15 @@
 
 import { useState } from "react";
 
-import Link from "next/link";
-
 import {
   ChevronDown,
   ChevronUp,
-  MoreHorizontal,
-  User,
 } from "lucide-react";
 
 import { Info } from "@/components/common/Info";
 
+import { VisualizarGrupoEmpresaResponse } from "@/domain/admin/grupo-empresa/types/grupoEmpresa.responses";
 import { formatDate } from "@/lib/utils";
-
-import { VisualizarGrupoEmpresaResponse } from "../types/grupoEmpresa.responses";
 
 import { UsuarioCard } from "./UsuarioCard";
 

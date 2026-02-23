@@ -18,12 +18,14 @@ import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
 import { PageHeader } from "@/components/layouts/page-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
+import { useGrupoEmpresa } from "@/domain/admin/grupo-empresa/hooks/useGrupoEmpresa";
+import { editarGrupoEmpresa } from "@/domain/admin/grupo-empresa/services/grupoEmpresaService";
+import { EditarGrupoEmpresaResponse } from "@/domain/admin/grupo-empresa/types/grupoEmpresa.responses";
+
 import { GrupoEmpresaFormEdicao } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormEdicao";
 import { GrupoEmpresaFormEdicaoSkeleton } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormEdicaoSkeleton";
-import { useGrupoEmpresa } from "@/features/admin/grupo-empresa/hooks/useGrupoEmpresa";
 import { GrupoEmpresasFormDataEdicao } from "@/features/admin/grupo-empresa/schemas/grupoEmpresa.schema";
-import { editarGrupoEmpresa } from "@/features/admin/grupo-empresa/services/grupoEmpresaService";
-import { EditarGrupoEmpresaResponse } from "@/features/admin/grupo-empresa/types/grupoEmpresa.responses";
+
 
 import { AdminPermissionGuard } from "../../_components/guard/AdminPermissionGuard";
 

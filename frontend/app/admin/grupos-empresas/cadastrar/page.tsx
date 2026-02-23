@@ -20,10 +20,11 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 
+import { cadastrarGrupoEmpresa } from "@/domain/admin/grupo-empresa/services/grupoEmpresaService";
+import { CadastrarGrupoEmpresaResponse } from "@/domain/admin/grupo-empresa/types/grupoEmpresa.responses";
+
 import { GrupoEmpresaFormCadastro } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormCadastro";
 import {GrupoEmpresasFormDataCadastro} from "@/features/admin/grupo-empresa/schemas/grupoEmpresa.schema";
-import { cadastrarGrupoEmpresa } from "@/features/admin/grupo-empresa/services/grupoEmpresaService";
-import { CadastrarGrupoEmpresaResponse } from "@/features/admin/grupo-empresa/types/grupoEmpresa.responses";
 
 import { AdminPermissionGuard } from "../../_components/guard/AdminPermissionGuard";
 

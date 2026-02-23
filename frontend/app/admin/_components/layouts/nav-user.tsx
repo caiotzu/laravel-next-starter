@@ -34,9 +34,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-import { useUserAdmin } from "@/hooks/use-user-admin"
-
-
 export function NavUser({
   user,
 }: {
@@ -48,7 +45,6 @@ export function NavUser({
 }) {
   const router = useRouter();
   const { isMobile } = useSidebar();
-  const { data: userAdmin, isLoading } = useUserAdmin();
 
   const handleLogout = async () => {
     try {

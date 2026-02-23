@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 
-import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 
 import { AxiosError } from "axios";
@@ -15,12 +14,12 @@ import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
 
 import { PageHeader } from "@/components/layouts/page-header";
-import { Button } from "@/components/ui/button";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+
+import { useGrupoEmpresa } from "@/domain/admin/grupo-empresa/hooks/useGrupoEmpresa";
 
 import { GrupoEmpresaVisualizacao } from "@/features/admin/grupo-empresa/components/GrupoEmpresaVisualizacao";
 import { GrupoEmpresaVisualizacaoSkeleton } from "@/features/admin/grupo-empresa/components/GrupoEmpresaVisualizacaoSkeleton";
-import { useGrupoEmpresa } from "@/features/admin/grupo-empresa/hooks/useGrupoEmpresa";
 
 
 export default function Page() {

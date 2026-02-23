@@ -7,9 +7,9 @@ import { Usuario } from "@/types/usuario.model";
 import { Info } from "@/components/common/Info";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+import { useAvatarUpload } from "@/domain/admin/perfil/hooks/useAvatarUpload";
 import { formatDate } from "@/lib/utils";
 
-import { useAvatarUpload } from "../hooks/useAvatarUpload";
 
 interface Props {
   user: Usuario;

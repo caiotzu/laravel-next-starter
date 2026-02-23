@@ -66,7 +66,7 @@ export async function POST(req: Request): Promise<NextResponse> {
       status: backendResponse.status,
       data: backendResponse.data,
     });
-  } catch (error: unknown) {
+  } catch {
     return NextResponse.json(
       {
         errors: {
