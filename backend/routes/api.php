@@ -5,8 +5,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\ {
     AuthController,
     PerfilController,
+    EmpresaController,
     GrupoEmpresaController,
-    AutenticacaoDoisFatoresController
+    AutenticacaoDoisFatoresController,
 };
 
 use App\Http\Controllers\Private\ {
@@ -40,11 +41,20 @@ Route::middleware('jwt')->group(function () {
 
         Route::prefix('grupos-empresas')->group(function () {
             Route::patch('/{id}/ativar', [GrupoEmpresaController::class, 'ativar']);
-            Route::patch('/{id}', [GrupoEmpresaController::class, 'atualizar']);
+            Route::put('/{id}', [GrupoEmpresaController::class, 'atualizar']);
             Route::delete('/{id}', [GrupoEmpresaController::class, 'excluir']);
             Route::get('/{id}', [GrupoEmpresaController::class, 'visualizar']);
             Route::get('/', [GrupoEmpresaController::class, 'listar']);
             Route::post('/', [GrupoEmpresaController::class, 'cadastrar']);
+        });
+
+        Route::prefix('empresas')->group(function () {
+            Route::patch('/{id}/ativar', [EmpresaController::class, 'ativar']);
+            Route::put('/{id}', [EmpresaController::class, 'atualizar']);
+            Route::delete('/{id}', [EmpresaController::class, 'excluir']);
+            Route::get('/{id}', [EmpresaController::class, 'visualizar']);
+            Route::get('/', [EmpresaController::class, 'listar']);
+            Route::post('', [EmpresaController::class, 'cadastrar']);
         });
     });
 

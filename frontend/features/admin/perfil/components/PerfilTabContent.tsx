@@ -74,12 +74,12 @@ export function PerfilTabContent({ user }: PerfilTabContentProps) {
           return;
         }
 
-        // 🔴 Erro de regra de negócio
+        // Erro de regra de negócio
         if (apiErrors.business) {
           setBackendErrors(apiErrors.business);
         }
 
-        // 🟡 Erros de validação
+        // Erros de validação
         Object.entries(apiErrors).forEach(([field, messages]) => {
           if (!messages || field === "business") return;
 

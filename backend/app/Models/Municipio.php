@@ -7,17 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class GrupoEmpresa extends Model
+class Municipio extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'grupo_empresas';
+    protected $table = 'municipios';
     protected $keyType = 'string';
     public $incrementing = false;
 
     protected $fillable = [
         'id',
         'nome',
+        'uf',
+        'codigo_ibge',
+        'codigo_siafi'
     ];
 
     protected $casts = [
@@ -35,21 +38,8 @@ class GrupoEmpresa extends Model
         });
     }
 
-    public function grupos(): HasMany
+    public function empresaEnderecos(): HasMany
     {
-        // Relaciona os grupos cujo entidade_tipo é "grupo_empresa"
-        // e o entidade_id é o ID deste grupo_empresa
-        return $this->hasMany(Grupo::class, 'entidade_id')
-            ->where('entidade_tipo_id', function ($query) {
-                $query->select('id')
-                    ->from('entidade_tipos')
-                    ->where('entidade_tabela', 'grupo_empresas')
-                    ->limit(1);
-            });
-    }
-
-    public function empresas(): HasMany
-    {
-        return $this->hasMany(Empresa::class, 'grupo_empresa_id', 'id');
+        return $this->hasMany(EmpresaEndereco::class, 'municipio_id', 'id');
     }
 }

@@ -42,7 +42,7 @@ class GrupoEmpresaController extends Controller
             )
         );
 
-        return response()->json($grupoEmpresa);
+        return response()->json($grupoEmpresa, 200);
     }
 
     public function visualizar(string $id): JsonResponse

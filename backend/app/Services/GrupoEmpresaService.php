@@ -16,6 +16,7 @@ use App\DTO\GrupoEmpresa\GrupoEmpresaCadastroDTO;
 use App\DTO\GrupoEmpresa\GrupoEmpresaAtualizacaoDTO;
 
 use App\Enums\ErrorCode;
+
 use App\Exceptions\BusinessException;
 
 class GrupoEmpresaService {
@@ -50,7 +51,6 @@ class GrupoEmpresaService {
             return $grupoEmpresa;
         });
     }
-
 
     public function atualizar(GrupoEmpresaAtualizacaoDTO $dto): GrupoEmpresa
     {
@@ -91,7 +91,7 @@ class GrupoEmpresaService {
 
             $grupoEmpresa = GrupoEmpresa::find($id);
 
-            if (! $grupoEmpresa) {
+            if (!$grupoEmpresa) {
                 throw new BusinessException(
                     'Grupo empresa não encontrado para exclusão.',
                     ErrorCode::GRUPO_EMPRESA_NOT_FOUND->value
@@ -99,6 +99,7 @@ class GrupoEmpresaService {
             }
 
             $grupoEmpresa->delete();
+            $grupoEmpresa->fresh();
         });
     }
 
@@ -108,7 +109,7 @@ class GrupoEmpresaService {
 
             $grupoEmpresa = GrupoEmpresa::onlyTrashed()->find($id);
 
-            if (! $grupoEmpresa) {
+            if (!$grupoEmpresa) {
                 throw new BusinessException(
                     'Grupo empresa não encontrado para ativação.',
                     ErrorCode::GRUPO_EMPRESA_NOT_FOUND->value
@@ -117,7 +118,7 @@ class GrupoEmpresaService {
 
             $grupoEmpresa->restore();
 
-            return $grupoEmpresa;
+            return $grupoEmpresa->fresh();
         });
     }
 

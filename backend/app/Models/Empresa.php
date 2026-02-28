@@ -6,18 +6,28 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class GrupoEmpresa extends Model
+
+class Empresa extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'grupo_empresas';
+    protected $table = 'empresas';
     protected $keyType = 'string';
     public $incrementing = false;
 
     protected $fillable = [
         'id',
-        'nome',
+        'grupo_empresa_id',
+        'matriz_id',
+        'cnpj',
+        'nome_fantasia',
+        'razao_social',
+        'inscricao_estadual',
+        'inscricao_municipal',
+        'ativo',
+        'uf',
     ];
 
     protected $casts = [
@@ -35,21 +45,18 @@ class GrupoEmpresa extends Model
         });
     }
 
-    public function grupos(): HasMany
+    public function grupoEmpresa(): BelongsTo
     {
-        // Relaciona os grupos cujo entidade_tipo é "grupo_empresa"
-        // e o entidade_id é o ID deste grupo_empresa
-        return $this->hasMany(Grupo::class, 'entidade_id')
-            ->where('entidade_tipo_id', function ($query) {
-                $query->select('id')
-                    ->from('entidade_tipos')
-                    ->where('entidade_tabela', 'grupo_empresas')
-                    ->limit(1);
-            });
+        return $this->belongsTo(GrupoEmpresa::class, 'grupo_empresa_id', 'id');
     }
 
-    public function empresas(): HasMany
+    public function contatos(): HasMany
     {
-        return $this->hasMany(Empresa::class, 'grupo_empresa_id', 'id');
+        return $this->hasMany(EmpresaContato::class, 'empresa_id', 'id');
+    }
+
+    public function enderecos(): HasMany
+    {
+        return $this->hasMany(EmpresaEndereco::class, 'empresa_id', 'id');
     }
 }
