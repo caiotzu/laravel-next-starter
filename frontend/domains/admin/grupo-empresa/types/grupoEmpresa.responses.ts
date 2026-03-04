@@ -16,6 +16,8 @@ export interface EditarGrupoEmpresaResponse {
   updated_at: string | null;
 }
 
+export type AtivarGrupoEmpresaResponse = GrupoEmpresa;
+
 export type ListarGrupoEmpresasResponse = LaravelPagination<GrupoEmpresa>;
 
 

@@ -32,7 +32,7 @@ export default function Page() {
     page,
     nome,
     excluido,
-    porPagina,
+    por_pagina: porPagina,
   });
 
   const pagination = data as LaravelPagination<GrupoEmpresa> | undefined;

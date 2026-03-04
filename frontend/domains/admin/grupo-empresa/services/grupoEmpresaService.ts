@@ -3,7 +3,7 @@ import qs from "qs";
 import { proxyAdminRequest } from "@/lib/proxy-admin";
 
 import { CadastrarGrupoEmpresaRequest, EditarGrupoEmpresaRequest, ListarGrupoEmpresasRequest } from "../types/grupoEmpresa.requests";
-import { CadastrarGrupoEmpresaResponse, EditarGrupoEmpresaResponse, ListarGrupoEmpresasResponse, VisualizarGrupoEmpresaResponse } from "../types/grupoEmpresa.responses";
+import { AtivarGrupoEmpresaResponse, CadastrarGrupoEmpresaResponse, EditarGrupoEmpresaResponse, ListarGrupoEmpresasResponse, VisualizarGrupoEmpresaResponse } from "../types/grupoEmpresa.responses";
 
 export function cadastrarGrupoEmpresa(
   dto: CadastrarGrupoEmpresaRequest
@@ -21,7 +21,7 @@ export function editarGrupoEmpresa(
 ) {
   return proxyAdminRequest<EditarGrupoEmpresaResponse>({
     url: `/admin/grupos-empresas/${id}`,
-    method: "PATCH",
+    method: "PUT",
     data: dto,
   });
 }
@@ -29,7 +29,7 @@ export function editarGrupoEmpresa(
 export async function excluirGrupoEmpresa(
   id: string
 ) {
-  return proxyAdminRequest<EditarGrupoEmpresaResponse>({
+  return proxyAdminRequest<null>({
     url: `/admin/grupos-empresas/${id}`,
     method: "DELETE"
   });
@@ -38,7 +38,7 @@ export async function excluirGrupoEmpresa(
 export function ativarGrupoEmpresa(
   id: string
 ) {
-  return proxyAdminRequest<EditarGrupoEmpresaResponse>({
+  return proxyAdminRequest<AtivarGrupoEmpresaResponse>({
     url: `/admin/grupos-empresas/${id}/ativar`,
     method: "PATCH"
   });

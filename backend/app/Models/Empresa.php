@@ -45,6 +45,16 @@ class Empresa extends Model
         });
     }
 
+    public function matriz(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'matriz_id', 'id');
+    }
+
+    public function filiais(): HasMany
+    {
+        return $this->hasMany(self::class, 'matriz_id', 'id');
+    }
+
     public function grupoEmpresa(): BelongsTo
     {
         return $this->belongsTo(GrupoEmpresa::class, 'grupo_empresa_id', 'id');

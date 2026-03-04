@@ -10,7 +10,7 @@ export interface ListarGrupoEmpresasRequest {
   id?: string;
   nome?: string;
   excluido?: boolean;
-  porPagina?: number;
+  por_pagina?: number;
   page?: number;
 }
 

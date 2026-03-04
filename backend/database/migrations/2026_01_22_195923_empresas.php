@@ -18,6 +18,10 @@ return new class extends Migration
                 ->references('id')
                 ->on('grupo_empresas');
             $table->uuid('matriz_id')->nullable(true);
+            $table->foreign('matriz_id')
+                ->references('id')
+                ->on('empresas')
+                ->restrictOnDelete();
             $table->string('cnpj', 14)->unique();
             $table->string('nome_fantasia', 60);
             $table->string('razao_social', 60);

@@ -40,8 +40,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
         {
           title: "Empresas",
-          url: "#",
-          permission: null
+          url: "/admin/empresas",
+          permission: "admin.empresa.menu"
         },
       ],
     },

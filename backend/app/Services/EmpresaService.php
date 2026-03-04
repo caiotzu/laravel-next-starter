@@ -141,6 +141,10 @@ class EmpresaService {
     public function listar(EmpresaFiltroDTO $filtro): LengthAwarePaginator
     {
         return Empresa::query()
+            ->with([
+                'grupoEmpresa',
+                'matriz'
+            ])
             ->when($filtro->id, fn ($q) =>
                 $q->where('id', $filtro->id)
             )
