@@ -14,20 +14,32 @@ class ListarRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if ($this->has('excluido')) {
-            $this->merge([
-                'excluido' => filter_var(
-                    $this->excluido,
-                    FILTER_VALIDATE_BOOLEAN,
-                    FILTER_NULL_ON_FAILURE
-                ),
-                'ativo' => filter_var(
-                    $this->ativo,
-                    FILTER_VALIDATE_BOOLEAN,
-                    FILTER_NULL_ON_FAILURE
-                ),
-            ]);
+        $dados = [];
+
+        if ($this->exists('excluido')) {
+            $dados['excluido'] = $this->normalizarBoolean($this->input('excluido'));
         }
+
+        if ($this->exists('ativo')) {
+            $dados['ativo'] = $this->normalizarBoolean($this->input('ativo'));
+        }
+
+        if (! empty($dados)) {
+            $this->merge($dados);
+        }
+    }
+
+    private function normalizarBoolean(mixed $valor): ?bool
+    {
+        if ($valor === '' || $valor === null) {
+            return null;
+        }
+
+        return filter_var(
+            $valor,
+            FILTER_VALIDATE_BOOLEAN,
+            FILTER_NULL_ON_FAILURE
+        );
     }
 
     public function rules(): array

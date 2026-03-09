@@ -15,7 +15,7 @@ final class EmpresaFiltroDTO
         public readonly ?string $razao_social = null,
         public readonly ?string $inscricao_estadual = null,
         public readonly ?string $inscricao_municipal = null,
-        public readonly ?string $ativo = null,
+        public readonly ?bool $ativo = null,
         public readonly ?string $uf = null,
         public readonly ?bool $excluido = null,
         public readonly PaginationDTO $paginacao

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { LaravelPagination } from "@/types/laravel";
 
@@ -16,18 +16,16 @@ import {
 
 import type { UF } from "@/constants/estados";
 import { useEmpresas } from "@/domains/admin/empresa/hooks/useEmpresas";
-import { Empresa } from "@/domains/admin/empresa/types/empresa.model";
 import { EmpresaListaItem } from "@/domains/admin/empresa/types/empresa.responses";
 import { useGrupoEmpresas } from "@/domains/admin/grupo-empresa/hooks/useGrupoEmpresas";
-import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
 
 import { EmpresasFilters } from "@/features/admin/empresa/components/EmpresasFilters";
 import { EmpresasTable } from "@/features/admin/empresa/components/EmpresasTable";
-import { GrupoEmpresasTable } from "@/features/admin/grupo-empresa/components/GrupoEmpresasTable";
 
 import { AdminPermissionGuard } from "../_components/guard/AdminPermissionGuard";
 
 export default function Page() {
+  const [id, setId] = useState("");
   const [grupoEmpresaNome, setGrupoEmpresaNome] = useState("");
   const [grupoEmpresaId, setGrupoEmpresaId] = useState<string | undefined>();
 
@@ -46,21 +44,54 @@ export default function Page() {
   const [page, setPage] = useState(1);
   const [porPagina, setPorPagina] = useState(10);
 
-  // const { data, isLoading } = useGrupoEmpresas({
-  //   page: 1,
-  //   nome: grupoEmpresaNome,
-  //   excluido: false,
-  //   por_pagina: 10,
-  // });
+  const [grupoEmpresaNomeDebounced, setGrupoEmpresaNomeDebounced] = useState("");
+  const [matrizNomeDebounced, setMatrizNomeDebounced] = useState("");
 
-  // const grupos = data?.data ?? [];
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setGrupoEmpresaNomeDebounced(grupoEmpresaNome);
+    }, 300);
 
- 
+    return () => clearTimeout(timeout);
+  }, [grupoEmpresaNome]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setMatrizNomeDebounced(matrizNome);
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [matrizNome]);
+
+  const { data: gruposData, isLoading: isLoadingGrupos } = useGrupoEmpresas({
+    page: 1,
+    nome: grupoEmpresaNomeDebounced || undefined,
+    excluido: false,
+    por_pagina: 10,
+  });
+
+  const grupos = gruposData?.data ?? [];
+
+  console.log(matrizNomeDebounced)
+  const { data: matrizesData, isLoading: isLoadingMatrizes } = useEmpresas({
+    page: 1,
+    nome_fantasia: matrizNomeDebounced || undefined,
+    excluido: false,
+    por_pagina: 10,
+  });
+
+  const matrizes = matrizesData?.data ?? [];
+
+  const idFiltro = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)
+    ? id
+    : undefined;
+  const cnpjFiltro = cnpj.length === 14 ? cnpj : undefined;
 
   const { data: empresas, isLoading: isLoadingEmpresa } = useEmpresas({
+    id: idFiltro,
     grupo_empresa_id: grupoEmpresaId,
     matriz_id: matrizId,
-    cnpj,
+    cnpj: cnpjFiltro,
     nome_fantasia: nomeFantasia,
     razao_social: razaoSocial,
     ativo,
@@ -104,32 +135,82 @@ export default function Page() {
             />
 
             <AdminPermissionGuard permission="admin.empresa.listar">
-              {/* <EmpresasFilters
+              <EmpresasFilters
+                id={id}
+                setId={(value) => {
+                  setId(value);
+                  setPage(1);
+                }}
                 grupoEmpresaNome={grupoEmpresaNome}
                 setGrupoEmpresaNome={(value) => {
                   setGrupoEmpresaNome(value);
                   setPage(1);
                 }}
                 grupoEmpresaId={grupoEmpresaId}
-                setGrupoEmpresaId={setGrupoEmpresaId}
+                setGrupoEmpresaId={(value) => {
+                  setGrupoEmpresaId(value);
+                  setPage(1);
+                }}
                 grupos={grupos}
-                isLoadingGrupos={isLoading}
+                isLoadingGrupos={isLoadingGrupos}
+                matrizNome={matrizNome}
+                setMatrizNome={(value) => {
+                  setMatrizNome(value);
+                  setPage(1);
+                }}
+                matrizId={matrizId}
+                setMatrizId={(value) => {
+                  setMatrizId(value);
+                  setPage(1);
+                }}
+                matrizes={matrizes}
+                isLoadingMatrizes={isLoadingMatrizes}
+                cnpj={cnpj}
+                setCnpj={(value) => {
+                  setCnpj(value);
+                  setPage(1);
+                }}
                 nomeFantasia={nomeFantasia}
-                setNomeFantasia={setNomeFantasia}
+                setNomeFantasia={(value) => {
+                  setNomeFantasia(value);
+                  setPage(1);
+                }}
                 razaoSocial={razaoSocial}
-                setRazaoSocial={setRazaoSocial}
+                setRazaoSocial={(value) => {
+                  setRazaoSocial(value);
+                  setPage(1);
+                }}
+                inscricaoEstadual={inscricaoEstadual}
+                setInscricaoEstadual={(value) => {
+                  setInscricaoEstadual(value);
+                  setPage(1);
+                }}
+                inscricaoMunicipal={inscricaoMunicipal}
+                setInscricaoMunicipal={(value) => {
+                  setInscricaoMunicipal(value);
+                  setPage(1);
+                }}
                 ativo={ativo}
-                setAtivo={setAtivo}
+                setAtivo={(value) => {
+                  setAtivo(value);
+                  setPage(1);
+                }}
                 uf={uf}
-                setUf={setUf}
+                setUf={(value) => {
+                  setUf(value);
+                  setPage(1);
+                }}
                 excluido={excluido}
-                setExcluido={setExcluido}
+                setExcluido={(value) => {
+                  setExcluido(value);
+                  setPage(1);
+                }}
                 porPagina={porPagina}
                 setPorPagina={(value) => {
                   setPage(1);
                   setPorPagina(value);
                 }}
-              /> */}
+              />
 
               <EmpresasTable
                 data={pagination?.data ?? []}
