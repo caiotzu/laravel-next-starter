@@ -63,3 +63,48 @@ export function maskCNPJAlfanumerico(value: string) {
 
   return result;
 }
+
+export function onlyDigits(value: string) {
+  return value.replace(/\D/g, "")
+}
+
+export function maskCEP(value: string) {
+  const cleaned = onlyDigits(value).slice(0, 8)
+
+  const part1 = cleaned.slice(0, 5)
+  const part2 = cleaned.slice(5, 8)
+
+  let result = part1
+
+  if (part2) result += `-${part2}`
+
+  return result
+}
+
+export function maskPhone(value: string) {
+  const cleaned = onlyDigits(value).slice(0, 11)
+
+  if (cleaned.length <= 10) {
+    const ddd = cleaned.slice(0, 2)
+    const part1 = cleaned.slice(2, 6)
+    const part2 = cleaned.slice(6, 10)
+
+    let result = ddd ? `(${ddd}` : ""
+    if (ddd.length === 2) result += ") "
+    if (part1) result += part1
+    if (part2) result += `-${part2}`
+
+    return result
+  }
+
+  const ddd = cleaned.slice(0, 2)
+  const part1 = cleaned.slice(2, 7)
+  const part2 = cleaned.slice(7, 11)
+
+  let result = ddd ? `(${ddd}` : ""
+  if (ddd.length === 2) result += ") "
+  if (part1) result += part1
+  if (part2) result += `-${part2}`
+
+  return result
+}

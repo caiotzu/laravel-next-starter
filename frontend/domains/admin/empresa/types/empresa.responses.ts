@@ -4,19 +4,9 @@ import { GrupoEmpresa } from "../../grupo-empresa/types/grupoEmpresa.model";
 
 import { Empresa } from "./empresa.model";
 
-// export interface CadastrarEmpresaResponse {
-//   id: string;
-//   nome: string;
-//   created_at: string;
-//   updated_at: string | null;
-// }
+export type CadastrarEmpresaResponse = Empresa;
 
-// export interface EditarEmpresaResponse {
-//   id: string;
-//   nome: string;
-//   created_at: string;
-//   updated_at: string | null;
-// }
+export type EditarEmpresaResponse = Empresa;
 
 export type AtivarEmpresaResponse = Empresa;
 
@@ -26,30 +16,37 @@ export type EmpresaListaItem = Empresa & {
 };
 export type ListarEmpresasResponse = LaravelPagination<EmpresaListaItem>
 
-
-// export interface VisualizarEmpresaResponse extends Empresa {
-//   grupos: {
-//     id: string;
-//     descricao: string;
-//     versao: number;
-//     entidade_tipo_id: string;
-//     entidade_id: string;
-//     created_at: string;
-//     updated_at: string | null;
-//     deleted_at: string | null;
-
-//     usuarios: {
-//       id: string;
-//       grupo_id: string;
-//       nome: string;
-//       email: string;
-//       ativo: boolean;
-//       avatar: string | null;
-//       google2fa_enable: boolean;
-//       google2fa_secret: string | null;
-//       created_at: string;
-//       updated_at: string | null;
-//       deleted_at: string | null;
-//     }[];
-//   }[];
-// }
+export interface VisualizarEmpresaResponse extends Empresa {
+  grupo_empresa: GrupoEmpresa;
+  matriz: Empresa | null;
+  contatos: {
+    id: string;
+    empresa_id: string;
+    tipo: string;
+    valor: string;
+    ativo: boolean;
+    principal: boolean;
+    created_at: string;
+    updated_at: string | null;
+  }[];
+  enderecos: {
+    id: string;
+    empresa_id: string;
+    tipo: string;
+    municipio_id: string;
+    ativo: boolean;
+    principal: boolean;
+    cep: string;
+    logradouro: string;
+    numero: string;
+    bairro: string;
+    complemento: string | null;
+    created_at: string;
+    updated_at: string | null;
+    municipio?: {
+      id: string;
+      nome: string;
+      uf: string;
+    };
+  }[];
+}
