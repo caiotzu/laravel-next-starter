@@ -14,32 +14,20 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 
-import type { UF } from "@/constants/estados";
 import { useEmpresas } from "@/domains/admin/empresa/hooks/useEmpresas";
 import { EmpresaListaItem } from "@/domains/admin/empresa/types/empresa.responses";
 import { useGrupoEmpresas } from "@/domains/admin/grupo-empresa/hooks/useGrupoEmpresas";
 
-import { EmpresasFilters } from "@/features/admin/empresa/components/EmpresasFilters";
+import { EmpresasFilters, type EmpresaFilters } from "@/features/admin/empresa/components/EmpresasFilters";
 import { EmpresasTable } from "@/features/admin/empresa/components/EmpresasTable";
 
 import { AdminPermissionGuard } from "../_components/guard/AdminPermissionGuard";
 
 export default function Page() {
-  const [id, setId] = useState("");
-  const [grupoEmpresaNome, setGrupoEmpresaNome] = useState("");
-  const [grupoEmpresaId, setGrupoEmpresaId] = useState<string | undefined>();
-
-  const [matrizNome, setMatrizNome] = useState("");
-  const [matrizId, setMatrizId] = useState<string | undefined>();
-
-  const [cnpj, setCnpj] = useState("");
-  const [nomeFantasia, setNomeFantasia] = useState("");
-  const [razaoSocial, setRazaoSocial] = useState("");
-  const [inscricaoEstadual, setInscricaoEstadual] = useState("");
-  const [inscricaoMunicipal, setInscricaoMunicipal] = useState("");
-  const [uf, setUf] = useState<UF | undefined>(undefined);
-  const [ativo, setAtivo] = useState(true);
-  const [excluido, setExcluido] = useState(false);
+  const [filters, setFilters] = useState<EmpresaFilters>({
+    ativo: true,
+    excluido: false,
+  });
 
   const [page, setPage] = useState(1);
   const [porPagina, setPorPagina] = useState(10);
@@ -49,19 +37,30 @@ export default function Page() {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      setGrupoEmpresaNomeDebounced(grupoEmpresaNome);
+      setGrupoEmpresaNomeDebounced(filters.grupoEmpresaNome ?? "");
     }, 300);
 
     return () => clearTimeout(timeout);
-  }, [grupoEmpresaNome]);
+  }, [filters.grupoEmpresaNome]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      setMatrizNomeDebounced(matrizNome);
+      setMatrizNomeDebounced(filters.matrizNome ?? "");
     }, 300);
 
     return () => clearTimeout(timeout);
-  }, [matrizNome]);
+  }, [filters.matrizNome]);
+
+  function updateFilter<K extends keyof EmpresaFilters>(
+    key: K,
+    value: EmpresaFilters[K]
+  ) {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+    setPage(1);
+  }
 
   const { data: gruposData, isLoading: isLoadingGrupos } = useGrupoEmpresas({
     page: 1,
@@ -72,7 +71,6 @@ export default function Page() {
 
   const grupos = gruposData?.data ?? [];
 
-  console.log(matrizNomeDebounced)
   const { data: matrizesData, isLoading: isLoadingMatrizes } = useEmpresas({
     page: 1,
     nome_fantasia: matrizNomeDebounced || undefined,
@@ -82,23 +80,25 @@ export default function Page() {
 
   const matrizes = matrizesData?.data ?? [];
 
-  const idFiltro = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)
-    ? id
+  const idValue = filters.id ?? "";
+  const cnpjValue = filters.cnpj ?? "";
+  const idFiltro = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(idValue)
+    ? idValue
     : undefined;
-  const cnpjFiltro = cnpj.length === 14 ? cnpj : undefined;
+  const cnpjFiltro = cnpjValue.length === 14 ? cnpjValue : undefined;
 
   const { data: empresas, isLoading: isLoadingEmpresa } = useEmpresas({
     id: idFiltro,
-    grupo_empresa_id: grupoEmpresaId,
-    matriz_id: matrizId,
+    grupo_empresa_id: filters.grupoEmpresaId,
+    matriz_id: filters.matrizId,
     cnpj: cnpjFiltro,
-    nome_fantasia: nomeFantasia,
-    razao_social: razaoSocial,
-    ativo,
-    inscricao_estadual: inscricaoEstadual,
-    inscricao_municipal: inscricaoMunicipal,
-    uf,
-    excluido,
+    nome_fantasia: filters.nomeFantasia,
+    razao_social: filters.razaoSocial,
+    ativo: filters.ativo,
+    inscricao_estadual: filters.inscricaoEstadual,
+    inscricao_municipal: filters.inscricaoMunicipal,
+    uf: filters.uf,
+    excluido: filters.excluido,
     page,
     por_pagina: porPagina,
   });
@@ -136,75 +136,12 @@ export default function Page() {
 
             <AdminPermissionGuard permission="admin.empresa.listar">
               <EmpresasFilters
-                id={id}
-                setId={(value) => {
-                  setId(value);
-                  setPage(1);
-                }}
-                grupoEmpresaNome={grupoEmpresaNome}
-                setGrupoEmpresaNome={(value) => {
-                  setGrupoEmpresaNome(value);
-                  setPage(1);
-                }}
-                grupoEmpresaId={grupoEmpresaId}
-                setGrupoEmpresaId={(value) => {
-                  setGrupoEmpresaId(value);
-                  setPage(1);
-                }}
+                filters={filters}
+                updateFilter={updateFilter}
                 grupos={grupos}
                 isLoadingGrupos={isLoadingGrupos}
-                matrizNome={matrizNome}
-                setMatrizNome={(value) => {
-                  setMatrizNome(value);
-                  setPage(1);
-                }}
-                matrizId={matrizId}
-                setMatrizId={(value) => {
-                  setMatrizId(value);
-                  setPage(1);
-                }}
                 matrizes={matrizes}
                 isLoadingMatrizes={isLoadingMatrizes}
-                cnpj={cnpj}
-                setCnpj={(value) => {
-                  setCnpj(value);
-                  setPage(1);
-                }}
-                nomeFantasia={nomeFantasia}
-                setNomeFantasia={(value) => {
-                  setNomeFantasia(value);
-                  setPage(1);
-                }}
-                razaoSocial={razaoSocial}
-                setRazaoSocial={(value) => {
-                  setRazaoSocial(value);
-                  setPage(1);
-                }}
-                inscricaoEstadual={inscricaoEstadual}
-                setInscricaoEstadual={(value) => {
-                  setInscricaoEstadual(value);
-                  setPage(1);
-                }}
-                inscricaoMunicipal={inscricaoMunicipal}
-                setInscricaoMunicipal={(value) => {
-                  setInscricaoMunicipal(value);
-                  setPage(1);
-                }}
-                ativo={ativo}
-                setAtivo={(value) => {
-                  setAtivo(value);
-                  setPage(1);
-                }}
-                uf={uf}
-                setUf={(value) => {
-                  setUf(value);
-                  setPage(1);
-                }}
-                excluido={excluido}
-                setExcluido={(value) => {
-                  setExcluido(value);
-                  setPage(1);
-                }}
                 porPagina={porPagina}
                 setPorPagina={(value) => {
                   setPage(1);

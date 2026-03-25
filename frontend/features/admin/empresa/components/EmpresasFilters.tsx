@@ -31,79 +31,43 @@ interface EmpresaOption {
   nome_fantasia: string;
 }
 
-interface Props {
-  id: string;
-  setId: (value: string) => void;
-
-  grupoEmpresaNome: string;
-  setGrupoEmpresaNome: (value: string) => void;
+export interface EmpresaFilters {
+  id?: string;
+  grupoEmpresaNome?: string;
   grupoEmpresaId?: string;
-  setGrupoEmpresaId: (value?: string) => void;
+  matrizNome?: string;
+  matrizId?: string;
+  cnpj?: string;
+  nomeFantasia?: string;
+  razaoSocial?: string;
+  inscricaoEstadual?: string;
+  inscricaoMunicipal?: string;
+  uf?: UF;
+  ativo: boolean;
+  excluido: boolean;
+}
+
+interface Props {
+  filters: EmpresaFilters;
+  updateFilter: <K extends keyof EmpresaFilters>(
+    key: K,
+    value: EmpresaFilters[K]
+  ) => void;
   grupos: Grupo[];
   isLoadingGrupos: boolean;
-
-  matrizNome: string;
-  setMatrizNome: (value: string) => void;
-  matrizId?: string;
-  setMatrizId: (value?: string) => void;
   matrizes: EmpresaOption[];
   isLoadingMatrizes: boolean;
-
-  cnpj: string;
-  setCnpj: (value: string) => void;
-  nomeFantasia: string;
-  setNomeFantasia: (value: string) => void;
-  razaoSocial: string;
-  setRazaoSocial: (value: string) => void;
-  inscricaoEstadual: string;
-  setInscricaoEstadual: (value: string) => void;
-  inscricaoMunicipal: string;
-  setInscricaoMunicipal: (value: string) => void;
-
-  ativo: boolean;
-  setAtivo: (value: boolean) => void;
-
-  uf?: UF;
-  setUf: (value?: UF) => void;
-
-  excluido: boolean;
-  setExcluido: (value: boolean) => void;
-
   porPagina: number;
   setPorPagina: (value: number) => void;
 }
 
 export function EmpresasFilters({
-  id,
-  setId,
-  grupoEmpresaNome,
-  setGrupoEmpresaNome,
-  grupoEmpresaId,
-  setGrupoEmpresaId,
+  filters,
+  updateFilter,
   grupos,
   isLoadingGrupos,
-  matrizNome,
-  setMatrizNome,
-  matrizId,
-  setMatrizId,
   matrizes,
   isLoadingMatrizes,
-  cnpj,
-  setCnpj,
-  nomeFantasia,
-  setNomeFantasia,
-  razaoSocial,
-  setRazaoSocial,
-  inscricaoEstadual,
-  setInscricaoEstadual,
-  inscricaoMunicipal,
-  setInscricaoMunicipal,
-  ativo,
-  setAtivo,
-  uf,
-  setUf,
-  excluido,
-  setExcluido,
   porPagina,
   setPorPagina,
 }: Props) {
@@ -118,8 +82,8 @@ export function EmpresasFilters({
           <Label>ID</Label>
           <Input
             placeholder="UUID da empresa..."
-            value={id}
-            onChange={(e) => setId(e.target.value)}
+            value={filters.id ?? ""}
+            onChange={(e) => updateFilter("id", e.target.value || undefined)}
           />
         </div>
 
@@ -129,26 +93,26 @@ export function EmpresasFilters({
 
           <Combobox
             items={grupos}
-            value={grupos.find((item) => item.id === grupoEmpresaId) ?? null}
+            value={grupos.find((item) => item.id === filters.grupoEmpresaId) ?? null}
             onValueChange={(item) => {
               if (!item) {
-                setGrupoEmpresaNome("");
-                setGrupoEmpresaId(undefined);
+                updateFilter("grupoEmpresaNome", undefined);
+                updateFilter("grupoEmpresaId", undefined);
                 return;
               }
 
-              setGrupoEmpresaNome(item.nome);
-              setGrupoEmpresaId(item.id);
+              updateFilter("grupoEmpresaNome", item.nome);
+              updateFilter("grupoEmpresaId", item.id);
             }}
             itemToStringLabel={(item) => item?.nome ?? ""}
           >
             <ComboboxInput
               placeholder="Digite o nome do grupo..."
-              value={grupoEmpresaNome}
+              value={filters.grupoEmpresaNome ?? ""}
               showClear
               onChange={(e) => {
-                setGrupoEmpresaNome(e.target.value);
-                setGrupoEmpresaId(undefined);
+                updateFilter("grupoEmpresaNome", e.target.value || undefined);
+                updateFilter("grupoEmpresaId", undefined);
               }}
             />
 
@@ -175,26 +139,26 @@ export function EmpresasFilters({
 
           <Combobox
             items={matrizes}
-            value={matrizes.find((item) => item.id === matrizId) ?? null}
+            value={matrizes.find((item) => item.id === filters.matrizId) ?? null}
             onValueChange={(item) => {
               if (!item) {
-                setMatrizNome("");
-                setMatrizId(undefined);
+                updateFilter("matrizNome", undefined);
+                updateFilter("matrizId", undefined);
                 return;
               }
 
-              setMatrizNome(item.nome_fantasia);
-              setMatrizId(item.id);
+              updateFilter("matrizNome", item.nome_fantasia);
+              updateFilter("matrizId", item.id);
             }}
             itemToStringLabel={(item) => item?.nome_fantasia ?? ""}
           >
             <ComboboxInput
               placeholder="Digite o nome da matriz..."
-              value={matrizNome}
+              value={filters.matrizNome ?? ""}
               showClear
               onChange={(e) => {
-                setMatrizNome(e.target.value);
-                setMatrizId(undefined);
+                updateFilter("matrizNome", e.target.value || undefined);
+                updateFilter("matrizId", undefined);
               }}
             />
 
@@ -220,8 +184,11 @@ export function EmpresasFilters({
           <Label>CNPJ</Label>
           <Input
             placeholder="Digite o CNPJ (14 dígitos)..."
-            value={cnpj}
-            onChange={(e) => setCnpj(e.target.value.replace(/\D/g, "").slice(0, 14))}
+            value={filters.cnpj ?? ""}
+            onChange={(e) => {
+              const value = e.target.value.replace(/\D/g, "").slice(0, 14);
+              updateFilter("cnpj", value || undefined);
+            }}
           />
         </div>
 
@@ -229,8 +196,8 @@ export function EmpresasFilters({
           <Label>Nome Fantasia</Label>
           <Input
             placeholder="Digite o nome fantasia..."
-            value={nomeFantasia}
-            onChange={(e) => setNomeFantasia(e.target.value)}
+            value={filters.nomeFantasia ?? ""}
+            onChange={(e) => updateFilter("nomeFantasia", e.target.value || undefined)}
             className="w-64"
           />
         </div>
@@ -239,8 +206,8 @@ export function EmpresasFilters({
           <Label>Razão Social</Label>
           <Input
             placeholder="Digite a razão social..."
-            value={razaoSocial}
-            onChange={(e) => setRazaoSocial(e.target.value)}
+            value={filters.razaoSocial ?? ""}
+            onChange={(e) => updateFilter("razaoSocial", e.target.value || undefined)}
             className="w-64"
           />
         </div>
@@ -249,8 +216,8 @@ export function EmpresasFilters({
           <Label>Inscrição Estadual</Label>
           <Input
             placeholder="Digite a inscrição estadual..."
-            value={inscricaoEstadual}
-            onChange={(e) => setInscricaoEstadual(e.target.value)}
+            value={filters.inscricaoEstadual ?? ""}
+            onChange={(e) => updateFilter("inscricaoEstadual", e.target.value || undefined)}
             className="w-64"
           />
         </div>
@@ -259,8 +226,10 @@ export function EmpresasFilters({
           <Label>Inscrição Municipal</Label>
           <Input
             placeholder="Digite a inscrição municipal..."
-            value={inscricaoMunicipal}
-            onChange={(e) => setInscricaoMunicipal(e.target.value)}
+            value={filters.inscricaoMunicipal ?? ""}
+            onChange={(e) =>
+              updateFilter("inscricaoMunicipal", e.target.value || undefined)
+            }
             className="w-64"
           />
         </div>
@@ -270,9 +239,9 @@ export function EmpresasFilters({
 
           <Combobox
             items={ESTADOS_LABELS}
-            value={uf ? getLabelByUF(uf) : null}
+            value={filters.uf ? getLabelByUF(filters.uf) : null}
             onValueChange={(label) =>
-              setUf(label ? ESTADOS_MAP.get(label) : undefined)
+              updateFilter("uf", label ? ESTADOS_MAP.get(label) : undefined)
             }
           >
             <ComboboxInput placeholder="Selecione a UF" showClear />
@@ -297,16 +266,16 @@ export function EmpresasFilters({
 
         <div className="flex items-center space-x-2">
           <Switch
-            checked={ativo}
-            onCheckedChange={setAtivo}
+            checked={filters.ativo}
+            onCheckedChange={(value) => updateFilter("ativo", value)}
           />
           <Label>Ativas</Label>
         </div>
 
         <div className="flex items-center space-x-2">
           <Switch
-            checked={excluido}
-            onCheckedChange={setExcluido}
+            checked={filters.excluido}
+            onCheckedChange={(value) => updateFilter("excluido", value)}
           />
           <Label>Excluídas</Label>
         </div>
