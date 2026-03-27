@@ -46,7 +46,7 @@ class AuthController extends Controller
             $usuario = $this->usuarioService->obterUsuarioAtivoPorEmail($request->email, EntidadeTipo::ADMIN);
 
             if (!$usuario || !Hash::check($request->senha, $usuario->senha)) {
-                throw new BusinessException('Credenciais informadas são inválidas');
+                throw new BusinessException('Credenciais informadas são inválidas.');
             }
 
             if ($usuario->google2fa_enable) {
@@ -79,13 +79,13 @@ class AuthController extends Controller
 
             $userId = Cache::get("2fa_login:{$request->temp_token}");
             if (!$userId)
-                throw new BusinessException('Token inválido ou expirado');
+                throw new BusinessException('Token inválido ou expirado.');
 
 
             $usuario = $this->usuarioService->obterUsuarioAtivoPorId($userId, EntidadeTipo::ADMIN);
 
             if (!$usuario)
-                throw new BusinessException('Credenciais inválidas');
+                throw new BusinessException('Credenciais inválidas.');
 
 
             if (!$usuario->google2fa_enable)

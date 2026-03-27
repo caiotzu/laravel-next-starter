@@ -31,7 +31,7 @@ class AuthController extends Controller
             $usuario = $this->usuarioService->obterUsuarioAtivoPorEmail($request->email, EntidadeTipo::PRIVATE);
 
             if (!$usuario || !Hash::check($request->senha, $usuario->senha))
-                throw new BusinessException('Credenciais informadas são inválidas');
+                throw new BusinessException('Credenciais informadas são inválidas.');
 
             $token = JWTAuth::fromUser($usuario);
 

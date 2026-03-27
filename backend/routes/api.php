@@ -2,6 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Lookup\ {
+    CepController
+};
+
 use App\Http\Controllers\Admin\ {
     AuthController,
     PerfilController,
@@ -20,6 +24,14 @@ Route::post('/admin/2fa/verificar', [AuthController::class, 'verificar2fa']);
 Route::post('/login', [PrivateAuthController::class, 'login']);
 
 Route::middleware('jwt')->group(function () {
+    Route::get('/me', [PrivateAuthController::class, 'me']);
+    Route::post('/logout', [PrivateAuthController::class, 'logout']);
+    Route::post('/refresh', [PrivateAuthController::class, 'refresh']);
+
+    Route::prefix('lookup')->group(function() {
+        Route::get('/cep/{cep}', [CepController::class, 'consultar']);
+    });
+
     Route::prefix('admin')->group(function() {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
@@ -57,8 +69,4 @@ Route::middleware('jwt')->group(function () {
             Route::post('', [EmpresaController::class, 'cadastrar']);
         });
     });
-
-    Route::get('/me', [PrivateAuthController::class, 'me']);
-    Route::post('/logout', [PrivateAuthController::class, 'logout']);
-    Route::post('/refresh', [PrivateAuthController::class, 'refresh']);
 });
