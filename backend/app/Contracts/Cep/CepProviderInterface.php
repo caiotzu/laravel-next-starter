@@ -2,7 +2,7 @@
 
 namespace App\Contracts\Cep;
 
-use App\DTO\Lookup\CepResultadoDTO;
+use App\DTO\Lookup\Cep\CepResultadoDTO;
 
 interface CepProviderInterface
 {

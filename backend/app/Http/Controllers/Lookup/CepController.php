@@ -8,7 +8,7 @@ use Illuminate\Http\JsonResponse;
 
 use App\Services\CepService;
 
-use App\DTO\Lookup\CepConsultaDTO;
+use App\DTO\Lookup\Cep\CepConsultaDTO;
 
 use App\Http\Requests\Lookup\Cep\ConsultarRequest;
 
@@ -24,9 +24,6 @@ class CepController extends Controller
             new CepConsultaDTO($request->cep)
         );
 
-        return response()->json([
-            'message' => 'Consulta do CEP realizada com sucesso.',
-            'data' => $cep,
-        ]);
+        return response()->json($cep);
     }
 }

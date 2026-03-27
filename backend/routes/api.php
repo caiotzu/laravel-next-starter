@@ -3,7 +3,8 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Lookup\ {
-    CepController
+    CepController,
+    MunicipioController
 };
 
 use App\Http\Controllers\Admin\ {
@@ -29,7 +30,8 @@ Route::middleware('jwt')->group(function () {
     Route::post('/refresh', [PrivateAuthController::class, 'refresh']);
 
     Route::prefix('lookup')->group(function() {
-        Route::get('/cep/{cep}', [CepController::class, 'consultar']);
+        Route::get('/ceps/{cep}', [CepController::class, 'consultar']);
+        Route::get('/municipios', [MunicipioController::class, 'listar']);
     });
 
     Route::prefix('admin')->group(function() {

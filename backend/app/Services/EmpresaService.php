@@ -175,7 +175,7 @@ class EmpresaService {
             ->when($filtro->uf, fn ($q) =>
                 $q->where('uf', $filtro->uf)
             )
-             ->when($filtro->excluido, fn ($q) =>
+            ->when($filtro->excluido, fn ($q) =>
                 $q->withTrashed()
             )
             ->orderBy('created_at', 'DESC')

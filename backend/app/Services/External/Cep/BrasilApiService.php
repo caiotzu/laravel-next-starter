@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Http;
 
 use App\Contracts\Cep\CepProviderInterface;
 
-use App\DTO\Lookup\CepResultadoDTO;
+use App\DTO\Lookup\Cep\CepResultadoDTO;
 
 class BrasilApiService implements CepProviderInterface
 {

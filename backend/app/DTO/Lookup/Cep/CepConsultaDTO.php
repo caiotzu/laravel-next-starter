@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DTO\Lookup;
+namespace App\DTO\Lookup\Cep;
 
 final class CepConsultaDTO
 {
