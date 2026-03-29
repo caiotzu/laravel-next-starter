@@ -5,8 +5,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { Building2, Loader2, MapPinned, Phone } from "lucide-react";
 import { useFieldArray, useForm, UseFormSetError } from "react-hook-form";
+
+import { ApiErrorResponse } from "@/types/errors";
 
 import { AppAlert } from "@/components/feedback/AppAlert";
 import { Button } from "@/components/ui/button";
@@ -36,7 +40,10 @@ import {
 } from "@/constants/estados";
 import { useEmpresas } from "@/domains/admin/empresa/hooks/useEmpresas";
 import { useGrupoEmpresas } from "@/domains/admin/grupo-empresa/hooks/useGrupoEmpresas";
-import { maskCNPJ } from "@/lib/utils";
+import { useMunicipios } from "@/domains/admin/lookup/hooks/useMunicipios";
+import { consultarCep, listarMunicipios } from "@/domains/admin/lookup/services/lookupService";
+import { ConsultarCepResponse, MunicipioLookupItem } from "@/domains/admin/lookup/types/lookup.responses";
+import { maskCEP, maskCNPJ, onlyDigits } from "@/lib/utils";
 
 import {
   empresaContatoSchema,
@@ -72,7 +79,7 @@ function createEmptyEndereco(): EmpresaEnderecoFormData {
   return {
     tipo: "COMERCIAL",
     municipio_id: "",
-    principal: false,
+    principal: true,
     ativo: true,
     cep: "",
     logradouro: "",
@@ -141,13 +148,8 @@ export function EmpresaFormCadastro({
       inscricao_estadual: "",
       inscricao_municipal: "",
       uf: undefined,
-      enderecos: [
-        {
-          ...createEmptyEndereco(),
-          principal: true,
-        },
-      ],
-      contatos: [createEmailContato(), createTelefoneContato()],
+      enderecos: [],
+      contatos: [],
     },
   });
 
@@ -166,12 +168,19 @@ export function EmpresaFormCadastro({
   const [matrizNome, setMatrizNome] = useState("");
   const [grupoEmpresaBusca, setGrupoEmpresaBusca] = useState("");
   const [matrizBusca, setMatrizBusca] = useState("");
+  const [municipioNome, setMunicipioNome] = useState("");
+  const [municipioBusca, setMunicipioBusca] = useState("");
   const [grupoSelecionado, setGrupoSelecionado] = useState<GrupoOption | null>(
     null
   );
   const [matrizSelecionada, setMatrizSelecionada] = useState<MatrizOption | null>(
     null
   );
+  const [municipioSelecionado, setMunicipioSelecionado] =
+    useState<MunicipioLookupItem | null>(null);
+  const [enderecosMunicipios, setEnderecosMunicipios] = useState<
+    Array<MunicipioLookupItem | null>
+  >([]);
 
   const [enderecoDraft, setEnderecoDraft] = useState<EmpresaEnderecoFormData>(
     createEmptyEndereco()
@@ -193,6 +202,7 @@ export function EmpresaFormCadastro({
   >({});
   const [enderecoGeneralError, setEnderecoGeneralError] = useState<string>();
   const [contatoGeneralError, setContatoGeneralError] = useState<string>();
+  const [cepLookupMessage, setCepLookupMessage] = useState<string>();
 
   const cnpjRegister = register("cnpj");
 
@@ -218,6 +228,20 @@ export function EmpresaFormCadastro({
     return () => clearTimeout(timeout);
   }, [matrizNome]);
 
+  useEffect(() => {
+    const nextBusca =
+      municipioSelecionado &&
+      municipioNome === `${municipioSelecionado.nome} - ${municipioSelecionado.uf}`
+        ? municipioSelecionado.nome
+        : municipioNome.trim();
+
+    const timeout = setTimeout(() => {
+      setMunicipioBusca(nextBusca);
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [municipioNome, municipioSelecionado]);
+
   const { data: gruposData, isLoading: isLoadingGrupos } = useGrupoEmpresas({
     page: 1,
     nome: grupoEmpresaBusca || undefined,
@@ -231,9 +255,19 @@ export function EmpresaFormCadastro({
     excluido: false,
     por_pagina: 10,
   });
+  const { data: municipiosData, isLoading: isLoadingMunicipios } = useMunicipios(
+    {
+      page: 1,
+      nome: municipioBusca || undefined,
+      uf: watch("uf") || undefined,
+      por_pagina: 10,
+    },
+    municipioBusca.length > 0
+  );
 
   const grupos = gruposData?.data ?? [];
   const matrizes = matrizesData?.data ?? [];
+  const municipios = municipiosData?.data ?? [];
   const grupoItems = grupoSelecionado
     ? [grupoSelecionado, ...grupos.filter((item) => item.id !== grupoSelecionado.id)]
     : grupos;
@@ -243,6 +277,12 @@ export function EmpresaFormCadastro({
         ...matrizes.filter((item) => item.id !== matrizSelecionada.id),
       ]
     : matrizes;
+  const municipioItems = municipioSelecionado
+    ? [
+        municipioSelecionado,
+        ...municipios.filter((item) => item.id !== municipioSelecionado.id),
+      ]
+    : municipios;
 
   const cnpj = watch("cnpj") ?? "";
   const uf = watch("uf");
@@ -251,6 +291,79 @@ export function EmpresaFormCadastro({
   const selectedUfLabel = uf
     ? getLabelByUF(uf as Parameters<typeof getLabelByUF>[0])
     : null;
+  const enderecoCepDigits = onlyDigits(enderecoDraft.cep);
+
+  const { mutate: consultarCepMutation, isPending: isConsultandoCep } = useMutation<
+    ConsultarCepResponse,
+    AxiosError<ApiErrorResponse>,
+    string
+  >({
+    mutationFn: consultarCep,
+    onSuccess: async (response) => {
+      setCepLookupMessage(
+        response.provider
+          ? `CEP encontrado via ${response.provider}.`
+          : "CEP encontrado."
+      );
+
+      setEnderecoDraft((prev) => ({
+        ...prev,
+        cep: maskCEP(response.cep),
+        logradouro: response.logradouro ?? prev.logradouro,
+        bairro: response.bairro ?? prev.bairro,
+      }));
+
+      if (!response.ibge) {
+        return;
+      }
+
+      try {
+        const municipiosPorIbge = await listarMunicipios({
+          codigo_ibge: response.ibge,
+          uf: response.uf ?? undefined,
+          por_pagina: 1,
+        });
+        const municipio = municipiosPorIbge.data[0];
+
+        if (!municipio) {
+          return;
+        }
+
+        setMunicipioSelecionado(municipio);
+        setMunicipioNome(`${municipio.nome} - ${municipio.uf}`);
+        setMunicipioBusca(municipio.nome);
+        setEnderecoDraft((prev) => ({
+          ...prev,
+          municipio_id: municipio.id,
+        }));
+        setEnderecoDraftErrors((prev) => ({
+          ...prev,
+          municipio_id: undefined,
+        }));
+      } catch {
+        // Mantem preenchimento manual caso o municipio nao seja encontrado no lookup.
+      }
+    },
+    onError: (error) => {
+      setCepLookupMessage(
+        error.response?.data?.errors?.business?.[0] ??
+          "Nao foi possivel consultar o CEP."
+      );
+    },
+  });
+
+  useEffect(() => {
+    if (enderecoCepDigits.length !== 8) {
+      setCepLookupMessage(undefined);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      consultarCepMutation(enderecoCepDigits);
+    }, 400);
+
+    return () => clearTimeout(timeout);
+  }, [consultarCepMutation, enderecoCepDigits]);
 
   function handleEnderecoDraftChange(
     key: keyof EmpresaEnderecoFormData,
@@ -265,6 +378,10 @@ export function EmpresaFormCadastro({
       [key]: undefined,
     }));
     setEnderecoGeneralError(undefined);
+
+    if (key === "cep") {
+      setCepLookupMessage(undefined);
+    }
   }
 
   function handleContatoDraftChange(
@@ -294,9 +411,13 @@ export function EmpresaFormCadastro({
 
   function resetEnderecoDraft() {
     setEnderecoDraft(createEmptyEndereco());
+    setMunicipioNome("");
+    setMunicipioBusca("");
+    setMunicipioSelecionado(null);
     setEditingEnderecoIndex(null);
     setEnderecoDraftErrors({});
     setEnderecoGeneralError(undefined);
+    setCepLookupMessage(undefined);
   }
 
   function resetContatoDraft(nextTipo: EmpresaContatoFormData["tipo"] = "E") {
@@ -332,8 +453,14 @@ export function EmpresaFormCadastro({
 
     if (editingEnderecoIndex === null) {
       appendEndereco(result.data);
+      setEnderecosMunicipios((prev) => [...prev, municipioSelecionado]);
     } else {
       updateEndereco(editingEnderecoIndex, result.data);
+      setEnderecosMunicipios((prev) =>
+        prev.map((item, index) =>
+          index === editingEnderecoIndex ? municipioSelecionado : item
+        )
+      );
     }
 
     resetEnderecoDraft();
@@ -379,13 +506,19 @@ export function EmpresaFormCadastro({
 
   function handleEditEndereco(index: number) {
     setEnderecoDraft(enderecos[index]);
+    const municipio = enderecosMunicipios[index] ?? null;
+    setMunicipioSelecionado(municipio);
+    setMunicipioNome(municipio ? `${municipio.nome} - ${municipio.uf}` : "");
+    setMunicipioBusca(municipio?.nome ?? "");
     setEditingEnderecoIndex(index);
     setEnderecoDraftErrors({});
     setEnderecoGeneralError(undefined);
+    setCepLookupMessage(undefined);
   }
 
   function handleRemoveEndereco(index: number) {
     removeEndereco(index);
+    setEnderecosMunicipios((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
 
     if (editingEnderecoIndex === index) {
       resetEnderecoDraft();
@@ -395,6 +528,39 @@ export function EmpresaFormCadastro({
     ) {
       setEditingEnderecoIndex(editingEnderecoIndex - 1);
     }
+  }
+
+  function handleMunicipioInputChange(value: string) {
+    setMunicipioNome(value);
+    setMunicipioSelecionado(null);
+    setEnderecoDraft((prev) => ({
+      ...prev,
+      municipio_id: "",
+    }));
+    setEnderecoDraftErrors((prev) => ({
+      ...prev,
+      municipio_id: undefined,
+    }));
+    setEnderecoGeneralError(undefined);
+  }
+
+  function handleMunicipioSelect(item: MunicipioLookupItem | null) {
+    if (!item) {
+      handleMunicipioInputChange("");
+      return;
+    }
+
+    setMunicipioSelecionado(item);
+    setMunicipioNome(`${item.nome} - ${item.uf}`);
+    setMunicipioBusca(item.nome);
+    setEnderecoDraft((prev) => ({
+      ...prev,
+      municipio_id: item.id,
+    }));
+    setEnderecoDraftErrors((prev) => ({
+      ...prev,
+      municipio_id: undefined,
+    }));
   }
 
   function handleEditContato(index: number) {
@@ -448,16 +614,17 @@ export function EmpresaFormCadastro({
               </TabsTrigger>
               <TabsTrigger value="enderecos">
                 <MapPinned className="h-4 w-4" />
-                Endereco
+                Endereços
               </TabsTrigger>
               <TabsTrigger value="contatos">
                 <Phone className="h-4 w-4" />
-                Contato
+                Contatos
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="dados" className="pt-4">
-              <div className="grid grid-cols-12 gap-6">
+              <div className="rounded-xl border p-6">
+                <div className="grid grid-cols-12 gap-6">
                 <div className="col-span-12 md:col-span-4 space-y-2">
                   <Label>Grupo Empresa <span className="text-red-600">*</span></Label>
 
@@ -637,7 +804,7 @@ export function EmpresaFormCadastro({
 
                 <div className="col-span-12 md:col-span-4 space-y-2">
                   <Label htmlFor="razao_social">
-                    Razao Social <span className="text-red-600">*</span>
+                    Razão Social <span className="text-red-600">*</span>
                   </Label>
                   <Input
                     id="razao_social"
@@ -653,7 +820,7 @@ export function EmpresaFormCadastro({
                 </div>
 
                 <div className="col-span-12 md:col-span-4 space-y-2">
-                  <Label htmlFor="inscricao_estadual">Inscricao Estadual</Label>
+                  <Label htmlFor="inscricao_estadual">Inscrição Estadual</Label>
                   <Input
                     id="inscricao_estadual"
                     placeholder="Digite a inscricao estadual"
@@ -668,7 +835,7 @@ export function EmpresaFormCadastro({
                 </div>
 
                 <div className="col-span-12 md:col-span-4 space-y-2">
-                  <Label htmlFor="inscricao_municipal">Inscricao Municipal</Label>
+                  <Label htmlFor="inscricao_municipal">Inscrição Municipal</Label>
                   <Input
                     id="inscricao_municipal"
                     placeholder="Digite a inscricao municipal"
@@ -725,17 +892,27 @@ export function EmpresaFormCadastro({
                   )}
                 </div>
               </div>
+              </div>
             </TabsContent>
 
             <TabsContent value="enderecos" className="pt-4">
               <EmpresaEnderecosTab
                 draft={enderecoDraft}
                 items={enderecos}
+                municipioInputValue={municipioNome}
+                selectedMunicipio={municipioSelecionado}
+                municipioItems={municipioItems}
+                municipiosByIndex={enderecosMunicipios}
+                isLoadingMunicipios={isLoadingMunicipios}
+                isLoadingCep={isConsultandoCep}
+                cepLookupMessage={cepLookupMessage}
                 draftErrors={enderecoDraftErrors}
                 generalError={enderecoGeneralError ?? errors.enderecos?.message}
                 editingIndex={editingEnderecoIndex}
                 isLoading={isLoading}
                 onDraftChange={handleEnderecoDraftChange}
+                onMunicipioInputChange={handleMunicipioInputChange}
+                onMunicipioSelect={handleMunicipioSelect}
                 onSave={handleSaveEndereco}
                 onEdit={handleEditEndereco}
                 onRemove={handleRemoveEndereco}

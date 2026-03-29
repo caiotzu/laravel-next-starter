@@ -1,9 +1,16 @@
 "use client";
 
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -160,7 +167,6 @@ export function EmpresaContatosTab({
               disabled={isLoading}
               className="cursor-pointer"
             >
-              <Plus className="h-4 w-4" />
               {editingIndex === null ? "Adicionar Contato" : "Salvar Contato"}
             </Button>
           </div>
@@ -196,32 +202,55 @@ export function EmpresaContatosTab({
                     <TableCell>
                       {item.tipo === "T" ? maskPhone(item.valor) : item.valor}
                     </TableCell>
-                    <TableCell>{item.principal ? "Sim" : "Nao"}</TableCell>
-                    <TableCell>{item.ativo ? "Sim" : "Nao"}</TableCell>
+                    <TableCell>
+                      <Badge
+                        className={
+                          item.principal
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-red-100 text-red-700"
+                        }
+                      >
+                        {item.principal ? "Sim" : "Nao"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={
+                          item.ativo
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-red-100 text-red-700"
+                        }
+                      >
+                        {item.ativo ? "Sim" : "Nao"}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onEdit(index)}
-                          disabled={isLoading}
-                        >
-                          <Pencil className="h-4 w-4" />
-                          Alterar
-                        </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" disabled={isLoading}>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
 
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onRemove(index)}
-                          disabled={isLoading}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Excluir
-                        </Button>
-                      </div>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => onEdit(index)}
+                            className="flex items-center cursor-pointer"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            Alterar
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem
+                            onClick={() => onRemove(index)}
+                            variant="destructive"
+                            className="flex items-center cursor-pointer"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
