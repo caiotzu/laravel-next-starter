@@ -35,7 +35,7 @@ export function useAvatarUpload(initialAvatar: string | null) {
     mutationFn: atualizarAvatar,
 
     onSuccess: (response) => {
-      const usuarioAtualizado = response.data;
+      const usuarioAtualizado = response;
       const newAvatar = usuarioAtualizado.avatar;
 
       // Atualiza estado definitivo

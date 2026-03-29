@@ -1,3 +1,1 @@
-export interface EncerrarSessaoResponse {
-  message: string;
-}
+export type EncerrarSessaoResponse = void;

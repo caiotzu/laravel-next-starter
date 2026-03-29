@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 use App\Services\PerfilService;
 use App\Services\UsuarioSessaoService;
@@ -26,7 +25,7 @@ class PerfilController extends Controller
         protected UsuarioSessaoService $usuarioSessaoService
     ) {}
 
-    public function atualizar(AtualizarRequest $request)
+    public function atualizar(AtualizarRequest $request): JsonResponse
     {
         /** @var \App\Models\Usuario $usuario */
         $usuario = Auth::user();
@@ -38,13 +37,10 @@ class PerfilController extends Controller
             )
         );
 
-        return response()->json([
-            'message' => 'Dados do usuário autenticado atualizado com sucesso.',
-            'data' => $usuarioAtualizado,
-        ]);
+        return response()->json($usuarioAtualizado);
     }
 
-    public function atualizarSenha(AtualizarSenhaRequest $request)
+    public function atualizarSenha(AtualizarSenhaRequest $request): JsonResponse
     {
         /** @var \App\Models\Usuario $usuario */
         $usuario = Auth::user();
@@ -56,13 +52,10 @@ class PerfilController extends Controller
             )
         );
 
-        return response()->json([
-            'message' => 'Dados do usuário autenticado atualizado com sucesso.',
-            'data' => $usuarioAtualizado,
-        ]);
+        return response()->json($usuarioAtualizado);
     }
 
-    public function atualizarAvatarBase64(AtualizarAvatarBase64Request $request)
+    public function atualizarAvatarBase64(AtualizarAvatarBase64Request $request): JsonResponse
     {
         /** @var \App\Models\Usuario $usuario */
         $usuario = Auth::user();
@@ -74,13 +67,7 @@ class PerfilController extends Controller
             )
         );
 
-        // Ajusta a URL de retorno
-        $usuarioAtualizado->avatar = $usuarioAtualizado->avatar ? url(Storage::url($usuarioAtualizado->avatar)) : null;
-
-        return response()->json([
-            'message' => 'Avatar atualizado com sucesso.',
-            'data' => $usuarioAtualizado,
-        ]);
+        return response()->json($usuarioAtualizado);
     }
 
     public function sessoes(): JsonResponse
@@ -98,13 +85,8 @@ class PerfilController extends Controller
         /** @var \App\Models\Usuario $usuario */
         $user = Auth::user();
 
-        try {
-            $this->usuarioSessaoService->encerrarSessao($user, $id);
-            return response()->json(['message' => 'Sessão encerrada']);
-        } catch (\Exception $e) {
-            return response()->json([
-                'errors' => ['business' => ['Não foi possível encerrar a sessão ('.$id.')']]
-            ], 500);
-        }
+        $this->usuarioSessaoService->encerrarSessao($user, $id);
+
+        return response()->json(null, 204);
     }
 }

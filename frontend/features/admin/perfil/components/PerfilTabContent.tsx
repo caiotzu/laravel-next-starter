@@ -59,8 +59,8 @@ export function PerfilTabContent({ user }: PerfilTabContentProps) {
     mutate(data, {
       onSuccess: (response) => {
         reset({
-          nome: response.data.nome,
-          email: response.data.email,
+          nome: response.nome,
+          email: response.email,
         });
 
         toast.success("Perfil atualizado com sucesso!");

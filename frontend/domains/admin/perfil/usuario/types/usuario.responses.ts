@@ -1,16 +1,7 @@
 import { Usuario } from "@/types/usuario.model";
 
-export interface AtualizarAvatarResponse {
-  message: string;
-  data: Usuario;
-}
+export type AtualizarAvatarResponse = Usuario;
 
-export interface AtualizarResponse {
-  message: string;
-  data: Usuario;
-}
+export type AtualizarResponse = Usuario;
 
-export interface AtualizarSenhaResponse {
-  message: string;
-  data: Usuario;
-}
+export type AtualizarSenhaResponse = Usuario;
