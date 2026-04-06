@@ -68,7 +68,7 @@ class AdminPermissaoSeeder extends Seeder
                 ],
             //---
 
-            // grupo empresa
+            // empresa
                 [
                     "id" => Str::uuid(),
                     "chave" => "admin.empresa.menu",
@@ -115,6 +115,51 @@ class AdminPermissaoSeeder extends Seeder
                     "id" => Str::uuid(),
                     "chave" => "admin.empresa.listar",
                     "descricao" => "Permite listar as empresas",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+            //---
+
+            // empresa contato
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.empresa.contato.cadastrar",
+                    "descricao" => "Permite cadastrar um novo endereço para empresa",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.empresa.atualizar",
+                    "descricao" => "Permite atualizar uma empresa",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.empresa.contato.visualizar",
+                    "descricao" => "Permite visualizar o contato de uma empresa",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.empresa.contato.excluir",
+                    "descricao" => "Permite excluir o contato de uma empresa",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.empresa.contato.ativar",
+                    "descricao" => "Permite ativar o contato de uma empresa",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.empresa.contato.listar",
+                    "descricao" => "Permite listar os contatos de uma empresa",
                     "created_at" => date("Y-m-d H:i:s"),
                     "updated_at" => date("Y-m-d H:i:s")
                 ],

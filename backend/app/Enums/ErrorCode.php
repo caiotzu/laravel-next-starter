@@ -23,4 +23,8 @@ enum ErrorCode: int
     // Empresa (model) -> 04
     case EMPRESA_NOT_FOUND = 40404;
     case EMPRESA_REQUIRED = 42204;
+
+    // Empresa Contato (model) -> 05
+    case EMPRESA_CONTATO_NOT_FOUND = 40405;
+    case EMPRESA_CONTATO_REQUIRED = 42205;
 }

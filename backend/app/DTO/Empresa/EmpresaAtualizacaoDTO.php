@@ -5,6 +5,7 @@ namespace App\DTO\Empresa;
 final class EmpresaAtualizacaoDTO
 {
     public function __construct(
+        public readonly string $empresa_id,
         public readonly ?string $matriz_id,
         public readonly string $cnpj,
         public readonly string $nome_fantasia,
@@ -15,9 +16,13 @@ final class EmpresaAtualizacaoDTO
         public readonly string $uf
     ) {}
 
-    public static function criarParaAtualizacao(array $dados): self
+    public static function criarParaAtualizacao(
+        string $empresaId,
+        array $dados
+    ): self
     {
         return new self(
+            empresa_id: $empresaId,
             matriz_id: $dados['matriz_id'] ?? null,
             cnpj: $dados['cnpj'],
             nome_fantasia: $dados['nome_fantasia'],

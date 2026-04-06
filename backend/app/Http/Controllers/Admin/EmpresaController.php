@@ -36,8 +36,8 @@ class EmpresaController extends Controller
         $this->authorize('admin.empresa.atualizar');
 
         $empresa = $this->empresaService->atualizar(
-            $id,
             EmpresaAtualizacaoDTO::criarParaAtualizacao(
+                $id,
                 $request->validated()
             )
         );

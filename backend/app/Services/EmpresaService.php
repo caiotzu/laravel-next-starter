@@ -66,11 +66,11 @@ class EmpresaService {
         });
     }
 
-    public function atualizar(string $id, EmpresaAtualizacaoDTO $dto): Empresa
+    public function atualizar(EmpresaAtualizacaoDTO $dto): Empresa
     {
-        return DB::transaction(function () use ($id, $dto) {
+        return DB::transaction(function () use ($dto) {
 
-            $empresa = Empresa::find($id);
+            $empresa = Empresa::find($dto->empresa_id);
             if(!$empresa)
                 throw new BusinessException('Empresa não encontrada.', ErrorCode::EMPRESA_NOT_FOUND->value);
 

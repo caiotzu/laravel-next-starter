@@ -2,17 +2,10 @@
 
 namespace App\Services;
 
-
-use App\Services\External\Cep\ViaCepService;
-use App\Services\External\Cep\BrasilApiService;
-
 use App\Contracts\Cep\CepProviderInterface;
 
 use App\DTO\Lookup\Cep\CepConsultaDTO;
 use App\DTO\Lookup\Cep\CepResultadoDTO;
-
-use App\Enums\ErrorCode;
-use App\Enums\EntidadeTipo;
 
 use App\Exceptions\BusinessException;
 
@@ -22,8 +15,6 @@ class CepService {
      * @param CepProviderInterface[] $providers
      */
     public function __construct(
-        private ViaCepService $viaCep,
-        private BrasilApiService $brasilApi,
         private iterable $providers
     ) {}
 

@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\ {
     PerfilController,
     EmpresaController,
     GrupoEmpresaController,
+    EmpresaContatoController,
     AutenticacaoDoisFatoresController,
 };
 
@@ -68,7 +69,16 @@ Route::middleware('jwt')->group(function () {
             Route::delete('/{id}', [EmpresaController::class, 'excluir']);
             Route::get('/{id}', [EmpresaController::class, 'visualizar']);
             Route::get('/', [EmpresaController::class, 'listar']);
-            Route::post('', [EmpresaController::class, 'cadastrar']);
+            Route::post('/', [EmpresaController::class, 'cadastrar']);
+
+            Route::prefix('{empresaId}/contatos')->group(function () {
+                Route::patch('/{contatoId}/ativar', [EmpresaContatoController::class, 'ativar']);
+                Route::put('/{contatoId}', [EmpresaContatoController::class, 'atualizar']);
+                Route::get('/{contatoId}', [EmpresaContatoController::class, 'visualizar']);
+                Route::delete('/{contatoId}', [EmpresaContatoController::class, 'excluir']);
+                Route::get('/', [EmpresaContatoController::class, 'listar']);
+                Route::post('/', [EmpresaContatoController::class, 'cadastrar']);
+            });
         });
     });
 });
