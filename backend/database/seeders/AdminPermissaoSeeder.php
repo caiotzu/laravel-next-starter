@@ -131,7 +131,7 @@ class AdminPermissaoSeeder extends Seeder
                 [
                     "id" => Str::uuid(),
                     "chave" => "admin.empresa.atualizar",
-                    "descricao" => "Permite atualizar uma empresa",
+                    "descricao" => "Permite atualizar o contato de uma empresa",
                     "created_at" => date("Y-m-d H:i:s"),
                     "updated_at" => date("Y-m-d H:i:s")
                 ],
