@@ -4,9 +4,10 @@ namespace App\DTO\EmpresaEndereco;
 
 use App\Enums\EmpresaEnderecoTipo;
 
-final class EmpresaEnderecoCadastroDTO
+final class EmpresaEnderecoAtualizacaoDTO
 {
     public function __construct(
+        public readonly string $endereco_id,
         public readonly string $empresa_id,
         public readonly EmpresaEnderecoTipo $tipo,
         public readonly string $municipio_id,
@@ -16,12 +17,17 @@ final class EmpresaEnderecoCadastroDTO
         public readonly string $logradouro,
         public readonly string $numero,
         public readonly string $bairro,
-        public readonly ?string $complemento
+        public readonly ?string $complemento,
     ) {}
 
-    public static function criarParaCadastro(string $empresaId, array $dados): self
+    public static function criarParaAtualizacao(
+        string $empresaId,
+        string $enderecoId,
+        array $dados
+    ): self
     {
         return new self(
+            endereco_id: $enderecoId,
             empresa_id: $empresaId,
             tipo: EmpresaEnderecoTipo::from($dados['tipo']),
             municipio_id: $dados['municipio_id'],
@@ -33,5 +39,20 @@ final class EmpresaEnderecoCadastroDTO
             bairro: $dados['bairro'],
             complemento: $dados['complemento'] ?? null
         );
+    }
+
+    public function paraPersistencia(): array
+    {
+        return [
+            'tipo' => $this->tipo,
+            'municipio_id' => $this->municipio_id,
+            'ativo' => $this->ativo,
+            'principal' => $this->principal,
+            'cep' => $this->cep,
+            'logradouro' => $this->logradouro,
+            'numero' => $this->numero,
+            'bairro' => $this->bairro,
+            'complemento' => $this->complemento,
+        ];
     }
 }

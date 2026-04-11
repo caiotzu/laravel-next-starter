@@ -39,7 +39,7 @@ class EmpresaContatoController extends Controller
     {
         $this->authorize('admin.empresa.contato.atualizar');
 
-        $empresa = $this->empresaContatoService->atualizar(
+        $contato = $this->empresaContatoService->atualizar(
             EmpresaContatoAtualizacaoDTO::criarParaAtualizacao(
                 $empresaId,
                 $contatoId,
@@ -47,7 +47,7 @@ class EmpresaContatoController extends Controller
             )
         );
 
-        return response()->json($empresa, 200);
+        return response()->json($contato, 200);
     }
 
     public function visualizar(string $empresaId, string $contatoId): JsonResponse
@@ -72,19 +72,19 @@ class EmpresaContatoController extends Controller
     {
         $this->authorize('admin.empresa.contato.ativar');
 
-        $empresa = $this->empresaContatoService->ativar($empresaId, $contatoId);
+        $contato = $this->empresaContatoService->ativar($empresaId, $contatoId);
 
-        return response()->json($empresa, 200);
+        return response()->json($contato, 200);
     }
 
     public function listar(string $empresaId): JsonResponse
     {
         $this->authorize('admin.empresa.contato.listar');
 
-        $grupoEmpresas = $this->empresaContatoService->listar(EmpresaContatoFiltroDTO::criarParaFiltro([
+        $contatos = $this->empresaContatoService->listar(EmpresaContatoFiltroDTO::criarParaFiltro([
             'empresaId' => $empresaId
         ]));
 
-        return response()->json($grupoEmpresas, 200);
+        return response()->json($contatos, 200);
     }
 }

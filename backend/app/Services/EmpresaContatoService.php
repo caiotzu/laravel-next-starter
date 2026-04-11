@@ -91,7 +91,7 @@ class EmpresaContatoService {
     {
         return DB::transaction(function () use ($empresaId, $contatoId) {
 
-            $contato = EmpresaContato::onlyTrashed()->find($contatoId);
+            $contato = EmpresaContato::onlyTrashed()->where('empresa_id', $empresaId)->find($contatoId);
 
 
             if (!$contato) {

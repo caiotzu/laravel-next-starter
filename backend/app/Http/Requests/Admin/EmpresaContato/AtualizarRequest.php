@@ -7,6 +7,9 @@ use Illuminate\Foundation\Http\FormRequest;
 
 use App\Models\EmpresaContato;
 
+use App\Enums\EmpresaContatoTipo;
+
+
 class AtualizarRequest extends FormRequest
 {
     public function authorize(): bool
@@ -19,7 +22,9 @@ class AtualizarRequest extends FormRequest
         return [
             'tipo' => [
                 'required',
-                Rule::in(['T', 'E'])
+                Rule::in(
+                    array_column(EmpresaContatoTipo::cases(), 'value')
+                ),
             ],
             'valor' => [
                 'required',
@@ -41,7 +46,7 @@ class AtualizarRequest extends FormRequest
     {
         return [
             'tipo.required' => 'O tipo do contato é obrigatório.',
-            'tipo.in' => 'O tipo do contato deve ser T (Telefone) ou E (E-mail).',
+            'tipo.in' => 'O tipo do contato deve ser ('. implode(', ', array_column(EmpresaContatoTipo::cases(), 'value')).')',
 
             'valor.required' => 'O valor do contato é obrigatório.',
             'valor.max' => 'O valor do contato pode ter no máximo 100 caracteres.',
@@ -53,8 +58,6 @@ class AtualizarRequest extends FormRequest
             'ativo.boolean' => 'O campo ativo do contato deve ser verdadeiro ou falso.',
         ];
     }
-
-
 
     public function withValidator($validator)
     {

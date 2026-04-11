@@ -124,13 +124,13 @@ class AdminPermissaoSeeder extends Seeder
                 [
                     "id" => Str::uuid(),
                     "chave" => "admin.empresa.contato.cadastrar",
-                    "descricao" => "Permite cadastrar um novo endereço para empresa",
+                    "descricao" => "Permite cadastrar um novo contato para empresa",
                     "created_at" => date("Y-m-d H:i:s"),
                     "updated_at" => date("Y-m-d H:i:s")
                 ],
                 [
                     "id" => Str::uuid(),
-                    "chave" => "admin.empresa.atualizar",
+                    "chave" => "admin.empresa.contato.atualizar",
                     "descricao" => "Permite atualizar o contato de uma empresa",
                     "created_at" => date("Y-m-d H:i:s"),
                     "updated_at" => date("Y-m-d H:i:s")
@@ -160,6 +160,51 @@ class AdminPermissaoSeeder extends Seeder
                     "id" => Str::uuid(),
                     "chave" => "admin.empresa.contato.listar",
                     "descricao" => "Permite listar os contatos de uma empresa",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+            //---
+
+            // empresa endereço
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.empresa.endereco.cadastrar",
+                    "descricao" => "Permite cadastrar um novo endereço para empresa",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.empresa.endereco.atualizar",
+                    "descricao" => "Permite atualizar o endereço de uma empresa",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.empresa.endereco.visualizar",
+                    "descricao" => "Permite visualizar o endereço de uma empresa",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.empresa.endereco.excluir",
+                    "descricao" => "Permite excluir o endereço de uma empresa",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.empresa.endereco.ativar",
+                    "descricao" => "Permite ativar o endereço de uma empresa",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.empresa.endereco.listar",
+                    "descricao" => "Permite listar os endereços de uma empresa",
                     "created_at" => date("Y-m-d H:i:s"),
                     "updated_at" => date("Y-m-d H:i:s")
                 ],

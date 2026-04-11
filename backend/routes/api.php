@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\ {
     EmpresaController,
     GrupoEmpresaController,
     EmpresaContatoController,
+    EmpresaEnderecoController,
     AutenticacaoDoisFatoresController,
 };
 
@@ -78,6 +79,15 @@ Route::middleware('jwt')->group(function () {
                 Route::delete('/{contatoId}', [EmpresaContatoController::class, 'excluir']);
                 Route::get('/', [EmpresaContatoController::class, 'listar']);
                 Route::post('/', [EmpresaContatoController::class, 'cadastrar']);
+            });
+
+            Route::prefix('{empresaId}/enderecos')->group(function () {
+                Route::patch('/{enderecoId}/ativar', [EmpresaEnderecoController::class, 'ativar']);
+                Route::put('/{enderecoId}', [EmpresaEnderecoController::class, 'atualizar']);
+                Route::get('/{enderecoId}', [EmpresaEnderecoController::class, 'visualizar']);
+                Route::delete('/{enderecoId}', [EmpresaEnderecoController::class, 'excluir']);
+                Route::get('/', [EmpresaEnderecoController::class, 'listar']);
+                Route::post('/', [EmpresaEnderecoController::class, 'cadastrar']);
             });
         });
     });
