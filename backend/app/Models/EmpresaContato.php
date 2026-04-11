@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+use App\Enums\EmpresaContatoTipo;
 
 class EmpresaContato extends Model
 {
@@ -26,6 +27,7 @@ class EmpresaContato extends Model
     ];
 
     protected $casts = [
+        'tipo' => EmpresaContatoTipo::class,
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime'

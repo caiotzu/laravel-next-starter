@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use App\Enums\EntidadeTipo as EnumsEntidadeTipo;
 
 class EntidadeTipo extends Model
 {
@@ -23,6 +24,7 @@ class EntidadeTipo extends Model
     ];
 
     protected $casts = [
+        'chave' => EnumsEntidadeTipo::class,
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime'
