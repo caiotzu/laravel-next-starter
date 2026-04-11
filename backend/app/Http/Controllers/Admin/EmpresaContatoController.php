@@ -15,6 +15,8 @@ use App\DTO\EmpresaContato\EmpresaContatoFiltroDTO;
 use App\DTO\EmpresaContato\EmpresaContatoCadastroDTO;
 use App\DTO\EmpresaContato\EmpresaContatoAtualizacaoDTO;
 
+use App\Http\Resources\EmpresaContato\EmpresaContatoResource;
+
 class EmpresaContatoController extends Controller
 {
     public function __construct(
@@ -32,7 +34,7 @@ class EmpresaContatoController extends Controller
             )
         );
 
-        return response()->json($contato, 201);
+        return EmpresaContatoResource::make($contato)->response()->setStatusCode(201);
     }
 
     public function atualizar(AtualizarRequest $request, string $empresaId, string $contatoId): JsonResponse
@@ -47,7 +49,7 @@ class EmpresaContatoController extends Controller
             )
         );
 
-        return response()->json($contato, 200);
+        return EmpresaContatoResource::make($contato)->response()->setStatusCode(200);
     }
 
     public function visualizar(string $empresaId, string $contatoId): JsonResponse
@@ -56,7 +58,7 @@ class EmpresaContatoController extends Controller
 
         $contato = $this->empresaContatoService->visualizar($empresaId, $contatoId);
 
-        return response()->json($contato, 200);
+        return EmpresaContatoResource::make($contato)->response()->setStatusCode(200);
     }
 
     public function excluir(string $empresaId, string $contatoId): JsonResponse
@@ -74,7 +76,7 @@ class EmpresaContatoController extends Controller
 
         $contato = $this->empresaContatoService->ativar($empresaId, $contatoId);
 
-        return response()->json($contato, 200);
+        return EmpresaContatoResource::make($contato)->response()->setStatusCode(200);
     }
 
     public function listar(string $empresaId): JsonResponse
@@ -85,6 +87,6 @@ class EmpresaContatoController extends Controller
             'empresaId' => $empresaId
         ]));
 
-        return response()->json($contatos, 200);
+        return EmpresaContatoResource::collection($contatos)->response()->setStatusCode(200);
     }
 }

@@ -14,6 +14,7 @@ use App\Http\Requests\Admin\EmpresaEndereco\AtualizarRequest;
 use App\DTO\EmpresaEndereco\EmpresaEnderecoFiltroDTO;
 use App\DTO\EmpresaEndereco\EmpresaEnderecoCadastroDTO;
 use App\DTO\EmpresaEndereco\EmpresaEnderecoAtualizacaoDTO;
+use App\Http\Resources\EmpresaEndereco\EmpresaEnderecoResource;
 
 class EmpresaEnderecoController extends Controller
 {
@@ -25,21 +26,21 @@ class EmpresaEnderecoController extends Controller
     {
         $this->authorize('admin.empresa.endereco.cadastrar');
 
-        $contato = $this->empresaEnderecoService->cadastrar(
+        $endereco = $this->empresaEnderecoService->cadastrar(
             EmpresaEnderecoCadastroDTO::criarParaCadastro(
                 $empresaId,
                 dados: $request->validated()
             )
         );
 
-        return response()->json($contato, 201);
+        return EmpresaEnderecoResource::make($endereco)->response()->setStatusCode(201);
     }
 
     public function atualizar(AtualizarRequest $request, string $empresaId, string $enderecoId): JsonResponse
     {
         $this->authorize('admin.empresa.contato.atualizar');
 
-        $empresa = $this->empresaEnderecoService->atualizar(
+        $endereco = $this->empresaEnderecoService->atualizar(
             EmpresaEnderecoAtualizacaoDTO::criarParaAtualizacao(
                 $empresaId,
                 $enderecoId,
@@ -47,7 +48,7 @@ class EmpresaEnderecoController extends Controller
             )
         );
 
-        return response()->json($empresa, 200);
+        return EmpresaEnderecoResource::make($endereco)->response()->setStatusCode(200);
     }
 
     public function visualizar(string $empresaId, string $enderecoId): JsonResponse
@@ -56,7 +57,7 @@ class EmpresaEnderecoController extends Controller
 
         $endereco = $this->empresaEnderecoService->visualizar($empresaId, $enderecoId);
 
-        return response()->json($endereco, 200);
+        return EmpresaEnderecoResource::make($endereco)->response()->setStatusCode(200);
     }
 
     public function excluir(string $empresaId, string $enderecoId): JsonResponse
@@ -74,7 +75,7 @@ class EmpresaEnderecoController extends Controller
 
         $endereco = $this->empresaEnderecoService->ativar($empresaId, $enderecoId);
 
-        return response()->json($endereco, 200);
+        return EmpresaEnderecoResource::make($endereco)->response()->setStatusCode(200);
     }
 
     public function listar(string $empresaId): JsonResponse
@@ -85,6 +86,6 @@ class EmpresaEnderecoController extends Controller
             'empresaId' => $empresaId
         ]));
 
-        return response()->json($enderecos, 200);
+        return EmpresaEnderecoResource::collection($enderecos)->response()->setStatusCode(200);
     }
 }

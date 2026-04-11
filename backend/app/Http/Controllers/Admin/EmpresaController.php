@@ -16,6 +16,10 @@ use App\DTO\Empresa\EmpresaFiltroDTO;
 use App\DTO\Empresa\EmpresaCadastroDTO;
 use App\DTO\Empresa\EmpresaAtualizacaoDTO;
 
+use App\Http\Resources\Empresa\EmpresaResource;
+use App\Http\Resources\Empresa\EmpresaListarResource;
+use App\Http\Resources\Empresa\EmpresaVisualizarResource;
+
 class EmpresaController extends Controller
 {
     public function __construct(
@@ -28,7 +32,7 @@ class EmpresaController extends Controller
 
         $empresa = $this->empresaService->cadastrar(EmpresaCadastroDTO::criarParaCadastro($request->validated()));
 
-        return response()->json($empresa, 201);
+        return EmpresaResource::make($empresa)->response()->setStatusCode(201);
     }
 
     public function atualizar(AtualizarRequest $request, string $id): JsonResponse
@@ -42,7 +46,7 @@ class EmpresaController extends Controller
             )
         );
 
-        return response()->json($empresa, 200);
+        return EmpresaResource::make($empresa)->response()->setStatusCode(200);
     }
 
     public function visualizar(string $id): JsonResponse
@@ -51,7 +55,8 @@ class EmpresaController extends Controller
 
         $empresa = $this->empresaService->visualizar($id);
 
-        return response()->json($empresa, 200);
+        // return response()->json($empresa, 200);
+        return EmpresaVisualizarResource::make($empresa)->response()->setStatusCode(200);
     }
 
     public function excluir(string $id): JsonResponse
@@ -69,15 +74,15 @@ class EmpresaController extends Controller
 
         $empresa = $this->empresaService->ativar($id);
 
-        return response()->json($empresa, 200);
+        return EmpresaResource::make($empresa)->response()->setStatusCode(200);
     }
 
     public function listar(ListarRequest $request): JsonResponse
     {
         $this->authorize('admin.empresa.listar');
 
-        $grupoEmpresas = $this->empresaService->listar(EmpresaFiltroDTO::criarParaFiltro($request->validated()));
+        $empresas = $this->empresaService->listar(EmpresaFiltroDTO::criarParaFiltro($request->validated()));
 
-        return response()->json($grupoEmpresas, 200);
+        return EmpresaListarResource::collection($empresas)->response()->setStatusCode(200);
     }
 }
