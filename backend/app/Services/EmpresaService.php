@@ -22,9 +22,6 @@ class EmpresaService {
     public function cadastrar(EmpresaCadastroDTO $dto): Empresa
     {
         return DB::transaction(function () use ($dto) {
-            $contatos = $dto->contatos;
-            $enderecos = $dto->enderecos;
-
             $empresa = Empresa::create([
                 'grupo_empresa_id' => $dto->grupo_empresa_id,
                 'matriz_id' => $dto->matriz_id,
@@ -36,31 +33,6 @@ class EmpresaService {
                 'ativo' => true,
                 'uf' => $dto->uf
             ]);
-
-            foreach($contatos as $contato) {
-                EmpresaContato::create([
-                    'empresa_id' => $empresa->id,
-                    'tipo' => $contato->tipo,
-                    'valor' => $contato->valor,
-                    'ativo' => $contato->ativo,
-                    'principal' => $contato->principal
-                ]);
-            }
-
-            foreach($enderecos as $endereco) {
-                EmpresaEndereco::create([
-                    'empresa_id' => $empresa->id,
-                    'tipo' => $endereco->tipo,
-                    'municipio_id' => $endereco->municipio_id,
-                    'ativo' => $endereco->ativo,
-                    'principal' => $endereco->principal,
-                    'cep' => $endereco->cep,
-                    'logradouro' => $endereco->logradouro,
-                    'numero' => $endereco->numero,
-                    'bairro' => $endereco->bairro,
-                    'complemento'
-                ]);
-            }
 
             return $empresa;
         });
