@@ -5,6 +5,8 @@ namespace App\Http\Requests\Admin\Empresa;
 use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
+use App\Enums\UF;
+
 class ListarRequest extends FormRequest
 {
     public function authorize(): bool
@@ -91,11 +93,9 @@ class ListarRequest extends FormRequest
                 'nullable',
                 'string',
                 'size:2',
-                Rule::in([
-                    'AC','AL','AP','AM','BA','CE','DF','ES','GO',
-                    'MA','MT','MS','MG','PA','PB','PR','PE','PI',
-                    'RJ','RN','RS','RO','RR','SC','SP','SE','TO'
-                ]),
+                Rule::in(
+                    array_column(UF::cases(), 'value')
+                ),
             ],
             'excluido' => [
                 'nullable',

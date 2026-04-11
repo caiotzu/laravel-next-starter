@@ -2,7 +2,6 @@
 
 namespace App\Enums;
 
-
 enum EntidadeTipo: string
 {
     case ADMIN = 'admin';
