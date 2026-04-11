@@ -4,7 +4,9 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Lookup\ {
     CepController,
-    MunicipioController
+    MunicipioController,
+    ContatoTipoController,
+    EnderecoTipoController
 };
 
 use App\Http\Controllers\Admin\ {
@@ -34,6 +36,8 @@ Route::middleware('jwt')->group(function () {
     Route::prefix('lookup')->group(function() {
         Route::get('/ceps/{cep}', [CepController::class, 'consultar']);
         Route::get('/municipios', [MunicipioController::class, 'listar']);
+        Route::get('/contato-tipos', [ContatoTipoController::class, 'listar']);
+        Route::get('/endereco-tipos', [EnderecoTipoController::class, 'listar']);
     });
 
     Route::prefix('admin')->group(function() {
