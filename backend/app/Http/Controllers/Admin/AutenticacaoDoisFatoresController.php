@@ -16,6 +16,9 @@ use App\DTO\AutenticacaoDoisFatores\AutenticacaoDoisFatoresHabilitacaoDTO;
 use App\DTO\AutenticacaoDoisFatores\AutenticacaoDoisFatoresConfirmacaoDTO;
 use App\DTO\AutenticacaoDoisFatores\AutenticacaoDoisFatoresDesabilitacaoDTO;
 
+use App\Http\Resources\Acoes\MensagemResource;
+use App\Http\Resources\AutenticacaoDoisFatores\AutenticacaoDoisFatoresResource;
+
 class AutenticacaoDoisFatoresController extends Controller
 {
     public function __construct(
@@ -35,7 +38,7 @@ class AutenticacaoDoisFatoresController extends Controller
 
         $dados = $this->autenticacaoDoisFatoresService->habilitar($dto);
 
-        return response()->json($dados);
+        return AutenticacaoDoisFatoresResource::make($dados)->response()->setStatusCode(200);
     }
 
     public function confirmar(ConfirmarRequest $request): JsonResponse
@@ -50,9 +53,7 @@ class AutenticacaoDoisFatoresController extends Controller
 
         $this->autenticacaoDoisFatoresService->confirmar($dto);
 
-        return response()->json([
-            'message' => '2FA ativado com sucesso.'
-        ]);
+        return MensagemResource::make(['message'=> '2FA ativado com sucesso.'])->response()->setStatusCode(200);
     }
 
     public function desabilitar(DesabilitarRequest $request): JsonResponse
@@ -68,9 +69,7 @@ class AutenticacaoDoisFatoresController extends Controller
 
         $this->autenticacaoDoisFatoresService->desabilitar($dto);
 
-        return response()->json([
-            'message' => '2FA desabilitado com sucesso.'
-        ]);
+        return MensagemResource::make(['message'=> '2FA desabilitado com sucesso.'])->response()->setStatusCode(200);
     }
 
 }

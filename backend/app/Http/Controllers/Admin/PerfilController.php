@@ -80,8 +80,6 @@ class PerfilController extends Controller
 
         $sessoes = $this->usuarioSessaoService->listarSessoesAtivas($user);
 
-        // return response()->json($sessoes);
-
         return UsuarioSessaoResource::collection($sessoes)->response()->setStatusCode(200);
     }
 
