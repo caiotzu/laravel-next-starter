@@ -16,6 +16,8 @@ use App\DTO\GrupoEmpresa\GrupoEmpresaFiltroDTO;
 use App\DTO\GrupoEmpresa\GrupoEmpresaCadastroDTO;
 use App\DTO\GrupoEmpresa\GrupoEmpresaAtualizacaoDTO;
 
+use App\Http\Resources\GrupoEmpresa\GrupoEmpresaResource;
+
 class GrupoEmpresaController extends Controller
 {
     public function __construct(
@@ -28,7 +30,7 @@ class GrupoEmpresaController extends Controller
 
         $grupoEmpresa = $this->grupoEmpresaService->cadastrar(GrupoEmpresaCadastroDTO::criarParaCadastro($request->validated()));
 
-        return response()->json($grupoEmpresa, 201);
+        return GrupoEmpresaResource::make($grupoEmpresa)->response()->setStatusCode(201);
     }
 
     public function atualizar(AtualizarRequest $request, string $id): JsonResponse
@@ -42,7 +44,7 @@ class GrupoEmpresaController extends Controller
             )
         );
 
-        return response()->json($grupoEmpresa, 200);
+        return GrupoEmpresaResource::make($grupoEmpresa)->response()->setStatusCode(200);
     }
 
     public function visualizar(string $id): JsonResponse
@@ -51,7 +53,7 @@ class GrupoEmpresaController extends Controller
 
         $grupoEmpresa = $this->grupoEmpresaService->visualizar($id);
 
-        return response()->json($grupoEmpresa, 200);
+        return GrupoEmpresaResource::make($grupoEmpresa)->response()->setStatusCode(200);
     }
 
     public function excluir(string $id): JsonResponse
@@ -69,7 +71,7 @@ class GrupoEmpresaController extends Controller
 
         $grupoEmpresa = $this->grupoEmpresaService->ativar($id);
 
-        return response()->json($grupoEmpresa, 200);
+        return GrupoEmpresaResource::make($grupoEmpresa)->response()->setStatusCode(200);
     }
 
     public function listar(ListarRequest $request): JsonResponse
@@ -78,6 +80,6 @@ class GrupoEmpresaController extends Controller
 
         $grupoEmpresas = $this->grupoEmpresaService->listar(GrupoEmpresaFiltroDTO::criarParaFiltro($request->validated()));
 
-        return response()->json($grupoEmpresas, 200);
+        return GrupoEmpresaResource::collection($grupoEmpresas)->response()->setStatusCode(200);
     }
 }
