@@ -15,8 +15,11 @@ use App\DTO\Perfil\PerfilAtualizacaoSenhaDTO;
 use App\DTO\Perfil\PerfilAvatarBase64AtualizacaoDTO;
 
 use App\Http\Requests\Admin\Perfil\AtualizarRequest;
-use App\Http\Requests\Admin\Perfil\AtualizarAvatarBase64Request;
 use App\Http\Requests\Admin\Perfil\AtualizarSenhaRequest;
+use App\Http\Requests\Admin\Perfil\AtualizarAvatarBase64Request;
+
+use App\Http\Resources\Usuario\UsuarioResource;
+use App\Http\Resources\UsuarioSessao\UsuarioSessaoResource;
 
 class PerfilController extends Controller
 {
@@ -37,7 +40,7 @@ class PerfilController extends Controller
             )
         );
 
-        return response()->json($usuarioAtualizado);
+        return UsuarioResource::make($usuarioAtualizado)->response()->setStatusCode(200);
     }
 
     public function atualizarSenha(AtualizarSenhaRequest $request): JsonResponse
@@ -52,7 +55,7 @@ class PerfilController extends Controller
             )
         );
 
-        return response()->json($usuarioAtualizado);
+        return UsuarioResource::make($usuarioAtualizado)->response()->setStatusCode(200);
     }
 
     public function atualizarAvatarBase64(AtualizarAvatarBase64Request $request): JsonResponse
@@ -67,7 +70,7 @@ class PerfilController extends Controller
             )
         );
 
-        return response()->json($usuarioAtualizado);
+        return UsuarioResource::make($usuarioAtualizado)->response()->setStatusCode(200);
     }
 
     public function sessoes(): JsonResponse
@@ -77,7 +80,9 @@ class PerfilController extends Controller
 
         $sessoes = $this->usuarioSessaoService->listarSessoesAtivas($user);
 
-        return response()->json($sessoes);
+        // return response()->json($sessoes);
+
+        return UsuarioSessaoResource::collection($sessoes)->response()->setStatusCode(200);
     }
 
     public function encerrarSessao(string $id): JsonResponse
