@@ -28,9 +28,15 @@ use App\DTO\UsuarioSessao\UsuarioSessaoAtualizacaoDTO;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\Verificar2faRequest;
 
-use App\Enums\EntidadeTipo;
+use App\Http\Resources\Auth\MeResource;
+use App\Http\Resources\Auth\LoginResource;
+use App\Http\Resources\Auth\LoginGoogle2FaEnableResource;
 
 use App\Exceptions\BusinessException;
+
+use App\Enums\EntidadeTipo;
+use App\Http\Resources\Auth\LogoutResource;
+use App\Http\Resources\Auth\RefreshResource;
 
 class AuthController extends Controller
 {
@@ -58,10 +64,10 @@ class AuthController extends Controller
                     now()->addMinutes(5)
                 );
 
-                return response()->json([
+                return LoginGoogle2FaEnableResource::make([
                     '2fa_enable' => true,
                     'temp_token' => $tempToken
-                ]);
+                ])->response()->setStatusCode(200);
             }
 
             return $this->finalizarLogin($usuario, $request);
@@ -132,11 +138,11 @@ class AuthController extends Controller
 
         $this->usuarioService->registrarLogin($usuario, $request->ip());
 
-        return response()->json([
+        return LoginResource::make([
             '2fa_enable' => $usuario->google2fa_enable,
             'token' => $token,
             'expires_in' => JWTAuth::factory()->getTTL() * 60,
-        ]);
+        ])->response()->setStatusCode(200);
     }
 
     public function logout(): JsonResponse
@@ -156,9 +162,9 @@ class AuthController extends Controller
 
             JWTAuth::invalidate(JWTAuth::getToken());
 
-            return response()->json([
+            return LogoutResource::make([
                 'message' => 'Desconectado com sucesso'
-            ]);
+            ])->response()->setStatusCode(200);
 
         } catch (BusinessException $e) {
 
@@ -194,7 +200,7 @@ class AuthController extends Controller
                     ->values()
                 : collect();
 
-            return response()->json([
+            return MeResource::make([
                 'id' => $user->id,
                 'nome' => $user->nome,
                 'email' => $user->email,
@@ -206,7 +212,7 @@ class AuthController extends Controller
                 'ultimo_login_em' => $user->ultimo_login_em,
                 'ultimo_ip' => $user->ultimo_ip,
                 'permissoes' => $permissoes
-            ]);
+            ])->response()->setStatusCode(200);
 
         } catch (JWTException $e) {
             return response()->json([
@@ -217,9 +223,9 @@ class AuthController extends Controller
 
     public function refresh(): JsonResponse
     {
-        return response()->json([
+        return RefreshResource::make([
             'token' => JWTAuth::parseToken()->refresh(),
             'expires_in' => JWTAuth::factory()->getTTL() * 60
-        ]);
+        ])->response()->setStatusCode(200);
     }
 }
