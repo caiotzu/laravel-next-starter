@@ -14,8 +14,8 @@ use App\Http\Requests\Admin\EmpresaEndereco\AtualizarRequest;
 use App\DTO\EmpresaEndereco\EmpresaEnderecoFiltroDTO;
 use App\DTO\EmpresaEndereco\EmpresaEnderecoCadastroDTO;
 use App\DTO\EmpresaEndereco\EmpresaEnderecoAtualizacaoDTO;
-use App\Http\Resources\EmpresaEndereco\EmpresaEnderecoResource;
 
+use App\Http\Resources\Admin\EmpresaEndereco\EmpresaEnderecoResource;
 class EmpresaEnderecoController extends Controller
 {
     public function __construct(

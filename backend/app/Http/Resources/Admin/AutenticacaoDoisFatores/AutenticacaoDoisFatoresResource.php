@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Resources\AutenticacaoDoisFatores;
+namespace App\Http\Resources\Admin\AutenticacaoDoisFatores;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;

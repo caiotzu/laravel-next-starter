@@ -28,15 +28,15 @@ use App\DTO\UsuarioSessao\UsuarioSessaoAtualizacaoDTO;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\Verificar2faRequest;
 
-use App\Http\Resources\Auth\MeResource;
-use App\Http\Resources\Auth\LoginResource;
-use App\Http\Resources\Auth\LoginGoogle2FaEnableResource;
+use App\Http\Resources\Admin\Auth\MeResource;
+use App\Http\Resources\Admin\Auth\LoginResource;
+use App\Http\Resources\Admin\Auth\LogoutResource;
+use App\Http\Resources\Admin\Auth\RefreshResource;
+use App\Http\Resources\Admin\Auth\LoginGoogle2FaEnableResource;
 
 use App\Exceptions\BusinessException;
 
 use App\Enums\EntidadeTipo;
-use App\Http\Resources\Auth\LogoutResource;
-use App\Http\Resources\Auth\RefreshResource;
 
 class AuthController extends Controller
 {

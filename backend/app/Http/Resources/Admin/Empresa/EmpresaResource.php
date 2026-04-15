@@ -1,16 +1,13 @@
 <?php
 
-namespace App\Http\Resources\Empresa;
+namespace App\Http\Resources\Admin\Empresa;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-use App\Http\Resources\GrupoEmpresa\GrupoEmpresaResource;
-use App\Http\Resources\EmpresaContato\EmpresaContatoResource;
-use App\Http\Resources\EmpresaEndereco\EmpresaEnderecoResource;
-
-class EmpresaVisualizarResource extends JsonResource
+class EmpresaResource extends JsonResource
 {
+
     public function toArray(Request $request): array
     {
         return [
@@ -26,16 +23,7 @@ class EmpresaVisualizarResource extends JsonResource
             'uf' => $this->uf,
             'updated_at' => $this->updated_at,
             'created_at' => $this->created_at,
-            'deleted_at' => $this->deleted_at,
-            'grupo_empresa' => GrupoEmpresaResource::make(
-                $this->whenLoaded('grupoEmpresa')
-            ),
-            'contatos' => EmpresaContatoResource::collection(
-                $this->whenLoaded('contatos')
-            ),
-            'enderecos' => EmpresaEnderecoResource::collection(
-                $this->whenLoaded('enderecos')
-            )
+            'deleted_at' => $this->deleted_at
         ];
     }
 }

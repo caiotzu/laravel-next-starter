@@ -12,6 +12,8 @@ use App\DTO\Lookup\Municipio\MunicipioFiltroDTO;
 
 use App\Http\Requests\Lookup\Municipio\ListarRequest;
 
+use App\Http\Resources\Lookup\Municipio\MunicipioResource;
+
 class MunicipioController extends Controller
 {
     public function __construct(
@@ -22,6 +24,6 @@ class MunicipioController extends Controller
     {
         $municipios = $this->municipioService->listar(MunicipioFiltroDTO::criarParaFiltro($request->validated()));
 
-        return response()->json($municipios, 200);
+        return MunicipioResource::collection($municipios)->response()->setStatusCode(200);
     }
 }

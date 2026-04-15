@@ -18,8 +18,8 @@ use App\Http\Requests\Admin\Perfil\AtualizarRequest;
 use App\Http\Requests\Admin\Perfil\AtualizarSenhaRequest;
 use App\Http\Requests\Admin\Perfil\AtualizarAvatarBase64Request;
 
-use App\Http\Resources\Usuario\UsuarioResource;
-use App\Http\Resources\UsuarioSessao\UsuarioSessaoResource;
+use App\Http\Resources\Admin\Usuario\UsuarioResource;
+use App\Http\Resources\Admin\UsuarioSessao\UsuarioSessaoResource;
 
 class PerfilController extends Controller
 {

@@ -16,7 +16,7 @@ use App\DTO\GrupoEmpresa\GrupoEmpresaFiltroDTO;
 use App\DTO\GrupoEmpresa\GrupoEmpresaCadastroDTO;
 use App\DTO\GrupoEmpresa\GrupoEmpresaAtualizacaoDTO;
 
-use App\Http\Resources\GrupoEmpresa\GrupoEmpresaResource;
+use App\Http\Resources\Admin\GrupoEmpresa\GrupoEmpresaResource;
 
 class GrupoEmpresaController extends Controller
 {

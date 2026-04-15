@@ -12,6 +12,8 @@ use App\DTO\Lookup\Cep\CepConsultaDTO;
 
 use App\Http\Requests\Lookup\Cep\ConsultarRequest;
 
+use App\Http\Resources\Lookup\Cep\CepResource;
+
 class CepController extends Controller
 {
     public function __construct(
@@ -24,6 +26,6 @@ class CepController extends Controller
             new CepConsultaDTO($request->cep)
         );
 
-        return response()->json($cep);
+        return CepResource::make($cep)->response()->setStatusCode(200);
     }
 }

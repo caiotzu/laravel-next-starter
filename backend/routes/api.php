@@ -36,8 +36,8 @@ Route::middleware('jwt')->group(function () {
     Route::prefix('lookup')->group(function() {
         Route::get('/ceps/{cep}', [CepController::class, 'consultar']);
         Route::get('/municipios', [MunicipioController::class, 'listar']);
-        Route::get('/contato-tipos', [ContatoTipoController::class, 'listar']);
-        Route::get('/endereco-tipos', [EnderecoTipoController::class, 'listar']);
+        Route::get('/contatos-tipos', [ContatoTipoController::class, 'listar']);
+        Route::get('/enderecos-tipos', [EnderecoTipoController::class, 'listar']);
     });
 
     Route::prefix('admin')->group(function() {

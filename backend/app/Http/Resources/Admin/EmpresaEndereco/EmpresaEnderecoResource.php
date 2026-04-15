@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Resources\EmpresaEndereco;
+namespace App\Http\Resources\Admin\EmpresaEndereco;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-use App\Http\Resources\Municipio\MunicipioResource;
+use App\Http\Resources\Admin\Municipio\MunicipioResource;
 
 class EmpresaEnderecoResource extends JsonResource
 {

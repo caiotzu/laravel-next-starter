@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Http\Resources\Empresa;
+namespace App\Http\Resources\Admin\Empresa;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-use App\Http\Resources\Empresa\EmpresaResource;
-use App\Http\Resources\GrupoEmpresa\GrupoEmpresaResource;
+use App\Http\Resources\Admin\GrupoEmpresa\GrupoEmpresaResource;
+use App\Http\Resources\Admin\EmpresaContato\EmpresaContatoResource;
+use App\Http\Resources\Admin\EmpresaEndereco\EmpresaEnderecoResource;
 
-class EmpresaListarResource extends JsonResource
+class EmpresaVisualizarResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
@@ -29,8 +30,11 @@ class EmpresaListarResource extends JsonResource
             'grupo_empresa' => GrupoEmpresaResource::make(
                 $this->whenLoaded('grupoEmpresa')
             ),
-             'matriz' => EmpresaResource::make(
-                $this->whenLoaded('matriz')
+            'contatos' => EmpresaContatoResource::collection(
+                $this->whenLoaded('contatos')
+            ),
+            'enderecos' => EmpresaEnderecoResource::collection(
+                $this->whenLoaded('enderecos')
             )
         ];
     }

@@ -15,7 +15,7 @@ use App\DTO\EmpresaContato\EmpresaContatoFiltroDTO;
 use App\DTO\EmpresaContato\EmpresaContatoCadastroDTO;
 use App\DTO\EmpresaContato\EmpresaContatoAtualizacaoDTO;
 
-use App\Http\Resources\EmpresaContato\EmpresaContatoResource;
+use App\Http\Resources\Admin\EmpresaContato\EmpresaContatoResource;
 
 class EmpresaContatoController extends Controller
 {

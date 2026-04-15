@@ -16,8 +16,8 @@ use App\DTO\AutenticacaoDoisFatores\AutenticacaoDoisFatoresHabilitacaoDTO;
 use App\DTO\AutenticacaoDoisFatores\AutenticacaoDoisFatoresConfirmacaoDTO;
 use App\DTO\AutenticacaoDoisFatores\AutenticacaoDoisFatoresDesabilitacaoDTO;
 
-use App\Http\Resources\Acoes\MensagemResource;
-use App\Http\Resources\AutenticacaoDoisFatores\AutenticacaoDoisFatoresResource;
+use App\Http\Resources\Admin\Acoes\MensagemResource;
+use App\Http\Resources\Admin\AutenticacaoDoisFatores\AutenticacaoDoisFatoresResource;
 
 class AutenticacaoDoisFatoresController extends Controller
 {

@@ -16,9 +16,9 @@ use App\DTO\Empresa\EmpresaFiltroDTO;
 use App\DTO\Empresa\EmpresaCadastroDTO;
 use App\DTO\Empresa\EmpresaAtualizacaoDTO;
 
-use App\Http\Resources\Empresa\EmpresaResource;
-use App\Http\Resources\Empresa\EmpresaListarResource;
-use App\Http\Resources\Empresa\EmpresaVisualizarResource;
+use App\Http\Resources\Admin\Empresa\EmpresaResource;
+use App\Http\Resources\Admin\Empresa\EmpresaListarResource;
+use App\Http\Resources\Admin\Empresa\EmpresaVisualizarResource;
 
 class EmpresaController extends Controller
 {
