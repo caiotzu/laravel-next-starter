@@ -4,8 +4,6 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 
-use App\Contracts\Cep\CepProviderInterface;
-
 use App\Services\CepService;
 use App\Services\External\Cep\ViaCepService;
 use App\Services\External\Cep\BrasilApiService;

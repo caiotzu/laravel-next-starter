@@ -209,6 +209,58 @@ class AdminPermissaoSeeder extends Seeder
                     "updated_at" => date("Y-m-d H:i:s")
                 ],
             //---
+
+            // grupo
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.grupo.menu",
+                    "descricao" => "Permite visualizar o menu de grupos",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.grupo.cadastrar",
+                    "descricao" => "Permite cadastrar um novo grupo",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.grupo.atualizar",
+                    "descricao" => "Permite atualizar um grupo",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.grupo.visualizar",
+                    "descricao" => "Permite visualizar um grupo",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.grupo.excluir",
+                    "descricao" => "Permite excluir um grupo",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.grupo.ativar",
+                    "descricao" => "Permite ativar um grupo",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.grupo.listar",
+                    "descricao" => "Permite listar os grupos",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+            //---
         ]);
     }
 }

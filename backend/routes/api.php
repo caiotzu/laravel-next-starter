@@ -11,6 +11,7 @@ use App\Http\Controllers\Lookup\ {
 
 use App\Http\Controllers\Admin\ {
     AuthController,
+    GrupoController,
     PerfilController,
     EmpresaController,
     GrupoEmpresaController,
@@ -93,6 +94,15 @@ Route::middleware('jwt')->group(function () {
                 Route::get('/', [EmpresaEnderecoController::class, 'listar']);
                 Route::post('/', [EmpresaEnderecoController::class, 'cadastrar']);
             });
+        });
+
+        Route::prefix('grupos')->group(function () {
+            Route::patch('/{id}/ativar', [GrupoController::class, 'ativar']);
+            Route::put('/{id}', [GrupoController::class, 'atualizar']);
+            Route::delete('/{id}', [GrupoController::class, 'excluir']);
+            Route::get('/{id}', [GrupoController::class, 'visualizar']);
+            Route::get('/', [GrupoController::class, 'listar']);
+            Route::post('/', [GrupoController::class, 'cadastrar']);
         });
     });
 });

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -44,8 +45,23 @@ class Grupo extends Model
             }
         });
 
+        /**
+         * Sempre que atualizar a versão faz update automaticamente
+         * evitando trabalho nos services
+         */
         static::updating(function ($model) {
             $model->versao++;
+        });
+
+        /**
+         * Adiciona as entidades vinculadas ao usuário sem a necessidade
+         * de repassar sempre no service
+         */
+        static::creating(function ($grupo) {
+            $user = Auth::user();
+
+            $grupo->entidade_tipo_id = $user->grupo->entidade_tipo_id;
+            $grupo->entidade_id = $user->grupo->entidade_id;
         });
     }
 
