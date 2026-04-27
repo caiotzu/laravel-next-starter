@@ -4,6 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+use App\Enums\UsuarioStatus;
 return new class extends Migration
 {
     /**
@@ -20,7 +21,7 @@ return new class extends Migration
             $table->string('nome');
             $table->string('email')->unique();
             $table->string('senha');
-            $table->boolean('ativo')->default(true);
+            $table->string('status')->default(UsuarioStatus::CONVIDADO->value);
             $table->string('remember_token')->nullable(true);
             $table->string('avatar')->nullable(true);
             $table->boolean('google2fa_enable')->default(false);

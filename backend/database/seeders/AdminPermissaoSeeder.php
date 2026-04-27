@@ -260,6 +260,13 @@ class AdminPermissaoSeeder extends Seeder
                     "created_at" => date("Y-m-d H:i:s"),
                     "updated_at" => date("Y-m-d H:i:s")
                 ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.grupo.sincronizar_permissao",
+                    "descricao" => "Permite vincular as permissões a um grupo",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
             //---
         ]);
     }

@@ -16,6 +16,7 @@ use App\DTO\GrupoEmpresa\GrupoEmpresaCadastroDTO;
 use App\DTO\GrupoEmpresa\GrupoEmpresaAtualizacaoDTO;
 
 use App\Enums\ErrorCode;
+use App\Enums\UsuarioStatus;
 
 use App\Exceptions\BusinessException;
 
@@ -45,7 +46,7 @@ class GrupoEmpresaService {
                 'nome' => $dto->usuario->nome,
                 'email' => $dto->usuario->email,
                 'senha' => bcrypt('mudar123@'),
-                'ativo' => true
+                'status' => UsuarioStatus::CONVIDADO->value
             ]);
 
             return $grupoEmpresa;

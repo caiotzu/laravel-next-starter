@@ -8,6 +8,7 @@ use App\Models\Usuario;
 
 use App\Enums\ErrorCode;
 use App\Enums\EntidadeTipo;
+use App\Enums\UsuarioStatus;
 
 use App\Exceptions\BusinessException;
 
@@ -31,7 +32,7 @@ class UsuarioService {
                 return $query->where('chave', $entidadeTipo->value);
             })
             ->where('email', $email)
-            ->where('ativo', true)
+            ->where('status', UsuarioStatus::ATIVO->value)
             ->first();
     }
 
@@ -42,7 +43,7 @@ class UsuarioService {
                 return $query->where('chave', $entidadeTipo->value);
             })
             ->where('id', $id)
-            ->where('ativo', true)
+            ->where('status', UsuarioStatus::ATIVO->value)
             ->first();
     }
 }

@@ -15,7 +15,7 @@ class MeResource extends JsonResource
             'email' => $this['email'],
             'avatar' => $this['avatar'],
             'grupo' => $this['grupo'],
-            'ativo' => $this['ativo'],
+            'status' => $this['status'],
             'google2fa_enable' => $this['google2fa_enable'],
             'google2fa_confirmado_em' => $this['google2fa_confirmado_em'],
             'ultimo_login_em' => $this['ultimo_login_em'],

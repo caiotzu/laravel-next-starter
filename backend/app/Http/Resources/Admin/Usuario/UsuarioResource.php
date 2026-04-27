@@ -14,7 +14,7 @@ class UsuarioResource extends JsonResource
             'grupo_id' => $this->grupo_id,
             'nome' => $this->nome,
             'email' => $this->email,
-            'ativo' => $this->ativo,
+            'status' => $this->status,
             'avatar' => $this->avatar,
             'google2fa_enable' => $this->google2fa_enable,
             'google2fa_confirmado_em' => $this->google2fa_confirmado_em,

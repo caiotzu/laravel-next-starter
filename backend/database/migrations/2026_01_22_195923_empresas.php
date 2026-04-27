@@ -18,10 +18,6 @@ return new class extends Migration
                 ->references('id')
                 ->on('grupo_empresas');
             $table->uuid('matriz_id')->nullable(true);
-            $table->foreign('matriz_id')
-                ->references('id')
-                ->on('empresas')
-                ->restrictOnDelete();
             $table->string('cnpj', 14)->unique();
             $table->string('nome_fantasia', 60);
             $table->string('razao_social', 60);
@@ -31,6 +27,14 @@ return new class extends Migration
             $table->string('uf', 2);
             $table->timestamps($precision = 0);
             $table->softDeletes();
+        });
+
+        // Adiciona a FK de autorreferência APÓS a criação da tabela
+        Schema::table('empresas', function (Blueprint $table) {
+            $table->foreign('matriz_id')
+                ->references('id')
+                ->on('empresas')
+                ->restrictOnDelete();
         });
     }
 

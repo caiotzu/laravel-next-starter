@@ -84,7 +84,7 @@ class EmpresaContatoController extends Controller
         $this->authorize('admin.empresa.contato.listar');
 
         $contatos = $this->empresaContatoService->listar(EmpresaContatoFiltroDTO::criarParaFiltro([
-            'empresaId' => $empresaId
+            'empresa_id' => $empresaId
         ]));
 
         return EmpresaContatoResource::collection($contatos)->response()->setStatusCode(200);

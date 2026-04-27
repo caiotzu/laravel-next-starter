@@ -115,8 +115,8 @@ class EmpresaEnderecoService {
     {
         return EmpresaEndereco::query()
             ->with('municipio')
-            ->when($filtro->empresaId, fn ($q) =>
-                $q->where('empresa_id', $filtro->empresaId)
+            ->when($filtro->empresa_id, fn ($q) =>
+                $q->where('empresa_id', $filtro->empresa_id)
             )
             ->orderBy('created_at', 'DESC')
             ->get();

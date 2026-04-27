@@ -6,8 +6,8 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+use App\Enums\UsuarioStatus;
 
 class AdminUsuarioSeeder extends Seeder
 {
@@ -24,7 +24,7 @@ class AdminUsuarioSeeder extends Seeder
             "nome" => "Caio Costa",
             "email" => "admin@admin.com.br",
             "senha" => bcrypt("Admin123@"),
-            "ativo" => true,
+            "status" => UsuarioStatus::ATIVO->value,
             "created_at" => date("Y-m-d H:i:s"),
             "updated_at" => date("Y-m-d H:i:s")
         ]);

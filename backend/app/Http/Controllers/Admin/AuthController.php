@@ -206,7 +206,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'avatar' => $user->avatar,
                 'grupo' => $user->grupo->descricao,
-                'ativo' => $user->ativo,
+                'status' => $user->status,
                 'google2fa_enable' => $user->google2fa_enable,
                 'google2fa_confirmado_em' => $user->google2fa_confirmado_em,
                 'ultimo_login_em' => $user->ultimo_login_em,

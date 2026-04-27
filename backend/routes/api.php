@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\ {
     GrupoController,
     PerfilController,
     EmpresaController,
+    PermissaoController,
     GrupoEmpresaController,
     EmpresaContatoController,
     EmpresaEnderecoController,
@@ -97,6 +98,7 @@ Route::middleware('jwt')->group(function () {
         });
 
         Route::prefix('grupos')->group(function () {
+            Route::patch('/{id}/permissoes', [GrupoController::class, 'sincronizarPermissoes']);
             Route::patch('/{id}/ativar', [GrupoController::class, 'ativar']);
             Route::put('/{id}', [GrupoController::class, 'atualizar']);
             Route::delete('/{id}', [GrupoController::class, 'excluir']);
@@ -104,5 +106,7 @@ Route::middleware('jwt')->group(function () {
             Route::get('/', [GrupoController::class, 'listar']);
             Route::post('/', [GrupoController::class, 'cadastrar']);
         });
+
+        Route::get('/permissoes', [PermissaoController::class, 'listar']);
     });
 });

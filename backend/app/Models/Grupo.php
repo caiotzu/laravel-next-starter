@@ -43,6 +43,19 @@ class Grupo extends Model
             if (! $model->id) {
                 $model->id = (string) Str::uuid();
             }
+
+            /**
+             * Adiciona as entidades vinculadas ao usuário sem a necessidade
+             * de repassar sempre no service.
+             * Só realizar o cadastro automático caso não seja passado, pois pode
+             * ser realizado o castro de um novo grupo a partir do admin para uma nova empresa.
+             */
+            if(!$model->entidade_tipo_id && !$model->entidade_id) {
+                $user = Auth::user();
+
+                $model->entidade_tipo_id = $user->grupo->entidade_tipo_id;
+                $model->entidade_id = $user->grupo->entidade_id;
+            }
         });
 
         /**
@@ -51,17 +64,6 @@ class Grupo extends Model
          */
         static::updating(function ($model) {
             $model->versao++;
-        });
-
-        /**
-         * Adiciona as entidades vinculadas ao usuário sem a necessidade
-         * de repassar sempre no service
-         */
-        static::creating(function ($grupo) {
-            $user = Auth::user();
-
-            $grupo->entidade_tipo_id = $user->grupo->entidade_tipo_id;
-            $grupo->entidade_id = $user->grupo->entidade_id;
         });
     }
 

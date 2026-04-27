@@ -12,10 +12,12 @@ use App\Services\GrupoService;
 use App\Http\Requests\Admin\Grupo\ListarRequest;
 use App\Http\Requests\Admin\Grupo\CadastrarRequest;
 use App\Http\Requests\Admin\Grupo\AtualizarRequest;
+use App\Http\Requests\Admin\Grupo\SincronizarPermissoesRequest;
 
 use App\DTO\Grupo\GrupoFiltroDTO;
 use App\DTO\Grupo\GrupoCadastroDTO;
 use App\DTO\Grupo\GrupoAtualizacaoDTO;
+use App\DTO\Grupo\SincronizarPermissoesDTO;
 
 use App\Http\Resources\Admin\Grupo\GrupoResource;
 use App\Http\Resources\Admin\Grupo\GrupoVisualizarResource;
@@ -30,9 +32,9 @@ class GrupoController extends Controller
     {
         $this->authorize('admin.grupo.cadastrar');
 
-        $grupoEmpresa = $this->grupoService->cadastrar(GrupoCadastroDTO::criarParaCadastro($request->validated()));
+        $grupo = $this->grupoService->cadastrar(GrupoCadastroDTO::criarParaCadastro($request->validated()));
 
-        return GrupoResource::make($grupoEmpresa)->response()->setStatusCode(201);
+        return GrupoResource::make($grupo)->response()->setStatusCode(201);
     }
 
     public function atualizar(AtualizarRequest $request, string $id): JsonResponse
@@ -54,7 +56,6 @@ class GrupoController extends Controller
         $this->authorize('admin.grupo.visualizar');
 
         $grupo = $this->grupoService->visualizar($id);
-        // dd($grupo);
 
         return GrupoVisualizarResource::make($grupo)->response()->setStatusCode(200);
     }
@@ -84,5 +85,17 @@ class GrupoController extends Controller
         $grupos = $this->grupoService->listar(GrupoFiltroDTO::criarParaFiltro($request->validated()));
 
         return GrupoResource::collection($grupos)->response()->setStatusCode(200);
+    }
+
+    public function sincronizarPermissoes(SincronizarPermissoesRequest $request, string $id)
+    {
+        $this->authorize('admin.grupo.sincronizar_permissao');
+
+        $grupo = $this->grupoService->sincronizarPermissoes(SincronizarPermissoesDTO::criarParaSincronizacaoDasPermissoes(
+            $id,
+            $request->validated()
+        ));
+
+        return GrupoVisualizarResource::make($grupo)->response()->setStatusCode(200);
     }
 }

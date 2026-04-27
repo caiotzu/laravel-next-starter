@@ -83,7 +83,7 @@ class EmpresaEnderecoController extends Controller
         $this->authorize('admin.empresa.endereco.listar');
 
         $enderecos = $this->empresaEnderecoService->listar(EmpresaEnderecoFiltroDTO::criarParaFiltro([
-            'empresaId' => $empresaId
+            'empresa_id' => $empresaId
         ]));
 
         return EmpresaEnderecoResource::collection($enderecos)->response()->setStatusCode(200);
