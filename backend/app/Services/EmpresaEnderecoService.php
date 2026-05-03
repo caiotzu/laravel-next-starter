@@ -5,6 +5,8 @@ namespace App\Services;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Collection;
 
+use App\Events\EmpresaDadosObrigatoriosAtualizados;
+
 use App\Models\EmpresaEndereco;
 
 use App\DTO\EmpresaEndereco\EmpresaEnderecoFiltroDTO;
@@ -32,6 +34,12 @@ class EmpresaEnderecoService {
                 'complemento' => $dto->complemento
             ]);
 
+            /**
+             * Dispara o evento para verificar se a empresa pode ser ativada
+             */
+            $empresa = $endereco->empresa;
+            event(new EmpresaDadosObrigatoriosAtualizados($empresa));
+
             return $endereco;
         });
     }
@@ -52,6 +60,12 @@ class EmpresaEnderecoService {
             }
 
             $endereco->update($dto->paraPersistencia());
+
+            /**
+             * Dispara o evento para verificar se a empresa pode ser ativada
+             */
+            $empresa = $endereco->empresa;
+            event(new EmpresaDadosObrigatoriosAtualizados($empresa));
 
             return $endereco;
         });
@@ -89,6 +103,12 @@ class EmpresaEnderecoService {
 
             $endereco->delete();
             $endereco->fresh();
+
+            /**
+             * Dispara o evento para verificar se a empresa pode ser ativada
+             */
+            $empresa = $endereco->empresa;
+            event(new EmpresaDadosObrigatoriosAtualizados($empresa));
         });
     }
 
@@ -106,8 +126,15 @@ class EmpresaEnderecoService {
             }
 
             $endereco->restore();
+            $endereco->fresh();
 
-            return $endereco->fresh();
+            /**
+             * Dispara o evento para verificar se a empresa pode ser ativada
+             */
+            $empresa = $endereco->empresa;
+            event(new EmpresaDadosObrigatoriosAtualizados($empresa));
+
+            return $endereco;
         });
     }
 

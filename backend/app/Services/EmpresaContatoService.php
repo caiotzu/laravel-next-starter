@@ -5,6 +5,8 @@ namespace App\Services;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Collection;
 
+use App\Events\EmpresaDadosObrigatoriosAtualizados;
+
 use App\Models\EmpresaContato;
 
 use App\DTO\EmpresaContato\EmpresaContatoFiltroDTO;
@@ -27,6 +29,12 @@ class EmpresaContatoService {
                 'principal' => $dto->principal
             ]);
 
+            /**
+             * Dispara o evento para verificar se a empresa pode ser ativada
+             */
+            $empresa = $contato->empresa;
+            event(new EmpresaDadosObrigatoriosAtualizados($empresa));
+
             return $contato;
         });
     }
@@ -47,6 +55,12 @@ class EmpresaContatoService {
             }
 
             $contato->update($dto->paraPersistencia());
+
+            /**
+             * Dispara o evento para verificar se a empresa pode ser ativada
+             */
+            $empresa = $contato->empresa;
+            event(new EmpresaDadosObrigatoriosAtualizados($empresa));
 
             return $contato;
         });
@@ -84,6 +98,12 @@ class EmpresaContatoService {
 
             $contato->delete();
             $contato->fresh();
+
+            /**
+             * Dispara o evento para verificar se a empresa pode ser ativada
+             */
+            $empresa = $contato->empresa;
+            event(new EmpresaDadosObrigatoriosAtualizados($empresa));
         });
     }
 
@@ -102,8 +122,15 @@ class EmpresaContatoService {
             }
 
             $contato->restore();
+            $contato->fresh();
 
-            return $contato->fresh();
+            /**
+             * Dispara o evento para verificar se a empresa pode ser ativada
+             */
+            $empresa = $contato->empresa;
+            event(new EmpresaDadosObrigatoriosAtualizados($empresa));
+
+            return $contato;
         });
     }
 

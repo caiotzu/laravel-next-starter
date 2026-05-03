@@ -12,6 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
+use App\Enums\UsuarioStatus;
 class Usuario extends Authenticatable implements JWTSubject
 {
     use SoftDeletes;
@@ -26,7 +27,7 @@ class Usuario extends Authenticatable implements JWTSubject
         'nome',
         'email',
         'senha',
-        'ativo',
+        'status',
         'remember_token',
         'avatar',
         'google2fa_enable',
@@ -42,6 +43,7 @@ class Usuario extends Authenticatable implements JWTSubject
     ];
 
     protected $casts = [
+        'status' => UsuarioStatus::class,
         'google2fa_secret' => 'encrypted',
         'google2fa_confirmado_em' => 'datetime',
         'ultimo_login_em' => 'datetime',

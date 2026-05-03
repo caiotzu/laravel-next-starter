@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\EmpresaStatus;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -27,7 +28,7 @@ class PrivateEmpresaSeeder extends Seeder
             "razao_social" => "Nexus Tecnologia e Soluções Digitais Ltda",
             "inscricao_estadual" => "987654321",
             "inscricao_municipal" => "12345678911",
-            "ativo" => true,
+            "status" => EmpresaStatus::ATIVO->value,
             "uf" => "SP",
             "created_at" => date("Y-m-d H:i:s"),
             "updated_at" => date("Y-m-d H:i:s")

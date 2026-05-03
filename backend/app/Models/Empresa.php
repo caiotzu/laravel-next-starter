@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+use App\Enums\EmpresaStatus;
 
 class Empresa extends Model
 {
@@ -26,11 +27,12 @@ class Empresa extends Model
         'razao_social',
         'inscricao_estadual',
         'inscricao_municipal',
-        'ativo',
+        'status',
         'uf',
     ];
 
     protected $casts = [
+        'status' => EmpresaStatus::class,
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime'
@@ -41,6 +43,11 @@ class Empresa extends Model
         static::creating(function ($model) {
             if (! $model->id) {
                 $model->id = (string) Str::uuid();
+            }
+
+            // Garante que o status nunca seja nulo na criação
+            if (!$model->status) {
+                $model->status = EmpresaStatus::PENDENTE;
             }
         });
     }

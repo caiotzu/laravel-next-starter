@@ -4,6 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+use App\Enums\EmpresaStatus;
 return new class extends Migration
 {
     /**
@@ -23,7 +24,7 @@ return new class extends Migration
             $table->string('razao_social', 60);
             $table->string('inscricao_estadual')->nullable(true);
             $table->string('inscricao_municipal')->nullable(true);
-            $table->boolean('ativo')->default(true);
+            $table->string('status')->default(EmpresaStatus::PENDENTE->value);
             $table->string('uf', 2);
             $table->timestamps($precision = 0);
             $table->softDeletes();

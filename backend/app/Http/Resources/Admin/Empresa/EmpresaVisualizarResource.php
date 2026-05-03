@@ -22,7 +22,7 @@ class EmpresaVisualizarResource extends JsonResource
             'razao_social' => $this->razao_social,
             'inscricao_estadual' => $this->inscricao_estadual,
             'inscricao_municipal' => $this->inscricao_municipal,
-            'ativo' => $this->ativo,
+            'status' => $this->status,
             'uf' => $this->uf,
             'updated_at' => $this->updated_at,
             'created_at' => $this->created_at,

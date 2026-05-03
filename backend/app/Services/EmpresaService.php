@@ -5,6 +5,8 @@ namespace App\Services;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
+use App\Events\EmpresaDadosObrigatoriosAtualizados;
+
 use App\Models\Empresa;
 use App\Models\EmpresaContato;
 use App\Models\EmpresaEndereco;
@@ -30,9 +32,13 @@ class EmpresaService {
                 'razao_social' => $dto->razao_social,
                 'inscricao_estadual' => $dto->inscricao_estadual,
                 'inscricao_municipal' => $dto->inscricao_municipal,
-                'ativo' => true,
                 'uf' => $dto->uf
             ]);
+
+            /**
+             * Dispara o evento para verificar se a empresa pode ser ativada
+             */
+            event(new EmpresaDadosObrigatoriosAtualizados($empresa));
 
             return $empresa;
         });
@@ -47,6 +53,11 @@ class EmpresaService {
                 throw new BusinessException('Empresa não encontrada.', ErrorCode::EMPRESA_NOT_FOUND->value);
 
             $empresa->update($dto->paraPersistencia());
+
+            /**
+             * Dispara o evento para verificar se a empresa pode ser ativada
+             */
+            event(new EmpresaDadosObrigatoriosAtualizados($empresa));
 
             return $empresa;
         });
@@ -87,6 +98,11 @@ class EmpresaService {
 
             $empresa->delete();
             $empresa->fresh();
+
+            /**
+             * Dispara o evento para verificar se a empresa pode ser ativada
+             */
+            event(new EmpresaDadosObrigatoriosAtualizados($empresa));
         });
     }
 
@@ -105,8 +121,14 @@ class EmpresaService {
             }
 
             $empresa->restore();
+            $empresa->fresh();
 
-            return $empresa->fresh();
+            /**
+             * Dispara o evento para verificar se a empresa pode ser ativada
+             */
+            event(new EmpresaDadosObrigatoriosAtualizados($empresa));
+
+            return $empresa;
         });
     }
 

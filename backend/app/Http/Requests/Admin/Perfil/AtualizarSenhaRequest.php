@@ -45,9 +45,9 @@ class AtualizarSenhaRequest extends FormRequest
     {
         return [
             'senha_atual.required' => 'A senha atual é obrigatória.',
+
             'senha_nova.required' => 'A nova senha é obrigatória.',
             'senha_nova.different' => 'A nova senha deve ser diferente da senha atual.',
-
             'senha_nova.min' => 'A nova senha deve ter pelo menos 8 caracteres.',
             'senha_nova.mixed' => 'A nova senha deve conter pelo menos uma letra maiúscula e uma minúscula.',
             'senha_nova.letters' => 'A nova senha deve conter pelo menos uma letra.',
