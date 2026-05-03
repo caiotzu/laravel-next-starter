@@ -29,7 +29,7 @@ class EmpresaListarResource extends JsonResource
             'grupo_empresa' => GrupoEmpresaResource::make(
                 $this->whenLoaded('grupoEmpresa')
             ),
-             'matriz' => EmpresaResource::make(
+            'matriz' => EmpresaResource::make(
                 $this->whenLoaded('matriz')
             )
         ];

@@ -2,23 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-
-
 class Grupo extends Model
 {
+    use HasUuids;
     use SoftDeletes;
 
     protected $table = 'grupos';
-    protected $keyType = 'string';
-    public $incrementing = false;
 
     protected $fillable = [
         'id',
@@ -40,10 +37,6 @@ class Grupo extends Model
     protected static function booted()
     {
         static::creating(function ($model) {
-            if (! $model->id) {
-                $model->id = (string) Str::uuid();
-            }
-
             /**
              * Adiciona as entidades vinculadas ao usuário sem a necessidade
              * de repassar sempre no service.

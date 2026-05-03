@@ -32,7 +32,7 @@ class GrupoService {
     {
         return DB::transaction(function () use ($dto) {
             /**
-             * Para visualizar o grupo precisa ser do mesmo tipo de entidade. Ex: admin, private
+             * Para atualizar o grupo precisa ser do mesmo tipo de entidade. Ex: admin, private
              * e também deve pertencer ao mesmo identificador da entidade. Ex: null (admin), grupo_empresas.
              */
             $user = Auth::user();
@@ -81,7 +81,7 @@ class GrupoService {
     {
         DB::transaction(function () use ($id) {
             /**
-             * Para visualizar o grupo precisa ser do mesmo tipo de entidade. Ex: admin, private
+             * Para excluir o grupo precisa ser do mesmo tipo de entidade. Ex: admin, private
              * e também deve pertencer ao mesmo identificador da entidade. Ex: null (admin), grupo_empresas.
              */
             $user = Auth::user();
@@ -106,7 +106,7 @@ class GrupoService {
     {
         return DB::transaction(function () use ($id) {
             /**
-             * Para visualizar o grupo precisa ser do mesmo tipo de entidade. Ex: admin, private
+             * Para ativar o grupo precisa ser do mesmo tipo de entidade. Ex: admin, private
              * e também deve pertencer ao mesmo identificador da entidade. Ex: null (admin), grupo_empresas.
              */
             $user = Auth::user();
@@ -132,7 +132,7 @@ class GrupoService {
     public function listar(GrupoFiltroDTO $filtro): LengthAwarePaginator
     {
         /**
-         * Para visualizar o grupo precisa ser do mesmo tipo de entidade. Ex: admin, private
+         * Para listar o grupo precisa ser do mesmo tipo de entidade. Ex: admin, private
          * e também deve pertencer ao mesmo identificador da entidade. Ex: null (admin), grupo_empresas.
          */
         $user = Auth::user();
@@ -157,7 +157,7 @@ class GrupoService {
     {
         return DB::transaction(function () use ($dto) {
             /**
-             * Para visualizar o grupo precisa ser do mesmo tipo de entidade. Ex: admin, private
+             * Para sincronizar o grupo precisa ser do mesmo tipo de entidade. Ex: admin, private
              * e também deve pertencer ao mesmo identificador da entidade. Ex: null (admin), grupo_empresas.
              */
             $user = Auth::user();

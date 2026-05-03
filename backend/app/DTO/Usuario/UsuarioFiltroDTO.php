@@ -1,16 +1,17 @@
 <?php
 
-namespace App\DTO\GrupoEmpresa;
+namespace App\DTO\Usuario;
 
 use App\DTO\Common\PaginationDTO;
 
-final class GrupoEmpresaFiltroDTO
+final class UsuarioFiltroDTO
 {
     private function __construct(
         public readonly PaginationDTO $paginacao,
         public readonly ?string $id = null,
         public readonly ?string $nome = null,
-        public readonly ?bool $excluido = null
+        public readonly ?string $grupo_id = null,
+        public readonly ?bool $excluido = null,
     ) {}
 
     public static function criarParaFiltro(array $dados): self
@@ -19,7 +20,8 @@ final class GrupoEmpresaFiltroDTO
             paginacao: PaginationDTO::criarParaPaginar($dados),
             id: $dados['id'] ?? null,
             nome: $dados['nome'] ?? null,
-            excluido: $dados['excluido'] ?? null
+            grupo_id: $dados['grupo_id'] ?? null,
+            excluido: $dados['excluido'] ?? null,
         );
     }
 }

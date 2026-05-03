@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
@@ -15,11 +15,10 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 use App\Enums\UsuarioStatus;
 class Usuario extends Authenticatable implements JWTSubject
 {
+    use HasUuids;
     use SoftDeletes;
 
     protected $table = 'usuarios';
-    protected $keyType = 'string';
-    public $incrementing = false;
 
     protected $fillable = [
         'id',
@@ -52,16 +51,7 @@ class Usuario extends Authenticatable implements JWTSubject
         'deleted_at' => 'datetime'
     ];
 
-    protected static function booted()
-    {
-        static::creating(function ($model) {
-            if (! $model->id) {
-                $model->id = (string) Str::uuid();
-            }
-        });
-    }
-
-     protected function avatar(): Attribute
+    protected function avatar(): Attribute
     {
         return Attribute::make(
             get: fn ($value) =>

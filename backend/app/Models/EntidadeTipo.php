@@ -2,20 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 use App\Enums\EntidadeTipo as EnumsEntidadeTipo;
 
 class EntidadeTipo extends Model
 {
+    use HasUuids;
     use SoftDeletes;
 
     protected $table = 'entidade_tipos';
-    protected $keyType = 'string';
-    public $incrementing = false;
 
     protected $fillable = [
         'id',
@@ -29,15 +28,6 @@ class EntidadeTipo extends Model
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime'
     ];
-
-    protected static function booted()
-    {
-        static::creating(function ($model) {
-            if (! $model->id) {
-                $model->id = (string) Str::uuid();
-            }
-        });
-    }
 
     public function grupos(): HasMany
     {

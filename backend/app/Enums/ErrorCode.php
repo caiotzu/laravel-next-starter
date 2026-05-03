@@ -19,6 +19,7 @@ enum ErrorCode: int
     // Usuário (model) -> 03
     case USUARIO_UNAUTHORIZED = 40103;
     case USUARIO_NOT_FOUND = 40403;
+    case USUARIO_REQUIRED = 42203;
 
     // Empresa (model) -> 04
     case EMPRESA_NOT_FOUND = 40404;

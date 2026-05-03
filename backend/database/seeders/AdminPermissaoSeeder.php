@@ -268,6 +268,58 @@ class AdminPermissaoSeeder extends Seeder
                     "updated_at" => date("Y-m-d H:i:s")
                 ],
             //---
+
+            // usuário
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.usuario.menu",
+                    "descricao" => "Permite visualizar o menu de usuários",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.usuario.cadastrar",
+                    "descricao" => "Permite cadastrar um novo usuário",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.usuario.atualizar",
+                    "descricao" => "Permite atualizar um usuário",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.usuario.visualizar",
+                    "descricao" => "Permite visualizar um usuário",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.usuario.excluir",
+                    "descricao" => "Permite excluir um usuário",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.usuario.ativar",
+                    "descricao" => "Permite ativar um usuário",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.usuario.listar",
+                    "descricao" => "Permite listar os usuários",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ]
+            //---
         ]);
     }
 }

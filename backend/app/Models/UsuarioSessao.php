@@ -33,15 +33,6 @@ class UsuarioSessao extends Model
         'deleted_at' => 'datetime'
     ];
 
-    protected static function booted()
-    {
-        static::creating(function ($model) {
-            if (! $model->id) {
-                $model->id = (string) Str::uuid();
-            }
-        });
-    }
-
     public function usuario(): BelongsTo
     {
         return $this->belongsTo(Usuario::class, 'usuario_id', 'id');
