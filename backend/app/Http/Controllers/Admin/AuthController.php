@@ -22,10 +22,6 @@ use App\Services\UsuarioService;
 use App\Services\UsuarioSessaoService;
 use App\Services\AutenticacaoDoisFatoresService;
 
-use App\Services\EmailService;
-use App\DTO\Email\EmailEnvioDTO;
-
-
 use App\DTO\UsuarioSessao\UsuarioSessaoCadastroDTO;
 use App\DTO\UsuarioSessao\UsuarioSessaoAtualizacaoDTO;
 
@@ -45,7 +41,6 @@ use App\Enums\EntidadeTipo;
 class AuthController extends Controller
 {
     public function __construct(
-        protected EmailService $emailService,
         protected UsuarioService $usuarioService,
         protected UsuarioSessaoService $usuarioSessaoService,
         protected AutenticacaoDoisFatoresService $autenticacaoDoisFatoresService
@@ -187,24 +182,6 @@ class AuthController extends Controller
 
     public function me(): JsonResponse
     {
-        dd('senha gerada', gerar_senha());
-        $html = view('emails.usuarios.usuario-criado', [
-            'nome' => 'Caio Costa',
-            'email' => 'caio.costa.ads@gmail.com',
-            'senha' => '123456',
-            'url' => config('app.url')
-        ])->render();
-
-        $response = $this->emailService->enviar(new EmailEnvioDTO(
-            to: ['caio.costa.ads@gmail.com'],
-            from_name: 'Caio Teste',
-            subject: 'Fazendo teste',
-            body: $html,
-            cc: [],
-            bcc: [],
-            attachments: [],
-        ));
-        dd('DD final', $response);
         try {
             /** @var \App\Models\Usuario $user */
             $user = Auth::user();
