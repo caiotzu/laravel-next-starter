@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
+use App\Events\UsuarioCriado;
+
 use App\Models\Grupo;
 use App\Models\Usuario;
 
@@ -42,15 +44,16 @@ class UsuarioService {
              * Por enquanto a senha vai ser gerada fixa, até a implementação
              * dos métodos de envio de e-mail
              */
-            $senhaCriptografada = bcrypt("123Mudar@");
-
+            $senha = gerar_senha();
             $usuario = Usuario::create([
                 'grupo_id' => $dto->grupo_id,
                 'nome' => $dto->nome,
                 'email' => $dto->email,
-                'senha' => $senhaCriptografada,
+                'senha' => bcrypt($senha),
                 'status' => UsuarioStatus::CONVIDADO->value
             ]);
+
+            event(new UsuarioCriado($usuario, $senha));
 
             return $usuario;
         });

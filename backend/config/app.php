@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'laravel-next-starter'),
+    'name' => env('APP_NAME', 'Laravel Next Starter'),
 
     /*
     |--------------------------------------------------------------------------
@@ -53,6 +53,8 @@ return [
     */
 
     'url' => env('APP_URL', 'http://localhost'),
+    'url_frontend' => env('APP_URL_FRONTEND', 'http://localhost'),
+
 
     /*
     |--------------------------------------------------------------------------

@@ -29,9 +29,9 @@ class AmazonSesService implements EmailProviderInterface
         ->withBody(json_encode((object) $payload))
         ->post(config('api.email.url'));
 
-        $data = $response->json() ?? [];
+        $data = $response->json() ?? null;
 
-        if (isset($data['error']) && $data['error']) {
+        if ((isset($data['error']) && $data['error']) || !$data) {
             return new EmailResultadoDTO(
                 provider: 'amazon_ses',
                 sucesso: false,

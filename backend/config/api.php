@@ -7,7 +7,8 @@ return [
         'min' => 1,
     ],
     'email' => [
+        'logo' => env('EMAIL_LOGO', ''),
+        'url' => env('EMAIL_URL', ''),
         'provider' => env('EMAIL_PROVIDER', 'amazon_ses'),
-        'url' => env('EMAIL_URL', '')
     ]
 ];

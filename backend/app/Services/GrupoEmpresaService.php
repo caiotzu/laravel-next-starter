@@ -5,6 +5,8 @@ namespace App\Services;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
+use App\Events\UsuarioCriado;
+
 use App\Models\Grupo;
 use App\Models\Usuario;
 use App\Models\Permissao;
@@ -41,13 +43,16 @@ class GrupoEmpresaService {
 
             $grupo->permissoes()->sync($permissoesIds);
 
-            Usuario::create([
+            $senha = gerar_senha();
+            $usuario = Usuario::create([
                 'grupo_id' => $grupo->id,
                 'nome' => $dto->usuario->nome,
                 'email' => $dto->usuario->email,
-                'senha' => bcrypt('mudar123@'),
+                'senha' => bcrypt($senha),
                 'status' => UsuarioStatus::CONVIDADO->value
             ]);
+
+            event(new UsuarioCriado($usuario, $senha));
 
             return $grupoEmpresa;
         });
