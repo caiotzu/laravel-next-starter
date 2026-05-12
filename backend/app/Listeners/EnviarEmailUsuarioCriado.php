@@ -31,7 +31,7 @@ class EnviarEmailUsuarioCriado
             'url' => $url
         ])->render();
 
-        $this->emailService->enviar(new EmailEnvioDTO(
+        $resultado = $this->emailService->enviar(new EmailEnvioDTO(
             to: [$usuario->email],
             from_name: config('app.name'),
             subject: 'Bem-vindo ao '.config('app.name'),
@@ -40,6 +40,14 @@ class EnviarEmailUsuarioCriado
             bcc: [],
             attachments: [],
         ));
+
+        if (!$resultado->sucesso) {
+            logger()->error('Falha ao enviar e-mail', [
+                'provider' => $resultado->provider,
+                'mensagem' => $resultado->mensagem,
+                'usuario_id' => $usuario->id,
+            ]);
+        }
     }
 
     private function resolverUrl(Usuario $usuario): string
