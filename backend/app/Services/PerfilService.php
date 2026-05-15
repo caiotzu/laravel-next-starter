@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
+use App\Events\SenhaUsuarioAlterada;
+
 use App\Models\Usuario;
 
 use App\DTO\Perfil\PerfilAtualizacaoDTO;
@@ -45,6 +47,8 @@ class PerfilService {
             $usuario->update([
                 'senha' => Hash::make($dto->senha_nova)
             ]);
+
+            event(new SenhaUsuarioAlterada($usuario));
 
             return $usuario->fresh();
         });

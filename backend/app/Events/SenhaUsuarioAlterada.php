@@ -12,12 +12,11 @@ use Illuminate\Queue\SerializesModels;
 
 use App\Models\Usuario;
 
-class UsuarioCriado
+class SenhaUsuarioAlterada
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public function __construct(
-        public Usuario $usuario,
-        public string $senha
+        public Usuario $usuario
     ) {}
 }
