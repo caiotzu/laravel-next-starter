@@ -12,6 +12,7 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 use App\Http\Middleware\JwtMiddleware;
+use Illuminate\Database\QueryException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (Throwable $e, $request) {
 
             if ($request->is('api/*')) {
+                // dd('Erro', $e);
 
                 // Validação de formulário (campos)
                 if ($e instanceof ValidationException) {
@@ -73,6 +75,15 @@ return Application::configure(basePath: dirname(__DIR__))
                             ]
                         ]
                     ], $e->getStatusCode());
+                }
+
+                // QueryException
+                if ($e instanceof QueryException) {
+                    return response()->json([
+                        'errors' => [
+                            'business' => config('app.debug') ? [$e->getMessage()] : ['Não foi possível processar sua solicitação. Verifique os dados informados e tente novamente.']
+                        ]
+                    ], Response::HTTP_BAD_REQUEST);
                 }
 
                 // Exception geral
