@@ -18,6 +18,6 @@ class UsuarioCriado
 
     public function __construct(
         public Usuario $usuario,
-        public string $senha
+        public string $token
     ) {}
 }

@@ -69,6 +69,11 @@ class Usuario extends Authenticatable implements JWTSubject
         return $this->hasMany(UsuarioSessao::class, 'usuario_id', 'id');
     }
 
+    public function tokenResetSenhas(): HasMany
+    {
+        return $this->hasMany(TokenResetSenha::class, 'usuario_id', 'id');
+    }
+
     private function carregarGrupoComPermissoes(): ?Grupo
     {
         if ($this->relationLoaded('grupo')) {

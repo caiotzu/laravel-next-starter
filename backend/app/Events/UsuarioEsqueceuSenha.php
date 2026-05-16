@@ -12,7 +12,7 @@ use Illuminate\Queue\SerializesModels;
 
 use App\Models\Usuario;
 
-class SenhaUsuarioAlterada
+class UsuarioEsqueceuSenha
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 

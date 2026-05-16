@@ -24,6 +24,10 @@ use App\Exceptions\BusinessException;
 
 class GrupoEmpresaService {
 
+    public function __construct(
+        private TokenResetSenhaService $tokenResetSenhaService
+    ) {}
+
     public function cadastrar(GrupoEmpresaCadastroDTO $dto): GrupoEmpresa
     {
         return DB::transaction(function () use ($dto) {
@@ -43,16 +47,16 @@ class GrupoEmpresaService {
 
             $grupo->permissoes()->sync($permissoesIds);
 
-            $senha = gerar_senha();
             $usuario = Usuario::create([
                 'grupo_id' => $grupo->id,
                 'nome' => $dto->usuario->nome,
                 'email' => $dto->usuario->email,
-                'senha' => bcrypt($senha),
+                'senha' => null,
                 'status' => UsuarioStatus::CONVIDADO->value
             ]);
 
-            event(new UsuarioCriado($usuario, $senha));
+            $token = $this->tokenResetSenhaService->gerarToken($usuario);
+            event(new UsuarioCriado($usuario, $token));
 
             return $grupoEmpresa;
         });

@@ -9,7 +9,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 
 use Jenssegers\Agent\Agent;
 
@@ -20,29 +19,42 @@ use App\Models\Usuario;
 
 use App\Services\UsuarioService;
 use App\Services\UsuarioSessaoService;
+use App\Services\TokenResetSenhaService;
 use App\Services\AutenticacaoDoisFatoresService;
 
+use App\DTO\Usuario\UsuarioPrimeiroAcessoDTO;
+use App\DTO\Usuario\UsuarioRedefinirSenhaDTO;
 use App\DTO\UsuarioSessao\UsuarioSessaoCadastroDTO;
 use App\DTO\UsuarioSessao\UsuarioSessaoAtualizacaoDTO;
 
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\Verificar2faRequest;
+use App\Http\Requests\Auth\EsqueceuSenhaRequest;
+use App\Http\Requests\Auth\PrimeiroAcessoRequest;
+use App\Http\Requests\Auth\RedefinirSenhaRequest;
+use App\Http\Requests\Auth\RedefinirSenhaValidarRequest;
+use App\Http\Requests\Auth\PrimeiroAcessoValidarRequest;
 
 use App\Http\Resources\Admin\Auth\MeResource;
 use App\Http\Resources\Admin\Auth\LoginResource;
 use App\Http\Resources\Admin\Auth\LogoutResource;
 use App\Http\Resources\Admin\Auth\RefreshResource;
+use App\Http\Resources\Admin\Auth\EsqueceuSenhaResource;
 use App\Http\Resources\Admin\Auth\LoginGoogle2FaEnableResource;
+use App\Http\Resources\Admin\Auth\RedefinirSenhaValidarResource;
+use App\Http\Resources\Admin\Auth\PrimeiroAcessoValidarResource;
 
 use App\Exceptions\BusinessException;
 
 use App\Enums\EntidadeTipo;
+
 
 class AuthController extends Controller
 {
     public function __construct(
         protected UsuarioService $usuarioService,
         protected UsuarioSessaoService $usuarioSessaoService,
+        protected TokenResetSenhaService $tokenResetSenhaService,
         protected AutenticacaoDoisFatoresService $autenticacaoDoisFatoresService
     ) {}
 
@@ -227,5 +239,50 @@ class AuthController extends Controller
             'token' => JWTAuth::parseToken()->refresh(),
             'expires_in' => JWTAuth::factory()->getTTL() * 60
         ])->response()->setStatusCode(200);
+    }
+
+    public function primeiroAcessoValidar(PrimeiroAcessoValidarRequest $request): JsonResponse
+    {
+        $token = $request->validated('token');
+        $tokenResetSenha = $this->tokenResetSenhaService->validarToken($token);
+        return PrimeiroAcessoValidarResource::make($tokenResetSenha)->response()->setStatusCode(200);
+    }
+
+    public function primeiroAcesso(PrimeiroAcessoRequest $request): JsonResponse
+    {
+        $this->usuarioService->primeiroAcesso(
+            UsuarioPrimeiroAcessoDTO::criarParaPrimeiroAcesso(
+                $request->validated()
+            )
+        );
+
+        return response()->json(null, 204);
+    }
+
+    public function esqueceuSenha(EsqueceuSenhaRequest $request): JsonResponse
+    {
+        $this->usuarioService->esqueceuSenha($request->email, EntidadeTipo::ADMIN);
+
+        return EsqueceuSenhaResource::make([
+            'mensagem' =>'Se o e-mail estiver cadastrado, as instruções de redefinição serão enviadas.'
+        ])->response()->setStatusCode(200);
+    }
+
+    public function redefinirSenhaValidar(RedefinirSenhaValidarRequest $request): JsonResponse
+    {
+        $token = $request->validated('token');
+        $tokenResetSenha = $this->tokenResetSenhaService->validarToken($token);
+        return RedefinirSenhaValidarResource::make($tokenResetSenha)->response()->setStatusCode(200);
+    }
+
+    public function redefinirSenha(RedefinirSenhaRequest $request): JsonResponse
+    {
+        $this->usuarioService->redefinirSenha(
+            UsuarioRedefinirSenhaDTO::criarParaRedefinirSenha(
+                $request->validated()
+            )
+        );
+
+        return response()->json(null, 204);
     }
 }

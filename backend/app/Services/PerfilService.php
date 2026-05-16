@@ -21,6 +21,9 @@ use App\Enums\EntidadeTipo;
 use App\Exceptions\BusinessException;
 
 class PerfilService {
+    public function __construct(
+        private TokenResetSenhaService $tokenResetSenhaService
+    ) {}
 
     public function atualizar(PerfilAtualizacaoDTO $dto): Usuario
     {
@@ -48,7 +51,8 @@ class PerfilService {
                 'senha' => Hash::make($dto->senha_nova)
             ]);
 
-            event(new SenhaUsuarioAlterada($usuario));
+            $token = $this->tokenResetSenhaService->gerarToken($usuario);
+            event(new SenhaUsuarioAlterada($usuario, $token));
 
             return $usuario->fresh();
         });

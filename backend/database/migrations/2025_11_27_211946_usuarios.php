@@ -20,7 +20,7 @@ return new class extends Migration
                 ->on('grupos');
             $table->string('nome');
             $table->string('email')->unique();
-            $table->string('senha');
+            $table->string('senha')->nullable(true);
             $table->string('status')->default(UsuarioStatus::CONVIDADO->value);
             $table->string('remember_token')->nullable(true);
             $table->string('avatar')->nullable(true);

@@ -26,8 +26,15 @@ use App\Http\Controllers\Private\ {
     AuthController as PrivateAuthController
 };
 
-Route::post('/admin/login', [AuthController::class, 'login']);
-Route::post('/admin/2fa/verificar', [AuthController::class, 'verificar2fa']);
+Route::prefix('admin')->group(function() {
+    Route::get('/primeiro-acesso/validar', [AuthController::class, 'primeiroAcessoValidar']);
+    Route::post('/primeiro-acesso', [AuthController::class, 'primeiroAcesso']);
+    Route::post('/esqueceu-senha', [AuthController::class, 'esqueceuSenha']);
+    Route::get('/redefinir-senha/validar', [AuthController::class, 'redefinirSenhaValidar']);
+    Route::post('/redefinir-senha', [AuthController::class, 'redefinirSenha']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/2fa/verificar', [AuthController::class, 'verificar2fa']);
+});
 
 Route::post('/login', [PrivateAuthController::class, 'login']);
 

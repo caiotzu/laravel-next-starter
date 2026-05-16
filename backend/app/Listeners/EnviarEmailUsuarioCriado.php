@@ -22,13 +22,11 @@ class EnviarEmailUsuarioCriado
     public function handle(UsuarioCriado $event): void
     {
         $usuario = $event->usuario;
-        $url = $this->resolverUrl($usuario);
 
         $html = view(EmailTemplate::USUARIO_CRIADO->value, [
             'nome' => $usuario->nome,
             'email' => $usuario->email,
-            'senha' => $event->senha,
-            'url' => $url
+            'url' => $this->resolverUrl($usuario, $event->token),
         ])->render();
 
         $resultado = $this->emailService->enviar(new EmailEnvioDTO(
@@ -50,12 +48,12 @@ class EnviarEmailUsuarioCriado
         }
     }
 
-    private function resolverUrl(Usuario $usuario): string
+    private function resolverUrl(Usuario $usuario, string $token): string
     {
         return match ($usuario->grupo->entidadeTipo->chave->value) {
-            EntidadeTipo::ADMIN->value => config('app.url_frontend').'/admin',
-            EntidadeTipo::PRIVATE->value => config('app.url_frontend'),
-            default => config('app.url_frontend'),
+            EntidadeTipo::ADMIN->value => config('app.url_frontend').'/admin/primeiro-acesso?token=' . $token,
+            EntidadeTipo::PRIVATE->value => config('app.url_frontend').'/primeiro-acesso?token=' . $token,
+            default => config('app.url_frontend').'/primeiro-acesso?token=' . $token
         };
     }
 }

@@ -7,7 +7,7 @@
         font-size:22px;
         font-weight:600;"
     >
-        Sua conta foi criada com sucesso 🚀
+        Redefinição de senha
     </h2>
 
     <p style="
@@ -17,14 +17,13 @@
         margin:0 0 24px 0;"
     >
         Olá, <strong>{{ $nome }}</strong>.<br>
-        Seu acesso ao sistema foi criado com sucesso.
-        Para concluir o primeiro acesso, defina sua senha pelo link abaixo.
+        Recebemos uma solicitação para redefinir a senha da sua conta.
     </p>
 
     <x-emails.card>
 
         <p style="margin:0 0 16px 0;font-weight:600;color:#111827;">
-            Dados de acesso
+            Dados da solicitação
         </p>
 
         <p style="margin:0;color:#6B7280;">Usuário</p>
@@ -40,10 +39,11 @@
         margin-top:24px;
         line-height:1.6;"
     >
-        Este link é de uso único e possui prazo de expiração por segurança.
+        Se você reconhece esta solicitação, use o link abaixo para definir uma nova senha.
+        O link é de uso único e possui prazo de expiração.
     </p>
 
     <x-emails.button :url="$url">
-        Definir senha →
+        Redefinir senha →
     </x-emails.button>
 @endsection

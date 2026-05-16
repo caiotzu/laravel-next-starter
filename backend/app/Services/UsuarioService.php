@@ -4,10 +4,13 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 use App\Events\UsuarioCriado;
+use App\Events\SenhaUsuarioAlterada;
+use App\Events\UsuarioEsqueceuSenha;
 
 use App\Models\Grupo;
 use App\Models\Usuario;
@@ -15,15 +18,19 @@ use App\Models\Usuario;
 use App\DTO\Usuario\UsuarioFiltroDTO;
 use App\DTO\Usuario\UsuarioCadastroDTO;
 use App\DTO\Usuario\UsuarioAtualizacaoDTO;
+use App\DTO\Usuario\UsuarioPrimeiroAcessoDTO;
+use App\DTO\Usuario\UsuarioRedefinirSenhaDTO;
 
 use App\Enums\ErrorCode;
 use App\Enums\EntidadeTipo;
 use App\Enums\UsuarioStatus;
 
-
 use App\Exceptions\BusinessException;
 
 class UsuarioService {
+    public function __construct(
+        private TokenResetSenhaService $tokenResetSenhaService
+    ) {}
 
     public function cadastrar(UsuarioCadastroDTO $dto): Usuario
     {
@@ -40,20 +47,15 @@ class UsuarioService {
             if(!$grupo)
                 throw new BusinessException('O grupo selecionado não é válido para este cadastro.', ErrorCode::GRUPO_REQUIRED->value);
 
-            /**
-             * Por enquanto a senha vai ser gerada fixa, até a implementação
-             * dos métodos de envio de e-mail
-             */
-            $senha = gerar_senha();
             $usuario = Usuario::create([
                 'grupo_id' => $dto->grupo_id,
                 'nome' => $dto->nome,
                 'email' => $dto->email,
-                'senha' => bcrypt($senha),
                 'status' => UsuarioStatus::CONVIDADO->value
             ]);
 
-            event(new UsuarioCriado($usuario, $senha));
+            $token = $this->tokenResetSenhaService->gerarToken($usuario);
+            event(new UsuarioCriado($usuario, $token));
 
             return $usuario;
         });
@@ -203,6 +205,62 @@ class UsuarioService {
             )
             ->orderBy('created_at', 'DESC')
             ->paginate($filtro->paginacao->por_pagina);
+    }
+
+    public function primeiroAcesso(UsuarioPrimeiroAcessoDTO $dto): void
+    {
+        DB::transaction(function () use ($dto) {
+            $tokenResetSenha = $this->tokenResetSenhaService->consumirToken($dto->token);
+
+            $usuario = $tokenResetSenha->usuario;
+
+            $usuario->update([
+                'senha' => Hash::make($dto->senha),
+                'status' => UsuarioStatus::ATIVO->value
+            ]);
+
+            $tokenResetSenha->update([
+                'usado_em' => now(),
+            ]);
+        });
+    }
+
+    public function esqueceuSenha(string $email, EntidadeTipo $entidadeTipo): void
+    {
+        $usuario = Usuario::with('grupo.entidadeTipo')
+            ->whereHas('grupo.entidadeTipo', function (Builder $query) use ($entidadeTipo) {
+                return $query->where('chave', $entidadeTipo->value);
+            })
+            ->where('email', $email)
+            ->where('status', UsuarioStatus::ATIVO->value)
+            ->first();
+
+        if (! $usuario) {
+            return;
+        }
+
+        $token = $this->tokenResetSenhaService->gerarToken($usuario);
+        event(new UsuarioEsqueceuSenha($usuario, $token));
+    }
+
+    public function redefinirSenha(UsuarioRedefinirSenhaDTO $dto): void
+    {
+        DB::transaction(function () use ($dto) {
+            $tokenResetSenha = $this->tokenResetSenhaService->consumirToken($dto->token);
+
+            $usuario = $tokenResetSenha->usuario;
+
+            $usuario->update([
+                'senha' => Hash::make($dto->senha)
+            ]);
+
+            $tokenResetSenha->update([
+                'usado_em' => now(),
+            ]);
+
+            $token = $this->tokenResetSenhaService->gerarToken($usuario);
+            event(new SenhaUsuarioAlterada($usuario, $token));
+        });
     }
 
     public function registrarLogin(Usuario $usuario, ?string $ip): void

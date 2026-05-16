@@ -2,7 +2,7 @@
 
 namespace App\Listeners;
 
-use App\Events\SenhaUsuarioAlterada;
+use App\Events\UsuarioEsqueceuSenha;
 
 use App\Services\EmailService;
 
@@ -13,17 +13,17 @@ use App\Models\Usuario;
 use App\Enums\EntidadeTipo;
 use App\Enums\EmailTemplate;
 
-class EnviarEmailSenhaUsuarioAlterada
+class EnviarEmailUsuarioEsqueceuSenha
 {
     public function __construct(
         private EmailService $emailService
     ) {}
 
-    public function handle(SenhaUsuarioAlterada $event): void
+    public function handle(UsuarioEsqueceuSenha $event): void
     {
         $usuario = $event->usuario;
 
-        $html = view(EmailTemplate::SENHA_ALTERADA->value, [
+        $html = view(EmailTemplate::SENHA_REDEFINICAO->value, [
             'nome' => $usuario->nome,
             'email' => $usuario->email,
             'url' => $this->resolverUrl($usuario, $event->token),
@@ -32,7 +32,7 @@ class EnviarEmailSenhaUsuarioAlterada
         $resultado = $this->emailService->enviar(new EmailEnvioDTO(
             to: [$usuario->email],
             from_name: config('app.name'),
-            subject: 'Sua senha foi alterada',
+            subject: 'Redefinição de senha',
             body: $html,
             cc: [],
             bcc: [],
