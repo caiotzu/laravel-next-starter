@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin\Grupo;
 
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ListarRequest extends FormRequest
@@ -30,7 +31,7 @@ class ListarRequest extends FormRequest
             'id' => [
                 'nullable',
                 'uuid',
-                'exists:grupos,id',
+                Rule::exists('grupos', 'id')
             ],
             'descricao' => [
                 'nullable',

@@ -50,22 +50,22 @@ class ListarRequest extends FormRequest
             'id' => [
                 'nullable',
                 'uuid',
-                'exists:empresas,id',
+                Rule::exists('empresas', 'id')
             ],
             'grupo_empresa_id' => [
                 'nullable',
                 'uuid',
-                'exists:grupo_empresas,id',
+                Rule::exists('grupo_empresas', 'id')
             ],
             'matriz_id' => [
                 'nullable',
                 'uuid',
-                'exists:empresas,id',
+                Rule::exists('empresas', 'id')
             ],
             'cnpj' => [
                 'nullable',
                 'size:14',
-                'exists:empresas,cnpj'
+                Rule::exists('empresas', 'cnpj')
             ],
             'nome_fantasia' => [
                 'nullable',

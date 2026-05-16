@@ -20,7 +20,7 @@ class AtualizarRequest extends FormRequest
             'matriz_id' => [
                 'required',
                 'uuid',
-                'exists:empresas,id',
+                Rule::exists('empresas', 'id')
             ],
             'cnpj' => [
                 'required',

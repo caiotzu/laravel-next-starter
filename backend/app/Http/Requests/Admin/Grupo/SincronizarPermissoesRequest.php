@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin\Grupo;
 
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SincronizarPermissoesRequest extends FormRequest
@@ -22,7 +23,7 @@ class SincronizarPermissoesRequest extends FormRequest
             'permissoes.*' => [
                 'required',
                 'uuid',
-                'exists:permissoes,id'
+                Rule::exists('permissoes', 'id')
             ],
         ];
     }

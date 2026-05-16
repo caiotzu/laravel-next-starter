@@ -36,7 +36,7 @@ class CadastrarRequest extends FormRequest
             'municipio_id' => [
                 'required',
                 'uuid',
-                'exists:municipios,id'
+                Rule::exists('municipios', 'id')
             ],
             'principal' => [
                 'required',

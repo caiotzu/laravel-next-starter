@@ -30,12 +30,12 @@ class CadastrarRequest extends FormRequest
             'grupo_empresa_id' => [
                 'required',
                 'uuid',
-                'exists:grupo_empresas,id'
+                Rule::exists('grupo_empresas', 'id')
             ],
             'matriz_id' => [
                 'nullable',
                 'uuid',
-                'exists:empresas,id'
+                Rule::exists('empresas', 'id')
             ],
             'cnpj' => [
                 'required',
