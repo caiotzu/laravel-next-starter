@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\RateLimiter;
 
 use Jenssegers\Agent\Agent;
 
@@ -60,7 +61,19 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request): JsonResponse
     {
+        /**
+         * Verifica o RateLimit, impossibilitando o usuário
+         * de realizar múltiplas tentativas
+         */
+        $keyRateLimiter = 'login:'.$request->ip().':'.$request->email;
+
         try {
+            if (RateLimiter::tooManyAttempts($keyRateLimiter, 5)) {
+                throw new BusinessException(
+                    'Muitas tentativas de login. Tente novamente em alguns minutos.'
+                );
+            }
+
             $usuario = $this->usuarioService->obterUsuarioAtivoPorEmail($request->email, EntidadeTipo::ADMIN);
 
             if (!$usuario || !Hash::check($request->senha, $usuario->senha)) {
@@ -82,9 +95,12 @@ class AuthController extends Controller
                 ])->response()->setStatusCode(200);
             }
 
+            RateLimiter::clear($keyRateLimiter);
             return $this->finalizarLogin($usuario, $request);
 
         } catch (BusinessException $e) {
+            RateLimiter::hit($keyRateLimiter, 300);
+
             return response()->json([
                 'errors' => ['business' => [$e->getMessage()]]
             ], 401);
@@ -93,7 +109,18 @@ class AuthController extends Controller
 
     public function verificar2fa(Verificar2faRequest $request): JsonResponse
     {
+        /**
+         * Verifica o RateLimit, impossibilitando o usuário
+         * de realizar múltiplas tentativas
+         */
+        $keyRateLimiter = '2fa:'.$request->temp_token.':'.$request->ip();
+
         try {
+            if (RateLimiter::tooManyAttempts($keyRateLimiter, 9)) {
+                throw new BusinessException(
+                    'Muitas tentativas de login. Tente novamente em alguns minutos.'
+                );
+            }
 
             $userId = Cache::get("2fa_login:{$request->temp_token}");
             if (!$userId)
@@ -119,9 +146,12 @@ class AuthController extends Controller
 
             Cache::forget("2fa_login:{$request->temp_token}");
 
+            RateLimiter::clear($keyRateLimiter);
             return $this->finalizarLogin($usuario, $request);
 
         } catch (BusinessException $e) {
+            RateLimiter::hit($keyRateLimiter, 300);
+
             return response()->json([
                 'errors' => ['business' => [$e->getMessage()]]
             ], 422);
