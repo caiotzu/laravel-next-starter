@@ -17,6 +17,7 @@ use App\DTO\GrupoEmpresa\GrupoEmpresaCadastroDTO;
 use App\DTO\GrupoEmpresa\GrupoEmpresaAtualizacaoDTO;
 
 use App\Http\Resources\Admin\GrupoEmpresa\GrupoEmpresaResource;
+use App\Http\Resources\Admin\GrupoEmpresa\GrupoEmpresaVisualizarResource;
 
 class GrupoEmpresaController extends Controller
 {
@@ -53,7 +54,7 @@ class GrupoEmpresaController extends Controller
 
         $grupoEmpresa = $this->grupoEmpresaService->visualizar($id);
 
-        return GrupoEmpresaResource::make($grupoEmpresa)->response()->setStatusCode(200);
+        return GrupoEmpresaVisualizarResource::make($grupoEmpresa)->response()->setStatusCode(200);
     }
 
     public function excluir(string $id): JsonResponse

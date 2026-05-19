@@ -5,7 +5,6 @@ import axios from "axios";
 
 export async function POST(req: Request) {
   try {
-    console.log('chegou no proxy')
     const body = await req.json();
 
     // Captura headers originais do navegador
@@ -28,16 +27,15 @@ export async function POST(req: Request) {
       }
     );
 
-    const data = response.data;
+    const data = response.data.data;
 
-    // Se backend retornar erro, apenas repassa
+    // Se for erro (400+), repassa o erro exatamente como veio
     if (response.status >= 400) {
-      return NextResponse.json(data, {
+      return NextResponse.json(response.data, {
         status: response.status,
       });
     }
 
-    // 🔐 Se sucesso, backend deve retornar token
     if (!data?.token) {
       return NextResponse.json(
         {

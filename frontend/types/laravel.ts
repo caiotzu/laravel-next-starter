@@ -5,6 +5,36 @@ export interface LaravelPaginationLink {
   active: boolean;
 }
 
+export interface LaravelPaginationMeta {
+  current_page: number;
+  from: number | null;
+  last_page: number;
+  links: LaravelPaginationLink[];
+  path: string;
+  per_page: number;
+  to: number | null;
+  total: number;
+}
+
+export interface LaravelPaginationUrls {
+  first: string;
+  last: string;
+  prev: string | null;
+  next: string | null;
+}
+
+/**
+ * Padrão (JSON:API-like)
+ */
+export interface LaravelResourcePagination<T> {
+  data: T[];
+  links: LaravelPaginationUrls;
+  meta: LaravelPaginationMeta;
+}
+
+/**
+ * Padrão pagination cru do laravel
+ */
 export interface LaravelPagination<T> {
   current_page: number;
   data: T[];
@@ -20,3 +50,7 @@ export interface LaravelPagination<T> {
   to: number | null;
   total: number;
 }
+
+
+
+

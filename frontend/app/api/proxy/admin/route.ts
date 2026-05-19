@@ -10,6 +10,54 @@ interface ProxyRequestBody<T = unknown> {
   headers?: Record<string, string>;
 }
 
+interface NormalizedResponse<T> {
+  data: T;
+  meta?: unknown;
+  links?: unknown;
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function normalizeLaravelResponse<T>(responseData: unknown): NormalizedResponse<T> {
+
+  if (!responseData) {
+    return { data: responseData as T };
+  }
+
+  if (!isObject(responseData)) {
+    return { data: responseData as T };
+  }
+
+  const obj = responseData as Record<string, unknown>;
+
+  const data = obj.data;
+  const meta = obj.meta;
+  const links = obj.links;
+
+  // PAGINAÇÃO
+  if (data !== undefined && meta !== undefined && links !== undefined) {
+    return {
+      data: data as T,
+      meta,
+      links,
+    };
+  }
+
+  // RESOURCE / COLLECTION
+  if (data !== undefined) {
+    return {
+      data: data as T,
+    };
+  }
+
+  // RAW RESPONSE
+  return {
+    data: responseData as T,
+  };
+}
+
 export async function POST(req: Request): Promise<NextResponse> {
   try {
     const body: ProxyRequestBody = await req.json();
@@ -51,7 +99,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         : data,
       validateStatus: () => true, // nunca lança erro por status
     });
-
+  
     if (backendResponse.status === 401) {
       // Sucesso → apaga cookie
       cookieStore.set("admin_access_token", "", {
@@ -79,9 +127,19 @@ export async function POST(req: Request): Promise<NextResponse> {
       );
     }
 
+    // return NextResponse.json({
+    //   status: backendResponse.status,
+    //   // data: backendResponse.data.data,
+    //   data: backendResponse.data,
+    // });
+
+    const normalized = normalizeLaravelResponse(
+      backendResponse.data
+    );
+
     return NextResponse.json({
       status: backendResponse.status,
-      data: backendResponse.data,
+      ...normalized,
     });
 
   } catch {

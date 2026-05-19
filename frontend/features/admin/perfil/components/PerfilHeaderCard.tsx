@@ -25,7 +25,7 @@ export function PerfilHeaderCard({ user }: Props) {
   return (
     <div
       className={`rounded-xl shadow-sm border-l-4 bg-card p-6 ${
-        user.ativo
+        user.status === 'ativo'
           ? "border-emerald-500"
           : "border-red-500"
       }`}

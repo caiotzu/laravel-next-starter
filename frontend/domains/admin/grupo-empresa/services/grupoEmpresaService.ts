@@ -15,15 +15,17 @@ export function cadastrarGrupoEmpresa(
   });
 }
 
-export function editarGrupoEmpresa(
+export async function editarGrupoEmpresa(
   id: string,
   dto: EditarGrupoEmpresaRequest
 ) {
-  return proxyAdminRequest<EditarGrupoEmpresaResponse>({
+  const response = await proxyAdminRequest<EditarGrupoEmpresaResponse>({
     url: `/admin/grupos-empresas/${id}`,
     method: "PUT",
     data: dto,
   });
+
+  return response.data
 }
 
 export async function excluirGrupoEmpresa(
@@ -55,9 +57,10 @@ export function listarGrupoEmpresas(
   });
 }
 
-export function visualizarGrupoEmpresa(id: string) {
-  return proxyAdminRequest<VisualizarGrupoEmpresaResponse>({
+export async function visualizarGrupoEmpresa(id: string) {
+  const response = await proxyAdminRequest<VisualizarGrupoEmpresaResponse>({
     url: `/admin/grupos-empresas/${id}`,
     method: "GET",
   });
+  return response.data;
 }

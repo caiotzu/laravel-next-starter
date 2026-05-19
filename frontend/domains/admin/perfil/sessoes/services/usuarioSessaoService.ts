@@ -3,16 +3,21 @@ import { proxyAdminRequest } from "@/lib/proxy-admin";
 import { UsuarioSessoes } from "../types/usuarioSessoes.model";
 import { EncerrarSessaoResponse } from "../types/usuarioSessoes.response";
 
-export function listarUsuarioSessoes() {
-  return proxyAdminRequest<UsuarioSessoes[]>({
+
+export async function listarUsuarioSessoes(): Promise<UsuarioSessoes[]> {
+  const response = await proxyAdminRequest<UsuarioSessoes[]>({
     url: `/admin/perfil/sessoes`,
     method: "GET",
   });
+
+  return response.data;
 }
 
-export function encerrarUsuarioSessao(sessionId: string) {
-  return proxyAdminRequest<EncerrarSessaoResponse>({
+export async function encerrarUsuarioSessao(sessionId: string): Promise<EncerrarSessaoResponse> {
+  const response = await proxyAdminRequest<EncerrarSessaoResponse>({
     url: `/admin/perfil/sessoes/${sessionId}/encerrar`,
     method: "DELETE",
   });
+
+  return response.data;
 }

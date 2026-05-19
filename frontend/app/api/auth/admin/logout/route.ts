@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       }
     );
 
-    const data = response.data;
+    const data = response.data.data;
 
     if (response.status >= 400) {
       return NextResponse.json(data, {

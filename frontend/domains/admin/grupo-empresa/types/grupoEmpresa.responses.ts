@@ -1,4 +1,4 @@
-import { LaravelPagination } from "@/types/laravel";
+import { LaravelPagination, LaravelResourcePagination } from "@/types/laravel";
 
 import { GrupoEmpresa } from "./grupoEmpresa.model";
 
@@ -18,8 +18,8 @@ export interface EditarGrupoEmpresaResponse {
 
 export type AtivarGrupoEmpresaResponse = GrupoEmpresa;
 
-export type ListarGrupoEmpresasResponse = LaravelPagination<GrupoEmpresa>;
-
+// export type ListarGrupoEmpresasResponse = LaravelPagination<GrupoEmpresa>;
+export type ListarGrupoEmpresasResponse = LaravelResourcePagination<GrupoEmpresa>;
 
 export interface VisualizarGrupoEmpresaResponse extends GrupoEmpresa {
   grupos: {
@@ -37,7 +37,7 @@ export interface VisualizarGrupoEmpresaResponse extends GrupoEmpresa {
       grupo_id: string;
       nome: string;
       email: string;
-      ativo: boolean;
+      status: string;
       avatar: string | null;
       google2fa_enable: boolean;
       google2fa_secret: string | null;

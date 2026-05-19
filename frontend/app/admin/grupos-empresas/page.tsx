@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { LaravelPagination } from "@/types/laravel";
+import { LaravelResourcePagination } from "@/types/laravel";
 
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
@@ -35,7 +35,7 @@ export default function Page() {
     por_pagina: porPagina,
   });
 
-  const pagination = data as LaravelPagination<GrupoEmpresa> | undefined;
+  const pagination = data as LaravelResourcePagination<GrupoEmpresa> | undefined;
 
   return (
     <SidebarProvider
@@ -87,11 +87,11 @@ export default function Page() {
 
               {pagination && (
                 <Pagination
-                  currentPage={pagination.current_page}
-                  lastPage={pagination.last_page}
-                  total={pagination.total}
-                  from={pagination.from ?? 0}
-                  to={pagination.to ?? 0}
+                  currentPage={pagination.meta.current_page}
+                  lastPage={pagination.meta.last_page}
+                  total={pagination.meta.total}
+                  from={pagination.meta.from ?? 0}
+                  to={pagination.meta.to ?? 0}
                   onPageChange={setPage}
                 />
               )}

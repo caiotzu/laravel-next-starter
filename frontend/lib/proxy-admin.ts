@@ -11,20 +11,22 @@ interface ProxyPayload {
 interface ProxyResponse<T> {
   status: number;
   data: T;
+  meta?: unknown;
+  links?: unknown;
 }
 
 export async function proxyAdminRequest<T>({
   url,
   method = "GET",
   data,
-}: ProxyPayload): Promise<T> {
+}: ProxyPayload): Promise<ProxyResponse<T>> {
   try {
     const response = await axios.post<ProxyResponse<T>>(
       "/api/proxy/admin",
       { url, method, data }
     );
 
-    return response.data.data;
+    return response.data;
   } catch (err) {
     const error = err as AxiosError<ApiErrorResponse>;
 

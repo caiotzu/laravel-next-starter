@@ -20,7 +20,7 @@ export function UsuarioCard({ usuario, formatDate }: UsuarioCardProps) {
   return (
     <div
       className={`relative rounded-xl shadow-sm border-l-4 bg-card ${
-        usuario.deleted_at || !usuario.ativo
+        usuario.deleted_at || usuario.status != 'ativo'
           ? "border-red-500"
           : "border-emerald-500"
       } p-3`}
@@ -76,6 +76,12 @@ export function UsuarioCard({ usuario, formatDate }: UsuarioCardProps) {
           <span className="font-medium text-foreground">Último Acesso:</span>{" "}
           <span className="text-muted-foreground">
             ---
+          </span>
+        </p>
+        <p>
+          <span className="font-medium text-foreground">Status:</span>{" "}
+          <span className="text-muted-foreground">
+            {usuario.status}
           </span>
         </p>
 

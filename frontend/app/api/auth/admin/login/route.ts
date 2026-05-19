@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    // Pega o user-agent original do navegador
+    // Captura headers originais do navegador
     const userAgent = req.headers.get("user-agent") || "";
     const forwardedFor = req.headers.get("x-forwarded-for") || "";
     const realIp = req.headers.get("x-real-ip") || "";
@@ -27,13 +27,13 @@ export async function POST(req: Request) {
       }
     );
 
-    const data = response.data;
+    const data = response.data.data;
 
     // Se for erro (400+), repassa o erro exatamente como veio
     if (response.status >= 400) {
       return NextResponse.json(
-        data,
-        { status: response.status }
+        response.data,
+        { status: response.status },
       );
     }
 
