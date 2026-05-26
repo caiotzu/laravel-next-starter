@@ -90,6 +90,19 @@ export function EmpresasTable({ data, isLoading }: Props) {
 
   const empresaSelecionada = data.find((g) => g.id === modal.empresaId);
 
+  function getStatusBadge(status: string) {
+    switch (status) {
+      case "ativo":
+        return <Badge className="bg-emerald-100 text-emerald-700">Ativo</Badge>;
+      case "pendente":
+        return <Badge className="bg-amber-100 text-amber-700">Pendente</Badge>;
+      case "bloqueado":
+        return <Badge className="bg-red-100 text-red-700">Bloqueado</Badge>;
+      default:
+        return <Badge className="bg-slate-100 text-slate-700">Inativo</Badge>;
+    }
+  }
+
   return (
     <Card className="w-full rounded-2xl border shadow-sm p-0 overflow-hidden">
       <Table>
@@ -146,11 +159,7 @@ export function EmpresasTable({ data, isLoading }: Props) {
                 {empresa.deleted_at ? (
                   <Badge className="bg-red-100 text-red-700">Excluído</Badge>
                 ) : (
-                  empresa.ativo ? (
-                    <Badge className="bg-emerald-100 text-emerald-700">Ativo</Badge>
-                  ) : (
-                    <Badge className="bg-red-100 text-red-700">Inativo</Badge>
-                  )
+                  getStatusBadge(empresa.status)
                 )}
               </TableCell>
 

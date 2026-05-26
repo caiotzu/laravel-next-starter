@@ -43,7 +43,7 @@ export interface EmpresaFilters {
   inscricaoEstadual?: string;
   inscricaoMunicipal?: string;
   uf?: UF;
-  ativo: boolean;
+  ativo?: boolean;
   excluido: boolean;
 }
 
@@ -266,8 +266,8 @@ export function EmpresasFilters({
 
         <div className="flex items-center space-x-2">
           <Switch
-            checked={filters.ativo}
-            onCheckedChange={(value) => updateFilter("ativo", value)}
+            checked={!!filters.ativo}
+            onCheckedChange={(value) => updateFilter("ativo", value ? true : undefined)}
           />
           <Label>Ativas</Label>
         </div>

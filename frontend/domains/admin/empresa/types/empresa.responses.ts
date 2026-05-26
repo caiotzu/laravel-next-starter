@@ -1,4 +1,4 @@
-import { LaravelPagination } from "@/types/laravel";
+import { LaravelResourcePagination } from "@/types/laravel";
 
 import { GrupoEmpresa } from "../../grupo-empresa/types/grupoEmpresa.model";
 
@@ -11,10 +11,15 @@ export type EditarEmpresaResponse = Empresa;
 export type AtivarEmpresaResponse = Empresa;
 
 export type EmpresaListaItem = Empresa & {
+  status: string;
+  status_descricao?: string;
   grupo_empresa: GrupoEmpresa;
-  matriz: Empresa | null;
+  matriz: (Empresa & {
+    status: string;
+    status_descricao?: string;
+  }) | null;
 };
-export type ListarEmpresasResponse = LaravelPagination<EmpresaListaItem>
+export type ListarEmpresasResponse = LaravelResourcePagination<EmpresaListaItem>
 
 export interface VisualizarEmpresaResponse extends Empresa {
   grupo_empresa: GrupoEmpresa;

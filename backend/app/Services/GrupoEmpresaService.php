@@ -82,7 +82,7 @@ class GrupoEmpresaService {
     public function visualizar(string $id): GrupoEmpresa
     {
         return DB::transaction(function () use ($id) {
-            $grupoEmpresa = GrupoEmpresa::with(['grupos.usuarios'])->find($id);
+            $grupoEmpresa = GrupoEmpresa::with(['grupos.usuarios'])->withTrashed()->find($id);
 
             if (! $grupoEmpresa) {
                 throw new BusinessException(
