@@ -113,7 +113,7 @@ class AuthController extends Controller
          * Verifica o RateLimit, impossibilitando o usuário
          * de realizar múltiplas tentativas
          */
-        $keyRateLimiter = '2fa:'.$request->temp_token.':'.$request->ip();
+        $keyRateLimiter = '2fa:'.$request->ip();
 
         try {
             if (RateLimiter::tooManyAttempts($keyRateLimiter, 9)) {
