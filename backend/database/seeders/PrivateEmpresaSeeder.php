@@ -2,12 +2,13 @@
 
 namespace Database\Seeders;
 
-use App\Enums\EmpresaStatus;
+
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
-
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+use App\Enums\EmpresaStatus;
 
 
 class PrivateEmpresaSeeder extends Seeder

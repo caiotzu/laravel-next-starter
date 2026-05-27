@@ -137,7 +137,7 @@ export function EmpresaContatosTab({
                   onCheckedChange={(value) => onDraftChange("principal", value)}
                   disabled={isLoading}
                 />
-                <span className="text-sm">Contato principal</span>
+                <span className="text-sm">Principal</span>
               </div>
               {draftErrors.principal && (
                 <p className="text-sm text-red-700">{draftErrors.principal}</p>
@@ -152,7 +152,7 @@ export function EmpresaContatosTab({
                   onCheckedChange={(value) => onDraftChange("ativo", value)}
                   disabled={isLoading}
                 />
-                <span className="text-sm">Contato ativo</span>
+                <span className="text-sm">Ativo</span>
               </div>
               {draftErrors.ativo && (
                 <p className="text-sm text-red-700">{draftErrors.ativo}</p>

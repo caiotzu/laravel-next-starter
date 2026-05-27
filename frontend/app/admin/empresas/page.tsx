@@ -17,6 +17,7 @@ import {
 import { useEmpresas } from "@/domains/admin/empresa/hooks/useEmpresas";
 import { EmpresaListaItem } from "@/domains/admin/empresa/types/empresa.responses";
 import { useGrupoEmpresas } from "@/domains/admin/grupo-empresa/hooks/useGrupoEmpresas";
+import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
 
 import { EmpresasFilters, type EmpresaFilters } from "@/features/admin/empresa/components/EmpresasFilters";
 import { EmpresasTable } from "@/features/admin/empresa/components/EmpresasTable";
@@ -68,7 +69,7 @@ export default function Page() {
     por_pagina: 10,
   });
 
-  const grupos = gruposData?.data ?? [];
+  const grupos = extractCollectionItems<GrupoEmpresa>(gruposData);
 
   const { data: matrizesData, isLoading: isLoadingMatrizes } = useEmpresas({
     page: 1,
@@ -169,4 +170,26 @@ export default function Page() {
       </SidebarInset>
     </SidebarProvider>
   );
+}
+
+function extractCollectionItems<T>(payload: unknown): T[] {
+  if (!payload || typeof payload !== "object") {
+    return [];
+  }
+
+  const directData = (payload as { data?: unknown }).data;
+
+  if (Array.isArray(directData)) {
+    return directData as T[];
+  }
+
+  if (directData && typeof directData === "object") {
+    const nestedData = (directData as { data?: unknown }).data;
+
+    if (Array.isArray(nestedData)) {
+      return nestedData as T[];
+    }
+  }
+
+  return [];
 }

@@ -39,11 +39,28 @@ import {
   getLabelByUF,
 } from "@/constants/estados";
 import { useEmpresas } from "@/domains/admin/empresa/hooks/useEmpresas";
+import {
+  cadastrarEmpresaContato,
+  cadastrarEmpresaEndereco,
+  atualizarEmpresaContato,
+  atualizarEmpresaEndereco,
+  excluirEmpresaContato,
+  excluirEmpresaEndereco,
+} from "@/domains/admin/empresa/services/empresaService";
+import {
+  EmpresaContatoRequest,
+  EmpresaEnderecoRequest,
+} from "@/domains/admin/empresa/types/empresa.requests";
+import {
+  CadastrarEmpresaResponse,
+  EmpresaContatoResponse,
+  EmpresaEnderecoResponse,
+} from "@/domains/admin/empresa/types/empresa.responses";
 import { useGrupoEmpresas } from "@/domains/admin/grupo-empresa/hooks/useGrupoEmpresas";
 import { useMunicipios } from "@/domains/admin/lookup/hooks/useMunicipios";
 import { consultarCep, listarMunicipios } from "@/domains/admin/lookup/services/lookupService";
 import { ConsultarCepResponse, MunicipioLookupItem } from "@/domains/admin/lookup/types/lookup.responses";
-import { maskCEP, maskCNPJ, onlyDigits } from "@/lib/utils";
+import { maskCEP, maskCNPJ, maskPhone, onlyDigits } from "@/lib/utils";
 
 import {
   empresaContatoSchema,
@@ -70,9 +87,11 @@ interface MatrizOption {
 interface EmpresaFormCadastroProps {
   onSubmit: (data: EmpresaFormDataCadastro) => Promise<void>;
   isLoading?: boolean;
+  empresaCriada?: CadastrarEmpresaResponse | null;
   backendErrors?: string[] | null;
   clearBackendErrors?: () => void;
   registerSetError?: (fn: UseFormSetError<EmpresaFormDataCadastro>) => void;
+  onCloseCadastro?: () => void;
 }
 
 function createEmptyEndereco(): EmpresaEnderecoFormData {
@@ -124,9 +143,11 @@ function mapFieldErrors<T extends object>(
 export function EmpresaFormCadastro({
   onSubmit,
   isLoading = false,
+  empresaCriada = null,
   backendErrors = null,
   clearBackendErrors,
   registerSetError,
+  onCloseCadastro,
 }: EmpresaFormCadastroProps) {
   const {
     register,
@@ -152,6 +173,10 @@ export function EmpresaFormCadastro({
       contatos: [],
     },
   });
+
+  const [activeTab, setActiveTab] = useState("dados");
+  const [isSavingEndereco, setIsSavingEndereco] = useState(false);
+  const [isSavingContato, setIsSavingContato] = useState(false);
 
   const { append: appendEndereco, update: updateEndereco, remove: removeEndereco } =
     useFieldArray({
@@ -203,6 +228,9 @@ export function EmpresaFormCadastro({
   const [enderecoGeneralError, setEnderecoGeneralError] = useState<string>();
   const [contatoGeneralError, setContatoGeneralError] = useState<string>();
   const [cepLookupMessage, setCepLookupMessage] = useState<string>();
+  const isEmpresaCriada = !!empresaCriada;
+  const isDadosDisabled = isLoading || isEmpresaCriada;
+  const isTabsRelacionadasDisabled = !isEmpresaCriada;
 
   const cnpjRegister = register("cnpj");
 
@@ -211,6 +239,12 @@ export function EmpresaFormCadastro({
       registerSetError(setError);
     }
   }, [registerSetError, setError]);
+
+  useEffect(() => {
+    if (empresaCriada) {
+      setActiveTab("enderecos");
+    }
+  }, [empresaCriada]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -265,9 +299,9 @@ export function EmpresaFormCadastro({
     municipioBusca.length > 0
   );
 
-  const grupos = gruposData?.data ?? [];
-  const matrizes = matrizesData?.data ?? [];
-  const municipios = municipiosData?.data ?? [];
+  const grupos = extractCollectionItems<GrupoOption>(gruposData);
+  const matrizes = extractCollectionItems<MatrizOption>(matrizesData);
+  const municipios = extractCollectionItems<MunicipioLookupItem>(municipiosData);
   const grupoItems = grupoSelecionado
     ? [grupoSelecionado, ...grupos.filter((item) => item.id !== grupoSelecionado.id)]
     : grupos;
@@ -323,7 +357,9 @@ export function EmpresaFormCadastro({
           uf: response.uf ?? undefined,
           por_pagina: 1,
         });
-        const municipio = municipiosPorIbge.data[0];
+        const municipio = extractCollectionItems<MunicipioLookupItem>(
+          municipiosPorIbge
+        )[0];
 
         if (!municipio) {
           return;
@@ -429,7 +465,13 @@ export function EmpresaFormCadastro({
     setContatoGeneralError(undefined);
   }
 
-  function handleSaveEndereco() {
+  async function handleSaveEndereco() {
+    if (!empresaCriada) {
+      setEnderecoGeneralError("Cadastre a empresa antes de adicionar endereços.");
+      setActiveTab("dados");
+      return;
+    }
+
     const result = empresaEnderecoSchema.safeParse(enderecoDraft);
 
     if (!result.success) {
@@ -449,24 +491,67 @@ export function EmpresaFormCadastro({
       return;
     }
 
-    clearErrors("enderecos");
+    const payload = toEmpresaEnderecoRequest(result.data);
 
-    if (editingEnderecoIndex === null) {
-      appendEndereco(result.data);
-      setEnderecosMunicipios((prev) => [...prev, municipioSelecionado]);
-    } else {
-      updateEndereco(editingEnderecoIndex, result.data);
-      setEnderecosMunicipios((prev) =>
-        prev.map((item, index) =>
-          index === editingEnderecoIndex ? municipioSelecionado : item
-        )
-      );
+    try {
+      setIsSavingEndereco(true);
+      clearErrors("enderecos");
+
+      if (editingEnderecoIndex === null) {
+        const enderecoSalvo = await cadastrarEmpresaEndereco(empresaCriada.id, payload);
+
+        appendEndereco(
+          mapEnderecoResponseToForm(enderecoSalvo)
+        );
+        setEnderecosMunicipios((prev) => [...prev, municipioSelecionado]);
+      } else {
+        const enderecoAtual = enderecos[editingEnderecoIndex];
+        const enderecoSalvo = enderecoAtual?.id
+          ? await atualizarEmpresaEndereco(empresaCriada.id, enderecoAtual.id, payload)
+          : await cadastrarEmpresaEndereco(empresaCriada.id, payload);
+
+        updateEndereco(
+          editingEnderecoIndex,
+          mapEnderecoResponseToForm(enderecoSalvo)
+        );
+        setEnderecosMunicipios((prev) =>
+          prev.map((item, index) =>
+            index === editingEnderecoIndex ? municipioSelecionado : item
+          )
+        );
+      }
+
+      resetEnderecoDraft();
+    } catch (error) {
+      applyItemErrors<EmpresaEnderecoFormData>({
+        error,
+        validKeys: [
+          "tipo",
+          "municipio_id",
+          "principal",
+          "ativo",
+          "cep",
+          "logradouro",
+          "numero",
+          "bairro",
+          "complemento",
+        ],
+        setFieldErrors: setEnderecoDraftErrors,
+        setGeneralError: setEnderecoGeneralError,
+        fallbackMessage: "Erro ao salvar endereço.",
+      });
+    } finally {
+      setIsSavingEndereco(false);
     }
-
-    resetEnderecoDraft();
   }
 
-  function handleSaveContato() {
+  async function handleSaveContato() {
+    if (!empresaCriada) {
+      setContatoGeneralError("Cadastre a empresa antes de adicionar contatos.");
+      setActiveTab("dados");
+      return;
+    }
+
     const result = empresaContatoSchema.safeParse(contatoDraft);
 
     if (!result.success) {
@@ -493,15 +578,37 @@ export function EmpresaFormCadastro({
       return;
     }
 
-    clearErrors("contatos");
+    const payload = toEmpresaContatoRequest(result.data);
 
-    if (editingContatoIndex === null) {
-      appendContato(result.data);
-    } else {
-      updateContato(editingContatoIndex, result.data);
+    try {
+      setIsSavingContato(true);
+      clearErrors("contatos");
+
+      if (editingContatoIndex === null) {
+        const contatoSalvo = await cadastrarEmpresaContato(empresaCriada.id, payload);
+
+        appendContato(mapContatoResponseToForm(contatoSalvo));
+      } else {
+        const contatoAtual = contatos[editingContatoIndex];
+        const contatoSalvo = contatoAtual?.id
+          ? await atualizarEmpresaContato(empresaCriada.id, contatoAtual.id, payload)
+          : await cadastrarEmpresaContato(empresaCriada.id, payload);
+
+        updateContato(editingContatoIndex, mapContatoResponseToForm(contatoSalvo));
+      }
+
+      resetContatoDraft(contatoDraft.tipo);
+    } catch (error) {
+      applyItemErrors<EmpresaContatoFormData>({
+        error,
+        validKeys: ["tipo", "valor", "principal", "ativo"],
+        setFieldErrors: setContatoDraftErrors,
+        setGeneralError: setContatoGeneralError,
+        fallbackMessage: "Erro ao salvar contato.",
+      });
+    } finally {
+      setIsSavingContato(false);
     }
-
-    resetContatoDraft(contatoDraft.tipo);
   }
 
   function handleEditEndereco(index: number) {
@@ -516,17 +623,38 @@ export function EmpresaFormCadastro({
     setCepLookupMessage(undefined);
   }
 
-  function handleRemoveEndereco(index: number) {
-    removeEndereco(index);
-    setEnderecosMunicipios((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
+  async function handleRemoveEndereco(index: number) {
+    const endereco = enderecos[index];
 
-    if (editingEnderecoIndex === index) {
-      resetEnderecoDraft();
-    } else if (
-      editingEnderecoIndex !== null &&
-      index < editingEnderecoIndex
-    ) {
-      setEditingEnderecoIndex(editingEnderecoIndex - 1);
+    if (!empresaCriada || !endereco?.id) {
+      return;
+    }
+
+    try {
+      setIsSavingEndereco(true);
+      await excluirEmpresaEndereco(empresaCriada.id, endereco.id);
+
+      removeEndereco(index);
+      setEnderecosMunicipios((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
+
+      if (editingEnderecoIndex === index) {
+        resetEnderecoDraft();
+      } else if (
+        editingEnderecoIndex !== null &&
+        index < editingEnderecoIndex
+      ) {
+        setEditingEnderecoIndex(editingEnderecoIndex - 1);
+      }
+    } catch (error) {
+      applyItemErrors<EmpresaEnderecoFormData>({
+        error,
+        validKeys: [],
+        setFieldErrors: setEnderecoDraftErrors,
+        setGeneralError: setEnderecoGeneralError,
+        fallbackMessage: "Erro ao excluir endereço.",
+      });
+    } finally {
+      setIsSavingEndereco(false);
     }
   }
 
@@ -570,17 +698,38 @@ export function EmpresaFormCadastro({
     setContatoGeneralError(undefined);
   }
 
-  function handleRemoveContato(index: number) {
-    const removedTipo = contatos[index]?.tipo ?? "E";
-    removeContato(index);
+  async function handleRemoveContato(index: number) {
+    const contato = contatos[index];
 
-    if (editingContatoIndex === index) {
-      resetContatoDraft(removedTipo);
-    } else if (
-      editingContatoIndex !== null &&
-      index < editingContatoIndex
-    ) {
-      setEditingContatoIndex(editingContatoIndex - 1);
+    if (!empresaCriada || !contato?.id) {
+      return;
+    }
+
+    try {
+      setIsSavingContato(true);
+      await excluirEmpresaContato(empresaCriada.id, contato.id);
+
+      const removedTipo = contato.tipo ?? "E";
+      removeContato(index);
+
+      if (editingContatoIndex === index) {
+        resetContatoDraft(removedTipo);
+      } else if (
+        editingContatoIndex !== null &&
+        index < editingContatoIndex
+      ) {
+        setEditingContatoIndex(editingContatoIndex - 1);
+      }
+    } catch (error) {
+      applyItemErrors<EmpresaContatoFormData>({
+        error,
+        validKeys: [],
+        setFieldErrors: setContatoDraftErrors,
+        setGeneralError: setContatoGeneralError,
+        fallbackMessage: "Erro ao excluir contato.",
+      });
+    } finally {
+      setIsSavingContato(false);
     }
   }
 
@@ -606,17 +755,25 @@ export function EmpresaFormCadastro({
             />
           )}
 
-          <Tabs defaultValue="dados" className="w-full">
+          {isEmpresaCriada && (
+            <AppAlert
+              variant="success"
+              subtitle="A empresa foi cadastrada. Agora você já pode adicionar endereços e contatos."
+              className="mb-6"
+            />
+          )}
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="w-full justify-start">
               <TabsTrigger value="dados">
                 <Building2 className="h-4 w-4" />
                 Dados da Empresa
               </TabsTrigger>
-              <TabsTrigger value="enderecos">
+              <TabsTrigger value="enderecos" disabled={isTabsRelacionadasDisabled}>
                 <MapPinned className="h-4 w-4" />
                 Endereços
               </TabsTrigger>
-              <TabsTrigger value="contatos">
+              <TabsTrigger value="contatos" disabled={isTabsRelacionadasDisabled}>
                 <Phone className="h-4 w-4" />
                 Contatos
               </TabsTrigger>
@@ -659,7 +816,7 @@ export function EmpresaFormCadastro({
                       placeholder="Digite o nome do grupo..."
                       value={grupoEmpresaNome}
                       showClear
-                      disabled={isLoading}
+                      disabled={isDadosDisabled}
                       onChange={(e) => {
                         setGrupoEmpresaNome(e.target.value);
                         setGrupoSelecionado(null);
@@ -728,7 +885,7 @@ export function EmpresaFormCadastro({
                       placeholder="Digite o nome da matriz..."
                       value={matrizNome}
                       showClear
-                      disabled={isLoading}
+                      disabled={isDadosDisabled}
                       onChange={(e) => {
                         setMatrizNome(e.target.value);
                         setMatrizSelecionada(null);
@@ -770,7 +927,7 @@ export function EmpresaFormCadastro({
                   <Input
                     id="cnpj"
                     placeholder="00.000.000/0000-00"
-                    disabled={isLoading}
+                    disabled={isDadosDisabled}
                     {...cnpjRegister}
                     value={cnpj}
                     onChange={(e) => {
@@ -792,7 +949,7 @@ export function EmpresaFormCadastro({
                   <Input
                     id="nome_fantasia"
                     placeholder="Digite o nome fantasia"
-                    disabled={isLoading}
+                    disabled={isDadosDisabled}
                     {...register("nome_fantasia")}
                   />
                   {errors.nome_fantasia && (
@@ -809,7 +966,7 @@ export function EmpresaFormCadastro({
                   <Input
                     id="razao_social"
                     placeholder="Digite a razao social"
-                    disabled={isLoading}
+                    disabled={isDadosDisabled}
                     {...register("razao_social")}
                   />
                   {errors.razao_social && (
@@ -824,7 +981,7 @@ export function EmpresaFormCadastro({
                   <Input
                     id="inscricao_estadual"
                     placeholder="Digite a inscricao estadual"
-                    disabled={isLoading}
+                    disabled={isDadosDisabled}
                     {...register("inscricao_estadual")}
                   />
                   {errors.inscricao_estadual && (
@@ -839,7 +996,7 @@ export function EmpresaFormCadastro({
                   <Input
                     id="inscricao_municipal"
                     placeholder="Digite a inscricao municipal"
-                    disabled={isLoading}
+                    disabled={isDadosDisabled}
                     {...register("inscricao_municipal")}
                   />
                   {errors.inscricao_municipal && (
@@ -871,7 +1028,7 @@ export function EmpresaFormCadastro({
                     <ComboboxInput
                       placeholder="Selecione a UF"
                       showClear
-                      disabled={isLoading}
+                      disabled={isDadosDisabled}
                     />
 
                     <ComboboxContent>
@@ -909,7 +1066,7 @@ export function EmpresaFormCadastro({
                 draftErrors={enderecoDraftErrors}
                 generalError={enderecoGeneralError ?? errors.enderecos?.message}
                 editingIndex={editingEnderecoIndex}
-                isLoading={isLoading}
+                isLoading={isSavingEndereco}
                 onDraftChange={handleEnderecoDraftChange}
                 onMunicipioInputChange={handleMunicipioInputChange}
                 onMunicipioSelect={handleMunicipioSelect}
@@ -926,7 +1083,7 @@ export function EmpresaFormCadastro({
                 draftErrors={contatoDraftErrors}
                 generalError={contatoGeneralError ?? errors.contatos?.message}
                 editingIndex={editingContatoIndex}
-                isLoading={isLoading}
+                isLoading={isSavingContato}
                 onDraftChange={handleContatoDraftChange}
                 onSave={handleSaveContato}
                 onEdit={handleEditContato}
@@ -936,19 +1093,159 @@ export function EmpresaFormCadastro({
           </Tabs>
         </CardContent>
 
-        <CardFooter className="flex justify-end gap-3 pt-6">
+        <CardFooter className="flex justify-end gap-5 pt-6">
           <Button asChild variant="outline">
             <Link href="/admin/empresas" className="gap-2">
               Cancelar
             </Link>
           </Button>
 
-          <Button type="submit" disabled={isLoading} className="cursor-pointer">
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Cadastrar
-          </Button>
+          {!isEmpresaCriada ? (
+            <Button type="submit" disabled={isLoading} className="cursor-pointer">
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Cadastrar Empresa
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={onCloseCadastro}
+              className="cursor-pointer"
+            >
+              Concluir Cadastro
+            </Button>
+          )}
         </CardFooter>
       </form>
     </Card>
   );
+}
+
+function toEmpresaEnderecoRequest(
+  data: EmpresaEnderecoFormData
+): EmpresaEnderecoRequest {
+  return {
+    tipo: data.tipo,
+    municipio_id: data.municipio_id,
+    principal: data.principal,
+    ativo: data.ativo,
+    cep: onlyDigits(data.cep),
+    logradouro: data.logradouro,
+    numero: data.numero,
+    bairro: data.bairro,
+    complemento: data.complemento || undefined,
+  };
+}
+
+function toEmpresaContatoRequest(
+  data: EmpresaContatoFormData
+): EmpresaContatoRequest {
+  return {
+    tipo: data.tipo,
+    valor: data.tipo === "T" ? onlyDigits(data.valor) : data.valor,
+    principal: data.principal,
+    ativo: data.ativo,
+  };
+}
+
+function mapEnderecoResponseToForm(
+  response: EmpresaEnderecoResponse
+): EmpresaEnderecoFormData {
+  return {
+    id: response.id,
+    tipo: response.tipo as EmpresaEnderecoFormData["tipo"],
+    municipio_id: response.municipio_id,
+    principal: response.principal,
+    ativo: response.ativo,
+    cep: maskCEP(response.cep),
+    logradouro: response.logradouro,
+    numero: response.numero,
+    bairro: response.bairro,
+    complemento: response.complemento ?? "",
+  };
+}
+
+function mapContatoResponseToForm(
+  response: EmpresaContatoResponse
+): EmpresaContatoFormData {
+  return {
+    id: response.id,
+    tipo: response.tipo as EmpresaContatoFormData["tipo"],
+    valor: response.tipo === "T" ? maskPhone(response.valor) : response.valor,
+    principal: response.principal,
+    ativo: response.ativo,
+  };
+}
+
+function applyItemErrors<T extends object>({
+  error,
+  validKeys,
+  setFieldErrors,
+  setGeneralError,
+  fallbackMessage,
+}: {
+  error: unknown;
+  validKeys: Array<keyof T>;
+  setFieldErrors: (value: Partial<Record<keyof T, string>>) => void;
+  setGeneralError: (value: string | undefined) => void;
+  fallbackMessage: string;
+}) {
+  if (!error || !(error instanceof AxiosError)) {
+    setGeneralError(fallbackMessage);
+    return;
+  }
+
+  const apiErrors = error.response?.data?.errors as
+    | Record<string, string[] | undefined>
+    | undefined;
+
+  if (!apiErrors) {
+    setGeneralError(fallbackMessage);
+    return;
+  }
+
+  const nextFieldErrors = {} as Partial<Record<keyof T, string>>;
+  const generalMessages: string[] = [];
+
+  Object.entries(apiErrors).forEach(([field, messages]) => {
+    if (!messages?.[0]) {
+      return;
+    }
+
+    if (field === "business") {
+      generalMessages.push(...messages);
+      return;
+    }
+
+    if (validKeys.includes(field as keyof T)) {
+      nextFieldErrors[field as keyof T] = messages[0];
+      return;
+    }
+
+    generalMessages.push(messages[0]);
+  });
+
+  setFieldErrors(nextFieldErrors);
+  setGeneralError(generalMessages[0] ?? fallbackMessage);
+}
+
+function extractCollectionItems<T>(payload: unknown): T[] {
+  if (!payload || typeof payload !== "object") {
+    return [];
+  }
+
+  const directData = (payload as { data?: unknown }).data;
+
+  if (Array.isArray(directData)) {
+    return directData as T[];
+  }
+
+  if (directData && typeof directData === "object") {
+    const nestedData = (directData as { data?: unknown }).data;
+
+    if (Array.isArray(nestedData)) {
+      return nestedData as T[];
+    }
+  }
+
+  return [];
 }

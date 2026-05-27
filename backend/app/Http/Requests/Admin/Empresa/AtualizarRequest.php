@@ -55,12 +55,7 @@ class AtualizarRequest extends FormRequest
                 Rule::in(
                     array_column(UF::cases(), 'value')
                 ),
-            ],
-
-            'ativo' => [
-                'required',
-                'boolean',
-            ],
+            ]
         ];
     }
 
@@ -86,10 +81,7 @@ class AtualizarRequest extends FormRequest
             'inscricao_municipal.max' => 'A inscrição municipal deve ter no máximo 255 caracteres.',
 
             'uf.required' => 'A UF é obrigatória.',
-            'uf.in' => 'A UF informada é inválida.',
-
-            'ativo.required' => 'O campo ativo é obrigatório.',
-            'ativo.boolean' => 'O campo ativo deve ser verdadeiro ou falso.',
+            'uf.in' => 'A UF informada é inválida.'
         ];
     }
 }

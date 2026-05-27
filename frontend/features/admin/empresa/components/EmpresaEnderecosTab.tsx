@@ -270,7 +270,7 @@ export function EmpresaEnderecosTab({
               )}
             </div>
 
-            <div className="col-span-12 md:col-span-1 space-y-2 mt-6">
+            <div className="col-span-12 md:col-span-2 space-y-2 mt-6">
               <div className="flex min-h-12 items-center gap-2 rounded-md px-3">
                 <Switch
                   checked={draft.principal}
@@ -284,7 +284,7 @@ export function EmpresaEnderecosTab({
               )}
             </div>
 
-            <div className="col-span-12 md:col-span-2 space-y-2 mt-6">
+            <div className="col-span-12 md:col-span-2 space-y-2 mt-6 md:pl-4">
               <div className="flex min-h-12 items-center gap-2 rounded-md px-3">
                 <Switch
                   checked={draft.ativo}

@@ -4,9 +4,10 @@ namespace Database\Seeders;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
-
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+use App\Enums\EmpresaContatoTipo;
 
 
 class PrivateEmpresaContatoSeeder extends Seeder
@@ -22,7 +23,7 @@ class PrivateEmpresaContatoSeeder extends Seeder
             [
                 "id" => Str::uuid(),
                 "empresa_id" => $empresa->id,
-                "tipo" => "E",
+                "tipo" => EmpresaContatoTipo::EMAIL->value,
                 "valor" => "admin.nexus.mock@nexus.com.br",
                 "ativo" => true,
                 "principal" => true,
@@ -32,7 +33,7 @@ class PrivateEmpresaContatoSeeder extends Seeder
             [
                 "id" => Str::uuid(),
                 "empresa_id" => $empresa->id,
-                "tipo" => "T",
+                "tipo" => EmpresaContatoTipo::TELEFONE->value,
                 "valor" => "14111112222",
                 "ativo" => true,
                 "principal" => true,

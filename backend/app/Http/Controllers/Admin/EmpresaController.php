@@ -55,7 +55,6 @@ class EmpresaController extends Controller
 
         $empresa = $this->empresaService->visualizar($id);
 
-        // return response()->json($empresa, 200);
         return EmpresaVisualizarResource::make($empresa)->response()->setStatusCode(200);
     }
 

@@ -1,13 +1,16 @@
+import { EmpresaStatusValue } from "@/constants/empresa-status";
+
 export interface Empresa {
   id: string;
   grupo_empresa_id: string;
-  matriz_id: string;
+  matriz_id: string | null;
   cnpj: string;
   nome_fantasia: string;
   razao_social: string;
-  inscricao_estadual: string;
-  inscricao_municipal: string;
-  ativo: boolean;
+  inscricao_estadual: string | null;
+  inscricao_municipal: string | null;
+  status: EmpresaStatusValue;
+  status_descricao?: string;
   uf: string;
   created_at: string;
   updated_at: string | null;

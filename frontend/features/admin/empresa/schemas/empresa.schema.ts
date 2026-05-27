@@ -8,6 +8,10 @@ import {
   EMPRESA_ENDERECO_TIPOS,
   type EmpresaEnderecoTipo,
 } from "@/constants/empresa-endereco-tipos";
+import {
+  EMPRESA_STATUS_OPTIONS,
+  type EmpresaStatusValue,
+} from "@/constants/empresa-status";
 import { ESTADOS, type UF } from "@/constants/estados";
 import { onlyDigits } from "@/lib/utils";
 
@@ -18,8 +22,12 @@ const EMPRESA_ENDERECO_TIPO_VALUES = Object.keys(
 const EMPRESA_CONTATO_TIPO_VALUES = Object.keys(
   EMPRESA_CONTATO_TIPOS
 ) as [EmpresaContatoTipo, ...EmpresaContatoTipo[]];
+const EMPRESA_STATUS_VALUES = EMPRESA_STATUS_OPTIONS.map(
+  (option) => option.value
+) as [EmpresaStatusValue, ...EmpresaStatusValue[]];
 
 export const empresaEnderecoSchema = z.object({
+  id: z.string().optional(),
   tipo: z.enum(EMPRESA_ENDERECO_TIPO_VALUES, {
     message: "O tipo do endereco e obrigatorio",
   }),
@@ -36,6 +44,7 @@ export const empresaEnderecoSchema = z.object({
 });
 
 export const empresaContatoSchema = z.object({
+  id: z.string().optional(),
   tipo: z.enum(EMPRESA_CONTATO_TIPO_VALUES, {
     message: "O tipo do contato e obrigatorio",
   }),
@@ -82,44 +91,8 @@ export const empresaSchemaCadastro = z.object({
   uf: z.enum(UF_VALUES, {
     message: "A UF e obrigatoria",
   }),
-  enderecos: z.array(empresaEnderecoSchema).min(1, "Informe pelo menos um endereco"),
-  contatos: z.array(empresaContatoSchema).min(1, "Informe pelo menos um contato"),
-}).superRefine((empresa, ctx) => {
-  const enderecosPrincipais = empresa.enderecos.filter(
-    (endereco) => endereco.principal
-  ).length;
-
-  if (enderecosPrincipais !== 1) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["enderecos"],
-      message: "Deve existir exatamente 1 endereco principal",
-    });
-  }
-
-  const emailPrincipal = empresa.contatos.filter(
-    (contato) => contato.tipo === "E" && contato.principal
-  ).length;
-
-  const telefonePrincipal = empresa.contatos.filter(
-    (contato) => contato.tipo === "T" && contato.principal
-  ).length;
-
-  if (emailPrincipal !== 1) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["contatos"],
-      message: "Deve existir exatamente 1 e-mail principal",
-    });
-  }
-
-  if (telefonePrincipal !== 1) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["contatos"],
-      message: "Deve existir exatamente 1 telefone principal",
-    });
-  }
+  enderecos: z.array(empresaEnderecoSchema).default([]),
+  contatos: z.array(empresaContatoSchema).default([]),
 });
 
 export const empresaSchemaEdicao = z.object({
@@ -135,7 +108,9 @@ export const empresaSchemaEdicao = z.object({
   uf: z.enum(UF_VALUES, {
     message: "A UF e obrigatoria",
   }),
-  ativo: z.boolean(),
+  status: z.enum(EMPRESA_STATUS_VALUES, {
+    message: "O status e obrigatorio",
+  }),
   enderecos: z.array(empresaEnderecoSchema).default([]),
   contatos: z.array(empresaContatoSchema).default([]),
 }).superRefine((empresa, ctx) => {

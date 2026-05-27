@@ -190,7 +190,7 @@ export function EmpresasTable({ data, isLoading }: Props) {
                       <AdminPermissionGuard permission="admin.empresa.atualizar" disableFallback={true}>
                         <DropdownMenuItem asChild>
                           <Link
-                            href={`/admin/empresas/${empresa.id}`}
+                            href={`/admin/empresas/${empresa.id}/editar`}
                             className="flex items-center cursor-pointer"
                           >
                             <Pencil className="h-4 w-4"/>

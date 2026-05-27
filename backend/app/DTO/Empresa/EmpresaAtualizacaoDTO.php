@@ -12,7 +12,6 @@ final class EmpresaAtualizacaoDTO
         public readonly string $razao_social,
         public readonly ?string $inscricao_estadual,
         public readonly ?string $inscricao_municipal,
-        public readonly bool $ativo,
         public readonly string $uf
     ) {}
 
@@ -29,7 +28,6 @@ final class EmpresaAtualizacaoDTO
             razao_social: $dados['razao_social'],
             inscricao_estadual: $dados['inscricao_estadual'] ?? null,
             inscricao_municipal: $dados['inscricao_municipal'] ?? null,
-            ativo: $dados['ativo'],
             uf: $dados['uf'],
         );
     }
@@ -43,7 +41,6 @@ final class EmpresaAtualizacaoDTO
             'razao_social' => $this->razao_social,
             'inscricao_estadual' => $this->inscricao_estadual,
             'inscricao_municipal' => $this->inscricao_municipal,
-            'ativo' => $this->ativo,
             'uf' => $this->uf
         ];
     }

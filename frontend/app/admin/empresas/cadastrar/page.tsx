@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { UseFormSetError } from "react-hook-form";
-import { toast } from "sonner";
 
 import { ApiErrorResponse } from "@/types/errors";
 
@@ -41,9 +40,8 @@ export default function Page() {
     CadastrarEmpresaRequest
   >({
     mutationFn: cadastrarEmpresa,
-    onSuccess: () => {
-      toast.success("Empresa cadastrada com sucesso!");
-      router.push("/admin/empresas");
+    onSuccess: (empresa) => {
+      router.push(`/admin/empresas/${empresa.id}/editar?cadastro=sucesso`);
     },
     onError: (error) => {
       const apiErrors = error.response?.data?.errors;
@@ -82,15 +80,6 @@ export default function Page() {
       inscricao_estadual: data.inscricao_estadual || undefined,
       inscricao_municipal: data.inscricao_municipal || undefined,
       uf: data.uf,
-      enderecos: data.enderecos.map((endereco) => ({
-        ...endereco,
-        cep: onlyDigits(endereco.cep),
-        complemento: endereco.complemento || undefined,
-      })),
-      contatos: data.contatos.map((contato) => ({
-        ...contato,
-        valor: contato.tipo === "T" ? onlyDigits(contato.valor) : contato.valor,
-      })),
     };
 
     await mutateAsync(payload);

@@ -11,47 +11,49 @@ export type EditarEmpresaResponse = Empresa;
 export type AtivarEmpresaResponse = Empresa;
 
 export type EmpresaListaItem = Empresa & {
-  status: string;
-  status_descricao?: string;
   grupo_empresa: GrupoEmpresa;
-  matriz: (Empresa & {
-    status: string;
-    status_descricao?: string;
-  }) | null;
+  matriz: Empresa | null;
 };
 export type ListarEmpresasResponse = LaravelResourcePagination<EmpresaListaItem>
 
+export interface EmpresaContatoResponse {
+  id: string;
+  empresa_id: string;
+  tipo: string;
+  tipo_descricao: string;
+  valor: string;
+  ativo: boolean;
+  principal: boolean;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export interface EmpresaEnderecoResponse {
+  id: string;
+  empresa_id: string;
+  tipo: string;
+  tipo_descricao: string;
+  municipio_id: string;
+  ativo: boolean;
+  principal: boolean;
+  cep: string;
+  logradouro: string;
+  numero: string;
+  bairro: string;
+  complemento: string | null;
+  created_at: string;
+  updated_at: string | null;
+  deleted_at?: string | null;
+  municipio?: {
+    id: string;
+    nome: string;
+    uf: string;
+  };
+}
+
 export interface VisualizarEmpresaResponse extends Empresa {
   grupo_empresa: GrupoEmpresa;
-  matriz: Empresa | null;
-  contatos: {
-    id: string;
-    empresa_id: string;
-    tipo: string;
-    valor: string;
-    ativo: boolean;
-    principal: boolean;
-    created_at: string;
-    updated_at: string | null;
-  }[];
-  enderecos: {
-    id: string;
-    empresa_id: string;
-    tipo: string;
-    municipio_id: string;
-    ativo: boolean;
-    principal: boolean;
-    cep: string;
-    logradouro: string;
-    numero: string;
-    bairro: string;
-    complemento: string | null;
-    created_at: string;
-    updated_at: string | null;
-    municipio?: {
-      id: string;
-      nome: string;
-      uf: string;
-    };
-  }[];
+  matriz?: Empresa | null;
+  contatos: EmpresaContatoResponse[];
+  enderecos: EmpresaEnderecoResponse[];
 }

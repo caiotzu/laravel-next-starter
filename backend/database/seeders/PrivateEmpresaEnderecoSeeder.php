@@ -4,10 +4,10 @@ namespace Database\Seeders;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
-
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+use App\Enums\EmpresaEnderecoTipo;
 
 class PrivateEmpresaEnderecoSeeder extends Seeder
 {
@@ -23,7 +23,7 @@ class PrivateEmpresaEnderecoSeeder extends Seeder
         DB::table("empresa_enderecos")->insert([
             "id" => Str::uuid(),
             "empresa_id" => $empresa->id,
-            "tipo" => "Comercial",
+            "tipo" => EmpresaEnderecoTipo::COMERCIAL->value,
             "municipio_id" => $municipio->id,
             "ativo" => true,
             "principal" => true,
