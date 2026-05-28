@@ -1,18 +1,38 @@
 "use client"
 
+import { useState } from "react";
+
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { PageHeader } from "@/app/admin/_components/layouts/page-header";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
 
+import { Pagination } from "@/components/data-tables/Pagination";
 import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar";
 
+import { useUsuarios } from "@/domains/admin/usuario/hooks/useUsuarios";
+import { ListarUsuarioRequest } from "@/domains/admin/usuario/types/usuario.requests";
+import { ListarUsuariosResponse } from "@/domains/admin/usuario/types/usuario.responses";
+
+import { UsuariosFilters } from "@/features/admin/usuario/components/UsuariosFilters";
+import { UsuariosTable } from "@/features/admin/usuario/components/UsuariosTable";
+
 import { AdminPermissionGuard } from "../_components/guard/AdminPermissionGuard";
 
 
 export default function Page() {
+  const [filters, setFilters] = useState<ListarUsuarioRequest>({
+    nome: "",
+    excluido: false,
+    page: 1,
+    por_pagina: 10,
+  });
+  
+  const { data, isLoading } = useUsuarios(filters);
+  const pagination = data as ListarUsuariosResponse | undefined;
+
 	return (
     <SidebarProvider
       style={
@@ -43,7 +63,17 @@ export default function Page() {
               ]}
             />
 
-            {/* <AdminPermissionGuard permission="admin.usuario.listar">
+            <AdminPermissionGuard permission="admin.usuario.listar">
+              <UsuariosFilters 
+                filters={filters}
+                setFilters={setFilters}
+              />
+
+              <UsuariosTable
+                data={data?.data ?? []}
+                isLoading={isLoading}
+              />
+
               {pagination && (
                 <Pagination
                   currentPage={pagination.meta.current_page}
@@ -51,10 +81,15 @@ export default function Page() {
                   total={pagination.meta.total}
                   from={pagination.meta.from ?? 0}
                   to={pagination.meta.to ?? 0}
-                  onPageChange={setPage}
+                  onPageChange={(page) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      page,
+                    }))
+                  }
                 />
               )}
-            </AdminPermissionGuard> */}
+            </AdminPermissionGuard>
           </div>
         </div>
       </SidebarInset>

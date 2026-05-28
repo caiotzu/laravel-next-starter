@@ -50,6 +50,12 @@ export interface LaravelPagination<T> {
   to: number | null;
   total: number;
 }
+/**
+ * Retorno sem paginação
+ */
+export interface LaravelApiResponse<T> {
+  data: T;
+}
 
 
 

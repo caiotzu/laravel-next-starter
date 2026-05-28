@@ -1,8 +1,6 @@
 import axios, { AxiosError, Method } from "axios";
 
 import { ApiErrorResponse } from "@/types/errors";
-import { LaravelPaginationMeta, LaravelPaginationUrls } from "@/types/laravel";
-
 
 interface ProxyPayload {
   url: string;
@@ -13,8 +11,6 @@ interface ProxyPayload {
 interface ProxyResponse<T> {
   status: number;
   data: T;
-  meta?: LaravelPaginationMeta;
-  links?: LaravelPaginationUrls;
 }
 
 export async function proxyAdminRequest<T>({

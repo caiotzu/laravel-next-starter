@@ -1,26 +1,14 @@
-import { LaravelPagination, LaravelResourcePagination } from "@/types/laravel";
+import { LaravelApiResponse, LaravelPagination, LaravelResourcePagination } from "@/types/laravel";
 
-import { GrupoEmpresa } from "./grupoEmpresa.model";
-
-export interface CadastrarGrupoEmpresaResponse {
+export interface GrupoEmpresaResponse {
   id: string;
   nome: string;
   created_at: string;
   updated_at: string | null;
+  deleted_at: string | null;
 }
 
-export interface EditarGrupoEmpresaResponse {
-  id: string;
-  nome: string;
-  created_at: string;
-  updated_at: string | null;
-}
-
-export type AtivarGrupoEmpresaResponse = GrupoEmpresa;
-
-export type ListarGrupoEmpresasResponse = LaravelResourcePagination<GrupoEmpresa>;
-
-export interface VisualizarGrupoEmpresaResponse extends GrupoEmpresa {
+export interface VisualizarGrupoEmpresaData extends GrupoEmpresaResponse {
   grupos: {
     id: string;
     descricao: string;
@@ -46,3 +34,13 @@ export interface VisualizarGrupoEmpresaResponse extends GrupoEmpresa {
     }[];
   }[];
 }
+
+export type CadastrarGrupoEmpresaResponse = LaravelApiResponse<GrupoEmpresaResponse>;
+export type EditarGrupoEmpresaResponse = LaravelApiResponse<GrupoEmpresaResponse>;
+export type ListarGrupoEmpresasResponse = LaravelResourcePagination<GrupoEmpresaResponse>;
+export type AtivarGrupoEmpresaResponse = LaravelApiResponse<GrupoEmpresaResponse>;
+export type VisualizarGrupoEmpresaResponse = LaravelApiResponse<VisualizarGrupoEmpresaData>;
+
+
+
+

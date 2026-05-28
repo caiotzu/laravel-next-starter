@@ -18,5 +18,3 @@ export interface ListarUsuarioRequest {
   por_pagina?: number;
   page?: number;
 }
-
-

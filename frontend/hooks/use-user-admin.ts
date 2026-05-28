@@ -13,7 +13,7 @@ export function useUserAdmin() {
         url: '/admin/me',
         method: 'GET'
       });
-      return res.data?.data ?? res.data;
+      return res.data?.data.data ?? res.data;
     },
     staleTime: 1000 * 60 * 5, // cache por 5 minutos
     retry: false,

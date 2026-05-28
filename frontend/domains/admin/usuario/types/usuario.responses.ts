@@ -1,43 +1,26 @@
-import { LaravelResourcePagination } from "@/types/laravel";
+import { LaravelApiResponse, LaravelResourcePagination } from "@/types/laravel";
 
-import { Usuario } from "./usuario.model";
+import { GrupoResponse } from "../../grupo/types/grupo.responses";
 
-export interface CadastrarUsuarioResponse {
+export interface UsuarioResponse {
   id: string;
-	grupo_id: string;
-	nome: string;
-	email: string;
-	status: string;
-	avatar: null;
-	google2fa_enable: null,
-	google2fa_confirmado_em: null,
-	ultimo_login_em: null,
-	ultimo_ip: null,
-	updated_at: string;
-	created_at: string;
-	deleted_at: null
+  grupo_id: string;
+  nome: string;
+  email: string;
+  status: string;
+  avatar: string | null;
+  google2fa_enable: boolean | null;
+  google2fa_confirmado_em: string | null;
+  ultimo_login_em: string | null;
+  ultimo_ip: string | null;
+  created_at: string;
+  updated_at: string | null;
+  deleted_at: string | null;
+	grupo?: GrupoResponse
 }
 
-export interface EditarUsuarioResponse {
-  id: string;
-	grupo_id: string;
-	nome: string;
-	email: string;
-	status: string;
-	avatar: null;
-	google2fa_enable: boolean,
-	google2fa_confirmado_em: null,
-	ultimo_login_em: null,
-	ultimo_ip: null,
-	updated_at: string;
-	created_at: string;
-	deleted_at: null
-}
-
-export type ListarUsuariosResponse = LaravelResourcePagination<Usuario>;
-
-export type AtivarUsuarioResponse = Usuario;
-export type VisualizarUsuarioResponse = Usuario;
-
-
-
+export type CadastrarUsuarioResponse = LaravelApiResponse<UsuarioResponse>;
+export type EditarUsuarioResponse = LaravelApiResponse<UsuarioResponse>;
+export type ListarUsuariosResponse = LaravelResourcePagination<UsuarioResponse>;
+export type AtivarUsuarioResponse = LaravelApiResponse<UsuarioResponse>;
+export type VisualizarUsuarioResponse = LaravelApiResponse<UsuarioResponse>;

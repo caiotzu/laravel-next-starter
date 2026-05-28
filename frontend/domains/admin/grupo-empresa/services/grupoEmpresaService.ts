@@ -49,15 +49,28 @@ export function ativarGrupoEmpresa(
   });
 }
 
-export function listarGrupoEmpresas(
+export async function listarGrupoEmpresas(
   dto: ListarGrupoEmpresasRequest
 ) {
-  const query = qs.stringify(dto, { skipNulls: true });
+  const query = qs.stringify(dto, {
+    skipNulls: true,
+    filter: (_, value) => {
+      if (
+        value === "" ||
+        value === undefined
+      ) {
+        return undefined;
+      }
 
-  return proxyAdminRequest<ListarGrupoEmpresasResponse>({
+      return value;
+    },
+  });
+  
+  const response = await proxyAdminRequest<ListarGrupoEmpresasResponse>({
     url: `/admin/grupos-empresas?${query}`,
     method: "GET",
   });
+  return response.data;
 }
 
 export async function visualizarGrupoEmpresa(id: string) {

@@ -16,6 +16,7 @@ import {
 
 import { useGrupoEmpresas } from "@/domains/admin/grupo-empresa/hooks/useGrupoEmpresas";
 import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
+import { ListarGrupoEmpresasResponse } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.responses";
 
 import { GrupoEmpresasFilters } from "@/features/admin/grupo-empresa/components/GrupoEmpresasFilters";
 import { GrupoEmpresasTable } from "@/features/admin/grupo-empresa/components/GrupoEmpresasTable";
@@ -34,9 +35,8 @@ export default function Page() {
     excluido,
     por_pagina: porPagina,
   });
-
-  const pagination = data as LaravelResourcePagination<GrupoEmpresa> | undefined;
-
+  const pagination = data as ListarGrupoEmpresasResponse | undefined;
+  
   return (
     <SidebarProvider
       style={
