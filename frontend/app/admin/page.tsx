@@ -50,8 +50,6 @@ export default function LoginPage() {
 
   const router = useRouter()
 
-  /* ================= LOGIN ================= */
-
   async function handleSubmit(data: LoginData) {
     try {
       setIsLoading(true)
@@ -89,8 +87,6 @@ export default function LoginPage() {
       setIsLoading(false)
     }
   }
-
-  /* ================= VERIFICAR 2FA ================= */
 
   async function handleVerify2FA() {
     if (!tempToken) return

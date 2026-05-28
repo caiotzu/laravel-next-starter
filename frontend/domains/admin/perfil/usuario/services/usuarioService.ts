@@ -3,33 +3,36 @@ import { proxyAdminRequest } from "@/lib/proxy-admin";
 import { AtualizarRequest, AtualizarAvatarRequest, AtualizarSenhaRequest } from "../types/usuario.requests";
 import { AtualizarResponse, AtualizarAvatarResponse, AtualizarSenhaResponse } from "../types/usuario.responses";
 
-export function atualizarAvatar(
+export async function atualizarAvatar(
   payload: AtualizarAvatarRequest
 ): Promise<AtualizarAvatarResponse> {
-  return proxyAdminRequest<AtualizarAvatarResponse>({
+  const response = await proxyAdminRequest<AtualizarAvatarResponse>({
     url: "/admin/perfil/avatar",
     method: "PATCH",
     data: payload,
   });
+  return response.data;
 }
 
-export function atualizar(
+export async function atualizar(
   payload: AtualizarRequest
 ): Promise<AtualizarResponse> {
-  return proxyAdminRequest<AtualizarResponse>({
+  const response = await proxyAdminRequest<AtualizarResponse>({
     url: "/admin/perfil",
     method: "PATCH",
     data: payload,
   });
+  return response.data
 }
 
-export function atualizarSenha(
+export async function atualizarSenha(
   payload: AtualizarSenhaRequest
 ): Promise<AtualizarSenhaResponse> {
-  return proxyAdminRequest<AtualizarSenhaResponse>({
+  const response = await proxyAdminRequest<AtualizarSenhaResponse>({
     url: "/admin/perfil/senha",
     method: "PATCH",
     data: payload,
   });
+  return response.data
 }
 

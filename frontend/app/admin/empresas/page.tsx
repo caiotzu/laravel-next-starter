@@ -15,11 +15,13 @@ import {
 } from "@/components/ui/sidebar";
 
 import { useEmpresas } from "@/domains/admin/empresa/hooks/useEmpresas";
+import { EmpresaFilters } from "@/domains/admin/empresa/types/empresa.filters";
+import { Empresa } from "@/domains/admin/empresa/types/empresa.model";
 import { EmpresaListaItem } from "@/domains/admin/empresa/types/empresa.responses";
 import { useGrupoEmpresas } from "@/domains/admin/grupo-empresa/hooks/useGrupoEmpresas";
 import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
 
-import { EmpresasFilters, type EmpresaFilters } from "@/features/admin/empresa/components/EmpresasFilters";
+import { EmpresasFilters } from "@/features/admin/empresa/components/EmpresasFilters";
 import { EmpresasTable } from "@/features/admin/empresa/components/EmpresasTable";
 
 import { AdminPermissionGuard } from "../_components/guard/AdminPermissionGuard";
@@ -32,24 +34,39 @@ export default function Page() {
   const [page, setPage] = useState(1);
   const [porPagina, setPorPagina] = useState(10);
 
-  const [grupoEmpresaNomeDebounced, setGrupoEmpresaNomeDebounced] = useState("");
-  const [matrizNomeDebounced, setMatrizNomeDebounced] = useState("");
+  const [grupoEmpresaNome, setGrupoEmpresaNome] = useState("");
+  const [matrizNome, setMatrizNome] = useState("");
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setGrupoEmpresaNomeDebounced(filters.grupoEmpresaNome ?? "");
-    }, 300);
+  const { data: gruposData, isLoading: isLoadingGrupos } = useGrupoEmpresas({
+    page: 1,
+    nome: grupoEmpresaNome || undefined,
+    excluido: false,
+    por_pagina: 10,
+  });
+  const grupos = (gruposData?.data ?? []) as GrupoEmpresa[];
 
-    return () => clearTimeout(timeout);
-  }, [filters.grupoEmpresaNome]);
+  const { data: matrizesData, isLoading: isLoadingMatrizes } = useEmpresas({
+    page: 1,
+    nome_fantasia: matrizNome || undefined,
+    excluido: false,
+    por_pagina: 10,
+  });
+  const matrizes = (matrizesData?.data ?? []) as Empresa[];
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setMatrizNomeDebounced(filters.matrizNome ?? "");
-    }, 300);
-
-    return () => clearTimeout(timeout);
-  }, [filters.matrizNome]);
+  const { data: empresas, isLoading: isLoadingEmpresa } = useEmpresas({
+    grupo_empresa_id: filters.grupo_empresa_id,
+    matriz_id: filters.matriz_id,
+    cnpj: filters.cnpj,
+    nome_fantasia: filters.nome_fantasia,
+    razao_social: filters.razao_social,
+    inscricao_estadual: filters.inscricao_estadual,
+    inscricao_municipal: filters.inscricao_municipal,
+    uf: filters.uf,
+    excluido: filters.excluido,
+    page,
+    por_pagina: porPagina,
+  });
+  const pagination = empresas as LaravelResourcePagination<EmpresaListaItem> | undefined;
 
   function updateFilter<K extends keyof EmpresaFilters>(
     key: K,
@@ -62,47 +79,9 @@ export default function Page() {
     setPage(1);
   }
 
-  const { data: gruposData, isLoading: isLoadingGrupos } = useGrupoEmpresas({
-    page: 1,
-    nome: grupoEmpresaNomeDebounced || undefined,
-    excluido: false,
-    por_pagina: 10,
-  });
-
-  const grupos = extractCollectionItems<GrupoEmpresa>(gruposData);
-
-  const { data: matrizesData, isLoading: isLoadingMatrizes } = useEmpresas({
-    page: 1,
-    nome_fantasia: matrizNomeDebounced || undefined,
-    excluido: false,
-    por_pagina: 10,
-  });
-
-  const matrizes = matrizesData?.data ?? [];
-
-  const idValue = filters.id ?? "";
-  const cnpjValue = filters.cnpj ?? "";
-  const idFiltro = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(idValue)
-    ? idValue
-    : undefined;
-  const cnpjFiltro = cnpjValue.length === 14 ? cnpjValue : undefined;
-
-  const { data: empresas, isLoading: isLoadingEmpresa } = useEmpresas({
-    id: idFiltro,
-    grupo_empresa_id: filters.grupoEmpresaId,
-    matriz_id: filters.matrizId,
-    cnpj: cnpjFiltro,
-    nome_fantasia: filters.nomeFantasia,
-    razao_social: filters.razaoSocial,
-    ativo: filters.ativo,
-    inscricao_estadual: filters.inscricaoEstadual,
-    inscricao_municipal: filters.inscricaoMunicipal,
-    uf: filters.uf,
-    excluido: filters.excluido,
-    page,
-    por_pagina: porPagina,
-  });
-  const pagination = empresas as LaravelResourcePagination<EmpresaListaItem> | undefined;
+  console.log('grupos', grupos);
+  console.log('matrizes', matrizes);
+  console.log('pagination', pagination);
 
   return (
     <SidebarProvider
@@ -172,24 +151,4 @@ export default function Page() {
   );
 }
 
-function extractCollectionItems<T>(payload: unknown): T[] {
-  if (!payload || typeof payload !== "object") {
-    return [];
-  }
 
-  const directData = (payload as { data?: unknown }).data;
-
-  if (Array.isArray(directData)) {
-    return directData as T[];
-  }
-
-  if (directData && typeof directData === "object") {
-    const nestedData = (directData as { data?: unknown }).data;
-
-    if (Array.isArray(nestedData)) {
-      return nestedData as T[];
-    }
-  }
-
-  return [];
-}

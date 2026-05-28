@@ -36,7 +36,7 @@ import {
 } from "@/constants/empresa-contato-tipos";
 import { maskPhone } from "@/lib/utils";
 
-import { EmpresaContatoFormData } from "../schemas/empresa.schema";
+import { EmpresaContatoFormData } from "../../empresa-contato/schemas/empresa-contato.schema";
 
 interface Props {
   draft: EmpresaContatoFormData;

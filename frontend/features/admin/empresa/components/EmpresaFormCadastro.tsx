@@ -39,50 +39,32 @@ import {
   getLabelByUF,
 } from "@/constants/estados";
 import { useEmpresas } from "@/domains/admin/empresa/hooks/useEmpresas";
-import {
-  cadastrarEmpresaContato,
-  cadastrarEmpresaEndereco,
-  atualizarEmpresaContato,
-  atualizarEmpresaEndereco,
-  excluirEmpresaContato,
-  excluirEmpresaEndereco,
-} from "@/domains/admin/empresa/services/empresaService";
-import {
-  EmpresaContatoRequest,
-  EmpresaEnderecoRequest,
-} from "@/domains/admin/empresa/types/empresa.requests";
+import { Empresa } from "@/domains/admin/empresa/types/empresa.model";
 import {
   CadastrarEmpresaResponse,
-  EmpresaContatoResponse,
-  EmpresaEnderecoResponse,
 } from "@/domains/admin/empresa/types/empresa.responses";
+import { atualizarEmpresaContato, cadastrarEmpresaContato, excluirEmpresaContato } from "@/domains/admin/empresa-contato/services/empresaContatoService";
+import { EmpresaContatoRequest } from "@/domains/admin/empresa-contato/types/empresaContato.requests";
+import { EmpresaContatoResponse } from "@/domains/admin/empresa-contato/types/empresaContato.responses";
+import { atualizarEmpresaEndereco, cadastrarEmpresaEndereco, excluirEmpresaEndereco } from "@/domains/admin/empresa-endereco/services/empresaEnderecoService";
+import { EmpresaEnderecoRequest } from "@/domains/admin/empresa-endereco/types/empresaEndereco.requests";
+import { EmpresaEnderecoResponse } from "@/domains/admin/empresa-endereco/types/empresaEndereco.responses";
 import { useGrupoEmpresas } from "@/domains/admin/grupo-empresa/hooks/useGrupoEmpresas";
+import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
 import { useMunicipios } from "@/domains/admin/lookup/hooks/useMunicipios";
 import { consultarCep, listarMunicipios } from "@/domains/admin/lookup/services/lookupService";
 import { ConsultarCepResponse, MunicipioLookupItem } from "@/domains/admin/lookup/types/lookup.responses";
 import { maskCEP, maskCNPJ, maskPhone, onlyDigits } from "@/lib/utils";
 
+import { EmpresaContatoFormData, empresaContatoSchema } from "../../empresa-contato/schemas/empresa-contato.schema";
+import { EmpresaEnderecoFormData, empresaEnderecoSchema } from "../../empresa-endereco/schemas/empresa-endereco.schema";
 import {
-  empresaContatoSchema,
-  empresaEnderecoSchema,
   empresaSchemaCadastro,
-  EmpresaContatoFormData,
-  EmpresaEnderecoFormData,
   EmpresaFormDataCadastro,
 } from "../schemas/empresa.schema";
 
 import { EmpresaContatosTab } from "./EmpresaContatosTab";
 import { EmpresaEnderecosTab } from "./EmpresaEnderecosTab";
-
-interface GrupoOption {
-  id: string;
-  nome: string;
-}
-
-interface MatrizOption {
-  id: string;
-  nome_fantasia: string;
-}
 
 interface EmpresaFormCadastroProps {
   onSubmit: (data: EmpresaFormDataCadastro) => Promise<void>;
@@ -161,7 +143,7 @@ export function EmpresaFormCadastro({
   } = useForm<EmpresaFormDataCadastro>({
     resolver: zodResolver(empresaSchemaCadastro),
     defaultValues: {
-      grupo_empresa_id: "",
+      grupo_empresa_id: undefined,
       matriz_id: undefined,
       cnpj: "",
       nome_fantasia: "",
@@ -195,36 +177,16 @@ export function EmpresaFormCadastro({
   const [matrizBusca, setMatrizBusca] = useState("");
   const [municipioNome, setMunicipioNome] = useState("");
   const [municipioBusca, setMunicipioBusca] = useState("");
-  const [grupoSelecionado, setGrupoSelecionado] = useState<GrupoOption | null>(
-    null
-  );
-  const [matrizSelecionada, setMatrizSelecionada] = useState<MatrizOption | null>(
-    null
-  );
-  const [municipioSelecionado, setMunicipioSelecionado] =
-    useState<MunicipioLookupItem | null>(null);
-  const [enderecosMunicipios, setEnderecosMunicipios] = useState<
-    Array<MunicipioLookupItem | null>
-  >([]);
-
-  const [enderecoDraft, setEnderecoDraft] = useState<EmpresaEnderecoFormData>(
-    createEmptyEndereco()
-  );
-  const [contatoDraft, setContatoDraft] = useState<EmpresaContatoFormData>(
-    createEmailContato()
-  );
-  const [editingEnderecoIndex, setEditingEnderecoIndex] = useState<number | null>(
-    null
-  );
-  const [editingContatoIndex, setEditingContatoIndex] = useState<number | null>(
-    null
-  );
-  const [enderecoDraftErrors, setEnderecoDraftErrors] = useState<
-    Partial<Record<keyof EmpresaEnderecoFormData, string>>
-  >({});
-  const [contatoDraftErrors, setContatoDraftErrors] = useState<
-    Partial<Record<keyof EmpresaContatoFormData, string>>
-  >({});
+  const [grupoSelecionado, setGrupoSelecionado] = useState<GrupoEmpresa | null>(null);
+  const [matrizSelecionada, setMatrizSelecionada] = useState<Empresa | null>(null);
+  const [municipioSelecionado, setMunicipioSelecionado] = useState<MunicipioLookupItem | null>(null);
+  const [enderecosMunicipios, setEnderecosMunicipios] = useState<Array<MunicipioLookupItem | null>>([]);
+  const [enderecoDraft, setEnderecoDraft] = useState<EmpresaEnderecoFormData>(createEmptyEndereco());
+  const [contatoDraft, setContatoDraft] = useState<EmpresaContatoFormData>(createEmailContato());
+  const [editingEnderecoIndex, setEditingEnderecoIndex] = useState<number | null>(null);
+  const [editingContatoIndex, setEditingContatoIndex] = useState<number | null>(null);
+  const [enderecoDraftErrors, setEnderecoDraftErrors] = useState<Partial<Record<keyof EmpresaEnderecoFormData, string>>>({});
+  const [contatoDraftErrors, setContatoDraftErrors] = useState<Partial<Record<keyof EmpresaContatoFormData, string>>>({});
   const [enderecoGeneralError, setEnderecoGeneralError] = useState<string>();
   const [contatoGeneralError, setContatoGeneralError] = useState<string>();
   const [cepLookupMessage, setCepLookupMessage] = useState<string>();
@@ -276,12 +238,14 @@ export function EmpresaFormCadastro({
     return () => clearTimeout(timeout);
   }, [municipioNome, municipioSelecionado]);
 
+
   const { data: gruposData, isLoading: isLoadingGrupos } = useGrupoEmpresas({
     page: 1,
-    nome: grupoEmpresaBusca || undefined,
+    nome: grupoEmpresaNome || undefined,
     excluido: false,
     por_pagina: 10,
   });
+  const grupos = (gruposData?.data ?? []) as GrupoEmpresa[];
 
   const { data: matrizesData, isLoading: isLoadingMatrizes } = useEmpresas({
     page: 1,
@@ -289,6 +253,8 @@ export function EmpresaFormCadastro({
     excluido: false,
     por_pagina: 10,
   });
+  const matrizes = (matrizesData?.data ?? []) as Empresa[];
+
   const { data: municipiosData, isLoading: isLoadingMunicipios } = useMunicipios(
     {
       page: 1,
@@ -298,10 +264,8 @@ export function EmpresaFormCadastro({
     },
     municipioBusca.length > 0
   );
+  const municipios = (municipiosData?.data ?? []) as MunicipioLookupItem[];
 
-  const grupos = extractCollectionItems<GrupoOption>(gruposData);
-  const matrizes = extractCollectionItems<MatrizOption>(matrizesData);
-  const municipios = extractCollectionItems<MunicipioLookupItem>(municipiosData);
   const grupoItems = grupoSelecionado
     ? [grupoSelecionado, ...grupos.filter((item) => item.id !== grupoSelecionado.id)]
     : grupos;
@@ -347,19 +311,17 @@ export function EmpresaFormCadastro({
         bairro: response.bairro ?? prev.bairro,
       }));
 
-      if (!response.ibge) {
+      if (!response.siafi) {
         return;
       }
 
       try {
-        const municipiosPorIbge = await listarMunicipios({
-          codigo_ibge: response.ibge,
+        const municipiosPorCodigoSiafi = await listarMunicipios({
+          codigo_siafi: response.siafi,
           uf: response.uf ?? undefined,
           por_pagina: 1,
         });
-        const municipio = extractCollectionItems<MunicipioLookupItem>(
-          municipiosPorIbge
-        )[0];
+        const municipio = municipiosPorCodigoSiafi.data[0];
 
         if (!municipio) {
           return;
@@ -1226,26 +1188,4 @@ function applyItemErrors<T extends object>({
 
   setFieldErrors(nextFieldErrors);
   setGeneralError(generalMessages[0] ?? fallbackMessage);
-}
-
-function extractCollectionItems<T>(payload: unknown): T[] {
-  if (!payload || typeof payload !== "object") {
-    return [];
-  }
-
-  const directData = (payload as { data?: unknown }).data;
-
-  if (Array.isArray(directData)) {
-    return directData as T[];
-  }
-
-  if (directData && typeof directData === "object") {
-    const nestedData = (directData as { data?: unknown }).data;
-
-    if (Array.isArray(nestedData)) {
-      return nestedData as T[];
-    }
-  }
-
-  return [];
 }

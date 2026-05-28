@@ -45,7 +45,8 @@ import {
 import { MunicipioLookupItem } from "@/domains/admin/lookup/types/lookup.responses";
 import { maskCEP } from "@/lib/utils";
 
-import { EmpresaEnderecoFormData } from "../schemas/empresa.schema";
+import { EmpresaEnderecoFormData } from "../../empresa-endereco/schemas/empresa-endereco.schema";
+
 
 interface Props {
   draft: EmpresaEnderecoFormData;

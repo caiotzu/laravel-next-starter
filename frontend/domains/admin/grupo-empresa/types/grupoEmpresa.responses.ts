@@ -18,7 +18,6 @@ export interface EditarGrupoEmpresaResponse {
 
 export type AtivarGrupoEmpresaResponse = GrupoEmpresa;
 
-// export type ListarGrupoEmpresasResponse = LaravelPagination<GrupoEmpresa>;
 export type ListarGrupoEmpresasResponse = LaravelResourcePagination<GrupoEmpresa>;
 
 export interface VisualizarGrupoEmpresaResponse extends GrupoEmpresa {

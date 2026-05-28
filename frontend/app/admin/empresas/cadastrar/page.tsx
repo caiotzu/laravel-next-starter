@@ -22,7 +22,7 @@ import {
 import { cadastrarEmpresa } from "@/domains/admin/empresa/services/empresaService";
 import { CadastrarEmpresaRequest } from "@/domains/admin/empresa/types/empresa.requests";
 import { CadastrarEmpresaResponse } from "@/domains/admin/empresa/types/empresa.responses";
-import { onlyDigits } from "@/lib/utils";
+import { onlyAlphaNumeric } from "@/lib/utils";
 
 import { EmpresaFormCadastro } from "@/features/admin/empresa/components/EmpresaFormCadastro";
 import { EmpresaFormDataCadastro } from "@/features/admin/empresa/schemas/empresa.schema";
@@ -74,7 +74,7 @@ export default function Page() {
     const payload: CadastrarEmpresaRequest = {
       grupo_empresa_id: data.grupo_empresa_id,
       matriz_id: data.matriz_id || undefined,
-      cnpj: onlyDigits(data.cnpj),
+      cnpj: onlyAlphaNumeric(data.cnpj),
       nome_fantasia: data.nome_fantasia,
       razao_social: data.razao_social,
       inscricao_estadual: data.inscricao_estadual || undefined,

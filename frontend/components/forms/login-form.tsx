@@ -107,7 +107,6 @@ export function LoginForm({ className, onSubmit, fieldErrors, ...props }: LoginF
           )}
         </Field>
 
-        {/* Botão submit */}
         <Field>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? (

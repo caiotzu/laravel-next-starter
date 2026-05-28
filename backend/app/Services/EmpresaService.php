@@ -163,9 +163,6 @@ class EmpresaService {
             ->when($filtro->inscricao_municipal, fn ($q) =>
                 $q->where('inscricao_municipal', 'ilike', "%{$filtro->inscricao_municipal}%")
             )
-            ->when(! is_null($filtro->ativo), fn ($q) =>
-                $q->where('ativo', $filtro->ativo)
-            ) // When não funciona bem com boolean, então caso queira filtrar os inativos precisar ser assim
             ->when($filtro->uf, fn ($q) =>
                 $q->where('uf', $filtro->uf)
             )

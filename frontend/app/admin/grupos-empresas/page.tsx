@@ -5,10 +5,10 @@ import { useState } from "react";
 import { LaravelResourcePagination } from "@/types/laravel";
 
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
+import { PageHeader } from "@/app/admin/_components/layouts/page-header";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
 
 import { Pagination } from "@/components/data-tables/Pagination";
-import { PageHeader } from "@/components/layouts/page-header";
 import {
   SidebarInset,
   SidebarProvider,

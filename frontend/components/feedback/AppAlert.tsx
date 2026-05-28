@@ -65,7 +65,6 @@ export function AppAlert({
     <div
       className={`w-full rounded-xl shadow-sm overflow-hidden ${current.cardClass} ${current.accentClass} ${className}`}
     >
-      {/* HEADER */}
       <div className="px-5 py-4">
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">

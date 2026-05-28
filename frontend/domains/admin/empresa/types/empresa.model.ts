@@ -1,5 +1,3 @@
-import { EmpresaStatusValue } from "@/constants/empresa-status";
-
 export interface Empresa {
   id: string;
   grupo_empresa_id: string;
@@ -9,8 +7,7 @@ export interface Empresa {
   razao_social: string;
   inscricao_estadual: string | null;
   inscricao_municipal: string | null;
-  status: EmpresaStatusValue;
-  status_descricao?: string;
+  status: string;
   uf: string;
   created_at: string;
   updated_at: string | null;

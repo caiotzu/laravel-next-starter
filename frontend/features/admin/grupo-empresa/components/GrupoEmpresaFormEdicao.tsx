@@ -96,7 +96,7 @@ export function GrupoEmpresaFormEdicao({
 
           <Button type="submit" disabled={isLoading} className="cursor-pointer">
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Salvar Alterações
+            Salvar
           </Button>
         </CardFooter>
       </form>

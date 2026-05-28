@@ -1,4 +1,4 @@
-import { EmpresaStatusValue } from "@/constants/empresa-status";
+import { UF } from "@/constants/estados";
 
 export interface CadastrarEmpresaRequest {
   grupo_empresa_id: string;
@@ -8,26 +8,7 @@ export interface CadastrarEmpresaRequest {
   razao_social: string;
   inscricao_estadual?: string;
   inscricao_municipal?: string;
-  uf: string;
-}
-
-export interface EmpresaContatoRequest {
-  tipo: string;
-  valor: string;
-  principal: boolean;
-  ativo: boolean;
-}
-
-export interface EmpresaEnderecoRequest {
-  tipo: string;
-  municipio_id: string;
-  principal: boolean;
-  ativo: boolean;
-  cep: string;
-  logradouro: string;
-  numero: string;
-  bairro: string;
-  complemento?: string;
+  uf: UF;
 }
 
 export interface EditarEmpresaRequest {
@@ -37,8 +18,7 @@ export interface EditarEmpresaRequest {
   razao_social: string;
   inscricao_estadual?: string;
   inscricao_municipal?: string;
-  uf: string;
-  status: EmpresaStatusValue;
+  uf: UF;
 }
 
 export interface ListarEmpresasRequest {
@@ -50,8 +30,7 @@ export interface ListarEmpresasRequest {
   razao_social?: string;
   inscricao_estadual?: string;
   inscricao_municipal?: string;
-  ativo?: boolean;
-  uf?: string;
+  uf?: UF;
   excluido?: boolean;
   por_pagina?: number;
   page?: number;

@@ -50,22 +50,12 @@ import {
   getLabelByUF,
 } from "@/constants/estados";
 import { useEmpresas } from "@/domains/admin/empresa/hooks/useEmpresas";
-import {
-  atualizarEmpresaContato,
-  atualizarEmpresaEndereco,
-  cadastrarEmpresaContato,
-  cadastrarEmpresaEndereco,
-  excluirEmpresaContato,
-  excluirEmpresaEndereco,
-} from "@/domains/admin/empresa/services/empresaService";
-import {
-  EmpresaContatoRequest,
-  EmpresaEnderecoRequest,
-} from "@/domains/admin/empresa/types/empresa.requests";
-import {
-  EmpresaContatoResponse,
-  EmpresaEnderecoResponse,
-} from "@/domains/admin/empresa/types/empresa.responses";
+import { atualizarEmpresaContato, cadastrarEmpresaContato, excluirEmpresaContato } from "@/domains/admin/empresa-contato/services/empresaContatoService";
+import { EmpresaContatoRequest } from "@/domains/admin/empresa-contato/types/empresaContato.requests";
+import { EmpresaContatoResponse } from "@/domains/admin/empresa-contato/types/empresaContato.responses";
+import { atualizarEmpresaEndereco, cadastrarEmpresaEndereco, excluirEmpresaEndereco } from "@/domains/admin/empresa-endereco/services/empresaEnderecoService";
+import { EmpresaEnderecoRequest } from "@/domains/admin/empresa-endereco/types/empresaEndereco.requests";
+import { EmpresaEnderecoResponse } from "@/domains/admin/empresa-endereco/types/empresaEndereco.responses";
 import { useMunicipios } from "@/domains/admin/lookup/hooks/useMunicipios";
 import {
   consultarCep,
@@ -77,12 +67,10 @@ import {
 } from "@/domains/admin/lookup/types/lookup.responses";
 import { maskCEP, maskCNPJ, maskPhone, onlyDigits } from "@/lib/utils";
 
+import { EmpresaContatoFormData, empresaContatoSchema } from "../../empresa-contato/schemas/empresa-contato.schema";
+import { EmpresaEnderecoFormData, empresaEnderecoSchema } from "../../empresa-endereco/schemas/empresa-endereco.schema";
 import {
-  empresaContatoSchema,
-  empresaEnderecoSchema,
   empresaSchemaEdicao,
-  EmpresaContatoFormData,
-  EmpresaEnderecoFormData,
   EmpresaFormDataEdicao,
 } from "../schemas/empresa.schema";
 
@@ -318,7 +306,6 @@ export function EmpresaFormEdicao({
 
   const cnpj = watch("cnpj") ?? "";
   const uf = watch("uf");
-  const status = watch("status");
   const enderecos = watch("enderecos") ?? [];
   const contatos = watch("contatos") ?? [];
   const selectedUfLabel = uf
@@ -741,7 +728,6 @@ export function EmpresaFormEdicao({
       <form onSubmit={handleSubmit(onSubmit)}>
         <input type="hidden" {...register("matriz_id")} />
         <input type="hidden" {...register("uf")} />
-        <input type="hidden" {...register("status")} />
 
         <CardContent className="space-y-6 pt-6">
           {backendErrors && backendErrors.length > 0 && (
@@ -990,40 +976,6 @@ export function EmpresaFormEdicao({
                     <p className="text-sm text-red-700">{errors.uf.message}</p>
                   )}
                 </div>
-
-                <div className="col-span-12 md:col-span-3 space-y-2">
-                  <Label>
-                    Status <span className="text-red-600">*</span>
-                  </Label>
-                  <Select
-                    value={status}
-                    onValueChange={(value) =>
-                      setValue("status", value as EmpresaFormDataEdicao["status"], {
-                        shouldDirty: true,
-                        shouldValidate: true,
-                      })
-                    }
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue
-                        placeholder="Selecione o status"
-                        aria-label={getEmpresaStatusLabel(status)}
-                      />
-                    </SelectTrigger>
-
-                    <SelectContent>
-                      {EMPRESA_STATUS_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.status && (
-                    <p className="text-sm text-red-700">{errors.status.message}</p>
-                  )}
-                </div>
               </div>
             </TabsContent>
 
@@ -1208,32 +1160,3 @@ function applyItemErrors<T extends object>({
   setGeneralError(generalMessages[0] ?? fallbackMessage);
 }
 
-function extractCollectionItems<T>(payload: unknown): T[] {
-  if (!payload || typeof payload !== "object") {
-    return [];
-  }
-
-  const directData = (payload as { data?: unknown }).data;
-
-  if (Array.isArray(directData)) {
-    return directData as T[];
-  }
-
-  if (directData && typeof directData === "object") {
-    const nestedData = (directData as { data?: unknown }).data;
-
-    if (Array.isArray(nestedData)) {
-      return nestedData as T[];
-    }
-  }
-
-  return [];
-}
-
-function extractResponseData<T>(payload: unknown): T {
-  if (payload && typeof payload === "object" && "data" in payload) {
-    return (payload as { data: T }).data;
-  }
-
-  return payload as T;
-}

@@ -25,10 +25,10 @@ import { maskCEP, maskCNPJ, maskPhone, onlyDigits } from "@/lib/utils";
 import { EmpresaFormEdicao } from "@/features/admin/empresa/components/EmpresaFormEdicao";
 import { EmpresaFormEdicaoSkeleton } from "@/features/admin/empresa/components/EmpresaFormEdicaoSkeleton";
 import {
-  EmpresaContatoFormData,
-  EmpresaEnderecoFormData,
   EmpresaFormDataEdicao,
 } from "@/features/admin/empresa/schemas/empresa.schema";
+import { EmpresaContatoFormData } from "@/features/admin/empresa-contato/schemas/empresa-contato.schema";
+import { EmpresaEnderecoFormData } from "@/features/admin/empresa-endereco/schemas/empresa-endereco.schema";
 
 import { AdminPermissionGuard } from "../../../_components/guard/AdminPermissionGuard";
 
@@ -133,8 +133,7 @@ export default function Page() {
       razao_social: data.razao_social,
       inscricao_estadual: data.inscricao_estadual || undefined,
       inscricao_municipal: data.inscricao_municipal || undefined,
-      uf: data.uf,
-      status: data.status,
+      uf: data.uf
     };
 
     await mutateAsync(payload);

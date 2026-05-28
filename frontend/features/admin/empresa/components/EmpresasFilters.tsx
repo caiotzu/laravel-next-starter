@@ -20,31 +20,13 @@ import {
   getLabelByUF,
   type UF,
 } from "@/constants/estados";
-
-interface Grupo {
-  id: string;
-  nome: string;
-}
+import { EmpresaFilters } from "@/domains/admin/empresa/types/empresa.filters";
+import { Empresa } from "@/domains/admin/empresa/types/empresa.model";
+import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
 
 interface EmpresaOption {
   id: string;
   nome_fantasia: string;
-}
-
-export interface EmpresaFilters {
-  id?: string;
-  grupoEmpresaNome?: string;
-  grupoEmpresaId?: string;
-  matrizNome?: string;
-  matrizId?: string;
-  cnpj?: string;
-  nomeFantasia?: string;
-  razaoSocial?: string;
-  inscricaoEstadual?: string;
-  inscricaoMunicipal?: string;
-  uf?: UF;
-  ativo?: boolean;
-  excluido: boolean;
 }
 
 interface Props {
@@ -53,7 +35,7 @@ interface Props {
     key: K,
     value: EmpresaFilters[K]
   ) => void;
-  grupos: Grupo[];
+  grupos: GrupoEmpresa[];
   isLoadingGrupos: boolean;
   matrizes: EmpresaOption[];
   isLoadingMatrizes: boolean;
@@ -79,40 +61,29 @@ export function EmpresasFilters({
 
       <CardContent className="flex flex-wrap gap-4 items-end">
         <div className="flex flex-col gap-2 w-64">
-          <Label>ID</Label>
-          <Input
-            placeholder="UUID da empresa..."
-            value={filters.id ?? ""}
-            onChange={(e) => updateFilter("id", e.target.value || undefined)}
-          />
-        </div>
-
-        {/* Grupo Empresa */}
-        <div className="flex flex-col gap-2 w-64">
           <Label>Grupo Empresa</Label>
 
           <Combobox
             items={grupos}
-            value={grupos.find((item) => item.id === filters.grupoEmpresaId) ?? null}
+            value={grupos.find((item) => item.id === filters.grupo_empresa_id) ?? null}
             onValueChange={(item) => {
               if (!item) {
-                updateFilter("grupoEmpresaNome", undefined);
-                updateFilter("grupoEmpresaId", undefined);
+                updateFilter("grupo_empresa_nome", undefined);
+                updateFilter("grupo_empresa_id", undefined);
                 return;
               }
 
-              updateFilter("grupoEmpresaNome", item.nome);
-              updateFilter("grupoEmpresaId", item.id);
+              updateFilter("grupo_empresa_nome", item.nome);
+              updateFilter("grupo_empresa_id", item.id);
             }}
             itemToStringLabel={(item) => item?.nome ?? ""}
           >
             <ComboboxInput
-              placeholder="Digite o nome do grupo..."
-              value={filters.grupoEmpresaNome ?? ""}
+              value={filters.grupo_empresa_nome ?? ""}
               showClear
               onChange={(e) => {
-                updateFilter("grupoEmpresaNome", e.target.value || undefined);
-                updateFilter("grupoEmpresaId", undefined);
+                updateFilter("grupo_empresa_nome", e.target.value || undefined);
+                updateFilter("grupo_empresa_id", undefined);
               }}
             />
 
@@ -139,26 +110,25 @@ export function EmpresasFilters({
 
           <Combobox
             items={matrizes}
-            value={matrizes.find((item) => item.id === filters.matrizId) ?? null}
+            value={matrizes.find((item) => item.id === filters.matriz_id) ?? null}
             onValueChange={(item) => {
               if (!item) {
-                updateFilter("matrizNome", undefined);
-                updateFilter("matrizId", undefined);
+                updateFilter("matriz_nome", undefined);
+                updateFilter("matriz_id", undefined);
                 return;
               }
 
-              updateFilter("matrizNome", item.nome_fantasia);
-              updateFilter("matrizId", item.id);
+              updateFilter("matriz_nome", item.nome_fantasia);
+              updateFilter("matriz_id", item.id);
             }}
             itemToStringLabel={(item) => item?.nome_fantasia ?? ""}
           >
             <ComboboxInput
-              placeholder="Digite o nome da matriz..."
-              value={filters.matrizNome ?? ""}
+              value={filters.matriz_nome ?? ""}
               showClear
               onChange={(e) => {
-                updateFilter("matrizNome", e.target.value || undefined);
-                updateFilter("matrizId", undefined);
+                updateFilter("matriz_nome", e.target.value || undefined);
+                updateFilter("matriz_id", undefined);
               }}
             />
 
@@ -183,10 +153,9 @@ export function EmpresasFilters({
         <div className="flex flex-col gap-2 w-64">
           <Label>CNPJ</Label>
           <Input
-            placeholder="Digite o CNPJ (14 dígitos)..."
             value={filters.cnpj ?? ""}
             onChange={(e) => {
-              const value = e.target.value.replace(/\D/g, "").slice(0, 14);
+              const value = e.target.value;
               updateFilter("cnpj", value || undefined);
             }}
           />
@@ -195,9 +164,8 @@ export function EmpresasFilters({
         <div className="flex flex-col gap-2">
           <Label>Nome Fantasia</Label>
           <Input
-            placeholder="Digite o nome fantasia..."
-            value={filters.nomeFantasia ?? ""}
-            onChange={(e) => updateFilter("nomeFantasia", e.target.value || undefined)}
+            value={filters.nome_fantasia ?? ""}
+            onChange={(e) => updateFilter("nome_fantasia", e.target.value || undefined)}
             className="w-64"
           />
         </div>
@@ -205,9 +173,8 @@ export function EmpresasFilters({
         <div className="flex flex-col gap-2">
           <Label>Razão Social</Label>
           <Input
-            placeholder="Digite a razão social..."
-            value={filters.razaoSocial ?? ""}
-            onChange={(e) => updateFilter("razaoSocial", e.target.value || undefined)}
+            value={filters.razao_social ?? ""}
+            onChange={(e) => updateFilter("razao_social", e.target.value || undefined)}
             className="w-64"
           />
         </div>
@@ -215,9 +182,8 @@ export function EmpresasFilters({
         <div className="flex flex-col gap-2">
           <Label>Inscrição Estadual</Label>
           <Input
-            placeholder="Digite a inscrição estadual..."
-            value={filters.inscricaoEstadual ?? ""}
-            onChange={(e) => updateFilter("inscricaoEstadual", e.target.value || undefined)}
+            value={filters.inscricao_estadual ?? ""}
+            onChange={(e) => updateFilter("inscricao_estadual", e.target.value || undefined)}
             className="w-64"
           />
         </div>
@@ -225,10 +191,9 @@ export function EmpresasFilters({
         <div className="flex flex-col gap-2">
           <Label>Inscrição Municipal</Label>
           <Input
-            placeholder="Digite a inscrição municipal..."
-            value={filters.inscricaoMunicipal ?? ""}
+            value={filters.inscricao_municipal ?? ""}
             onChange={(e) =>
-              updateFilter("inscricaoMunicipal", e.target.value || undefined)
+              updateFilter("inscricao_municipal", e.target.value || undefined)
             }
             className="w-64"
           />
@@ -263,14 +228,6 @@ export function EmpresasFilters({
         </div>
 
         <PerPage perPage={porPagina} onChange={setPorPagina} />
-
-        <div className="flex items-center space-x-2">
-          <Switch
-            checked={!!filters.ativo}
-            onCheckedChange={(value) => updateFilter("ativo", value ? true : undefined)}
-          />
-          <Label>Ativas</Label>
-        </div>
 
         <div className="flex items-center space-x-2">
           <Switch

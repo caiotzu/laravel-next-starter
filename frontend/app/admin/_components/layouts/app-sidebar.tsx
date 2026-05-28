@@ -57,8 +57,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
         {
           title: "Usuários",
-          url: "#",
-          permission: null
+          url: "/admin/usuarios",
+          permission: "admin.usuario.menu"
         },
       ],
     }

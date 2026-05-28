@@ -16,7 +16,6 @@ final class EmpresaFiltroDTO
         public readonly ?string $razao_social = null,
         public readonly ?string $inscricao_estadual = null,
         public readonly ?string $inscricao_municipal = null,
-        public readonly ?bool $ativo = null,
         public readonly ?string $uf = null,
         public readonly ?bool $excluido = null
     ) {}
@@ -33,7 +32,6 @@ final class EmpresaFiltroDTO
             razao_social: $dados['razao_social'] ?? null,
             inscricao_estadual: $dados['inscricao_estadual'] ?? null,
             inscricao_municipal: $dados['inscricao_municipal'] ?? null,
-            ativo: $dados['ativo'] ?? null,
             uf: $dados['uf'] ?? null,
             excluido: $dados['excluido'] ?? null
         );

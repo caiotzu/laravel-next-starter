@@ -1,16 +1,21 @@
-export const EMPRESA_STATUS_OPTIONS = [
-  { value: "pendente", label: "Pendente" },
-  { value: "ativo", label: "Ativo" },
-  { value: "inativo", label: "Inativo" },
-  { value: "bloqueado", label: "Bloqueado" },
-] as const;
+export const EMPRESA_STATUS = {
+  pendente: "Pendente",
+  ativo: "Ativo",
+  inativo: "Inativo",
+  bloqueado: "Bloqueado",
+} as const;
 
-export type EmpresaStatusValue = (typeof EMPRESA_STATUS_OPTIONS)[number]["value"];
+export type EmpresaStatus = keyof typeof EMPRESA_STATUS;
 
-export function getEmpresaStatusLabel(status?: string | null) {
-  return (
-    EMPRESA_STATUS_OPTIONS.find((option) => option.value === status)?.label ??
-    status ??
-    ""
-  );
+export const EMPRESA_STATUS_OPTIONS = Object.entries(
+  EMPRESA_STATUS
+).map(([value, label]) => ({
+  value: value as EmpresaStatus,
+  label,
+}));
+
+export function getEmpresaStatusLabel(
+  tipo: EmpresaStatus
+): string {
+  return EMPRESA_STATUS[tipo];
 }

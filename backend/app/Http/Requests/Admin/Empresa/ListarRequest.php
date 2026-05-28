@@ -22,10 +22,6 @@ class ListarRequest extends FormRequest
             $dados['excluido'] = $this->normalizarBoolean($this->input('excluido'));
         }
 
-        if ($this->exists('ativo')) {
-            $dados['ativo'] = $this->normalizarBoolean($this->input('ativo'));
-        }
-
         if (! empty($dados)) {
             $this->merge($dados);
         }
@@ -85,10 +81,6 @@ class ListarRequest extends FormRequest
                 'nullable',
                 'string'
             ],
-            'ativo' => [
-                'nullable',
-                'boolean'
-            ],
             'uf' => [
                 'nullable',
                 'string',
@@ -129,8 +121,6 @@ class ListarRequest extends FormRequest
 
             'razao_social.string' => 'A razão social da empresa deve ser um texto',
             'razao_social.max'    => 'A razão social da empresa deve ter no máximo 60 caracteres',
-
-            'ativo.boolean' => 'O filtro ativo deve do tipo boolean',
 
             'uf.size' => 'A UF deve conter exatamente 2 caracteres.',
             'uf.in' => 'A UF informada é inválida',

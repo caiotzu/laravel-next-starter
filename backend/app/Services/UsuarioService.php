@@ -77,7 +77,6 @@ class UsuarioService {
                 throw new BusinessException('O grupo selecionado não é válido para este cadastro.', ErrorCode::GRUPO_REQUIRED->value);
 
             $usuario = Usuario::find($dto->id);
-            dd($usuario);
             if(!$usuario)
                 throw new BusinessException('Usuário não encontrado.', ErrorCode::USUARIO_NOT_FOUND->value);
 

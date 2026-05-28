@@ -68,6 +68,10 @@ export function onlyDigits(value: string) {
   return value.replace(/\D/g, "")
 }
 
+export function onlyAlphaNumeric(value: string) {
+  return value.replace(/[^a-zA-Z0-9]/g, "");
+}
+
 export function maskCEP(value: string) {
   const cleaned = onlyDigits(value).slice(0, 8)
 
@@ -107,4 +111,14 @@ export function maskPhone(value: string) {
   if (part2) result += `-${part2}`
 
   return result
+}
+
+export function removeEmptyValues<T extends Record<string, unknown>>(obj: T) {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([_, value]) => {
+      return value !== undefined &&
+             value !== null &&
+             value !== "";
+    })
+  );
 }

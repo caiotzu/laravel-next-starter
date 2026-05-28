@@ -33,7 +33,6 @@ export function GrupoEmpresasFilters({
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium">Nome</label>
           <Input
-            placeholder="Digite o nome..."
             value={nome}
             onChange={(e) => setNome(e.target.value)}
             className="w-64"
