@@ -12,19 +12,23 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 
+import { useGrupos } from "@/domains/admin/grupo/hooks/useGrupos";
 import { useUsuarios } from "@/domains/admin/usuario/hooks/useUsuarios";
-import { ListarUsuarioRequest } from "@/domains/admin/usuario/types/usuario.requests";
+import { ListarUsuariosRequest } from "@/domains/admin/usuario/types/usuario.requests";
 import { ListarUsuariosResponse } from "@/domains/admin/usuario/types/usuario.responses";
 
 import { UsuariosFilters } from "@/features/admin/usuario/components/UsuariosFilters";
+import { UsuariosFiltersSkeleton } from "@/features/admin/usuario/components/UsuariosFiltersSkeleton";
 import { UsuariosTable } from "@/features/admin/usuario/components/UsuariosTable";
+import { UsuariosTableSkeleton } from "@/features/admin/usuario/components/UsuariosTableSkeleton";
 
 import { AdminPermissionGuard } from "../_components/guard/AdminPermissionGuard";
 
 
 export default function Page() {
-  const [filters, setFilters] = useState<ListarUsuarioRequest>({
+  const [filters, setFilters] = useState<ListarUsuariosRequest>({
     nome: "",
+    grupo_id: "",
     excluido: false,
     page: 1,
     por_pagina: 10,
@@ -32,6 +36,8 @@ export default function Page() {
   
   const { data, isLoading } = useUsuarios(filters);
   const pagination = data as ListarUsuariosResponse | undefined;
+
+  const { data: grupos, isLoading: isLoadingGrupos } = useGrupos();
 
 	return (
     <SidebarProvider
@@ -55,24 +61,34 @@ export default function Page() {
               actions={[
                 {
                   label: "Cadastrar",
-                  href: "/admin/grupos-empresas/cadastrar",
+                  href: "/admin/usuarios/cadastrar",
                   icon: null,
-                  permission: "admin.grupo_empresa.cadastrar",
+                  permission: "admin.usuario.cadastrar",
                   variant: "default"
                 },
               ]}
             />
 
             <AdminPermissionGuard permission="admin.usuario.listar">
-              <UsuariosFilters 
-                filters={filters}
-                setFilters={setFilters}
-              />
+              {isLoadingGrupos ? (
+                <UsuariosFiltersSkeleton />
+              ) : (
+                <UsuariosFilters 
+                  filters={filters}
+                  setFilters={setFilters}
+                  grupos={grupos?.data ?? []}
+                  isLoadingGrupos={isLoadingGrupos}
+                />
+              )}
 
-              <UsuariosTable
-                data={data?.data ?? []}
-                isLoading={isLoading}
-              />
+              {isLoading ? (
+                <UsuariosTableSkeleton />
+              ): (
+                <UsuariosTable
+                  data={data?.data ?? []}
+                  isLoading={isLoading}
+                />
+              )}
 
               {pagination && (
                 <Pagination

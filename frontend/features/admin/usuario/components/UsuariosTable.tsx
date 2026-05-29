@@ -94,7 +94,7 @@ export function UsuariosTable({ data, isLoading }: Props) {
               Status
             </TableHead>
              <TableHead className="text-primary-foreground tracking-wider font-semibold py-4 text-center">
-              Excluído
+              Registro
             </TableHead>
 						<TableHead className="text-primary-foreground tracking-wider font-semibold py-4">
               Grupo
@@ -123,9 +123,9 @@ export function UsuariosTable({ data, isLoading }: Props) {
 							</TableCell>
               <TableCell className="text-center">
                 {usuario.deletedAt ? (
-                  <Badge className="bg-red-100 text-red-700">Sim</Badge>
+                  <Badge className="bg-red-100 text-red-700">Excluído</Badge>
                 ) : (
-                  <Badge className="bg-emerald-100 text-emerald-700">Não</Badge>
+                  <Badge className="bg-emerald-100 text-emerald-700">Ativo</Badge>
                 )}
               </TableCell>
               <TableCell className="font-medium">{usuario.grupo?.descricao}</TableCell>

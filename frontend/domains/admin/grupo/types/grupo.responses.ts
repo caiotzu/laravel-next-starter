@@ -1,3 +1,5 @@
+import { LaravelApiResponse, LaravelResourcePagination } from "@/types/laravel";
+
 export interface GrupoResponse {
   id: string;
   descricao: string;
@@ -5,3 +7,6 @@ export interface GrupoResponse {
   updated_at: string | null;
   deleted_at: string | null;
 }
+
+
+export type ListarGruposResponse = LaravelResourcePagination<GrupoResponse>;

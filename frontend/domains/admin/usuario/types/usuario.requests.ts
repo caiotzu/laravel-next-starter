@@ -10,7 +10,7 @@ export interface EditarUsuarioRequest {
   email: string;
 }
 
-export interface ListarUsuarioRequest {
+export interface ListarUsuariosRequest {
   id?: string;
   nome?: string;
   grupo_id?: string;

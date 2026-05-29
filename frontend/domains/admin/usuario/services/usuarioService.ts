@@ -9,7 +9,7 @@ import { Usuario } from "../types/usuario.model";
 import {
   CadastrarUsuarioRequest,
   EditarUsuarioRequest,
-  ListarUsuarioRequest,
+  ListarUsuariosRequest,
 } from "../types/usuario.requests";
 import {
   AtivarUsuarioResponse,
@@ -68,7 +68,7 @@ export async function ativarUsuario(
 }
 
 export async function listarUsuarios(
-  dto: ListarUsuarioRequest
+  dto: ListarUsuariosRequest
 ): Promise<LaravelResourcePagination<Usuario>> {
   const query = qs.stringify(dto, {
     skipNulls: true,

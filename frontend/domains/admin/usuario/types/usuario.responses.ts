@@ -1,5 +1,7 @@
 import { LaravelApiResponse, LaravelResourcePagination } from "@/types/laravel";
 
+import { UsuarioStatus } from "@/constants/usuario-status";
+
 import { GrupoResponse } from "../../grupo/types/grupo.responses";
 
 export interface UsuarioResponse {
@@ -7,7 +9,7 @@ export interface UsuarioResponse {
   grupo_id: string;
   nome: string;
   email: string;
-  status: string;
+  status: UsuarioStatus;
   avatar: string | null;
   google2fa_enable: boolean | null;
   google2fa_confirmado_em: string | null;
