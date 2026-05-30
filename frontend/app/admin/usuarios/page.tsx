@@ -24,7 +24,6 @@ import { UsuariosTableSkeleton } from "@/features/admin/usuario/components/Usuar
 
 import { AdminPermissionGuard } from "../_components/guard/AdminPermissionGuard";
 
-
 export default function Page() {
   const [filters, setFilters] = useState<ListarUsuariosRequest>({
     nome: "",

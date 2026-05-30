@@ -3,10 +3,10 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { listarUsuarios } from "../services/usuarioService";
-import { ListarUsuarioRequest } from "../types/usuario.requests";
+import { ListarUsuariosRequest } from "../types/usuario.requests";
 
 export function useUsuarios(
-  params?: ListarUsuarioRequest
+  params?: ListarUsuariosRequest
 ) {
   const safeParams = params ?? {};
   return useQuery({
@@ -14,7 +14,7 @@ export function useUsuarios(
     queryFn: ({ queryKey }) => {
       const [, queryParams] = queryKey;
       return listarUsuarios(
-        queryParams as ListarUsuarioRequest
+        queryParams as ListarUsuariosRequest
       );
     },
     placeholderData: (previousData) => previousData

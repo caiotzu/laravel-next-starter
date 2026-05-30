@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/sidebar";
 
 import { useGrupos } from "@/domains/admin/grupo/hooks/useGrupos";
-import { cadastrarUsuario } from "@/domains/admin/usuario/services/usuarioService";
+import { useUsuario } from "@/domains/admin/usuario/hooks/useUsuario";
+import { editarUsuario } from "@/domains/admin/usuario/services/usuarioService";
 import { Usuario } from "@/domains/admin/usuario/types/usuario.model";
 
 import { UsuarioForm } from "@/features/admin/usuario/components/UsuarioForm";
@@ -31,30 +32,33 @@ import { UsuarioFormData } from "@/features/admin/usuario/schemas/usuario.schema
 import { AdminPermissionGuard } from "../../_components/guard/AdminPermissionGuard";
 
 export default function Page() {
-  const router = useRouter();
+	const router = useRouter();
+	const params = useParams();
+  const id = params.id as string;
 
-  const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
-
-  const { data: grupos, isLoading: isLoadingGrupos } = useGrupos();
-
-  const { mutate, isPending } = useMutation<
-    Usuario,
-    AxiosError<ApiErrorResponse>,
-    {
-      data: UsuarioFormData;
-      setError: UseFormSetError<UsuarioFormData>;
-    }
-  >({
-    mutationFn: ({ data }) => cadastrarUsuario(data),
-    onSuccess: () => {
-      toast.success("Usuário cadastrado com sucesso!");
+	const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
+    
+	const { data: usuario, isLoading } = useUsuario(id);
+	const { data: grupos, isLoading: isLoadingGrupos } = useGrupos();
+	
+	const { mutate, isPending } = useMutation<
+		Usuario,
+		AxiosError<ApiErrorResponse>,
+		{
+			data: UsuarioFormData,
+			setError: UseFormSetError<UsuarioFormData>
+		}
+	>({
+		mutationFn: ({ data }) => editarUsuario(id, data),
+		onSuccess: () => {
+			toast.success("Usuário atualizado com sucesso!");
       router.push("/admin/usuarios");
-    },
-    onError: (error, variables) => {
+		},
+		onError: (error, variables) => {
       const apiErrors = error.response?.data?.errors;
 
       if (!apiErrors) {
-        setBackendErrors(["Erro ao cadastrar o usuário."]);
+        setBackendErrors(["Erro ao editar o usuário."]);
         return;
       }
 
@@ -72,9 +76,9 @@ export default function Page() {
         });
       });
     },
-  });
+	});
 
-  async function handleSubmit(
+	async function handleSubmit(
     data: UsuarioFormData,
     setError: UseFormSetError<UsuarioFormData>
   ) {
@@ -105,11 +109,11 @@ export default function Page() {
 
             <PageHeader
               title="Usuarios"
-              description="Cadastro de usuário"
+              description="Edição do usuário"
             />
 
-            <AdminPermissionGuard permission="admin.usuario.cadastrar">
-							{isLoadingGrupos ? (
+            <AdminPermissionGuard permission="admin.usuario.atualizar">
+							{isLoading ? (
 								<UsuarioFormSkeleton />
 							) : (
 								<UsuarioForm
@@ -117,6 +121,7 @@ export default function Page() {
 									isLoading={isPending}
 									backendErrors={backendErrors}
 									clearBackendErrors={() => setBackendErrors(null)}
+									usuario={usuario}
 									grupos={grupos?.data ?? []}
 									isLoadingGrupos={isLoadingGrupos}
 								/>
@@ -127,5 +132,5 @@ export default function Page() {
         </div>
       </SidebarInset>
     </SidebarProvider>
-  );
+	);
 }

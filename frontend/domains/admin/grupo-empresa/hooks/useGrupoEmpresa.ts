@@ -8,7 +8,6 @@ import { ApiErrorResponse } from "@/types/errors";
 import { visualizarGrupoEmpresa } from "../services/grupoEmpresaService";
 import { VisualizarGrupoEmpresaResponse } from "../types/grupoEmpresa.responses";
 
-
 export function useGrupoEmpresa(id: string) {
   return useQuery<VisualizarGrupoEmpresaResponse, AxiosError<ApiErrorResponse>>({
     queryKey: ["grupo-empresa", id],

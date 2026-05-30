@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { listarGrupoEmpresas } from "../services/grupoEmpresaService";
 import { ListarGrupoEmpresasRequest } from "../types/grupoEmpresa.requests";
 
-
 export function useGrupoEmpresas(
   params?: ListarGrupoEmpresasRequest
 ) {
