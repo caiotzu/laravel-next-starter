@@ -44,7 +44,7 @@ export default function Page() {
   >({
     mutationFn: ({ data }) => cadastrarGrupoEmpresa(data),
     onSuccess: () => {
-      toast.success("Grupo cadastrado com sucesso!");
+      toast.success("Grupo empresa cadastrado com sucesso!");
       router.push("/admin/grupos-empresas");
     },
     onError: (error, variables) => {

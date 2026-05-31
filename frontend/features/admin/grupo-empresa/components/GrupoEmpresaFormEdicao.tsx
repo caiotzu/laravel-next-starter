@@ -14,53 +14,51 @@ import { Card, CardContent, CardHeader, CardFooter, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
+
 import { grupoEmpresaSchemaEdicao, GrupoEmpresasFormDataEdicao } from "../schemas/grupoEmpresa.schema";
 
-interface GrupoEmpresaFormEdicaoProps {
-  defaultValues?: GrupoEmpresasFormDataEdicao;
-  onSubmit: (data: GrupoEmpresasFormDataEdicao) => Promise<void>;
+interface Props {
+  onSubmit: (
+    data: GrupoEmpresasFormDataEdicao,
+    setError: UseFormSetError<GrupoEmpresasFormDataEdicao>
+  ) => Promise<void>;
   isLoading?: boolean;
   backendErrors?: string[] | null;
   clearBackendErrors?: () => void;
-  registerSetError?: (fn: UseFormSetError<GrupoEmpresasFormDataEdicao>) => void;
+  grupoEmpresa: GrupoEmpresa
 }
 
 export function GrupoEmpresaFormEdicao({
-  defaultValues,
   onSubmit,
   isLoading = false,
   backendErrors = null,
   clearBackendErrors,
-  registerSetError,
-}: GrupoEmpresaFormEdicaoProps) {
+  grupoEmpresa
+}: Props) {
 
-  const { register, handleSubmit, formState: { errors }, setError, reset } = useForm<GrupoEmpresasFormDataEdicao>({
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors }, 
+    setError, 
+    reset 
+  } = useForm<GrupoEmpresasFormDataEdicao>({
     resolver: zodResolver(grupoEmpresaSchemaEdicao),
-    defaultValues,
+    defaultValues: grupoEmpresa,
   });
 
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  useEffect(() => {
-    if (defaultValues && !isInitialized) {
-      reset(defaultValues);
-      setIsInitialized(true);
-    }
-  }, [defaultValues, isInitialized, reset]);
-
-  useEffect(() => {
-    if (registerSetError) {
-      registerSetError(setError);
-    }
-  }, [registerSetError, setError]);
+  async function handleFormSubmit(data: GrupoEmpresasFormDataEdicao) {
+    await onSubmit(data, setError);
+  }
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Editar Grupo de Empresas</CardTitle>
+        <CardTitle>Editar Grupo Empresa</CardTitle>
       </CardHeader>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(handleFormSubmit)}>
         <CardContent className="space-y-6 pt-6">
           {backendErrors && backendErrors.length > 0 && (
             <AppAlert

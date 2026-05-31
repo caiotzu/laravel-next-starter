@@ -65,7 +65,7 @@ export function GrupoEmpresaFormCadastro({
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Cadastrar Grupo de Empresas</CardTitle>
+        <CardTitle>Cadastrar Grupo Empresa</CardTitle>
       </CardHeader>
 
       <form onSubmit={handleSubmit(handleFormSubmit)}>
