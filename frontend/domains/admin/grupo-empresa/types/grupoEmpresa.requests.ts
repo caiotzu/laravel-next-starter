@@ -13,5 +13,3 @@ export interface ListarGrupoEmpresasRequest {
   por_pagina?: number;
   page?: number;
 }
-
-

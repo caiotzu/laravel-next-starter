@@ -41,8 +41,6 @@ import {
 import { excluirGrupoEmpresa, ativarGrupoEmpresa } from "@/domains/admin/grupo-empresa/services/grupoEmpresaService";
 import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
 
-import { GrupoEmpresasTableSkeleton } from "./GrupoEmpresasTableSkeleton";
-
 interface Props {
   data: GrupoEmpresa[];
   isLoading: boolean;
@@ -76,8 +74,6 @@ export function GrupoEmpresasTable({ data, isLoading }: Props) {
     },
     onError: () => toast.error("Erro ao ativar o grupo."),
   });
-
-  if (isLoading) return <GrupoEmpresasTableSkeleton />;
 
   if (!data.length) {
     return (
@@ -118,15 +114,15 @@ export function GrupoEmpresasTable({ data, isLoading }: Props) {
               <TableCell className="font-medium">{grupo.nome}</TableCell>
 
               <TableCell className="text-sm text-muted-foreground text-center">
-                {new Date(grupo.created_at).toLocaleDateString("pt-BR")} •{" "}
-                {new Date(grupo.created_at).toLocaleTimeString("pt-BR", {
+                {new Date(grupo.createdAt).toLocaleDateString("pt-BR")} •{" "}
+                {new Date(grupo.createdAt).toLocaleTimeString("pt-BR", {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
               </TableCell>
 
               <TableCell className="text-center">
-                {grupo.deleted_at ? (
+                {grupo.deletedAt ? (
                   <Badge className="bg-red-100 text-red-700">Excluído</Badge>
                 ) : (
                   <Badge className="bg-emerald-100 text-emerald-700">Ativo</Badge>
@@ -156,7 +152,7 @@ export function GrupoEmpresasTable({ data, isLoading }: Props) {
                     </AdminPermissionGuard>
 
                     {/* Editar */}
-                    {!grupo.deleted_at && (
+                    {!grupo.deletedAt && (
                       <AdminPermissionGuard permission="admin.grupo_empresa.atualizar" disableFallback={true}>
                         <DropdownMenuItem asChild>
                           <Link
@@ -171,7 +167,7 @@ export function GrupoEmpresasTable({ data, isLoading }: Props) {
                     )}
 
                     {/* Ativar */}
-                    {grupo.deleted_at && (
+                    {grupo.deletedAt && (
                       <AdminPermissionGuard permission="admin.grupo_empresa.ativar" disableFallback={true}>
                         <DropdownMenuItem
                           onClick={() => setModal({ tipo: "ativar", grupoId: grupo.id })}
@@ -184,7 +180,7 @@ export function GrupoEmpresasTable({ data, isLoading }: Props) {
                     )}
 
                     {/* Excluir */}
-                    {!grupo.deleted_at && (
+                    {!grupo.deletedAt && (
                       <AdminPermissionGuard permission="admin.grupo_empresa.excluir" disableFallback={true}>
                         <DropdownMenuItem
                           onClick={() => setModal({ tipo: "excluir", grupoId: grupo.id })}

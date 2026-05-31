@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-import { LaravelResourcePagination } from "@/types/laravel";
-
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { PageHeader } from "@/app/admin/_components/layouts/page-header";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
@@ -15,26 +13,24 @@ import {
 } from "@/components/ui/sidebar";
 
 import { useGrupoEmpresas } from "@/domains/admin/grupo-empresa/hooks/useGrupoEmpresas";
-import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
+import { ListarGrupoEmpresasRequest } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.requests";
 import { ListarGrupoEmpresasResponse } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.responses";
 
 import { GrupoEmpresasFilters } from "@/features/admin/grupo-empresa/components/GrupoEmpresasFilters";
 import { GrupoEmpresasTable } from "@/features/admin/grupo-empresa/components/GrupoEmpresasTable";
+import { GrupoEmpresasTableSkeleton } from "@/features/admin/grupo-empresa/components/GrupoEmpresasTableSkeleton";
 
 import { AdminPermissionGuard } from "../_components/guard/AdminPermissionGuard";
 
 export default function Page() {
-  const [page, setPage] = useState(1);
-  const [nome, setNome] = useState("");
-  const [excluido, setExcluido] = useState(false);
-  const [porPagina, setPorPagina] = useState(10);
-
-  const { data, isLoading } = useGrupoEmpresas({
-    page,
-    nome,
-    excluido,
-    por_pagina: porPagina,
+  const [filters, setFilters] = useState<ListarGrupoEmpresasRequest>({
+    nome: "",
+    excluido: false,
+    page: 1,
+    por_pagina: 10
   });
+
+  const { data, isLoading } = useGrupoEmpresas(filters);
   const pagination = data as ListarGrupoEmpresasResponse | undefined;
   
   return (
@@ -69,21 +65,18 @@ export default function Page() {
 
             <AdminPermissionGuard permission="admin.grupo_empresa.listar">
               <GrupoEmpresasFilters
-                nome={nome}
-                setNome={setNome}
-                excluido={excluido}
-                setExcluido={setExcluido}
-                porPagina={porPagina}
-                setPorPagina={(value) => {
-                  setPage(1);
-                  setPorPagina(value);
-                }}
+                filters={filters}
+                setFilters={setFilters}
               />
 
-              <GrupoEmpresasTable
-                data={pagination?.data ?? []}
-                isLoading={isLoading}
-              />
+              {isLoading ? (
+                <GrupoEmpresasTableSkeleton />
+              ) : (
+                <GrupoEmpresasTable
+                  data={data?.data ?? []}
+                  isLoading={isLoading}
+                />
+              )}
 
               {pagination && (
                 <Pagination
@@ -92,7 +85,12 @@ export default function Page() {
                   total={pagination.meta.total}
                   from={pagination.meta.from ?? 0}
                   to={pagination.meta.to ?? 0}
-                  onPageChange={setPage}
+                  onPageChange={(page) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      page,
+                    }))
+                  }
                 />
               )}
             </AdminPermissionGuard>

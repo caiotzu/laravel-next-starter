@@ -5,30 +5,35 @@ import { LaravelPaginationMeta, LaravelPaginationUrls } from "@/types/laravel";
 import { proxyAdminRequest } from "@/lib/proxy-admin";
 
 
+import { toGrupoEmpresa } from "../mappers/grupo-empresa.mapper";
 import { CadastrarGrupoEmpresaRequest, EditarGrupoEmpresaRequest, ListarGrupoEmpresasRequest } from "../types/grupoEmpresa.requests";
 import { AtivarGrupoEmpresaResponse, CadastrarGrupoEmpresaResponse, EditarGrupoEmpresaResponse, ListarGrupoEmpresasResponse, VisualizarGrupoEmpresaResponse } from "../types/grupoEmpresa.responses";
 
-export function cadastrarGrupoEmpresa(
+export async function cadastrarGrupoEmpresa(
   dto: CadastrarGrupoEmpresaRequest
 ) {
-  return proxyAdminRequest<CadastrarGrupoEmpresaResponse>({
-    url: "/admin/grupos-empresas",
-    method: "POST",
-    data: dto,
-  });
+  const response = 
+    await proxyAdminRequest<CadastrarGrupoEmpresaResponse>({
+      url: "/admin/grupos-empresas",
+      method: "POST",
+      data: dto,
+    });
+
+  return toGrupoEmpresa(response.data.data);  
 }
 
 export async function editarGrupoEmpresa(
   id: string,
   dto: EditarGrupoEmpresaRequest
 ) {
-  const response = await proxyAdminRequest<EditarGrupoEmpresaResponse>({
-    url: `/admin/grupos-empresas/${id}`,
-    method: "PUT",
-    data: dto,
-  });
+  const response = 
+    await proxyAdminRequest<EditarGrupoEmpresaResponse>({
+      url: `/admin/grupos-empresas/${id}`,
+      method: "PUT",
+      data: dto,
+    });
 
-  return response.data
+  return toGrupoEmpresa(response.data.data);  
 }
 
 export async function excluirGrupoEmpresa(
@@ -40,13 +45,16 @@ export async function excluirGrupoEmpresa(
   });
 }
 
-export function ativarGrupoEmpresa(
+export async function ativarGrupoEmpresa(
   id: string
 ) {
-  return proxyAdminRequest<AtivarGrupoEmpresaResponse>({
-    url: `/admin/grupos-empresas/${id}/ativar`,
-    method: "PATCH"
-  });
+  const response = 
+    await proxyAdminRequest<AtivarGrupoEmpresaResponse>({
+      url: `/admin/grupos-empresas/${id}/ativar`,
+      method: "PATCH"
+    });
+
+  return toGrupoEmpresa(response.data.data);  
 }
 
 export async function listarGrupoEmpresas(
@@ -70,7 +78,13 @@ export async function listarGrupoEmpresas(
     url: `/admin/grupos-empresas?${query}`,
     method: "GET",
   });
-  return response.data;
+
+  return {
+    ...response.data,
+    data: response.data.data.map(
+      toGrupoEmpresa
+    ),
+  };
 }
 
 export async function visualizarGrupoEmpresa(id: string) {
@@ -78,5 +92,6 @@ export async function visualizarGrupoEmpresa(id: string) {
     url: `/admin/grupos-empresas/${id}`,
     method: "GET",
   });
-  return response.data;
+  
+  return toGrupoEmpresa(response.data.data);
 }

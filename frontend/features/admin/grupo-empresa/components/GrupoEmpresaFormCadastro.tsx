@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-
 import Link from "next/link";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,21 +23,32 @@ import {
   GrupoEmpresasFormDataCadastro,
 } from "../schemas/grupoEmpresa.schema";
 
-interface GrupoEmpresaFormCadastroProps {
-  onSubmit: (data: GrupoEmpresasFormDataCadastro) => Promise<void>;
+// interface GrupoEmpresaFormCadastroProps {
+//   onSubmit: (data: GrupoEmpresasFormDataCadastro) => Promise<void>;
+//   isLoading?: boolean;
+//   backendErrors?: string[] | null;
+//   clearBackendErrors?: () => void;
+//   registerSetError?: (fn: UseFormSetError<GrupoEmpresasFormDataCadastro>) => void;
+// }
+
+interface Props {
+  onSubmit: (
+    data: GrupoEmpresasFormDataCadastro,
+    setError: UseFormSetError<GrupoEmpresasFormDataCadastro>
+  ) => Promise<void>;
   isLoading?: boolean;
   backendErrors?: string[] | null;
   clearBackendErrors?: () => void;
-  registerSetError?: (fn: UseFormSetError<GrupoEmpresasFormDataCadastro>) => void;
 }
+
+
 
 export function GrupoEmpresaFormCadastro({
   onSubmit,
   isLoading = false,
   backendErrors = null,
-  clearBackendErrors,
-  registerSetError,
-}: GrupoEmpresaFormCadastroProps) {
+  clearBackendErrors
+}: Props) {
   const {
     register,
     handleSubmit,
@@ -49,11 +58,9 @@ export function GrupoEmpresaFormCadastro({
     resolver: zodResolver(grupoEmpresaSchemaCadastro),
   });
 
-  useEffect(() => {
-    if (registerSetError) {
-      registerSetError(setError);
-    }
-  }, [registerSetError, setError]);
+  async function handleFormSubmit(data: GrupoEmpresasFormDataCadastro) {
+    await onSubmit(data, setError);
+  }
 
   return (
     <Card className="w-full">
@@ -61,7 +68,7 @@ export function GrupoEmpresaFormCadastro({
         <CardTitle>Cadastrar Grupo de Empresas</CardTitle>
       </CardHeader>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(handleFormSubmit)}>
         <CardContent className="space-y-6 pt-6">
           {backendErrors && backendErrors.length > 0 && (
             <AppAlert

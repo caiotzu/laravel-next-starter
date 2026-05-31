@@ -4,7 +4,7 @@ export const grupoEmpresaSchemaCadastro = z.object({
   nome: z.string().min(1, "O nome do grupo é obrigatório"),
   usuario: z.object({
     nome: z.string().min(1, "O nome do usuário é obrigatório"),
-    email: z.string().email("E-mail inválido"),
+    email: z.email("E-mail inválido"),
   }),
 });
 

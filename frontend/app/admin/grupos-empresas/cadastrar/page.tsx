@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { cadastrarGrupoEmpresa } from "@/domains/admin/grupo-empresa/services/grupoEmpresaService";
+import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
 import { CadastrarGrupoEmpresaResponse } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.responses";
 
 import { GrupoEmpresaFormCadastro } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormCadastro";
@@ -30,49 +31,55 @@ import { AdminPermissionGuard } from "../../_components/guard/AdminPermissionGua
 
 export default function Page() {
   const router = useRouter();
-  const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
-  const [formError, setFormError] = useState<UseFormSetError<GrupoEmpresasFormDataCadastro> | null>(null);
 
-  const { mutateAsync, isPending } = useMutation<
-    CadastrarGrupoEmpresaResponse,
+  const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
+
+  const { mutate, isPending } = useMutation<
+    GrupoEmpresa,
     AxiosError<ApiErrorResponse>,
-    GrupoEmpresasFormDataCadastro
+    {
+      data: GrupoEmpresasFormDataCadastro
+      setError: UseFormSetError<GrupoEmpresasFormDataCadastro>
+    }
   >({
-    mutationFn: cadastrarGrupoEmpresa,
+    mutationFn: ({ data }) => cadastrarGrupoEmpresa(data),
     onSuccess: () => {
       toast.success("Grupo cadastrado com sucesso!");
       router.push("/admin/grupos-empresas");
     },
-
-    onError: (error) => {
+    onError: (error, variables) => {
       const apiErrors = error.response?.data?.errors;
 
       if (!apiErrors) {
-        setBackendErrors(["Erro ao cadastrar grupo."]);
+        setBackendErrors(["Erro ao cadastrar o usuário."]);
         return;
       }
 
-      if (apiErrors.business) {
+      if ("business" in apiErrors && Array.isArray(apiErrors.business)) {
         setBackendErrors(apiErrors.business);
         return;
       }
 
-      if (formError) {
-        Object.entries(apiErrors).forEach(([field, messages]) => {
-          if (!messages || field === "business") return;
+      Object.entries(apiErrors).forEach(([field, messages]) => {
+        if (!Array.isArray(messages)) return;
 
-          formError(field as keyof GrupoEmpresasFormDataCadastro, {
-            type: "server",
-            message: messages[0],
-          });
+        variables.setError(field as keyof GrupoEmpresasFormDataCadastro, {
+          type: "server",
+          message: messages[0],
         });
-      }
+      });
     },
   });
 
-  async function handleSubmit(data: GrupoEmpresasFormDataCadastro) {
+  async function handleSubmit(
+    data: GrupoEmpresasFormDataCadastro,
+    setError: UseFormSetError<GrupoEmpresasFormDataCadastro>
+  ) {
     setBackendErrors(null);
-    await mutateAsync(data);
+    mutate({
+      data,
+      setError
+    })
   }
 
   return (
@@ -102,7 +109,6 @@ export default function Page() {
                 isLoading={isPending}
                 backendErrors={backendErrors}
                 clearBackendErrors={() => setBackendErrors(null)}
-                registerSetError={(fn) => setFormError(() => fn)}
               />
             </AdminPermissionGuard>
           </div>
