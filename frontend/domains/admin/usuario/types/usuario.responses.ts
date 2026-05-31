@@ -2,9 +2,9 @@ import { LaravelApiResponse, LaravelResourcePagination } from "@/types/laravel";
 
 import { UsuarioStatus } from "@/constants/usuario-status";
 
-import { GrupoResponse } from "../../grupo/types/grupo.responses";
+import { grupoDataResponse } from "../../grupo/types/grupo.responses";
 
-export interface UsuarioResponse {
+export interface UsuarioDataResponse {
   id: string;
   grupo_id: string;
   nome: string;
@@ -18,11 +18,12 @@ export interface UsuarioResponse {
   created_at: string;
   updated_at: string | null;
   deleted_at: string | null;
-	grupo?: GrupoResponse
+
+  grupo?: grupoDataResponse
 }
 
-export type CadastrarUsuarioResponse = LaravelApiResponse<UsuarioResponse>;
-export type EditarUsuarioResponse = LaravelApiResponse<UsuarioResponse>;
-export type ListarUsuariosResponse = LaravelResourcePagination<UsuarioResponse>;
-export type AtivarUsuarioResponse = LaravelApiResponse<UsuarioResponse>;
-export type VisualizarUsuarioResponse = LaravelApiResponse<UsuarioResponse>;
+export type CadastrarUsuarioResponse = LaravelApiResponse<UsuarioDataResponse>;
+export type EditarUsuarioResponse = LaravelApiResponse<UsuarioDataResponse>;
+export type ListarUsuariosResponse = LaravelResourcePagination<UsuarioDataResponse>;
+export type AtivarUsuarioResponse = LaravelApiResponse<UsuarioDataResponse>;
+export type VisualizarUsuarioResponse = LaravelApiResponse<UsuarioDataResponse>;

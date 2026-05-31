@@ -1,8 +1,9 @@
- import { GrupoEmpresa } from "../types/grupoEmpresa.model";
-import { GrupoEmpresaResponse } from "../types/grupoEmpresa.responses";
+ import { toGrupo } from "../../grupo/mappers/grupo.mapper";
+import { GrupoEmpresa } from "../types/grupoEmpresa.model";
+import { GrupoEmpresaDataResponse } from "../types/grupoEmpresa.responses";
 
 export function toGrupoEmpresa(
-  data: GrupoEmpresaResponse
+  data: GrupoEmpresaDataResponse
 ): GrupoEmpresa {
   return {
     id: data.id,
@@ -10,5 +11,7 @@ export function toGrupoEmpresa(
     createdAt: data.created_at,
     updatedAt: data.updated_at,
     deletedAt: data.deleted_at,
+
+    grupos: data.grupos?.map(toGrupo)
   };
 }

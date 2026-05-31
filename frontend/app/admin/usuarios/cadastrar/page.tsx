@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
@@ -35,7 +35,19 @@ export default function Page() {
 
   const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
 
-  const { data: grupos, isLoading: isLoadingGrupos } = useGrupos();
+  const { data: grupos, isLoading: isLoadingGrupos, error: errorGrupos } = useGrupos();
+  useEffect(() => {
+    if (errorGrupos) {
+      const axiosError = errorGrupos as AxiosError<ApiErrorResponse>;
+
+      toast.error(
+        axiosError.response?.data?.errors.business ?? 
+        "Não foi possível carregar os grupos para o cadastro do usuário."
+      );
+      
+      router.push("/admin/usuarios");
+    }
+  }, [errorGrupos, router]);
 
   const { mutate, isPending } = useMutation<
     Usuario,

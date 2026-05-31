@@ -42,10 +42,10 @@ import {
 import { getUsuarioStatusClassName, getUsuarioStatusLabel } from "@/constants/usuario-status";
 import { ativarUsuario, excluirUsuario } from "@/domains/admin/usuario/services/usuarioService";
 import { Usuario } from "@/domains/admin/usuario/types/usuario.model";
+import { formatDate } from "@/lib/utils";
 
 interface Props {
 	data: Usuario[];
-	isLoading: boolean;
 }
 
 type ModalState = {
@@ -53,7 +53,7 @@ type ModalState = {
   usuarioId: string | null;
 };
 
-export function UsuariosTable({ data, isLoading }: Props) {
+export function UsuariosTable({ data }: Props) {
   const queryClient = useQueryClient();
 	const [modal, setModal] = useState<ModalState>({ tipo: null, usuarioId: null });
 
@@ -130,11 +130,7 @@ export function UsuariosTable({ data, isLoading }: Props) {
               </TableCell>
               <TableCell className="font-medium">{usuario.grupo?.descricao}</TableCell>
               <TableCell className="text-sm text-muted-foreground text-center">
-                {new Date(usuario.createdAt).toLocaleDateString("pt-BR")} •{" "}
-                {new Date(usuario.createdAt).toLocaleTimeString("pt-BR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                {formatDate(usuario.createdAt)}
               </TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>

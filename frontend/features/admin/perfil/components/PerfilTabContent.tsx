@@ -166,7 +166,7 @@ export function PerfilTabContent({ user }: PerfilTabContentProps) {
             className="cursor-pointer"
           >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Salvar Alterações
+            Salvar
           </Button>
         </CardFooter>
       </form>

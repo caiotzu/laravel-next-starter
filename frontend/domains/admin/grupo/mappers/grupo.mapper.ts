@@ -1,9 +1,10 @@
  
+import { toUsuario } from "../../usuario/mappers/usuario.mapper";
 import { Grupo } from "../types/grupo.model";
-import { GrupoResponse } from "../types/grupo.responses";
+import { grupoDataResponse } from "../types/grupo.responses";
 
 export function toGrupo(
-  data: GrupoResponse
+  data: grupoDataResponse
 ): Grupo {
   return {
     id: data.id,
@@ -11,5 +12,7 @@ export function toGrupo(
     createdAt: data.created_at,
     updatedAt: data.updated_at,
     deletedAt: data.deleted_at,
+
+    usuarios: data?.usuarios?.map(toUsuario)
   };
 }

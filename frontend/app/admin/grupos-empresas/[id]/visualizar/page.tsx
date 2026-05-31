@@ -28,35 +28,18 @@ export default function Page() {
   const id = params.id as string;
 
   const { data, isLoading, error } = useGrupoEmpresa(id);
-
   useEffect(() => {
     if (error) {
       const axiosError = error as AxiosError<ApiErrorResponse>;
-      toast.error(axiosError.response?.data?.errors.business || "Grupo não encontrado.");
+
+      toast.error(
+        axiosError.response?.data?.errors.business ?? 
+        "Não foi possível carregar os dados."
+      );
+      
       router.push("/admin/grupos-empresas");
     }
   }, [error, router]);
-
-  if (isLoading || !data) {
-    return (
-      <SidebarProvider
-        style={{
-          "--sidebar-width": "calc(var(--spacing) * 72)",
-          "--header-height": "calc(var(--spacing) * 12)",
-        } as React.CSSProperties}
-      >
-        <AppSidebar variant="inset" />
-        <SidebarInset>
-          <SiteHeader />
-          <div className="flex flex-1 flex-col">
-            <div className="flex flex-col gap-6 py-6 px-4 lg:px-6">
-              <GrupoEmpresaVisualizacaoSkeleton />
-            </div>
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
-    );
-  }
 
   return (
     <SidebarProvider
@@ -75,7 +58,7 @@ export default function Page() {
               description="Gerencie os grupos de empresas cadastrados."
               actions={[
                 {
-                  label: "Voltar para listagem",
+                  label: "Voltar",
                   href: "/admin/grupos-empresas",
                   icon: null,
                   variant: "default"
@@ -84,7 +67,11 @@ export default function Page() {
             />
 
             <AdminPermissionGuard permission="admin.grupo_empresa.visualizar">
-              <GrupoEmpresaVisualizacao grupoEmpresa={data} />
+              {isLoading || !data ? (
+                <GrupoEmpresaVisualizacaoSkeleton />
+              ) : (
+                <GrupoEmpresaVisualizacao grupoEmpresa={data} />
+              )}
             </AdminPermissionGuard>
           </div>
         </div>

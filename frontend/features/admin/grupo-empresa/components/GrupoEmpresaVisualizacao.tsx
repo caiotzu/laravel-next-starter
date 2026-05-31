@@ -9,18 +9,18 @@ import {
 
 import { Info } from "@/components/common/Info";
 
-import { VisualizarGrupoEmpresaResponse } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.responses";
+import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
 import { formatDate } from "@/lib/utils";
 
 import { UsuarioCard } from "./UsuarioCard";
 
-interface GrupoEmpresaVisualizacaoProps {
-  grupoEmpresa: VisualizarGrupoEmpresaResponse;
+interface Props {
+  grupoEmpresa: GrupoEmpresa;
 }
 
 export function GrupoEmpresaVisualizacao({
   grupoEmpresa,
-}: GrupoEmpresaVisualizacaoProps) {
+}: Props) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   function toggleExpand(groupId: string) {
@@ -36,7 +36,7 @@ export function GrupoEmpresaVisualizacao({
     <div className="flex flex-1 flex-col py-6 space-y-6">
       <div
         className={`rounded-xl shadow-sm border-l-4 bg-card p-6 ${
-          grupoEmpresa.deleted_at
+          grupoEmpresa.deletedAt
             ? "border-red-500"
             : "border-emerald-500"
         }`}
@@ -49,10 +49,10 @@ export function GrupoEmpresaVisualizacao({
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-sm">
           <Info label="ID" value={grupoEmpresa.id} />
-          <Info label="Situação" value={grupoEmpresa.deleted_at ? 'Excluído' : 'Ativo'} />
-          <Info label="Criado em" value={formatDate(grupoEmpresa.created_at)} />
-          <Info label="Atualizado em" value={formatDate(grupoEmpresa.updated_at)} />
-          <Info label="Excluído em" value={formatDate(grupoEmpresa.deleted_at)} />
+          <Info label="Situação" value={grupoEmpresa.deletedAt ? 'Excluído' : 'Ativo'} />
+          <Info label="Criado em" value={formatDate(grupoEmpresa.createdAt)} />
+          <Info label="Atualizado em" value={formatDate(grupoEmpresa.updatedAt)} />
+          <Info label="Excluído em" value={formatDate(grupoEmpresa.deletedAt)} />
         </div>
       </div>
 
@@ -60,7 +60,7 @@ export function GrupoEmpresaVisualizacao({
         <div
           key={grupo.id}
           className={`rounded-xl shadow-sm border-l-4 bg-card ${
-            grupo.deleted_at
+            grupo.deletedAt
               ? "border-red-500"
               : "border-emerald-500"
           }`}
@@ -91,7 +91,6 @@ export function GrupoEmpresaVisualizacao({
                     <UsuarioCard
                       key={usuario.id}
                       usuario={usuario}
-                      formatDate={formatDate}
                     />
                   ))}
                 </div>

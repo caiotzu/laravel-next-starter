@@ -1,6 +1,11 @@
 "use client"
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import { AxiosError } from "axios";
+import { toast } from "sonner";
+
+import { ApiErrorResponse } from "@/types/errors";
 
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { PageHeader } from "@/app/admin/_components/layouts/page-header";
@@ -18,7 +23,6 @@ import { ListarUsuariosRequest } from "@/domains/admin/usuario/types/usuario.req
 import { ListarUsuariosResponse } from "@/domains/admin/usuario/types/usuario.responses";
 
 import { UsuariosFilters } from "@/features/admin/usuario/components/UsuariosFilters";
-import { UsuariosFiltersSkeleton } from "@/features/admin/usuario/components/UsuariosFiltersSkeleton";
 import { UsuariosTable } from "@/features/admin/usuario/components/UsuariosTable";
 import { UsuariosTableSkeleton } from "@/features/admin/usuario/components/UsuariosTableSkeleton";
 
@@ -33,10 +37,25 @@ export default function Page() {
     por_pagina: 10,
   });
   
-  const { data, isLoading } = useUsuarios(filters);
+  const { data, isLoading, error } = useUsuarios(filters);
   const pagination = data as ListarUsuariosResponse | undefined;
 
-  const { data: grupos, isLoading: isLoadingGrupos } = useGrupos();
+  const { data: grupos, isLoading: isLoadingGrupos, error: errorGrupos } = useGrupos();
+
+  useEffect(() => {
+    const currentError = error || errorGrupos;
+    if (!currentError) return;
+
+    const axiosError = currentError as AxiosError<ApiErrorResponse>;
+
+    toast.error(
+      axiosError.response?.data?.errors.business ??
+      "Não foi possível carregar os dados.",
+      {
+        id: "usuarios-page-error", // evita de mostrar várias vezes mesmo erro se acontecer na filtragem
+      }
+    );
+  }, [error, errorGrupos]);
 
 	return (
     <SidebarProvider
@@ -69,23 +88,18 @@ export default function Page() {
             />
 
             <AdminPermissionGuard permission="admin.usuario.listar">
-              {isLoadingGrupos ? (
-                <UsuariosFiltersSkeleton />
-              ) : (
-                <UsuariosFilters 
-                  filters={filters}
-                  setFilters={setFilters}
-                  grupos={grupos?.data ?? []}
-                  isLoadingGrupos={isLoadingGrupos}
-                />
-              )}
-
+              <UsuariosFilters 
+                filters={filters}
+                setFilters={setFilters}
+                grupos={grupos?.data ?? []}
+                isLoadingGrupos={isLoadingGrupos}
+              />
+              
               {isLoading ? (
                 <UsuariosTableSkeleton />
               ): (
                 <UsuariosTable
                   data={data?.data ?? []}
-                  isLoading={isLoading}
                 />
               )}
 

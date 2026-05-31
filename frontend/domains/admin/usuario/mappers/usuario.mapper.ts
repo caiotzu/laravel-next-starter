@@ -1,10 +1,10 @@
  
 import { toGrupo } from "../../grupo/mappers/grupo.mapper";
 import { Usuario } from "../types/usuario.model";
-import { UsuarioResponse } from "../types/usuario.responses";
+import { UsuarioDataResponse } from "../types/usuario.responses";
 
 export function toUsuario(
-  data: UsuarioResponse
+  data: UsuarioDataResponse
 ): Usuario {
   return {
     id: data.id,

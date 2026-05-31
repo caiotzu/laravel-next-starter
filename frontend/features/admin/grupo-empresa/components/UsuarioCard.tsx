@@ -9,21 +9,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { VisualizarGrupoEmpresaResponse } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.responses";
+import { getUsuarioStatusBorder } from "@/constants/usuario-status";
+import { Usuario } from "@/domains/admin/usuario/types/usuario.model";
+import { formatDate } from "@/lib/utils";
 
-interface UsuarioCardProps {
-  usuario: VisualizarGrupoEmpresaResponse["grupos"][number]["usuarios"][number];
-  formatDate: (date?: string | null) => string;
+interface Props {
+  usuario: Usuario;
 }
-
-export function UsuarioCard({ usuario, formatDate }: UsuarioCardProps) {
+export function UsuarioCard({ usuario }: Props) {
   return (
     <div
-      className={`relative rounded-xl shadow-sm border-l-4 bg-card ${
-        usuario.deleted_at || usuario.status != 'ativo'
-          ? "border-red-500"
-          : "border-emerald-500"
-      } p-3`}
+      className={`relative rounded-xl shadow-sm border-l-4 bg-card ${getUsuarioStatusBorder( usuario.status )} p-3`}
     >
       <div className="absolute top-2 right-2">
         <DropdownMenu>
@@ -68,7 +64,7 @@ export function UsuarioCard({ usuario, formatDate }: UsuarioCardProps) {
         <p>
           <span className="font-medium text-foreground">Criado:</span>{" "}
           <span className="text-muted-foreground">
-            {formatDate(usuario.created_at)}
+            {formatDate(usuario.createdAt)}
           </span>
         </p>
 
@@ -88,7 +84,7 @@ export function UsuarioCard({ usuario, formatDate }: UsuarioCardProps) {
         <p>
           <span className="font-medium text-foreground">2FA:</span>{" "}
           <span className="text-muted-foreground">
-            {usuario.google2fa_enable
+            {usuario.google2faEnable
               ? "Ativado"
               : "Desativado"}
           </span>

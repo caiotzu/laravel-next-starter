@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useRouter, useParams } from "next/navigation";
 
@@ -37,6 +37,18 @@ export default function Page() {
   const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
 
   const { data, isLoading, error } = useGrupoEmpresa(id);
+  useEffect(() => {
+    if (!error) return;
+
+    const axiosError = error as AxiosError<ApiErrorResponse>;
+
+    toast.error(
+      axiosError.response?.data?.errors.business ??
+      "Não foi possível carregar os dados."
+    );
+
+    router.push("/admin/grupos-empresas");
+  }, [error, router]);
 
   const { mutate, isPending } = useMutation<
     GrupoEmpresa,

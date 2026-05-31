@@ -9,6 +9,15 @@ export const USUARIO_STATUS = {
 export type UsuarioStatus =
   keyof typeof USUARIO_STATUS;
 
+export const USUARIO_STATUS_BORDER:
+  Record<UsuarioStatus, string> = {
+    convidado: "border-amber-500",
+    ativo: "border-emerald-500",
+    expirado: "border-orange-500",
+    inativo: "border-zinc-500",
+    bloqueado: "border-red-500",
+  };
+
 export const USUARIO_STATUS_CLASSNAME:
   Record<UsuarioStatus, string> = {
     convidado: "bg-amber-100 text-amber-700",
@@ -36,6 +45,14 @@ export function getUsuarioStatusClassName(
   status: UsuarioStatus
 ): string {
   return USUARIO_STATUS_CLASSNAME[
+    status
+  ];
+}
+
+export function getUsuarioStatusBorder(
+  status: UsuarioStatus
+): string {
+  return USUARIO_STATUS_BORDER[
     status
   ];
 }

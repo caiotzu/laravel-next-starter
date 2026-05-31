@@ -1,6 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import { AxiosError } from "axios";
+import { toast } from "sonner";
+
+import { ApiErrorResponse } from "@/types/errors";
 
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { PageHeader } from "@/app/admin/_components/layouts/page-header";
@@ -30,9 +35,23 @@ export default function Page() {
     por_pagina: 10
   });
 
-  const { data, isLoading } = useGrupoEmpresas(filters);
+  const { data, isLoading, error } = useGrupoEmpresas(filters);
   const pagination = data as ListarGrupoEmpresasResponse | undefined;
   
+  useEffect(() => {
+      if (!error) return;
+  
+      const axiosError = error as AxiosError<ApiErrorResponse>;
+  
+      toast.error(
+        axiosError.response?.data?.errors.business ??
+        "Não foi possível carregar os dados.",
+        {
+          id: "grupo-empresa-page-error", // evita de mostrar várias vezes mesmo erro se acontecer na filtragem
+        }
+      );
+    }, [error]);
+
   return (
     <SidebarProvider
       style={
