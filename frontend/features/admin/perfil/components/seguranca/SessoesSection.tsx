@@ -14,11 +14,7 @@ import { formatDate } from "@/lib/utils";
 import { SessoesSectionSkeleton } from "./SessoesSectionSkeleton";
 
 export function SessoesSection() {
-  const {
-    data: sessoes,
-    isLoading: loadingSessoes,
-    isError: erroSessoes,
-  } = useUsuarioSessoes();
+  const { data: sessoes, isLoading: loadingSessoes, isError: erroSessoes } = useUsuarioSessoes();
 
   const encerrarSessaoMutation = useEncerrarSessao();
 
@@ -38,11 +34,11 @@ export function SessoesSection() {
       <CardContent className="space-y-4">
         {erroSessoes && <p className="text-sm text-red-500">Erro ao carregar sessões.</p>}
 
-        {!loadingSessoes && sessoes?.length === 0 && (
+        {!loadingSessoes && sessoes?.data?.length === 0 && (
           <p className="text-sm text-muted-foreground">Nenhuma sessão ativa encontrada.</p>
         )}
 
-        {sessoes?.map((sessao) => (
+        {sessoes?.data?.map((sessao) => (
           <div key={sessao.id} className="flex items-center justify-between border rounded-xl p-3">
             <div className="space-y-1">
               <p className="text-sm font-medium">
@@ -53,7 +49,7 @@ export function SessoesSection() {
                 ID: {sessao.id} <br />
                 IP: {sessao.ip} <br />
                 Navegador: {sessao.browser} <br />
-                Ultimo Acesso: {formatDate(sessao.ultimo_acesso_em)} <br />
+                Ultimo Acesso: {formatDate(sessao.ultimoAcessoEm)} <br />
               </p>
               {sessao.atual && (
                 <Badge className="bg-emerald-100 text-emerald-700">Sessão atual</Badge>

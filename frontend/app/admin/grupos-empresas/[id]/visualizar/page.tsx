@@ -18,8 +18,8 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 import { useGrupoEmpresa } from "@/domains/admin/grupo-empresa/hooks/useGrupoEmpresa";
 
-import { GrupoEmpresaVisualizacao } from "@/features/admin/grupo-empresa/components/GrupoEmpresaVisualizacao";
-import { GrupoEmpresaVisualizacaoSkeleton } from "@/features/admin/grupo-empresa/components/GrupoEmpresaVisualizacaoSkeleton";
+import { GrupoEmpresaView } from "@/features/admin/grupo-empresa/components/GrupoEmpresaView";
+import { GrupoEmpresaViewSkeleton } from "@/features/admin/grupo-empresa/components/GrupoEmpresaViewSkeleton";
 
 
 export default function Page() {
@@ -68,9 +68,9 @@ export default function Page() {
 
             <AdminPermissionGuard permission="admin.grupo_empresa.visualizar">
               {isLoading || !data ? (
-                <GrupoEmpresaVisualizacaoSkeleton />
+                <GrupoEmpresaViewSkeleton />
               ) : (
-                <GrupoEmpresaVisualizacao grupoEmpresa={data} />
+                <GrupoEmpresaView grupoEmpresa={data} />
               )}
             </AdminPermissionGuard>
           </div>

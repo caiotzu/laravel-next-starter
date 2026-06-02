@@ -1,14 +1,14 @@
 export interface UsuarioSessoes {
   id: string;
-  usuario_id: string;
+  usuarioId: string;
   ip: string | null;
   browser: string | null;
   plataforma: string | null;
   dispositivo: string | null;
   ativo: boolean;
-  ultimo_acesso_em: string | null;
+  ultimoAcessoEm: string | null;
   atual: boolean;
-  created_at: string;
-  updated_at: string | null;
-  deleted_at: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+  deletedAt: string | null;
 }

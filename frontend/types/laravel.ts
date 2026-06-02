@@ -56,7 +56,3 @@ export interface LaravelPagination<T> {
 export interface LaravelApiResponse<T> {
   data: T;
 }
-
-
-
-

@@ -1,16 +1,24 @@
+import { LaravelApiResponse } from "@/types/laravel";
+
 import { proxyAdminRequest } from "@/lib/proxy-admin";
 
+import { toUsuarioSessao } from "../mappers/usuarioSessao.mapper";
 import { UsuarioSessoes } from "../types/usuarioSessoes.model";
-import { EncerrarSessaoResponse } from "../types/usuarioSessoes.response";
+import { EncerrarSessaoResponse, ListarUsuarioSessoesResponse } from "../types/usuarioSessoes.response";
 
 
-export async function listarUsuarioSessoes(): Promise<UsuarioSessoes[]> {
-  const response = await proxyAdminRequest<UsuarioSessoes[]>({
+export async function listarUsuarioSessoes(): Promise<LaravelApiResponse<UsuarioSessoes[]>> {
+  const response = await proxyAdminRequest<ListarUsuarioSessoesResponse>({
     url: `/admin/perfil/sessoes`,
     method: "GET",
   });
 
-  return response.data;
+  return {
+    ...response.data,
+    data: response.data.data.map(
+      toUsuarioSessao
+    ),
+  };
 }
 
 export async function encerrarUsuarioSessao(sessionId: string): Promise<EncerrarSessaoResponse> {

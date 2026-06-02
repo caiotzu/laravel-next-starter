@@ -18,7 +18,7 @@ interface Props {
   grupoEmpresa: GrupoEmpresa;
 }
 
-export function GrupoEmpresaVisualizacao({
+export function GrupoEmpresaView({
   grupoEmpresa,
 }: Props) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());

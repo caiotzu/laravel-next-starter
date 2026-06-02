@@ -22,11 +22,11 @@ import {
   useHabilitar2FA,
 } from "@/domains/admin/perfil/autenticacao-dois-fatores/hooks/useAutenticacaoDoisFatores";
 
-interface TwoFactorSectionProps {
+interface Props {
   twoFactorEnabled: boolean;
 }
 
-export function TwoFactorSection({ twoFactorEnabled }: TwoFactorSectionProps) {
+export function TwoFactorSection({ twoFactorEnabled }: Props) {
   const [is2FAEnabled, setIs2FAEnabled] = useState(twoFactorEnabled);
 
   const [openHabilitar, setOpenHabilitar] = useState(false);
@@ -68,7 +68,7 @@ export function TwoFactorSection({ twoFactorEnabled }: TwoFactorSectionProps) {
     habilitarMutation.mutate(
       { senha: senhaHabilitar },
       {
-        onSuccess: (data) => setQrCodeUrl(data.otpauth_url),
+        onSuccess: (data) => setQrCodeUrl(data.data.otpauth_url),
         onError: (error: AxiosError<ApiErrorResponse>) => {
           const apiErrors = error.response?.data?.errors;
 
