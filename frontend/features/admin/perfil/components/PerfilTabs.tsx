@@ -2,9 +2,9 @@
 
 import { User, Shield, Bell } from "lucide-react";
 
-import { Usuario } from "@/types/usuario.model";
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import { Usuario } from "@/domains/admin/perfil/usuario/types/usuario.model";
 
 import { NotificacoesTabContent } from "./NotificacoesTabContent";
 import { PerfilTabContent } from "./PerfilTabContent";

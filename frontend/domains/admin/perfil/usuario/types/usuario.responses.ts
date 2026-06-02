@@ -1,4 +1,4 @@
-import { Usuario } from "@/types/usuario.model";
+import { Usuario } from "./usuario.model";
 
 export type AtualizarAvatarResponse = Usuario;
 

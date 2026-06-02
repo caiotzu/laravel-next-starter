@@ -9,7 +9,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { ApiErrorResponse } from "@/types/errors";
-import { Usuario } from "@/types/usuario.model";
 
 import { AppAlert } from "@/components/feedback/AppAlert";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { useAtualizarPerfil } from "@/domains/admin/perfil/usuario/hooks/useAtualizarPerfil";
+import { Usuario } from "@/domains/admin/perfil/usuario/types/usuario.model";
 
 import { usuarioPerfilSchema, UsuarioPerfilFormData } from "../schemas/usuarioPerfil.schema";
 

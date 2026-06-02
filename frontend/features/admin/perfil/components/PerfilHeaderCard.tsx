@@ -2,12 +2,11 @@
 
 import { Camera, User } from "lucide-react";
 
-import { Usuario } from "@/types/usuario.model";
-
 import { Info } from "@/components/common/Info";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { useAvatarUpload } from "@/domains/admin/perfil/usuario/hooks/useAvatarUpload";
+import { Usuario } from "@/domains/admin/perfil/usuario/types/usuario.model";
 import { formatDate } from "@/lib/utils";
 
 

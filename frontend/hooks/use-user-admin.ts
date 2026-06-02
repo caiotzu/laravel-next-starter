@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query"
 import axios from "axios"
 
-import { Usuario } from "@/types/usuario.model";
+import { Usuario } from "@/domains/admin/perfil/usuario/types/usuario.model";
 
 export function useUserAdmin() {
   return useQuery<Usuario>({
@@ -19,4 +19,3 @@ export function useUserAdmin() {
     retry: false,
   })
 }
-

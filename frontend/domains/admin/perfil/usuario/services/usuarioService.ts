@@ -35,4 +35,3 @@ export async function atualizarSenha(
   });
   return response.data
 }
-

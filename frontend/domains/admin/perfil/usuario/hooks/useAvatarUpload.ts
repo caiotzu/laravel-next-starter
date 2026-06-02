@@ -7,9 +7,9 @@ import { AxiosError } from "axios";
 import { toast } from "sonner";
 
 import { ApiErrorResponse } from "@/types/errors";
-import { Usuario } from "@/types/usuario.model";
 
 import { atualizarAvatar } from "../services/usuarioService";
+import { Usuario } from "../types/usuario.model";
 import { AtualizarAvatarRequest } from "../types/usuario.requests";
 import { AtualizarAvatarResponse } from "../types/usuario.responses";
 
