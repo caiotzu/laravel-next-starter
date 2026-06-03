@@ -38,30 +38,46 @@ export function useAvatarUpload(initialAvatar: string | null) {
       const usuarioAtualizado = response;
       const newAvatar = usuarioAtualizado.avatar;
 
-      // Atualiza estado definitivo
-      setAvatar(newAvatar);
-      previousAvatarRef.current = newAvatar;
-
-      // Atualiza cache global tipado
-      queryClient.setQueryData<Usuario>(
-        ["userAdmin"],
-        (oldData) => {
-          if (!oldData) return oldData;
-
-          return {
-            ...oldData,
-            avatar: newAvatar,
-          };
-        }
-      );
-
-      // Limpa preview temporário
-      if (previewUrlRef.current) {
-        URL.revokeObjectURL(previewUrlRef.current);
-        previewUrlRef.current = null;
+      if (!newAvatar) {
+        toast.success("Avatar atualizado com sucesso.");
+        return;
       }
 
-      toast.success("Avatar atualizado com sucesso.");
+      const loadedImage = new window.Image();
+
+      loadedImage.onload = () => {
+        // Atualiza estado definitivo só quando a nova imagem estiver carregada
+        setAvatar(newAvatar);
+        previousAvatarRef.current = newAvatar;
+
+        // Atualiza cache global tipado
+        queryClient.setQueryData<Usuario>(
+          ["userAdmin"],
+          (oldData) => {
+            if (!oldData) return oldData;
+
+            return {
+              ...oldData,
+              avatar: newAvatar,
+            };
+          }
+        );
+
+        // Limpa preview temporário
+        if (previewUrlRef.current) {
+          URL.revokeObjectURL(previewUrlRef.current);
+          previewUrlRef.current = null;
+        }
+
+        toast.success("Avatar atualizado com sucesso.");
+      };
+
+      loadedImage.onerror = () => {
+        // Mantém o preview atual para evitar imagem quebrada.
+        toast.success("Avatar atualizado com sucesso.");
+      };
+
+      loadedImage.src = `${newAvatar}${newAvatar.includes("?") ? "&" : "?"}v=${Date.now()}`;
     },
 
     onError: (error) => {

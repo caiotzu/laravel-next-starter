@@ -1,12 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 
 import axios from "axios"
-import { Monitor, Loader2 } from "lucide-react"
+import { ArrowRight, Monitor, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 import { AppAlert } from "@/components/feedback/AppAlert"
 import { LoginForm } from "@/components/forms/login-form"
@@ -49,6 +51,26 @@ export default function LoginPage() {
   const [codigo, setCodigo] = useState("")
 
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const toastShownRef = useRef(false)
+
+  useEffect(() => {
+    if (toastShownRef.current) return
+
+    const toastType = searchParams.get("toast")
+
+    if (!toastType) return
+
+    toastShownRef.current = true
+
+    if (toastType === "primeiro-acesso") {
+      toast.success("Senha definida com sucesso. Faça login novamente.")
+    } else if (toastType === "redefinir-senha") {
+      toast.success("Senha redefinida com sucesso. Faça login novamente.")
+    }
+
+    router.replace("/admin")
+  }, [router, searchParams])
 
   async function handleSubmit(data: LoginData) {
     try {
@@ -148,10 +170,22 @@ export default function LoginPage() {
               )}
 
               {!requires2FA && (
-                <LoginForm
-                  onSubmit={handleSubmit}
-                  fieldErrors={fieldErrors}
-                />
+                <div className="space-y-4">
+                  <LoginForm
+                    onSubmit={handleSubmit}
+                    fieldErrors={fieldErrors}
+                  />
+
+                  <div className="flex justify-end">
+                    <Link
+                      href="/admin/esqueceu-senha"
+                      className="inline-flex items-center gap-1 text-sm text-muted-foreground transition hover:text-foreground hover:underline underline-offset-4"
+                    >
+                      Esqueceu a senha?
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                </div>
               )}
 
               {requires2FA && (
