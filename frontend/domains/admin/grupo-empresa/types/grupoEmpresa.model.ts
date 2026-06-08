@@ -7,5 +7,5 @@ export interface GrupoEmpresa {
   updatedAt: string | null;
   deletedAt: string | null;
 
-  grupos: Grupo[];
+  grupos?: Grupo[];
 }

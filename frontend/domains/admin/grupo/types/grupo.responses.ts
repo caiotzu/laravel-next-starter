@@ -1,11 +1,11 @@
-import { LaravelResourcePagination } from "@/types/laravel";
+import { LaravelApiResponse, LaravelResourcePagination } from "@/types/laravel";
 
-import { Usuario } from "../../usuario/types/usuario.model";
 import { UsuarioDataResponse } from "../../usuario/types/usuario.responses";
 
 // retono com todos os relacionamentos
 export interface grupoDataResponse {
   id: string;
+  versao?: number;
   descricao: string;
   created_at: string;
   updated_at: string | null;
@@ -15,3 +15,5 @@ export interface grupoDataResponse {
 }
 
 export type ListarGruposResponse = LaravelResourcePagination<grupoDataResponse>;
+export type AtivarGrupoResponse = LaravelApiResponse<grupoDataResponse>;
+

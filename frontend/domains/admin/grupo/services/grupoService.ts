@@ -9,8 +9,28 @@ import { Grupo } from "../types/grupo.model";
 import {
   ListarGruposRequest,
 } from "../types/grupo.requests";
-import { ListarGruposResponse } from "../types/grupo.responses";
+import { AtivarGrupoResponse, ListarGruposResponse } from "../types/grupo.responses";
 
+export async function excluirGrupo(
+  id: string
+) {
+  return proxyAdminRequest<null>({
+    url: `/admin/grupos/${id}`,
+    method: "DELETE"
+  });
+}
+
+export async function ativarGrupo(
+  id: string
+) {
+  const response = 
+    await proxyAdminRequest<AtivarGrupoResponse>({
+      url: `/admin/grupos/${id}/ativar`,
+      method: "PATCH"
+    });
+
+  return toGrupo(response.data.data);  
+}
 
 export async function listarGrupos(
   dto: ListarGruposRequest

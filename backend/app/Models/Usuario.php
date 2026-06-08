@@ -64,6 +64,11 @@ class Usuario extends Authenticatable implements JWTSubject
         return $this->belongsTo(Grupo::class, 'grupo_id', 'id');
     }
 
+    public function grupoComExcluidos(): BelongsTo
+    {
+        return $this->belongsTo(Grupo::class, 'grupo_id', 'id')->withTrashed();
+    }
+
     public function usuarioSessoes(): HasMany
     {
         return $this->hasMany(UsuarioSessao::class, 'usuario_id', 'id');

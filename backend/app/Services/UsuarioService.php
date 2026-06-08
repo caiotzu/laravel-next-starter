@@ -137,6 +137,7 @@ class UsuarioService {
 
             $grupo = Grupo::where('entidade_tipo_id', $user->grupo->entidade_tipo_id)
                 ->where('entidade_id', $user->grupo->entidade_id)
+                ->withTrashed()
                 ->find($usuario->grupo_id);
             if(!$grupo)
                 throw new BusinessException('Usuário não encontrado ou não disponível para exclusão.', ErrorCode::USUARIO_NOT_FOUND->value);
@@ -167,6 +168,7 @@ class UsuarioService {
 
             $grupo = Grupo::where('entidade_tipo_id', $user->grupo->entidade_tipo_id)
                 ->where('entidade_id', $user->grupo->entidade_id)
+                ->withTrashed()
                 ->find($usuario->grupo_id);
             if(!$grupo)
                 throw new BusinessException('Usuário não encontrado ou não disponível para exclusão.', ErrorCode::USUARIO_NOT_FOUND->value);
@@ -185,8 +187,8 @@ class UsuarioService {
         $user = Auth::user();
 
         return Usuario::query()
-            ->with('grupo')
-            ->whereHas('grupo', function (Builder $query) use ($user) {
+            ->with('grupoComExcluidos')
+            ->whereHas('grupoComExcluidos', function (Builder $query) use ($user) {
                 return $query->where('entidade_tipo_id', $user->grupo->entidade_tipo_id)
                     ->where('entidade_id', $user->grupo->entidade_id);
             })

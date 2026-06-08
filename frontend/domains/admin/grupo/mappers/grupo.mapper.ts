@@ -8,11 +8,12 @@ export function toGrupo(
 ): Grupo {
   return {
     id: data.id,
+    versao: data.versao ?? 0,
     descricao: data.descricao, 
     createdAt: data.created_at,
     updatedAt: data.updated_at,
     deletedAt: data.deleted_at,
 
-    usuarios: data?.usuarios?.map(toUsuario)
+    usuarios: data?.usuarios?.map(toUsuario) ?? []
   };
 }

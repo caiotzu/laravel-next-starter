@@ -12,6 +12,6 @@ export function toGrupoEmpresa(
     updatedAt: data.updated_at,
     deletedAt: data.deleted_at,
 
-    grupos: data.grupos?.map(toGrupo)
+    grupos: data.grupos?.map(toGrupo) ?? []
   };
 }

@@ -33,6 +33,11 @@ export const protectedRoutes: RoutePermission[] = [
     { path: "/admin/grupos-empresas/cadastrar", protected: true, cookieName: "admin_access_token" },
     { path: "/admin/grupos-empresas", protected: true, cookieName: "admin_access_token" },
 
+    { path: "/admin/grupos/:id/visualizar", protected: true, cookieName: "admin_access_token" },
+    { path: "/admin/grupos/:id", protected: true, cookieName: "admin_access_token" },
+    { path: "/admin/grupos/cadastrar", protected: true, cookieName: "admin_access_token" },
+    { path: "/admin/grupos", protected: true, cookieName: "admin_access_token" },
+
     { path: "/admin/usuarios/:id/visualizar", protected: true, cookieName: "admin_access_token" },
     { path: "/admin/usuarios/:id", protected: true, cookieName: "admin_access_token" },
     { path: "/admin/usuarios/cadastrar", protected: true, cookieName: "admin_access_token" },

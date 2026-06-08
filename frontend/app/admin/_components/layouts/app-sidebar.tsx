@@ -52,8 +52,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       items: [
         {
           title: "Grupos",
-          url: "#",
-          permission: null
+          url: "/admin/grupos",
+          permission: "admin.grupo.menu"
         },
         {
           title: "Usuários",

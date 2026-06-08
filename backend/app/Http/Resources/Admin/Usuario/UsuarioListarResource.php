@@ -26,7 +26,7 @@ class UsuarioListarResource extends JsonResource
             'created_at' => $this->created_at,
             'deleted_at' => $this->deleted_at,
             'grupo' => GrupoResource::make(
-                $this->whenLoaded('grupo')
+                $this->whenLoaded('grupoComExcluidos')
             ),
         ];
     }

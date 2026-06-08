@@ -38,65 +38,65 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { getUsuarioStatusClassName, getUsuarioStatusClassText, getUsuarioStatusLabel } from "@/constants/usuario-status";
-import { ativarUsuario, excluirUsuario } from "@/domains/admin/usuario/services/usuarioService";
-import { Usuario } from "@/domains/admin/usuario/types/usuario.model";
-import { formatDate } from "@/lib/utils";
+import { ativarGrupo, excluirGrupo } from "@/domains/admin/grupo/services/grupoService";
+import { Grupo } from "@/domains/admin/grupo/types/grupo.model";
 
 interface Props {
-	data: Usuario[];
+  data: Grupo[];
 }
 
 type ModalState = {
   tipo: "excluir" | "ativar" | null;
-  usuarioId: string | null;
+  grupoId: string | null;
 };
 
-export function UsuariosTable({ data }: Props) {
+export function GruposTable({ data }: Props) {
   const queryClient = useQueryClient();
-	const [modal, setModal] = useState<ModalState>({ tipo: null, usuarioId: null });
-
+	const [modal, setModal] = useState<ModalState>({ tipo: null, grupoId: null });
+	
 	const { mutateAsync: deletar } = useMutation({
-    mutationFn: excluirUsuario,
+    mutationFn: excluirGrupo,
     onSuccess: () => {
-      toast.success("Usuário excluído com sucesso!");
-      queryClient.invalidateQueries({ queryKey: ["usuarios"] });
-      setModal({ tipo: null, usuarioId: null });
+      toast.success("Grupo excluído com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["grupos"] });
+      setModal({ tipo: null, grupoId: null });
     },
-    onError: () => toast.error("Erro ao excluir o usuário."),
+    onError: () => toast.error("Erro ao excluir o grupo."),
   });
 
 	const { mutateAsync: ativar } = useMutation({
-		mutationFn: ativarUsuario,
+		mutationFn: ativarGrupo,
 		onSuccess: () => {
-			toast.success("Usuário ativado com sucesso");
-			queryClient.invalidateQueries({ queryKey: ["usuarios"] });
-      setModal({ tipo: null, usuarioId: null });
+			toast.success("Grupo ativado com sucesso!");
+			queryClient.invalidateQueries({ queryKey: ["grupos"] });
+			setModal({ tipo: null, grupoId: null });
 		},
-		onError: () => toast.error("Erro ao ativar o usuário")
+		onError: () => toast.error("Erro ao ativar o grupo."),
 	});
 
-	const usuarioSelecionado = data.find((u) => u.id === modal.usuarioId);
-	
-	return (
+	if (!data.length) {
+    return (
+      <Card className="rounded-2xl border shadow-sm p-8 text-center text-muted-foreground">
+        Nenhum registro encontrado
+      </Card>
+    );
+  }
+
+  const grupoSelecionado = data.find((g) => g.id === modal.grupoId);
+
+  return (
     <Card className="w-full rounded-2xl border shadow-sm p-0 overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="bg-primary hover:bg-primary shadow-inner border-b border-white/10">
             <TableHead className="text-primary-foreground tracking-wider font-semibold py-4">
-              Nome
+              Descrição
             </TableHead>
-            <TableHead className="text-primary-foreground tracking-wider font-semibold py-4">
-							E-mail
+            <TableHead className="text-primary-foreground tracking-wider font-semibold py-4 text-center">
+              Criado em
             </TableHead>
             <TableHead className="text-primary-foreground tracking-wider font-semibold py-4 text-center">
               Status
-            </TableHead>
-						<TableHead className="text-primary-foreground tracking-wider font-semibold py-4">
-              Grupo
-            </TableHead>
-						<TableHead className="text-primary-foreground tracking-wider font-semibold py-4 text-center">
-              Criado em
             </TableHead>
             <TableHead className="text-primary-foreground tracking-wider font-semibold py-4 text-right">
               Ações
@@ -105,41 +105,29 @@ export function UsuariosTable({ data }: Props) {
         </TableHeader>
 
         <TableBody>
-          {data.map((usuario) => (
+          {data.map((grupo) => (
             <TableRow
-              key={usuario.id}
+              key={grupo.id}
               className="border-b last:border-0 hover:bg-muted/40 even:bg-muted/20 transition-colors"
             >
-              <TableCell>
-                <div className="flex flex-col">
-                  <span>{usuario.nome}</span>
-                  <span className={`text-xs ${getUsuarioStatusClassText( usuario.status )}`}>
-                    {getUsuarioStatusLabel( usuario.status )}
-                  </span>
-                </div>
+              <TableCell className="font-medium">{grupo.descricao}</TableCell>
+
+              <TableCell className="text-sm text-muted-foreground text-center">
+                {new Date(grupo.createdAt).toLocaleDateString("pt-BR")} •{" "}
+                {new Date(grupo.createdAt).toLocaleTimeString("pt-BR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </TableCell>
-              <TableCell className="font-medium">{usuario.email}</TableCell>
+
               <TableCell className="text-center">
-                {usuario.deletedAt ? (
+                {grupo.deletedAt ? (
                   <Badge className="bg-red-100 text-red-700">Excluído</Badge>
                 ) : (
                   <Badge className="bg-emerald-100 text-emerald-700">Ativo</Badge>
                 )}
               </TableCell>
-              <TableCell>
-                <div className="flex flex-col">
-                  <span>{usuario.grupo?.descricao}</span>
 
-                  {usuario.grupo?.deletedAt && (
-                    <span className="text-xs text-muted-foreground">
-                      Grupo excluído
-                    </span>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell className="text-sm text-muted-foreground text-center">
-                {formatDate(usuario.createdAt)}
-              </TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -150,10 +138,10 @@ export function UsuariosTable({ data }: Props) {
 
                   <DropdownMenuContent align="end">
                     {/* Visualizar */}
-                    <AdminPermissionGuard permission="admin.usuario.visualizar" disableFallback={true}>
+                    <AdminPermissionGuard permission="admin.grupo.visualizar" disableFallback={true}>
                       <DropdownMenuItem asChild>
                         <Link
-                          href={`/admin/usuarios/${usuario.id}/visualizar`}
+                          href={`/admin/grupos-empresas/${grupo.id}/visualizar`}
                           className="flex items-center cursor-pointer"
                         >
                           <Eye className="h-4 w-4"/>
@@ -163,11 +151,11 @@ export function UsuariosTable({ data }: Props) {
                     </AdminPermissionGuard>
 
                     {/* Editar */}
-                    {!usuario.deletedAt && (
-                      <AdminPermissionGuard permission="admin.usuario.atualizar" disableFallback={true}>
+                    {!grupo.deletedAt && (
+                      <AdminPermissionGuard permission="admin.grupo.atualizar" disableFallback={true}>
                         <DropdownMenuItem asChild>
                           <Link
-                            href={`/admin/usuarios/${usuario.id}`}
+                            href={`/admin/grupos-empresas/${grupo.id}`}
                             className="flex items-center cursor-pointer"
                           >
                             <Pencil className="h-4 w-4"/>
@@ -178,10 +166,10 @@ export function UsuariosTable({ data }: Props) {
                     )}
 
                     {/* Ativar */}
-                    {usuario.deletedAt && (
-                      <AdminPermissionGuard permission="admin.usuario.ativar" disableFallback={true}>
+                    {grupo.deletedAt && (
+                      <AdminPermissionGuard permission="admin.grupo.ativar" disableFallback={true}>
                         <DropdownMenuItem
-                          onClick={() => setModal({ tipo: "ativar", usuarioId: usuario.id })}
+                          onClick={() => setModal({ tipo: "ativar", grupoId: grupo.id })}
                           className="flex items-center cursor-pointer"
                         >
                           <Check className="h-4 w-4" />
@@ -191,10 +179,10 @@ export function UsuariosTable({ data }: Props) {
                     )}
 
                     {/* Excluir */}
-                    {!usuario.deletedAt && (
-                      <AdminPermissionGuard permission="admin.usuario.excluir" disableFallback={true}>
+                    {!grupo.deletedAt && (
+                      <AdminPermissionGuard permission="admin.grupo.excluir" disableFallback={true}>
                         <DropdownMenuItem
-                          onClick={() => setModal({ tipo: "excluir", usuarioId: usuario.id })}
+                          onClick={() => setModal({ tipo: "excluir", grupoId: grupo.id })}
                           className="flex items-center cursor-pointer"
                         >
                           <Trash className="h-4 w-4" />
@@ -210,23 +198,24 @@ export function UsuariosTable({ data }: Props) {
         </TableBody>
       </Table>
 
-      {usuarioSelecionado && modal.tipo === "excluir" && (
-        <AlertDialog open onOpenChange={() => setModal({ tipo: null, usuarioId: null })}>
+      {/* ----------------- Modais compartilhados ----------------- */}
+      {grupoSelecionado && modal.tipo === "excluir" && (
+        <AlertDialog open onOpenChange={() => setModal({ tipo: null, grupoId: null })}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
               <AlertDialogDescription>
-                Deseja realmente excluir o usuário ({usuarioSelecionado.nome})?
+                Deseja realmente excluir o grupo ({grupoSelecionado.descricao})?
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setModal({ tipo: null, usuarioId: null })}>
+              <AlertDialogCancel onClick={() => setModal({ tipo: null, grupoId: null })}>
                 Cancelar
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={async () => {
-                  await deletar(usuarioSelecionado.id);
-                  setModal({ tipo: null, usuarioId: null });
+                  await deletar(grupoSelecionado.id);
+                  setModal({ tipo: null, grupoId: null });
                 }}
                 className="bg-red-700 hover:bg-red-800"
               >
@@ -237,23 +226,23 @@ export function UsuariosTable({ data }: Props) {
         </AlertDialog>
       )}
 
-      {usuarioSelecionado && modal.tipo === "ativar" && (
-        <AlertDialog open onOpenChange={() => setModal({ tipo: null, usuarioId: null })}>
+      {grupoSelecionado && modal.tipo === "ativar" && (
+        <AlertDialog open onOpenChange={() => setModal({ tipo: null, grupoId: null })}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Confirmar ativação</AlertDialogTitle>
               <AlertDialogDescription>
-                Deseja realmente ativar o usuário ({usuarioSelecionado.nome})?
+                Deseja realmente ativar o grupo ({grupoSelecionado.descricao})?
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setModal({ tipo: null, usuarioId: null })}>
+              <AlertDialogCancel onClick={() => setModal({ tipo: null, grupoId: null })}>
                 Cancelar
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={async () => {
-                  await ativar(usuarioSelecionado.id);
-                  setModal({ tipo: null, usuarioId: null });
+                  await ativar(grupoSelecionado.id);
+                  setModal({ tipo: null, grupoId: null });
                 }}
               >
                 Confirmar
