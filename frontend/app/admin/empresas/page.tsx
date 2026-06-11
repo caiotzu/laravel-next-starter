@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { LaravelResourcePagination } from "@/types/laravel";
 
+import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
 
@@ -24,7 +25,7 @@ import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.m
 import { EmpresasFilters } from "@/features/admin/empresa/components/EmpresasFilters";
 import { EmpresasTable } from "@/features/admin/empresa/components/EmpresasTable";
 
-import { AdminPermissionGuard } from "../_components/guard/AdminPermissionGuard";
+
 
 export default function Page() {
   const [filters, setFilters] = useState<EmpresaFilters>({

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { ApiErrorResponse } from "@/types/errors";
 
+import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { PageHeader } from "@/app/admin/_components/layouts/page-header";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
@@ -25,7 +26,7 @@ import { GrupoEmpresasFilters } from "@/features/admin/grupo-empresa/components/
 import { GrupoEmpresasTable } from "@/features/admin/grupo-empresa/components/GrupoEmpresasTable";
 import { GrupoEmpresasTableSkeleton } from "@/features/admin/grupo-empresa/components/GrupoEmpresasTableSkeleton";
 
-import { AdminPermissionGuard } from "../_components/guard/AdminPermissionGuard";
+
 
 export default function Page() {
   const [filters, setFilters] = useState<ListarGrupoEmpresasRequest>({
@@ -70,7 +71,7 @@ export default function Page() {
             
             <PageHeader
               title="Grupos de Empresas"
-              description="Gerencie os grupos de empresas cadastrados."
+              description="Gerenciamento de grupos de empresas"
               actions={[
                 {
                   label: "Cadastrar",

@@ -55,7 +55,7 @@ export default function Page() {
           <div className="flex flex-col gap-6 py-6 px-4 lg:px-6">
 						<PageHeader
               title="Usuários"
-              description="Dados do usuário."
+              description="Detalhes do usuário"
               actions={[
                 {
                   label: "Voltar",

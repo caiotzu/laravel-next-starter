@@ -123,7 +123,7 @@ export default function Page() {
 
             <PageHeader
               title="Usuarios"
-              description="Edição do usuário"
+              description="Edição de usuário"
             />
 
             <AdminPermissionGuard permission="admin.usuario.atualizar">

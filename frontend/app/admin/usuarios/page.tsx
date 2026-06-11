@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { ApiErrorResponse } from "@/types/errors";
 
+import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { PageHeader } from "@/app/admin/_components/layouts/page-header";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
@@ -25,8 +26,6 @@ import { ListarUsuariosResponse } from "@/domains/admin/usuario/types/usuario.re
 import { UsuariosFilters } from "@/features/admin/usuario/components/UsuariosFilters";
 import { UsuariosTable } from "@/features/admin/usuario/components/UsuariosTable";
 import { UsuariosTableSkeleton } from "@/features/admin/usuario/components/UsuariosTableSkeleton";
-
-import { AdminPermissionGuard } from "../_components/guard/AdminPermissionGuard";
 
 export default function Page() {
   const [filters, setFilters] = useState<ListarUsuariosRequest>({
@@ -75,7 +74,7 @@ export default function Page() {
             
             <PageHeader
               title="Usuários"
-              description="Gerencie os usuários cadastrados."
+              description="Gerenciamento de usuários"
               actions={[
                 {
                   label: "Cadastrar",

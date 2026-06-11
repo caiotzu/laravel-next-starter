@@ -12,6 +12,7 @@ import { toast } from "sonner";
 
 import { ApiErrorResponse } from "@/types/errors";
 
+import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
 
@@ -25,8 +26,6 @@ import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.m
 import { GrupoEmpresaFormEdicao } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormEdicao";
 import { GrupoEmpresaFormEdicaoSkeleton } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormEdicaoSkeleton";
 import { GrupoEmpresasFormDataEdicao } from "@/features/admin/grupo-empresa/schemas/grupoEmpresa.schema";
-
-import { AdminPermissionGuard } from "../../_components/guard/AdminPermissionGuard";
 
 export default function Page() {
   const router = useRouter();
@@ -116,7 +115,7 @@ export default function Page() {
 
             <PageHeader
               title="Grupos de Empresas"
-              description="Gerencie os grupos de empresas cadastrados."
+              description="Edição de grupo de empresas"
             />
 
             <AdminPermissionGuard permission="admin.grupo_empresa.atualizar">

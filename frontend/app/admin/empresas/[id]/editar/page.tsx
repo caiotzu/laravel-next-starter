@@ -10,6 +10,7 @@ import { UseFormSetError } from "react-hook-form";
 
 import { ApiErrorResponse } from "@/types/errors";
 
+import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
 
@@ -30,7 +31,7 @@ import {
 import { EmpresaContatoFormData } from "@/features/admin/empresa-contato/schemas/empresa-contato.schema";
 import { EmpresaEnderecoFormData } from "@/features/admin/empresa-endereco/schemas/empresa-endereco.schema";
 
-import { AdminPermissionGuard } from "../../../_components/guard/AdminPermissionGuard";
+
 
 export default function Page() {
   const router = useRouter();

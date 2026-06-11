@@ -10,6 +10,7 @@ import { UseFormSetError } from "react-hook-form";
 
 import { ApiErrorResponse } from "@/types/errors";
 
+import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
 
@@ -27,7 +28,7 @@ import { onlyAlphaNumeric } from "@/lib/utils";
 import { EmpresaFormCadastro } from "@/features/admin/empresa/components/EmpresaFormCadastro";
 import { EmpresaFormDataCadastro } from "@/features/admin/empresa/schemas/empresa.schema";
 
-import { AdminPermissionGuard } from "../../_components/guard/AdminPermissionGuard";
+
 
 export default function Page() {
   const router = useRouter();
