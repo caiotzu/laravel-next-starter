@@ -85,7 +85,6 @@ export function GrupoEmpresaFormCadastro({
               <Label htmlFor="nome">Nome do Grupo <span className="text-red-600">*</span></Label>
               <Input
                 id="nome"
-                placeholder="Digite o nome do grupo"
                 disabled={isLoading}
                 className={errors.nome ? "border-red-700 focus-visible:ring-red-700" : ""}
                 {...register("nome")}
@@ -99,7 +98,6 @@ export function GrupoEmpresaFormCadastro({
               <Label htmlFor="usuario_nome">Nome do Usuário <span className="text-red-600">*</span></Label>
               <Input
                 id="usuario_nome"
-                placeholder="Digite o nome do usuário"
                 disabled={isLoading}
                 className={errors.usuario?.nome ? "border-red-700 focus-visible:ring-red-700" : ""}
                 {...register("usuario.nome")}
@@ -114,7 +112,6 @@ export function GrupoEmpresaFormCadastro({
               <Input
                 id="usuario_email"
                 type="email"
-                placeholder="Digite o e-mail do usuário"
                 disabled={isLoading}
                 className={errors.usuario?.email ? "border-red-700 focus-visible:ring-red-700" : ""}
                 {...register("usuario.email")}

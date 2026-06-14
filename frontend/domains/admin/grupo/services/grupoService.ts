@@ -7,9 +7,38 @@ import { proxyAdminRequest } from "@/lib/proxy-admin";
 import { toGrupo } from "../mappers/grupo.mapper";
 import { Grupo } from "../types/grupo.model";
 import {
+  CadastrarGrupoRequest,
+  EditarGrupoRequest,
   ListarGruposRequest,
 } from "../types/grupo.requests";
-import { AtivarGrupoResponse, ListarGruposResponse } from "../types/grupo.responses";
+import { AtivarGrupoResponse, CadastrarGrupoResponse, EditarGrupoResponse, ListarGruposResponse, VisualizarGrupoResponse } from "../types/grupo.responses";
+
+export async function cadastrarGrupo(
+  dto: CadastrarGrupoRequest
+) {
+  const response = 
+    await proxyAdminRequest<CadastrarGrupoResponse>({
+      url: "/admin/grupos",
+      method: "POST",
+      data: dto,
+    });
+
+  return toGrupo(response.data.data);  
+}
+
+export async function editarGrupo(
+  id: string,
+  dto: EditarGrupoRequest
+) {
+  const response = 
+    await proxyAdminRequest<EditarGrupoResponse>({
+      url: `/admin/grupos/${id}`,
+      method: "PUT",
+      data: dto,
+    });
+
+  return toGrupo(response.data.data);  
+}
 
 export async function excluirGrupo(
   id: string
@@ -61,4 +90,13 @@ export async function listarGrupos(
       toGrupo
     ),
   };
+}
+
+export async function visualizarGrupo(id: string) {
+  const response = await proxyAdminRequest<VisualizarGrupoResponse>({
+    url: `/admin/grupos/${id}`,
+    method: "GET",
+  });
+  
+  return toGrupo(response.data.data);
 }

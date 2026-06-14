@@ -141,7 +141,7 @@ export function GruposTable({ data }: Props) {
                     <AdminPermissionGuard permission="admin.grupo.visualizar" disableFallback={true}>
                       <DropdownMenuItem asChild>
                         <Link
-                          href={`/admin/grupos-empresas/${grupo.id}/visualizar`}
+                          href={`/admin/grupos/${grupo.id}/visualizar`}
                           className="flex items-center cursor-pointer"
                         >
                           <Eye className="h-4 w-4"/>
@@ -155,7 +155,7 @@ export function GruposTable({ data }: Props) {
                       <AdminPermissionGuard permission="admin.grupo.atualizar" disableFallback={true}>
                         <DropdownMenuItem asChild>
                           <Link
-                            href={`/admin/grupos-empresas/${grupo.id}`}
+                            href={`/admin/grupos/${grupo.id}`}
                             className="flex items-center cursor-pointer"
                           >
                             <Pencil className="h-4 w-4"/>
