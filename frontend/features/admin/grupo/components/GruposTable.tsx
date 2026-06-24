@@ -152,7 +152,14 @@ export function GruposTable({ data }: Props) {
 
                     {/* Editar */}
                     {!grupo.deletedAt && (
-                      <AdminPermissionGuard permission="admin.grupo.atualizar" disableFallback={true}>
+                      <AdminPermissionGuard 
+                        /*permission="admin.grupo.atualizar"*/ 
+                        permissions={[
+                          "admin.grupo.atualizar",
+                          "admin.grupo.sincronizar_permissao",
+                        ]} 
+                        disableFallback={true}
+                      >
                         <DropdownMenuItem asChild>
                           <Link
                             href={`/admin/grupos/${grupo.id}`}

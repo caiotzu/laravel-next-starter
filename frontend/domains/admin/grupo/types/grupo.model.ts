@@ -1,3 +1,4 @@
+import { Permissao } from "../../permissao/types/permissao.model";
 import { Usuario } from "../../usuario/types/usuario.model";
 
 export interface Grupo {
@@ -8,5 +9,6 @@ export interface Grupo {
   updatedAt: string | null;
   deletedAt: string | null;
 
-  usuarios?: Usuario[]
+  usuarios?: Usuario[],
+  permissoes?: Permissao[],
 }

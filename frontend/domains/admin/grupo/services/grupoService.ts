@@ -10,6 +10,7 @@ import {
   CadastrarGrupoRequest,
   EditarGrupoRequest,
   ListarGruposRequest,
+  SincronizarPermissoesGrupoRequest,
 } from "../types/grupo.requests";
 import { AtivarGrupoResponse, CadastrarGrupoResponse, EditarGrupoResponse, ListarGruposResponse, VisualizarGrupoResponse } from "../types/grupo.responses";
 
@@ -99,4 +100,18 @@ export async function visualizarGrupo(id: string) {
   });
   
   return toGrupo(response.data.data);
+}
+
+export async function sincronizarPermissoesGrupo(
+  id: string,
+  dto: SincronizarPermissoesGrupoRequest
+) {
+  const response = 
+    await proxyAdminRequest<EditarGrupoResponse>({
+      url: `/admin/grupos/${id}/permissoes`,
+      method: "PATCH",
+      data: dto,
+    });
+
+  return toGrupo(response.data.data);  
 }

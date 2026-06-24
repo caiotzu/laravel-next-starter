@@ -7,7 +7,8 @@ import { useAdminPermission } from "@/app/admin/providers/admin-permission-provi
 import { AccessDenied } from "@/components/feedback/AccessDenied";
 
 interface AdminPermissionGuardProps {
-  permission: string;
+  permission?: string;
+  permissions?: string[];
   children: ReactNode;
   fallback?: ReactNode;
   disableFallback?: boolean;
@@ -15,13 +16,16 @@ interface AdminPermissionGuardProps {
 
 export function AdminPermissionGuard({
   permission,
+  permissions,
   children,
   fallback,
   disableFallback = false,
 }: AdminPermissionGuardProps) {
   const { can } = useAdminPermission();
 
-  if (!can(permission)) {
+  const hasPermission = permission ? can(permission) : permissions?.some((permission) => can(permission)) ?? false;
+
+  if (!hasPermission) {
     if (disableFallback) {
       return null;
     }

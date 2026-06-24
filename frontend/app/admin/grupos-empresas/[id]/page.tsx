@@ -23,8 +23,8 @@ import { useGrupoEmpresa } from "@/domains/admin/grupo-empresa/hooks/useGrupoEmp
 import { editarGrupoEmpresa } from "@/domains/admin/grupo-empresa/services/grupoEmpresaService";
 import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
 
-import { GrupoEmpresaFormEdicao } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormEdicao";
-import { GrupoEmpresaFormEdicaoSkeleton } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormEdicaoSkeleton";
+import { GrupoEmpresaFormEdit } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormEdit";
+import { GrupoEmpresaFormEditSkeleton } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormEditSkeleton";
 import { GrupoEmpresasFormDataEdicao } from "@/features/admin/grupo-empresa/schemas/grupoEmpresa.schema";
 
 export default function Page() {
@@ -120,9 +120,9 @@ export default function Page() {
 
             <AdminPermissionGuard permission="admin.grupo_empresa.atualizar">
               {isLoading || !data ? (
-                <GrupoEmpresaFormEdicaoSkeleton />
+                <GrupoEmpresaFormEditSkeleton />
               ) : (
-                <GrupoEmpresaFormEdicao
+                <GrupoEmpresaFormEdit
                   onSubmit={handleSubmit}
                   isLoading={isPending || isLoading}
                   backendErrors={backendErrors}

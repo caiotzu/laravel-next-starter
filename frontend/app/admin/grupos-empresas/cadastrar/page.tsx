@@ -23,9 +23,8 @@ import {
 
 import { cadastrarGrupoEmpresa } from "@/domains/admin/grupo-empresa/services/grupoEmpresaService";
 import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
-import { CadastrarGrupoEmpresaResponse } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.responses";
 
-import { GrupoEmpresaFormCadastro } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormCadastro";
+import { GrupoEmpresaFormCreate } from "@/features/admin/grupo-empresa/components/GrupoEmpresaFormCreate";
 import {GrupoEmpresasFormDataCadastro} from "@/features/admin/grupo-empresa/schemas/grupoEmpresa.schema";
 
 export default function Page() {
@@ -103,7 +102,7 @@ export default function Page() {
             />
 
             <AdminPermissionGuard permission="admin.grupo_empresa.cadastrar">
-              <GrupoEmpresaFormCadastro
+              <GrupoEmpresaFormCreate
                 onSubmit={handleSubmit}
                 isLoading={isPending}
                 backendErrors={backendErrors}

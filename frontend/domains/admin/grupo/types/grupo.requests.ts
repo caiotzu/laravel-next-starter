@@ -13,3 +13,7 @@ export interface ListarGruposRequest {
   por_pagina?: number;
   page?: number;
 }
+
+export interface SincronizarPermissoesGrupoRequest {
+  permissoes: string[];
+}
