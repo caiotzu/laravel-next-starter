@@ -40,6 +40,7 @@ import {
 
 import { excluirGrupoEmpresa, ativarGrupoEmpresa } from "@/domains/admin/grupo-empresa/services/grupoEmpresaService";
 import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
+import { formatDate } from "@/lib/utils";
 
 interface Props {
   data: GrupoEmpresa[];
@@ -112,14 +113,7 @@ export function GrupoEmpresasTable({ data, isLoading }: Props) {
               className="border-b last:border-0 hover:bg-muted/40 even:bg-muted/20 transition-colors"
             >
               <TableCell className="font-medium">{grupo.nome}</TableCell>
-
-              <TableCell className="text-sm text-muted-foreground text-center">
-                {new Date(grupo.createdAt).toLocaleDateString("pt-BR")} •{" "}
-                {new Date(grupo.createdAt).toLocaleTimeString("pt-BR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </TableCell>
+              <TableCell className="text-sm text-muted-foreground text-center">{formatDate(grupo.createdAt)}</TableCell>
 
               <TableCell className="text-center">
                 {grupo.deletedAt ? (

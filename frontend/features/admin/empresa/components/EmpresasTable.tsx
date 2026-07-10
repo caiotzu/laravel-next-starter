@@ -39,14 +39,11 @@ import {
 } from "@/components/ui/table";
 
 import { ativarEmpresa, excluirEmpresa } from "@/domains/admin/empresa/services/empresaService";
-import { EmpresaListaItem } from "@/domains/admin/empresa/types/empresa.responses";
-import { maskCNPJAlfanumerico } from "@/lib/utils";
-
-import { EmpresasTableSkeleton } from "./EmpresasTableSkeleton";
+import { Empresa } from "@/domains/admin/empresa/types/empresa.model";
+import { formatDate, maskCNPJAlfanumerico } from "@/lib/utils";
 
 interface Props {
-  data: EmpresaListaItem[];
-  isLoading: boolean;
+  data: Empresa[];
 }
 
 type ModalState = {
@@ -54,7 +51,7 @@ type ModalState = {
   empresaId: string | null;
 };
 
-export function EmpresasTable({ data, isLoading }: Props) {
+export function EmpresasTable({ data }: Props) {
   const queryClient = useQueryClient();
   const [modal, setModal] = useState<ModalState>({ tipo: null, empresaId: null });
 
@@ -77,8 +74,6 @@ export function EmpresasTable({ data, isLoading }: Props) {
     },
     onError: () => toast.error("Erro ao ativar a empresa."),
   });
-
-  if (isLoading) return <EmpresasTableSkeleton />;
 
   if (!data.length) {
     return (
@@ -142,21 +137,13 @@ export function EmpresasTable({ data, isLoading }: Props) {
               className="border-b last:border-0 hover:bg-muted/40 even:bg-muted/20 transition-colors"
             >
               <TableCell className="font-medium">{maskCNPJAlfanumerico(empresa.cnpj)}</TableCell>
-              <TableCell className="font-medium">{empresa.nome_fantasia}</TableCell>
-              <TableCell className="font-medium">{empresa.grupo_empresa.nome}</TableCell>
-              <TableCell className="font-medium">{empresa.matriz?.nome_fantasia || '---'}</TableCell>
+              <TableCell className="font-medium">{empresa.nomeFantasia}</TableCell>
+              <TableCell className="font-medium">{empresa?.grupoEmpresa?.nome}</TableCell>
+              <TableCell className="font-medium">{empresa.matriz?.nomeFantasia || '---'}</TableCell>
               <TableCell className="font-medium text-center">{empresa.uf}</TableCell>
-
-              <TableCell className="text-sm text-muted-foreground text-center">
-                {new Date(empresa.created_at).toLocaleDateString("pt-BR")} •{" "}
-                {new Date(empresa.created_at).toLocaleTimeString("pt-BR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </TableCell>
-
+              <TableCell className="text-sm text-muted-foreground text-center">{formatDate(empresa.createdAt)}</TableCell>
               <TableCell className="text-center">
-                {empresa.deleted_at ? (
+                {empresa.deletedAt ? (
                   <Badge className="bg-red-100 text-red-700">Excluído</Badge>
                 ) : (
                   getStatusBadge(empresa.status)
@@ -186,7 +173,7 @@ export function EmpresasTable({ data, isLoading }: Props) {
                     </AdminPermissionGuard>
 
                     {/* Editar */}
-                    {!empresa.deleted_at && (
+                    {!empresa.deletedAt && (
                       <AdminPermissionGuard permission="admin.empresa.atualizar" disableFallback={true}>
                         <DropdownMenuItem asChild>
                           <Link
@@ -201,7 +188,7 @@ export function EmpresasTable({ data, isLoading }: Props) {
                     )}
 
                     {/* Ativar */}
-                    {empresa.deleted_at && (
+                    {empresa.deletedAt && (
                       <AdminPermissionGuard permission="admin.empresa.ativar" disableFallback={true}>
                         <DropdownMenuItem
                           onClick={() => setModal({ tipo: "ativar", empresaId: empresa.id })}
@@ -214,7 +201,7 @@ export function EmpresasTable({ data, isLoading }: Props) {
                     )}
 
                     {/* Excluir */}
-                    {!empresa.deleted_at && (
+                    {!empresa.deletedAt && (
                       <AdminPermissionGuard permission="admin.empresa.excluir" disableFallback={true}>
                         <DropdownMenuItem
                           onClick={() => setModal({ tipo: "excluir", empresaId: empresa.id })}
@@ -240,7 +227,7 @@ export function EmpresasTable({ data, isLoading }: Props) {
             <AlertDialogHeader>
               <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
               <AlertDialogDescription>
-                Deseja realmente excluir a empresa ({empresaSelecionada.nome_fantasia})?
+                Deseja realmente excluir a empresa ({empresaSelecionada.nomeFantasia})?
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -267,7 +254,7 @@ export function EmpresasTable({ data, isLoading }: Props) {
             <AlertDialogHeader>
               <AlertDialogTitle>Confirmar ativação</AlertDialogTitle>
               <AlertDialogDescription>
-                Deseja realmente ativar a empresa ({empresaSelecionada.nome_fantasia})?
+                Deseja realmente ativar a empresa ({empresaSelecionada.nomeFantasia})?
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

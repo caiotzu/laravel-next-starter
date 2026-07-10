@@ -1,4 +1,4 @@
-export interface EmpresaEnderecoResponse {
+export interface EmpresaEnderecoDataResponse {
   id: string;
   empresa_id: string;
   tipo: string;

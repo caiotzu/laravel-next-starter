@@ -1,4 +1,4 @@
-export interface EmpresaContatoResponse {
+export interface EmpresaContatoDataResponse {
   id: string;
   empresa_id: string;
   tipo: string;
@@ -8,4 +8,5 @@ export interface EmpresaContatoResponse {
   principal: boolean;
   created_at: string;
   updated_at: string | null;
+  deleted_at: string | null;
 }

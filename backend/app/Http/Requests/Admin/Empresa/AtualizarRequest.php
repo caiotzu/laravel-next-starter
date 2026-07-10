@@ -18,7 +18,7 @@ class AtualizarRequest extends FormRequest
     {
         return [
             'matriz_id' => [
-                'required',
+                'nullable',
                 'uuid',
                 Rule::exists('empresas', 'id')
             ],

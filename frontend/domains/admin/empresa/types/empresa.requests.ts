@@ -12,7 +12,7 @@ export interface CadastrarEmpresaRequest {
 }
 
 export interface EditarEmpresaRequest {
-  matriz_id: string;
+  matriz_id?: string;
   cnpj: string;
   nome_fantasia: string;
   razao_social: string;

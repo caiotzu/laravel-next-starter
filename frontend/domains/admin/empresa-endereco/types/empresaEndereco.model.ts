@@ -1,8 +1,13 @@
 export interface EmpresaEndereco {
   id: string;
-  empresa_id: string;
+  empresaId: string;
   tipo: string;
-  municipio_id: string;
+  municipioId: string;
+  municipio?: {
+    id: string;
+    nome: string;
+    uf: string;
+  } | null;
   ativo: boolean;
   principal: boolean;
   cep: string;
@@ -10,7 +15,7 @@ export interface EmpresaEndereco {
   numero: string;
   bairro: string;
   complemento: string | null;
-  created_at: string;
-  updated_at: string | null;
-  deleted_at: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+  deletedAt: string | null;
 }

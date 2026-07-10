@@ -94,13 +94,11 @@ export function EmpresaEnderecosTab({
   onEdit,
   onRemove,
 }: Props) {
-  const municipioSelecionadoNaLista =
+  const municipioSelecionadoNaLista = dedupeMunicipios(
     selectedMunicipio
-      ? [
-          selectedMunicipio,
-          ...municipioItems.filter((item) => item.id !== selectedMunicipio.id),
-        ]
-      : municipioItems;
+      ? [selectedMunicipio, ...municipioItems]
+      : municipioItems
+  );
 
   return (
     <div className="space-y-6">
@@ -412,5 +410,11 @@ export function EmpresaEnderecosTab({
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function dedupeMunicipios(items: MunicipioLookupItem[]) {
+  return items.filter(
+    (item, index, array) => array.findIndex((current) => current.id === item.id) === index
   );
 }

@@ -6,10 +6,10 @@ import { AxiosError } from "axios";
 import { ApiErrorResponse } from "@/types/errors";
 
 import { visualizarEmpresa } from "../services/empresaService";
-import { VisualizarEmpresaResponse } from "../types/empresa.responses";
+import { Empresa } from "../types/empresa.model";
 
 export function useEmpresa(id: string) {
-  return useQuery<VisualizarEmpresaResponse, AxiosError<ApiErrorResponse>>({
+  return useQuery<Empresa, AxiosError<ApiErrorResponse>>({
     queryKey: ["empresa", id],
     queryFn: ({ queryKey }) => {
       const [, empresaId] = queryKey;

@@ -13,7 +13,7 @@ export interface grupoDataResponse {
   deleted_at: string | null;
 
   usuarios?: UsuarioDataResponse[];
-  permissoes?: PermissaoDataResponse[]
+  permissoes?: PermissaoDataResponse[];
 }
 
 export type CadastrarGrupoResponse = LaravelApiResponse<grupoDataResponse>;
@@ -21,5 +21,3 @@ export type EditarGrupoResponse = LaravelApiResponse<grupoDataResponse>;
 export type ListarGruposResponse = LaravelResourcePagination<grupoDataResponse>;
 export type AtivarGrupoResponse = LaravelApiResponse<grupoDataResponse>;
 export type VisualizarGrupoResponse = LaravelApiResponse<grupoDataResponse>;
-
-

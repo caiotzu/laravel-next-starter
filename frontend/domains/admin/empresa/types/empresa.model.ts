@@ -1,15 +1,25 @@
+import { EmpresaContato } from "../../empresa-contato/types/empresaContato.model";
+import { EmpresaEndereco } from "../../empresa-endereco/types/empresaEndereco.model";
+import { GrupoEmpresa } from "../../grupo-empresa/types/grupoEmpresa.model";
+
 export interface Empresa {
   id: string;
-  grupo_empresa_id: string;
-  matriz_id: string | null;
+  grupoEmpresaId: string;
+  matrizId: string | null;
   cnpj: string;
-  nome_fantasia: string;
-  razao_social: string;
-  inscricao_estadual: string | null;
-  inscricao_municipal: string | null;
+  nomeFantasia: string;
+  razaoSocial: string;
+  inscricaoEstadual: string | null;
+  inscricaoMunicipal: string | null;
   status: string;
   uf: string;
-  created_at: string;
-  updated_at: string | null;
-  deleted_at: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+  deletedAt: string | null;
+
+  grupoEmpresa?: GrupoEmpresa,
+  matriz?: Empresa,
+
+  contatos: EmpresaContato[],
+  enderecos: EmpresaEndereco[]
 }

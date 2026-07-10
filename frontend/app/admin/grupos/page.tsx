@@ -21,8 +21,6 @@ import { GruposFilters } from "@/features/admin/grupo/components/GruposFilters";
 import { GruposTable } from "@/features/admin/grupo/components/GruposTable";
 import { GruposTableSkeleton } from "@/features/admin/grupo/components/GruposTableSkeleton";
 
-
-
 export default function Page() {
 	const [filters, setFilters] = useState<ListarGruposRequest>({
 		descricao: "",

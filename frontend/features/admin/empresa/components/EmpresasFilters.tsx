@@ -18,44 +18,42 @@ import {
   ESTADOS_LABELS,
   ESTADOS_MAP,
   getLabelByUF,
-  type UF,
 } from "@/constants/estados";
 import { EmpresaFilters } from "@/domains/admin/empresa/types/empresa.filters";
 import { Empresa } from "@/domains/admin/empresa/types/empresa.model";
 import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
 
-interface EmpresaOption {
-  id: string;
-  nome_fantasia: string;
-}
-
 interface Props {
   filters: EmpresaFilters;
-  updateFilter: <K extends keyof EmpresaFilters>(
-    key: K,
-    value: EmpresaFilters[K]
-  ) => void;
+  setFilters: React.Dispatch<React.SetStateAction<EmpresaFilters>>;
   grupos: GrupoEmpresa[];
   isLoadingGrupos: boolean;
-  matrizes: EmpresaOption[];
+  matrizes: Empresa[];
   isLoadingMatrizes: boolean;
-  porPagina: number;
-  setPorPagina: (value: number) => void;
 }
 
 export function EmpresasFilters({
   filters,
-  updateFilter,
+  setFilters,
   grupos,
   isLoadingGrupos,
   matrizes,
   isLoadingMatrizes,
-  porPagina,
-  setPorPagina,
 }: Props) {
+  function updateFilter<K extends keyof EmpresaFilters>(
+    key: K,
+    value: EmpresaFilters[K]
+  ) {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value,
+      page: 1,
+    }));
+  }
+
   return (
     <Card className="shadow-sm">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Filtros</CardTitle>
       </CardHeader>
 
@@ -68,13 +66,17 @@ export function EmpresasFilters({
             value={grupos.find((item) => item.id === filters.grupo_empresa_id) ?? null}
             onValueChange={(item) => {
               if (!item) {
-                updateFilter("grupo_empresa_nome", undefined);
-                updateFilter("grupo_empresa_id", undefined);
+                updateFilter("grupo_empresa_nome", "");
+                updateFilter("grupo_empresa_id", "");
                 return;
               }
 
-              updateFilter("grupo_empresa_nome", item.nome);
-              updateFilter("grupo_empresa_id", item.id);
+              setFilters((prev) => ({
+                ...prev,
+                grupo_empresa_nome: item.nome,
+                grupo_empresa_id: item.id,
+                page: 1,
+              }));
             }}
             itemToStringLabel={(item) => item?.nome ?? ""}
           >
@@ -82,8 +84,12 @@ export function EmpresasFilters({
               value={filters.grupo_empresa_nome ?? ""}
               showClear
               onChange={(e) => {
-                updateFilter("grupo_empresa_nome", e.target.value || undefined);
-                updateFilter("grupo_empresa_id", undefined);
+                setFilters((prev) => ({
+                  ...prev,
+                  grupo_empresa_nome: e.target.value,
+                  grupo_empresa_id: "",
+                  page: 1,
+                }));
               }}
             />
 
@@ -113,22 +119,30 @@ export function EmpresasFilters({
             value={matrizes.find((item) => item.id === filters.matriz_id) ?? null}
             onValueChange={(item) => {
               if (!item) {
-                updateFilter("matriz_nome", undefined);
-                updateFilter("matriz_id", undefined);
+                updateFilter("matriz_nome", "");
+                updateFilter("matriz_id", "");
                 return;
               }
 
-              updateFilter("matriz_nome", item.nome_fantasia);
-              updateFilter("matriz_id", item.id);
+              setFilters((prev) => ({
+                ...prev,
+                matriz_nome: item.nomeFantasia,
+                matriz_id: item.id,
+                page: 1,
+              }));
             }}
-            itemToStringLabel={(item) => item?.nome_fantasia ?? ""}
+            itemToStringLabel={(item) => item?.nomeFantasia ?? ""}
           >
             <ComboboxInput
               value={filters.matriz_nome ?? ""}
               showClear
               onChange={(e) => {
-                updateFilter("matriz_nome", e.target.value || undefined);
-                updateFilter("matriz_id", undefined);
+                setFilters((prev) => ({
+                  ...prev,
+                  matriz_nome: e.target.value,
+                  matriz_id: "",
+                  page: 1,
+                }));
               }}
             />
 
@@ -142,7 +156,7 @@ export function EmpresasFilters({
               <ComboboxList>
                 {(item) => (
                   <ComboboxItem key={item.id} value={item}>
-                    {item.nome_fantasia}
+                    {item.nomeFantasia}
                   </ComboboxItem>
                 )}
               </ComboboxList>
@@ -155,8 +169,7 @@ export function EmpresasFilters({
           <Input
             value={filters.cnpj ?? ""}
             onChange={(e) => {
-              const value = e.target.value;
-              updateFilter("cnpj", value || undefined);
+              updateFilter("cnpj", e.target.value);
             }}
           />
         </div>
@@ -165,7 +178,7 @@ export function EmpresasFilters({
           <Label>Nome Fantasia</Label>
           <Input
             value={filters.nome_fantasia ?? ""}
-            onChange={(e) => updateFilter("nome_fantasia", e.target.value || undefined)}
+            onChange={(e) => updateFilter("nome_fantasia", e.target.value)}
             className="w-64"
           />
         </div>
@@ -174,7 +187,7 @@ export function EmpresasFilters({
           <Label>Razão Social</Label>
           <Input
             value={filters.razao_social ?? ""}
-            onChange={(e) => updateFilter("razao_social", e.target.value || undefined)}
+            onChange={(e) => updateFilter("razao_social", e.target.value)}
             className="w-64"
           />
         </div>
@@ -183,7 +196,7 @@ export function EmpresasFilters({
           <Label>Inscrição Estadual</Label>
           <Input
             value={filters.inscricao_estadual ?? ""}
-            onChange={(e) => updateFilter("inscricao_estadual", e.target.value || undefined)}
+            onChange={(e) => updateFilter("inscricao_estadual", e.target.value)}
             className="w-64"
           />
         </div>
@@ -193,7 +206,7 @@ export function EmpresasFilters({
           <Input
             value={filters.inscricao_municipal ?? ""}
             onChange={(e) =>
-              updateFilter("inscricao_municipal", e.target.value || undefined)
+              updateFilter("inscricao_municipal", e.target.value)
             }
             className="w-64"
           />
@@ -227,11 +240,20 @@ export function EmpresasFilters({
           </Combobox>
         </div>
 
-        <PerPage perPage={porPagina} onChange={setPorPagina} />
+        <PerPage
+          perPage={filters.por_pagina ?? 10}
+          onChange={(value) =>
+            setFilters((prev) => ({
+              ...prev,
+              por_pagina: value,
+              page: 1,
+            }))
+          }
+        />
 
         <div className="flex items-center space-x-2">
           <Switch
-            checked={filters.excluido}
+            checked={filters.excluido ?? false}
             onCheckedChange={(value) => updateFilter("excluido", value)}
           />
           <Label>Excluídas</Label>

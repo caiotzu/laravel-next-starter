@@ -21,14 +21,12 @@ import {
 } from "@/components/ui/sidebar";
 
 import { cadastrarEmpresa } from "@/domains/admin/empresa/services/empresaService";
+import { Empresa } from "@/domains/admin/empresa/types/empresa.model";
 import { CadastrarEmpresaRequest } from "@/domains/admin/empresa/types/empresa.requests";
-import { CadastrarEmpresaResponse } from "@/domains/admin/empresa/types/empresa.responses";
 import { onlyAlphaNumeric } from "@/lib/utils";
 
 import { EmpresaFormCadastro } from "@/features/admin/empresa/components/EmpresaFormCadastro";
 import { EmpresaFormDataCadastro } from "@/features/admin/empresa/schemas/empresa.schema";
-
-
 
 export default function Page() {
   const router = useRouter();
@@ -36,7 +34,7 @@ export default function Page() {
   const [formError, setFormError] = useState<UseFormSetError<EmpresaFormDataCadastro> | null>(null);
 
   const { mutateAsync, isPending } = useMutation<
-    CadastrarEmpresaResponse,
+    Empresa,
     AxiosError<ApiErrorResponse>,
     CadastrarEmpresaRequest
   >({

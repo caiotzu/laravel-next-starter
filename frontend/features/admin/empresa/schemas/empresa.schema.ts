@@ -27,7 +27,7 @@ export const empresaSchemaCadastro = z.object({
 
 export const empresaSchemaEdicao = z.object({
   grupo_empresa_id: z.string().optional(),
-  matriz_id: z.string().min(1, "A matriz e obrigatoria"),
+  matriz_id: z.string().optional(),
   cnpj: z.string().min(1, "O CNPJ e obrigatorio").refine((value) => {
     return onlyAlphaNumeric(value).length === 14;
   }, "O CNPJ deve conter 14 digitos"),
@@ -40,30 +40,6 @@ export const empresaSchemaEdicao = z.object({
   }),
   enderecos: z.array(empresaEnderecoSchema).default([]),
   contatos: z.array(empresaContatoSchema).default([]),
-}).superRefine((empresa, ctx) => {
-  const emailPrincipal = empresa.contatos.filter(
-    (contato) => contato.tipo === "E" && contato.principal
-  ).length;
-
-  const telefonePrincipal = empresa.contatos.filter(
-    (contato) => contato.tipo === "T" && contato.principal
-  ).length;
-
-  if (emailPrincipal > 1) {
-    ctx.addIssue({
-      code: "custom",
-      path: ["contatos"],
-      message: "Nao pode existir mais de 1 e-mail principal",
-    });
-  }
-
-  if (telefonePrincipal > 1) {
-    ctx.addIssue({
-      code: "custom",
-      path: ["contatos"],
-      message: "Nao pode existir mais de 1 telefone principal",
-    });
-  }
 });
 
 export type EmpresaFormDataCadastro = z.input<typeof empresaSchemaCadastro>;

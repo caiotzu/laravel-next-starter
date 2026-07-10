@@ -40,9 +40,6 @@ import {
 } from "@/constants/estados";
 import { useEmpresas } from "@/domains/admin/empresa/hooks/useEmpresas";
 import { Empresa } from "@/domains/admin/empresa/types/empresa.model";
-import {
-  CadastrarEmpresaResponse,
-} from "@/domains/admin/empresa/types/empresa.responses";
 import { atualizarEmpresaContato, cadastrarEmpresaContato, excluirEmpresaContato } from "@/domains/admin/empresa-contato/services/empresaContatoService";
 import { EmpresaContatoRequest } from "@/domains/admin/empresa-contato/types/empresaContato.requests";
 import { EmpresaContatoResponse } from "@/domains/admin/empresa-contato/types/empresaContato.responses";
@@ -69,7 +66,7 @@ import { EmpresaEnderecosTab } from "./EmpresaEnderecosTab";
 interface EmpresaFormCadastroProps {
   onSubmit: (data: EmpresaFormDataCadastro) => Promise<void>;
   isLoading?: boolean;
-  empresaCriada?: CadastrarEmpresaResponse | null;
+  empresaCriada?: Empresa | null;
   backendErrors?: string[] | null;
   clearBackendErrors?: () => void;
   registerSetError?: (fn: UseFormSetError<EmpresaFormDataCadastro>) => void;
@@ -241,7 +238,7 @@ export function EmpresaFormCadastro({
 
   const { data: gruposData, isLoading: isLoadingGrupos } = useGrupoEmpresas({
     page: 1,
-    nome: grupoEmpresaNome || undefined,
+    nome: grupoEmpresaBusca || undefined,
     excluido: false,
     por_pagina: 10,
   });
@@ -259,12 +256,11 @@ export function EmpresaFormCadastro({
     {
       page: 1,
       nome: municipioBusca || undefined,
-      uf: watch("uf") || undefined,
       por_pagina: 10,
     },
-    municipioBusca.length > 0
+    true
   );
-  const municipios = (municipiosData?.data ?? []) as MunicipioLookupItem[];
+  const municipios = municipiosData ?? [];
 
   const grupoItems = grupoSelecionado
     ? [grupoSelecionado, ...grupos.filter((item) => item.id !== grupoSelecionado.id)]
@@ -311,17 +307,41 @@ export function EmpresaFormCadastro({
         bairro: response.bairro ?? prev.bairro,
       }));
 
-      if (!response.siafi) {
+      const municipioQuery = response.siafi
+        ? {
+            codigo_siafi: response.siafi,
+            uf: response.uf ?? undefined,
+            por_pagina: 1,
+          }
+        : response.cidade
+          ? {
+              nome: response.cidade,
+              uf: response.uf ?? undefined,
+              por_pagina: 10,
+            }
+          : null;
+
+      if (!municipioQuery) {
         return;
       }
 
       try {
-        const municipiosPorCodigoSiafi = await listarMunicipios({
-          codigo_siafi: response.siafi,
-          uf: response.uf ?? undefined,
-          por_pagina: 1,
-        });
-        const municipio = municipiosPorCodigoSiafi.data[0];
+        const municipiosEncontrados = await listarMunicipios(municipioQuery);
+        const municipio =
+          municipiosEncontrados.find((item) => {
+            if (response.ibge && item.codigo_ibge === response.ibge) {
+              return true;
+            }
+
+            if (!response.cidade) {
+              return false;
+            }
+
+            const mesmoNome = item.nome.toLowerCase() === response.cidade.toLowerCase();
+            const mesmaUf = !response.uf || item.uf.toLowerCase() === response.uf.toLowerCase();
+
+            return mesmoNome && mesmaUf;
+          }) ?? municipiosEncontrados[0];
 
         if (!municipio) {
           return;
@@ -462,23 +482,23 @@ export function EmpresaFormCadastro({
       if (editingEnderecoIndex === null) {
         const enderecoSalvo = await cadastrarEmpresaEndereco(empresaCriada.id, payload);
 
-        appendEndereco(
-          mapEnderecoResponseToForm(enderecoSalvo)
-        );
-        setEnderecosMunicipios((prev) => [...prev, municipioSelecionado]);
+        appendEndereco(mapEnderecoResponseToForm(enderecoSalvo));
+        setEnderecosMunicipios((prev) => [
+          ...prev,
+          mapMunicipioLookup(enderecoSalvo.municipio) ?? municipioSelecionado,
+        ]);
       } else {
         const enderecoAtual = enderecos[editingEnderecoIndex];
         const enderecoSalvo = enderecoAtual?.id
           ? await atualizarEmpresaEndereco(empresaCriada.id, enderecoAtual.id, payload)
           : await cadastrarEmpresaEndereco(empresaCriada.id, payload);
 
-        updateEndereco(
-          editingEnderecoIndex,
-          mapEnderecoResponseToForm(enderecoSalvo)
-        );
+        updateEndereco(editingEnderecoIndex, mapEnderecoResponseToForm(enderecoSalvo));
         setEnderecosMunicipios((prev) =>
           prev.map((item, index) =>
-            index === editingEnderecoIndex ? municipioSelecionado : item
+            index === editingEnderecoIndex
+              ? mapMunicipioLookup(enderecoSalvo.municipio) ?? municipioSelecionado
+              : item
           )
         );
       }
@@ -834,14 +854,14 @@ export function EmpresaFormCadastro({
                         return;
                       }
 
-                      setMatrizNome(item.nome_fantasia);
+                      setMatrizNome(item.nomeFantasia);
                       setMatrizSelecionada(item);
                       setValue("matriz_id", item.id, {
                         shouldDirty: true,
                         shouldValidate: true,
                       });
                     }}
-                    itemToStringLabel={(item) => item?.nome_fantasia ?? ""}
+                    itemToStringLabel={(item) => item?.nomeFantasia ?? ""}
                   >
                     <ComboboxInput
                       placeholder="Digite o nome da matriz..."
@@ -867,8 +887,8 @@ export function EmpresaFormCadastro({
 
                       <ComboboxList>
                         {(item) => (
-                          <ComboboxItem key={item.id} value={item}>
-                            {item.nome_fantasia}
+                        <ComboboxItem key={item.id} value={item}>
+                            {item.nomeFantasia}
                           </ComboboxItem>
                         )}
                       </ComboboxList>
@@ -893,7 +913,7 @@ export function EmpresaFormCadastro({
                     {...cnpjRegister}
                     value={cnpj}
                     onChange={(e) => {
-                      setValue("cnpj", maskCNPJ(e.target.value), {
+                      setValue("cnpj", maskCNPJ(e.target.value ?? ""), {
                         shouldDirty: true,
                         shouldValidate: true,
                       });
@@ -1135,6 +1155,25 @@ function mapContatoResponseToForm(
     valor: response.tipo === "T" ? maskPhone(response.valor) : response.valor,
     principal: response.principal,
     ativo: response.ativo,
+  };
+}
+
+function mapMunicipioLookup(
+  municipio?: NonNullable<EmpresaEnderecoResponse["municipio"]> | null
+): MunicipioLookupItem | null {
+  if (!municipio) {
+    return null;
+  }
+
+  return {
+    id: municipio.id,
+    nome: municipio.nome,
+    uf: municipio.uf,
+    codigo_ibge: "",
+    codigo_siafi: "",
+    created_at: "",
+    updated_at: null,
+    deleted_at: null,
   };
 }
 

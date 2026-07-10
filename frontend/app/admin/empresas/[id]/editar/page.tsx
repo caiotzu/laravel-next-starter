@@ -19,8 +19,8 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 import { useEmpresa } from "@/domains/admin/empresa/hooks/useEmpresa";
 import { editarEmpresa } from "@/domains/admin/empresa/services/empresaService";
+import { Empresa } from "@/domains/admin/empresa/types/empresa.model";
 import { EditarEmpresaRequest } from "@/domains/admin/empresa/types/empresa.requests";
-import { EditarEmpresaResponse } from "@/domains/admin/empresa/types/empresa.responses";
 import { maskCEP, maskCNPJ, maskPhone, onlyDigits } from "@/lib/utils";
 
 import { EmpresaFormEdicao } from "@/features/admin/empresa/components/EmpresaFormEdicao";
@@ -55,13 +55,13 @@ export default function Page() {
     if (!data) return undefined;
 
     return {
-      grupo_empresa_id: getGrupoEmpresaId(data.grupo_empresa) ?? "",
-      matriz_id: data.matriz_id ?? "",
-      cnpj: maskCNPJ(data.cnpj),
-      nome_fantasia: data.nome_fantasia,
-      razao_social: data.razao_social,
-      inscricao_estadual: data.inscricao_estadual ?? "",
-      inscricao_municipal: data.inscricao_municipal ?? "",
+      grupo_empresa_id: getGrupoEmpresaId(data.grupoEmpresa) ?? "",
+      matriz_id: data.matrizId ?? "",
+      cnpj: maskCNPJ(data.cnpj ?? ""),
+      nome_fantasia: data.nomeFantasia,
+      razao_social: data.razaoSocial,
+      inscricao_estadual: data.inscricaoEstadual ?? "",
+      inscricao_municipal: data.inscricaoMunicipal ?? "",
       uf: data.uf as EmpresaFormDataEdicao["uf"],
       status: data.status,
       enderecos: data.enderecos.map((endereco) => ({
@@ -91,7 +91,7 @@ export default function Page() {
     : undefined;
 
   const { mutateAsync, isPending } = useMutation<
-    EditarEmpresaResponse,
+    Empresa,
     AxiosError<ApiErrorResponse>,
     EditarEmpresaRequest
   >({
@@ -177,14 +177,22 @@ export default function Page() {
             <PageHeader
               title="Empresas"
               description="Gerencie as empresas cadastradas."
+              actions={[
+                {
+                  label: "Voltar",
+                  href: "/admin/empresas",
+                  icon: null,
+                  variant: "default",
+                },
+              ]}
             />
 
             <AdminPermissionGuard permission="admin.empresa.atualizar">
               <EmpresaFormEdicao
                 empresaId={id}
                 defaultValues={defaultValues}
-                grupoEmpresaNome={getGrupoEmpresaNome(data.grupo_empresa)}
-                matrizEmpresaNome={data.matriz?.nome_fantasia ?? ""}
+                grupoEmpresaNome={getGrupoEmpresaNome(data.grupoEmpresa)}
+                matrizEmpresaNome={data.matriz?.nomeFantasia ?? ""}
                 initialMunicipios={data.enderecos.map((endereco) =>
                   endereco.municipio
                     ? {

@@ -21,8 +21,8 @@ export function formatDate(date?: string | null): string {
   )}`;
 }
 
-export function maskCNPJ(value: string) {
-  const cleaned = value
+export function maskCNPJ(value: string | null | undefined = "") {
+  const cleaned = String(value ?? "")
     .replace(/\D/g, "") // apenas números
     .slice(0, 14);
 
@@ -64,15 +64,15 @@ export function maskCNPJAlfanumerico(value: string) {
   return result;
 }
 
-export function onlyDigits(value: string) {
-  return value.replace(/\D/g, "")
+export function onlyDigits(value: string | null | undefined = "") {
+  return String(value ?? "").replace(/\D/g, "")
 }
 
-export function onlyAlphaNumeric(value: string) {
-  return value.replace(/[^a-zA-Z0-9]/g, "");
+export function onlyAlphaNumeric(value: string | null | undefined = "") {
+  return String(value ?? "").replace(/[^a-zA-Z0-9]/g, "");
 }
 
-export function maskCEP(value: string) {
+export function maskCEP(value: string | null | undefined = "") {
   const cleaned = onlyDigits(value).slice(0, 8)
 
   const part1 = cleaned.slice(0, 5)
@@ -85,7 +85,7 @@ export function maskCEP(value: string) {
   return result
 }
 
-export function maskPhone(value: string) {
+export function maskPhone(value: string | null | undefined = "") {
   const cleaned = onlyDigits(value).slice(0, 11)
 
   if (cleaned.length <= 10) {
@@ -115,7 +115,7 @@ export function maskPhone(value: string) {
 
 export function removeEmptyValues<T extends Record<string, unknown>>(obj: T) {
   return Object.fromEntries(
-    Object.entries(obj).filter(([_, value]) => {
+    Object.entries(obj).filter(([, value]) => {
       return value !== undefined &&
              value !== null &&
              value !== "";

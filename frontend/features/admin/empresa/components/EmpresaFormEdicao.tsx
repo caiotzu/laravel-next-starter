@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import Link from "next/link";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
@@ -17,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -31,25 +28,15 @@ import {
 } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import {
-  EMPRESA_STATUS_OPTIONS,
-  getEmpresaStatusLabel,
-} from "@/constants/empresa-status";
 import {
   ESTADOS_LABELS,
   ESTADOS_MAP,
   getLabelByUF,
 } from "@/constants/estados";
 import { useEmpresas } from "@/domains/admin/empresa/hooks/useEmpresas";
+import { Empresa } from "@/domains/admin/empresa/types/empresa.model";
 import { atualizarEmpresaContato, cadastrarEmpresaContato, excluirEmpresaContato } from "@/domains/admin/empresa-contato/services/empresaContatoService";
 import { EmpresaContatoRequest } from "@/domains/admin/empresa-contato/types/empresaContato.requests";
 import { EmpresaContatoResponse } from "@/domains/admin/empresa-contato/types/empresaContato.responses";
@@ -76,11 +63,6 @@ import {
 
 import { EmpresaContatosTab } from "./EmpresaContatosTab";
 import { EmpresaEnderecosTab } from "./EmpresaEnderecosTab";
-
-interface MatrizOption {
-  id: string;
-  nome_fantasia: string;
-}
 
 interface EmpresaFormEdicaoProps {
   empresaId: string;
@@ -189,9 +171,7 @@ export function EmpresaFormEdicao({
   const [isSavingContato, setIsSavingContato] = useState(false);
   const [matrizNome, setMatrizNome] = useState(matrizEmpresaNome);
   const [matrizBusca, setMatrizBusca] = useState(matrizEmpresaNome);
-  const [matrizSelecionada, setMatrizSelecionada] = useState<MatrizOption | null>(
-    null
-  );
+  const [matrizSelecionada, setMatrizSelecionada] = useState<Empresa | null>(null);
   const [grupoEmpresaNomeAtual, setGrupoEmpresaNomeAtual] = useState(
     grupoEmpresaNome
   );
@@ -283,14 +263,13 @@ export function EmpresaFormEdicao({
     {
       page: 1,
       nome: municipioBusca || undefined,
-      uf: watch("uf") || undefined,
       por_pagina: 10,
     },
-    municipioBusca.length > 0
+    true
   );
 
-  const matrizes = extractCollectionItems<MatrizOption>(matrizesData);
-  const municipios = extractCollectionItems<MunicipioLookupItem>(municipiosData);
+  const matrizes = matrizesData?.data ?? [];
+  const municipios = municipiosData ?? [];
   const matrizItems = matrizSelecionada
     ? [
         matrizSelecionada,
@@ -318,10 +297,7 @@ export function EmpresaFormEdicao({
     AxiosError<ApiErrorResponse>,
     string
   >({
-    mutationFn: async (cep) => {
-      const response = await consultarCep(cep);
-      return extractResponseData<ConsultarCepResponse>(response);
-    },
+    mutationFn: consultarCep,
     onSuccess: async (response) => {
       setCepLookupMessage(
         response.provider
@@ -329,26 +305,52 @@ export function EmpresaFormEdicao({
           : "CEP encontrado."
       );
 
+      const nextCep = maskCEP(response.cep ?? "");
+      const nextLogradouro = response.logradouro ?? "";
+      const nextBairro = response.bairro ?? "";
+
       setEnderecoDraft((prev) => ({
         ...prev,
-        cep: maskCEP(response.cep),
-        logradouro: response.logradouro ?? prev.logradouro,
-        bairro: response.bairro ?? prev.bairro,
+        cep: nextCep,
+        logradouro: nextLogradouro,
+        bairro: nextBairro,
       }));
 
-      if (!response.ibge) {
+      const municipioQuery = response.ibge
+        ? {
+            codigo_ibge: response.ibge,
+            uf: response.uf ?? undefined,
+            por_pagina: 1,
+          }
+        : response.cidade
+          ? {
+              nome: response.cidade,
+              uf: response.uf ?? undefined,
+              por_pagina: 10,
+            }
+          : null;
+
+      if (!municipioQuery) {
         return;
       }
 
       try {
-        const municipiosPorIbge = await listarMunicipios({
-          codigo_ibge: response.ibge,
-          uf: response.uf ?? undefined,
-          por_pagina: 1,
-        });
-        const municipio = extractCollectionItems<MunicipioLookupItem>(
-          municipiosPorIbge
-        )[0];
+        const municipiosEncontrados = await listarMunicipios(municipioQuery);
+        const municipio =
+          municipiosEncontrados.find((item) => {
+            if (response.ibge && item.codigo_ibge === response.ibge) {
+              return true;
+            }
+
+            if (!response.cidade) {
+              return false;
+            }
+
+            const mesmoNome = item.nome.toLowerCase() === response.cidade.toLowerCase();
+            const mesmaUf = !response.uf || item.uf.toLowerCase() === response.uf.toLowerCase();
+
+            return mesmoNome && mesmaUf;
+          }) ?? municipiosEncontrados[0];
 
         if (!municipio) {
           return;
@@ -766,7 +768,8 @@ export function EmpresaFormEdicao({
             </TabsList>
 
             <TabsContent value="dados" className="pt-4">
-              <div className="grid grid-cols-12 gap-6">
+              <div className="rounded-xl border p-6 space-y-6">
+                <div className="grid grid-cols-12 gap-6">
                 <div className="col-span-12 md:col-span-4 space-y-2">
                   <Label htmlFor="grupo-empresa-nome">Grupo Empresa</Label>
                   <Input
@@ -778,9 +781,7 @@ export function EmpresaFormEdicao({
                 </div>
 
                 <div className="col-span-12 md:col-span-4 space-y-2">
-                  <Label>
-                    Matriz <span className="text-red-600">*</span>
-                  </Label>
+                  <Label>Matriz</Label>
 
                   <Combobox
                     items={matrizItems}
@@ -798,14 +799,14 @@ export function EmpresaFormEdicao({
                         return;
                       }
 
-                      setMatrizNome(item.nome_fantasia);
+                      setMatrizNome(item.nomeFantasia);
                       setMatrizSelecionada(item);
                       setValue("matriz_id", item.id, {
                         shouldDirty: true,
                         shouldValidate: true,
                       });
                     }}
-                    itemToStringLabel={(item) => item?.nome_fantasia ?? ""}
+                    itemToStringLabel={(item) => item?.nomeFantasia ?? ""}
                   >
                     <ComboboxInput
                       placeholder="Digite o nome da matriz..."
@@ -832,7 +833,7 @@ export function EmpresaFormEdicao({
                       <ComboboxList>
                         {(item) => (
                           <ComboboxItem key={item.id} value={item}>
-                            {item.nome_fantasia}
+                            {item.nomeFantasia}
                           </ComboboxItem>
                         )}
                       </ComboboxList>
@@ -857,7 +858,7 @@ export function EmpresaFormEdicao({
                     {...cnpjRegister}
                     value={cnpj}
                     onChange={(e) => {
-                      setValue("cnpj", maskCNPJ(e.target.value), {
+                      setValue("cnpj", maskCNPJ(e.target.value ?? ""), {
                         shouldDirty: true,
                         shouldValidate: true,
                       });
@@ -976,6 +977,14 @@ export function EmpresaFormEdicao({
                     <p className="text-sm text-red-700">{errors.uf.message}</p>
                   )}
                 </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button type="submit" disabled={isLoading} className="cursor-pointer">
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Salvar Empresa
+                  </Button>
+                </div>
               </div>
             </TabsContent>
 
@@ -1020,18 +1029,6 @@ export function EmpresaFormEdicao({
           </Tabs>
         </CardContent>
 
-        <CardFooter className="flex justify-end gap-5 pt-6">
-          <Button asChild variant="outline">
-            <Link href="/admin/empresas" className="gap-2">
-              Cancelar
-            </Link>
-          </Button>
-
-          <Button type="submit" disabled={isLoading} className="cursor-pointer">
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Salvar Alteracoes
-          </Button>
-        </CardFooter>
       </form>
     </Card>
   );
@@ -1159,4 +1156,3 @@ function applyItemErrors<T extends object>({
   setFieldErrors(nextFieldErrors);
   setGeneralError(generalMessages[0] ?? fallbackMessage);
 }
-

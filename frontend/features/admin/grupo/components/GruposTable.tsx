@@ -40,6 +40,7 @@ import {
 
 import { ativarGrupo, excluirGrupo } from "@/domains/admin/grupo/services/grupoService";
 import { Grupo } from "@/domains/admin/grupo/types/grupo.model";
+import { formatDate } from "@/lib/utils";
 
 interface Props {
   data: Grupo[];
@@ -111,15 +112,7 @@ export function GruposTable({ data }: Props) {
               className="border-b last:border-0 hover:bg-muted/40 even:bg-muted/20 transition-colors"
             >
               <TableCell className="font-medium">{grupo.descricao}</TableCell>
-
-              <TableCell className="text-sm text-muted-foreground text-center">
-                {new Date(grupo.createdAt).toLocaleDateString("pt-BR")} •{" "}
-                {new Date(grupo.createdAt).toLocaleTimeString("pt-BR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </TableCell>
-
+              <TableCell className="text-sm text-muted-foreground text-center">{formatDate(grupo.createdAt)}</TableCell>
               <TableCell className="text-center">
                 {grupo.deletedAt ? (
                   <Badge className="bg-red-100 text-red-700">Excluído</Badge>
