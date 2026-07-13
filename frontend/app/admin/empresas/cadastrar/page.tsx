@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { UseFormSetError } from "react-hook-form";
+import { toast } from "sonner";
 
 import { ApiErrorResponse } from "@/types/errors";
 
@@ -40,7 +41,8 @@ export default function Page() {
   >({
     mutationFn: cadastrarEmpresa,
     onSuccess: (empresa) => {
-      router.push(`/admin/empresas/${empresa.id}/editar?cadastro=sucesso`);
+      toast.success("Empresa cadastrada com sucesso. Agora voce ja pode adicionar endereços e contatos.");
+      router.push(`/admin/empresas/${empresa.id}`);
     },
     onError: (error) => {
       const apiErrors = error.response?.data?.errors;

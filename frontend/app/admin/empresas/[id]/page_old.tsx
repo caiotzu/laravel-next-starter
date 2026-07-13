@@ -67,7 +67,7 @@ export default function Page() {
       enderecos: data.enderecos.map((endereco) => ({
         id: endereco.id,
         tipo: endereco.tipo as EmpresaEnderecoFormData["tipo"],
-        municipio_id: endereco.municipio_id,
+        municipio_id: endereco.municipioId,
         principal: endereco.principal,
         ativo: endereco.ativo,
         cep: maskCEP(endereco.cep),
@@ -87,7 +87,7 @@ export default function Page() {
   }, [data]);
 
   const successMessage = searchParams.get("cadastro")
-    ? "Empresa cadastrada com sucesso. Agora voce ja pode adicionar enderecos e contatos."
+    ? "Empresa cadastrada com sucesso. Agora voce ja pode adicionar endereços e contatos."
     : undefined;
 
   const { mutateAsync, isPending } = useMutation<
