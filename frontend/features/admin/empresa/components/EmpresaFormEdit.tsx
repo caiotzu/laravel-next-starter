@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,6 +10,8 @@ import { useFieldArray, useForm, UseFormSetError } from "react-hook-form";
 import { toast } from "sonner";
 
 import { ApiErrorResponse } from "@/types/errors";
+
+import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
 
 import { AppAlert } from "@/components/feedback/AppAlert";
 import { Button } from "@/components/ui/button";
@@ -40,23 +42,8 @@ import {
 import { useEmpresas } from "@/domains/admin/empresa/hooks/useEmpresas";
 import { editarEmpresa } from "@/domains/admin/empresa/services/empresaService";
 import { Empresa } from "@/domains/admin/empresa/types/empresa.model";
-import { atualizarEmpresaContato, cadastrarEmpresaContato, excluirEmpresaContato } from "@/domains/admin/empresa-contato/services/empresaContatoService";
-import { EmpresaContatoRequest } from "@/domains/admin/empresa-contato/types/empresaContato.requests";
-import { atualizarEmpresaEndereco, cadastrarEmpresaEndereco, excluirEmpresaEndereco } from "@/domains/admin/empresa-endereco/services/empresaEnderecoService";
-import { EmpresaEnderecoRequest } from "@/domains/admin/empresa-endereco/types/empresaEndereco.requests";
-import { useMunicipios } from "@/domains/admin/lookup/hooks/useMunicipios";
-import {
-  consultarCep,
-  listarMunicipios,
-} from "@/domains/admin/lookup/services/lookupService";
-import {
-  ConsultarCepResponse,
-  MunicipioLookupItem,
-} from "@/domains/admin/lookup/types/lookup.responses";
-import { maskCEP, maskCNPJ, maskPhone, onlyAlphaNumeric, onlyDigits } from "@/lib/utils";
+import { maskCNPJ, onlyAlphaNumeric } from "@/lib/utils";
 
-import { EmpresaContatoFormData, empresaContatoSchema } from "../../empresa-contato/schemas/empresa-contato.schema";
-import { EmpresaEnderecoFormData, empresaEnderecoSchema } from "../../empresa-endereco/schemas/empresa-endereco.schema";
 import {
   empresaSchemaEdicao,
   EmpresaFormDataEdicao,
@@ -73,7 +60,6 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
   const {
     register,
     handleSubmit,
-    control,
     formState: { errors },
     setError,
     clearErrors,
@@ -108,7 +94,7 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
   const matrizes = (matrizesData?.data ?? []) as Empresa[];
   const matrizSelecionada = matrizes.find((item) => item.id === watch("matriz_id")) ?? null;
 
-  const atualizarEmpresaMutation = useMutation<
+  const { mutate: atualizarEmpresaMutation, isPending: isPendingAtualizarEmpresa } = useMutation<
     Empresa,
     AxiosError<ApiErrorResponse>,
     EmpresaFormDataEdicao
@@ -122,7 +108,6 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
       toast.success("Empresa atualizada com sucesso");
     },
     onError: (error) => {
-      console.log('humm', error);
       const apiErrors = error.response?.data?.errors;
 
       if (!apiErrors) {
@@ -145,8 +130,8 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
     },
   });
 
-  const submitEmpresa = (data: EmpresaFormDataEdicao) => {
-    atualizarEmpresaMutation.mutate({
+  const onSubmitEmpresa = (data: EmpresaFormDataEdicao) => {
+    atualizarEmpresaMutation({
       ...data,
       cnpj: onlyAlphaNumeric(data.cnpj),
     });
@@ -186,7 +171,7 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
           </TabsList>
 
           <TabsContent value="dados" className="pt-4">
-            <form onSubmit={handleSubmit(submitEmpresa)}>
+            <form onSubmit={handleSubmit(onSubmitEmpresa)}>
               <div className="rounded-xl border p-6 space-y-6">
                 <div className="grid grid-cols-12 gap-6">
                   <div className="col-span-12 md:col-span-4 space-y-2">
@@ -375,46 +360,44 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
                   </div>
                 </div>
                 <div className="flex justify-end">
-                  <Button
-                    type="submit"
-                    disabled={atualizarEmpresaMutation.isPending}
-                    className="cursor-pointer"
+                  <AdminPermissionGuard 
+                    permission="admin.empresa.atualizar"
+                    disableFallback={true}
                   >
-                    {atualizarEmpresaMutation.isPending && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Salvar Empresa
-                  </Button>
+                    <Button
+                      type="submit"
+                      disabled={isPendingAtualizarEmpresa}
+                      className="cursor-pointer"
+                    >
+                      {isPendingAtualizarEmpresa && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Salvar Empresa
+                    </Button>
+                  </AdminPermissionGuard>
                 </div>
               </div>
             </form>
           </TabsContent>
 
-          {/* <TabsContent value="enderecos" className="pt-4">
-            <EmpresaEnderecosTab
-              draft={enderecoDraft}
-              items={enderecos}
-              municipioInputValue={municipioNome}
-              selectedMunicipio={municipioSelecionado}
-              municipioItems={municipioItems}
-              municipiosByIndex={enderecosMunicipios}
-              isLoadingMunicipios={isLoadingMunicipios}
-              isLoadingCep={isConsultandoCep}
-              cepLookupMessage={cepLookupMessage}
-              draftErrors={enderecoDraftErrors}
-              generalError={enderecoGeneralError ?? errors.enderecos?.message}
-              editingIndex={editingEnderecoIndex}
-              isLoading={isLoading || isSavingEndereco}
-              onDraftChange={handleEnderecoDraftChange}
-              onMunicipioInputChange={handleMunicipioInputChange}
-              onMunicipioSelect={handleMunicipioSelect}
-              onSave={handleSaveEndereco}
-              onEdit={handleEditEndereco}
-              onRemove={handleRemoveEndereco}
-            />
+          <TabsContent value="enderecos" className="pt-4">
+            <AdminPermissionGuard 
+							permissions={[
+								"admin.empresa.endereco.atualizar",
+								"admin.empresa.endereco.cadastrar",
+								"admin.empresa.endereco.excluir",
+								"admin.empresa.endereco.listar",
+								"admin.empresa.endereco.visualizar",
+              ]}
+						>
+              <EmpresaEnderecosTab
+                empresa={empresa}
+                enderecos={empresa.enderecos}
+              />
+            </AdminPermissionGuard>
           </TabsContent>
 
-          <TabsContent value="contatos" className="pt-4">
+          {/* <TabsContent value="contatos" className="pt-4">
             <EmpresaContatosTab
               draft={contatoDraft}
               items={contatos}

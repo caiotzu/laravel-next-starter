@@ -1,7 +1,20 @@
 "use client";
 
-import { Loader2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+import { Loader2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { Controller } from "react-hook-form";
+import { toast } from "sonner";
+
+import { ApiErrorResponse } from "@/types/errors";
+
+import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
+
+import { AppAlert } from "@/components/feedback/AppAlert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,184 +53,460 @@ import {
 
 import {
   EMPRESA_ENDERECO_TIPO_OPTIONS,
+  EmpresaEnderecoTipo,
   getEmpresaEnderecoTipoLabel,
 } from "@/constants/empresa-endereco-tipos";
-import { MunicipioLookupItem } from "@/domains/admin/lookup/types/lookup.responses";
+import { Empresa } from "@/domains/admin/empresa/types/empresa.model";
+import { atualizarEmpresaEndereco, cadastrarEmpresaEndereco, excluirEmpresaEndereco } from "@/domains/admin/empresa-endereco/services/empresaEnderecoService";
+import { EmpresaEndereco } from "@/domains/admin/empresa-endereco/types/empresaEndereco.model";
+import { useMunicipios } from "@/domains/admin/lookup/hooks/useMunicipios";
+import { consultarCep, listarMunicipios } from "@/domains/admin/lookup/services/lookupService";
+import { ConsultarCepResponse, MunicipioLookupItem } from "@/domains/admin/lookup/types/lookup.responses";
 import { maskCEP } from "@/lib/utils";
 
-import { EmpresaEnderecoFormData } from "../../empresa-endereco/schemas/empresa-endereco.schema";
-
+import { EmpresaEnderecoFormData, empresaEnderecoSchema } from "../../empresa-endereco/schemas/empresa-endereco.schema";
 
 interface Props {
-  draft: EmpresaEnderecoFormData;
-  items: EmpresaEnderecoFormData[];
-  draftErrors: Partial<Record<keyof EmpresaEnderecoFormData, string>>;
-  generalError?: string;
-  editingIndex: number | null;
-  isLoading?: boolean;
-  municipioInputValue?: string;
-  selectedMunicipio?: MunicipioLookupItem | null;
-  municipioItems?: MunicipioLookupItem[];
-  municipiosByIndex?: Array<MunicipioLookupItem | null>;
-  isLoadingMunicipios?: boolean;
-  isLoadingCep?: boolean;
-  cepLookupMessage?: string;
-  onDraftChange: (
-    key: keyof EmpresaEnderecoFormData,
-    value: string | boolean
-  ) => void;
-  onMunicipioInputChange?: (value: string) => void;
-  onMunicipioSelect?: (item: MunicipioLookupItem | null) => void;
-  onSave: () => void;
-  onEdit: (index: number) => void;
-  onRemove: (index: number) => void;
+  empresa: Empresa;
+  enderecos: EmpresaEndereco[];
 }
 
+const DEFAULT_VALUES: EmpresaEnderecoFormData = {
+  id: "",
+  tipo: "COMERCIAL",
+  municipio_id: "",
+  principal: false,
+  ativo: true,
+  cep: "",
+  logradouro: "",
+  numero: "",
+  bairro: "",
+  complemento: "",
+};
+
 export function EmpresaEnderecosTab({
-  draft,
-  items,
-  draftErrors,
-  generalError,
-  editingIndex,
-  isLoading = false,
-  municipioInputValue = "",
-  selectedMunicipio = null,
-  municipioItems = [],
-  municipiosByIndex = [],
-  isLoadingMunicipios = false,
-  isLoadingCep = false,
-  cepLookupMessage,
-  onDraftChange,
-  onMunicipioInputChange,
-  onMunicipioSelect,
-  onSave,
-  onEdit,
-  onRemove,
+  empresa,
+  enderecos
 }: Props) {
-  const municipioSelecionadoNaLista = dedupeMunicipios(
-    selectedMunicipio
-      ? [selectedMunicipio, ...municipioItems]
-      : municipioItems
-  );
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    setError,
+    clearErrors,
+    setValue,
+    reset
+  } = useForm<EmpresaEnderecoFormData>({
+    resolver: zodResolver(empresaEnderecoSchema),
+    defaultValues: DEFAULT_VALUES,
+  });
+  const queryClient = useQueryClient();
+
+  const [municipioBusca, setMunicipioBusca] = useState("");
+  const [cepLookupMessage, setCepLookupMessage] = useState("");
+  const [municipioSelecionado, setMunicipioSelecionado] = useState<MunicipioLookupItem | null>(null);
+  const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
+  const [editingEndereco, setEditingEndereco] = useState<EmpresaEndereco | null>(null);
+
+  const { data: municipios, isLoading: isLoadingMunicipios } = useMunicipios({
+    page: 1,
+    nome: municipioBusca || undefined,
+    por_pagina: 10,
+  });
+
+  const resetForm = () => {
+    reset(DEFAULT_VALUES);
+    setEditingEndereco(null);
+    setMunicipioSelecionado(null);
+    setMunicipioBusca("");
+  };
+
+  const { mutate: cadastrarEnderecoMutation, isPending: isPendingCadastrarEndereco } = useMutation<
+    EmpresaEndereco,
+    AxiosError<ApiErrorResponse>,
+    EmpresaEnderecoFormData
+  >({
+    mutationFn: (data) => cadastrarEmpresaEndereco(empresa.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["empresa", empresa.id],
+      });
+      toast.success("Endereço cadastrado com sucesso");
+      resetForm();
+    },
+    onError: (error) => {
+      const apiErrors = error.response?.data?.errors;
+
+      if (!apiErrors) {
+        setBackendErrors(["Erro ao atualizar empresa."]);
+        return;
+      }
+
+      if (apiErrors.business) {
+        setBackendErrors(apiErrors.business);
+      }
+
+      Object.entries(apiErrors).forEach(([field, messages]) => {
+        if (!messages || field === "business") return;
+
+        setError(field as keyof EmpresaEnderecoFormData, {
+          type: "server",
+          message: messages[0],
+        });
+      });
+    },
+  });
+
+  const { mutate: atualizarEnderecoMutation, isPending: isPendingAtualizarEndereco } = useMutation<
+    EmpresaEndereco,
+    AxiosError<ApiErrorResponse>,
+    {
+      id: string;
+      data: EmpresaEnderecoFormData
+    }
+  >({
+    mutationFn: ({ id, data }) => atualizarEmpresaEndereco(empresa.id, id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["empresa", empresa.id],
+      });
+      toast.success("Endereço atualizado com sucesso");
+      resetForm();
+    },
+    onError: (error) => {
+      const apiErrors = error.response?.data?.errors;
+
+      if (!apiErrors) {
+        setBackendErrors(["Erro ao atualizar empresa."]);
+        return;
+      }
+
+      if (apiErrors.business) {
+        setBackendErrors(apiErrors.business);
+      }
+
+      Object.entries(apiErrors).forEach(([field, messages]) => {
+        if (!messages || field === "business") return;
+
+        setError(field as keyof EmpresaEnderecoFormData, {
+          type: "server",
+          message: messages[0],
+        });
+      });
+    },
+  });
+
+  const { mutate: deletarEnderecoMutation } = useMutation({
+    mutationFn: ({ id }: { id: string }) => excluirEmpresaEndereco(empresa.id, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["empresa", empresa.id],
+      });
+      toast.success("Endereço excluído com sucesso");
+      resetForm();
+    },
+    onError: () => {
+      toast.error("Erro ao excluir o endereço.");
+    },
+  });
+
+  const { mutate: consultarCepMutation, isPending: isLoadingCep } = useMutation<
+    ConsultarCepResponse,
+    AxiosError<ApiErrorResponse>,
+    string
+  >({
+    mutationFn: consultarCep,
+    onSuccess: async (response) => {
+      setCepLookupMessage(
+        response.provider
+          ? `CEP encontrado via ${response.provider}.`
+          : "CEP encontrado."
+      );
+
+      setValue("cep", maskCEP(response.cep ?? ""), {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+
+      setValue("logradouro", response.logradouro ?? "", {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+
+      setValue("bairro", response.bairro ?? "", {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+
+      const municipioQuery = response.ibge
+        ? {
+            codigo_ibge: response.ibge,
+            uf: response.uf ?? undefined,
+            por_pagina: 1,
+          }
+        : response.cidade
+          ? {
+              nome: response.cidade,
+              uf: response.uf ?? undefined,
+              por_pagina: 10,
+            }
+          : null;
+
+      if (!municipioQuery) {
+        return;
+      }
+
+      try {
+        const municipiosEncontrados = await listarMunicipios(municipioQuery);
+
+        const municipio =
+          municipiosEncontrados.find((item) => {
+            if (response.ibge && item.codigo_ibge === response.ibge) {
+              return true;
+            }
+
+            if (!response.cidade) {
+              return false;
+            }
+
+            const mesmoNome =
+              item.nome.toLowerCase() === response.cidade.toLowerCase();
+
+            const mesmaUf =
+              !response.uf ||
+              item.uf.toLowerCase() === response.uf.toLowerCase();
+
+            return mesmoNome && mesmaUf;
+          }) ?? municipiosEncontrados[0];
+
+        if (!municipio) {
+          return;
+        }
+
+        setMunicipioSelecionado(municipio);
+        setMunicipioBusca("");
+
+        setValue("municipio_id", municipio.id, {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+
+        clearErrors("municipio_id");
+      } catch {
+        // Mantém preenchimento manual caso o município não seja encontrado.
+      }
+    },
+
+    onError: (error) => {
+      setCepLookupMessage(
+        error.response?.data?.errors?.business?.[0] ??
+          "Não foi possível consultar o CEP."
+      );
+    },
+  });
+
+  const onSubmit = (data: EmpresaEnderecoFormData) => {
+    if (editingEndereco) {
+      atualizarEnderecoMutation({
+        id: editingEndereco.id,
+        data,
+      });
+
+      return;
+    }
+
+    cadastrarEnderecoMutation(data);
+  };
+
+  const onEdit = (endereco: EmpresaEndereco) => {
+    setEditingEndereco(endereco);
+    setMunicipioSelecionado((endereco.municipio as MunicipioLookupItem) ?? null);
+    setMunicipioBusca("");
+
+    reset({
+      id: endereco.id,
+      tipo: endereco.tipo,
+      municipio_id: endereco.municipioId,
+      principal: endereco.principal,
+      ativo: endereco.ativo,
+      cep: maskCEP(endereco.cep),
+      logradouro: endereco.logradouro,
+      numero: endereco.numero,
+      bairro: endereco.bairro,
+      complemento: endereco.complemento ?? "",
+    });
+  };
 
   return (
     <div className="space-y-6">
       <Card>
+        {backendErrors && backendErrors.length > 0 && (
+          <AppAlert
+            variant="error"
+            subtitle="Ocorreu um erro durante a operação"
+            messages={backendErrors}
+            onClose={() => setBackendErrors(null)}
+            className="mb-6"
+          />
+        )}
         <CardHeader>
           <CardTitle>
-            {editingIndex === null ? "Adicionar Endereço" : "Editar Endereço"}
+            {editingEndereco ? "Editar Endereço" : "Adicionar Endereço"}
           </CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {generalError && (
-            <p className="text-sm text-red-700">{generalError}</p>
-          )}
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="grid grid-cols-12 gap-6">
+              <div className="col-span-12 md:col-span-3 space-y-2">
+                <Label htmlFor="cep">CEP</Label>
 
-          <div className="grid grid-cols-12 gap-6">
-            <div className="col-span-12 md:col-span-3 space-y-2">
-              <Label htmlFor="endereco-cep">CEP</Label>
-              <Input
-                id="endereco-cep"
-                value={draft.cep}
-                onChange={(e) => onDraftChange("cep", maskCEP(e.target.value))}
-                placeholder="00000-000"
-                disabled={isLoading}
-              />
-              {isLoadingCep && (
-                <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Consultando CEP...
-                </p>
-              )}
-              {!isLoadingCep && cepLookupMessage && (
-                <p className="text-sm text-muted-foreground">{cepLookupMessage}</p>
-              )}
-              {draftErrors.cep && (
-                <p className="text-sm text-red-700">{draftErrors.cep}</p>
-              )}
-            </div>
+                <Controller
+                  name="cep"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      id="cep"
+                      placeholder="00000-000"
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        const cep = maskCEP(e.target.value);
 
-            <div className="col-span-12 md:col-span-6 space-y-2">
-              <Label htmlFor="endereco-logradouro">Logradouro</Label>
-              <Input
-                id="endereco-logradouro"
-                value={draft.logradouro}
-                onChange={(e) => onDraftChange("logradouro", e.target.value)}
-                placeholder="Digite o logradouro"
-                disabled={isLoading}
-              />
-              {draftErrors.logradouro && (
-                <p className="text-sm text-red-700">{draftErrors.logradouro}</p>
-              )}
-            </div>
+                        field.onChange(cep);
 
-            <div className="col-span-12 md:col-span-3 space-y-2">
-              <Label htmlFor="endereco-numero">Número</Label>
-              <Input
-                id="endereco-numero"
-                value={draft.numero}
-                onChange={(e) => onDraftChange("numero", e.target.value)}
-                placeholder="Numero"
-                disabled={isLoading}
-              />
-              {draftErrors.numero && (
-                <p className="text-sm text-red-700">{draftErrors.numero}</p>
-              )}
-            </div>
+                        setCepLookupMessage("");
+                      }}
+                      onBlur={(e) => {
+                        field.onBlur();
 
-            <div className="col-span-12 md:col-span-4 space-y-2">
-              <Label htmlFor="endereco-complemento">Complemento</Label>
-              <Input
-                id="endereco-complemento"
-                value={draft.complemento ?? ""}
-                onChange={(e) => onDraftChange("complemento", e.target.value)}
-                placeholder="Complemento"
-                disabled={isLoading}
-              />
-              {draftErrors.complemento && (
-                <p className="text-sm text-red-700">{draftErrors.complemento}</p>
-              )}
-            </div>
+                        const cep = e.target.value.replace(/\D/g, "");
 
-            <div className="col-span-12 md:col-span-4 space-y-2">
-              <Label htmlFor="endereco-bairro">Bairro</Label>
-              <Input
-                id="endereco-bairro"
-                value={draft.bairro}
-                onChange={(e) => onDraftChange("bairro", e.target.value)}
-                placeholder="Digite o bairro"
-                disabled={isLoading}
-              />
-              {draftErrors.bairro && (
-                <p className="text-sm text-red-700">{draftErrors.bairro}</p>
-              )}
-            </div>
+                        if (cep.length === 8) {
+                          consultarCepMutation(cep);
+                        }
+                      }}
+                    />
+                  )}
+                />
 
-            <div className="col-span-12 md:col-span-4 space-y-2">
-              <Label>Município</Label>
-              {onMunicipioSelect ? (
+                {isLoadingCep && (
+                  <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Consultando CEP...
+                  </p>
+                )}
+
+                {!isLoadingCep && cepLookupMessage && (
+                  <p className="text-sm text-muted-foreground">
+                    {cepLookupMessage}
+                  </p>
+                )}
+
+                {errors.cep && (
+                  <p className="text-sm text-red-700">
+                    {errors.cep.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="col-span-12 md:col-span-6 space-y-2">
+                <Label htmlFor="logradouro">
+                  Logradouro  
+                </Label>
+                <Input
+                  id="logradouro"
+                  placeholder="Digite o logradouro"
+                  {... register("logradouro")}
+                />
+                {errors.logradouro && (
+                  <p className="text-sm text-red-700">
+                    {errors.logradouro.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="col-span-12 md:col-span-3 space-y-2">
+                <Label htmlFor="numero">Número</Label>
+                <Input
+                  id="numero"
+                  placeholder="Numero"
+                  {... register("numero")}
+                />
+                {errors.numero && (
+                  <p className="text-sm text-red-700">
+                    {errors.numero.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="col-span-12 md:col-span-4 space-y-2">
+                <Label htmlFor="complemento">Complemento</Label>
+                <Input
+                  id="complemento"
+                  placeholder="Complemento"
+                  {... register("complemento")}
+                />
+                {errors.complemento && (
+                  <p className="text-sm text-red-700">
+                    {errors.complemento.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="col-span-12 md:col-span-4 space-y-2">
+                <Label htmlFor="bairro">Bairro</Label>
+                <Input
+                  id="bairro"
+                  placeholder="Digite o bairro"
+                  {... register("bairro")}
+                />
+                {errors.bairro && (
+                  <p className="text-sm text-red-700">
+                    {errors.bairro.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="col-span-12 md:col-span-4 space-y-2">
+                <Label>Município</Label>
+
                 <Combobox
-                  items={municipioSelecionadoNaLista}
-                  value={selectedMunicipio}
-                  onValueChange={onMunicipioSelect}
-                  itemToStringLabel={(item) =>
-                    item ? `${item.nome} - ${item.uf}` : ""
-                  }
+                  items={municipios}
+                  value={municipioSelecionado}
+                  onValueChange={(item) => {
+                    setMunicipioSelecionado(item);
+
+                    setValue("municipio_id", item ? item.id : "", {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    });
+
+                    if (!item) {
+                      setMunicipioBusca("");
+                    }
+                  }}
+                  itemToStringLabel={(item) => item ? `${item.nome} - ${item.uf}` : "" }
                 >
                   <ComboboxInput
-                    placeholder="Digite o municipio..."
-                    value={municipioInputValue}
+                    placeholder="Digite o nome do município"
+                    value={
+                      municipioSelecionado
+                        ? `${municipioSelecionado.nome} - ${municipioSelecionado.uf}`
+                        : municipioBusca
+                    }
+                    onChange={(e) => {
+                      setMunicipioSelecionado(null);
+                      setMunicipioBusca(e.target.value);
+                    }}
                     showClear
-                    disabled={isLoading}
-                    onChange={(e) => onMunicipioInputChange?.(e.target.value)}
                   />
 
                   <ComboboxContent>
                     <ComboboxEmpty>
                       {isLoadingMunicipios
                         ? "Carregando..."
-                        : "Nenhum municipio encontrado."}
+                        : "Nenhuma município encontrado."}
                     </ComboboxEmpty>
 
                     <ComboboxList>
@@ -229,85 +518,133 @@ export function EmpresaEnderecosTab({
                     </ComboboxList>
                   </ComboboxContent>
                 </Combobox>
-              ) : (
-                <Input
-                  id="endereco-municipio-id"
-                  value={draft.municipio_id}
-                  onChange={(e) => onDraftChange("municipio_id", e.target.value)}
-                  placeholder="UUID do municipio"
-                  disabled={isLoading}
+
+                {errors.municipio_id && (
+                  <p className="text-sm text-red-700">
+                    {errors.municipio_id.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="col-span-12 md:col-span-4 space-y-2">
+                <Label>Tipo</Label>
+
+                <Controller
+                  name="tipo"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={(value: EmpresaEnderecoTipo) => field.onChange(value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        {EMPRESA_ENDERECO_TIPO_OPTIONS.map((tipo) => (
+                          <SelectItem
+                            key={tipo.value}
+                            value={tipo.value}
+                          >
+                            {tipo.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
-              )}
-              {draftErrors.municipio_id && (
-                <p className="text-sm text-red-700">
-                  {draftErrors.municipio_id}
-                </p>
-              )}
+
+                {errors.tipo && (
+                  <p className="text-sm text-red-700">
+                    {errors.tipo.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="col-span-12 md:col-span-2 space-y-2 mt-6">
+                <Controller
+                  name="principal"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="flex min-h-12 items-center gap-2 rounded-md px-3">
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                      <span className="text-sm">Principal</span>
+                    </div>
+                  )}
+                />
+
+                {errors.principal && (
+                  <p className="text-sm text-red-700">
+                    {errors.principal.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="col-span-12 md:col-span-2 space-y-2 mt-6 md:pl-4">
+                <Controller
+                  name="ativo"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="flex min-h-12 items-center gap-2 rounded-md px-3">
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                      <span className="text-sm">Ativo</span>
+                    </div>
+                  )}
+                />
+
+                {errors.ativo && (
+                  <p className="text-sm text-red-700">
+                    {errors.ativo.message}
+                  </p>
+                )}
+              </div>
             </div>
 
-            <div className="col-span-12 md:col-span-4 space-y-2">
-              <Label>Tipo</Label>
-              <Select
-                value={draft.tipo}
-                onValueChange={(value) => onDraftChange("tipo", value)}
-                disabled={isLoading}
+            <div className="flex justify-end gap-2">
+              {editingEndereco && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={resetForm}
+                  disabled={isPendingCadastrarEndereco || isPendingAtualizarEndereco}
+                >
+                  Cancelar
+                </Button>
+              )}
+
+              <AdminPermissionGuard
+                permission={
+                  editingEndereco
+                    ? "admin.empresa.endereco.atualizar"
+                    : "admin.empresa.endereco.cadastrar"
+                }
+                disableFallback={true}
               >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
+                <Button
+                  type="submit"
+                  disabled={
+                    isPendingCadastrarEndereco ||
+                    isPendingAtualizarEndereco
+                  }
+                >
+                  {(isPendingCadastrarEndereco || isPendingAtualizarEndereco) && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
 
-                <SelectContent>
-                  {EMPRESA_ENDERECO_TIPO_OPTIONS.map((tipo) => (
-                    <SelectItem key={tipo.value} value={tipo.value}>
-                      {tipo.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {draftErrors.tipo && (
-                <p className="text-sm text-red-700">{draftErrors.tipo}</p>
-              )}
+                  {editingEndereco
+                    ? "Salvar Alterações"
+                    : "Adicionar Endereço"}
+                </Button>
+              </AdminPermissionGuard>
             </div>
-
-            <div className="col-span-12 md:col-span-2 space-y-2 mt-6">
-              <div className="flex min-h-12 items-center gap-2 rounded-md px-3">
-                <Switch
-                  checked={draft.principal}
-                  onCheckedChange={(value) => onDraftChange("principal", value)}
-                  disabled={isLoading}
-                />
-                <span className="text-sm">Principal</span>
-              </div>
-              {draftErrors.principal && (
-                <p className="text-sm text-red-700">{draftErrors.principal}</p>
-              )}
-            </div>
-
-            <div className="col-span-12 md:col-span-2 space-y-2 mt-6 md:pl-4">
-              <div className="flex min-h-12 items-center gap-2 rounded-md px-3">
-                <Switch
-                  checked={draft.ativo}
-                  onCheckedChange={(value) => onDraftChange("ativo", value)}
-                  disabled={isLoading}
-                />
-                <span className="text-sm">Ativo</span>
-              </div>
-              {draftErrors.ativo && (
-                <p className="text-sm text-red-700">{draftErrors.ativo}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex justify-end">
-            <Button
-              type="button"
-              onClick={onSave}
-              disabled={isLoading}
-              className="cursor-pointer"
-            >
-              {editingIndex === null ? "Adicionar Endereco" : "Salvar Endereco"}
-            </Button>
-          </div>
+          </form>
         </CardContent>
       </Card>
 
@@ -317,7 +654,7 @@ export function EmpresaEnderecosTab({
         </CardHeader>
 
         <CardContent>
-          {!items.length ? (
+          {!enderecos.length ? (
             <p className="text-sm text-muted-foreground">
               Nenhum endereço adicionado.
             </p>
@@ -339,14 +676,10 @@ export function EmpresaEnderecosTab({
               </TableHeader>
 
               <TableBody>
-                {items.map((item, index) => (
-                  <TableRow key={`${item.tipo}-${item.municipio_id}-${index}`}>
+                {enderecos.map((item, index) => (
+                  <TableRow key={`${item.tipo}-${item.municipioId}-${index}`}>
                     <TableCell>{getEmpresaEnderecoTipoLabel(item.tipo)}</TableCell>
-                    <TableCell>
-                      {municipiosByIndex[index]
-                        ? `${municipiosByIndex[index]?.nome} - ${municipiosByIndex[index]?.uf}`
-                        : item.municipio_id}
-                    </TableCell>
+                    <TableCell>{item.municipio?.nome} - {item.municipio?.uf}</TableCell>
                     <TableCell>{maskCEP(item.cep)}</TableCell>
                     <TableCell>{item.logradouro}</TableCell>
                     <TableCell>{item.numero}</TableCell>
@@ -377,28 +710,39 @@ export function EmpresaEnderecosTab({
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" disabled={isLoading}>
+                          <Button variant="ghost" size="icon">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
 
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => onEdit(index)}
-                            className="flex items-center cursor-pointer"
-                          >
-                            <Pencil className="h-4 w-4" />
-                            Alterar
-                          </DropdownMenuItem>
 
-                          <DropdownMenuItem
-                            onClick={() => onRemove(index)}
-                            variant="destructive"
-                            className="flex items-center cursor-pointer"
+                          <AdminPermissionGuard
+                            permission="admin.empresa.endereco.atualizar"
+                            disableFallback={true}
                           >
-                            <Trash2 className="h-4 w-4" />
-                            Excluir
-                          </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => onEdit(item)}
+                              className="flex items-center cursor-pointer"
+                            >
+                              <Pencil className="h-4 w-4" />
+                              Alterar
+                            </DropdownMenuItem>
+                          </AdminPermissionGuard>
+
+                          <AdminPermissionGuard
+                            permission="admin.empresa.endereco.excluir"
+                            disableFallback={true}
+                          >
+                            <DropdownMenuItem
+                              onClick={() => deletarEnderecoMutation({ id: item.id })}
+                              variant="destructive"
+                              className="flex items-center cursor-pointer"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </AdminPermissionGuard>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -410,11 +754,5 @@ export function EmpresaEnderecosTab({
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function dedupeMunicipios(items: MunicipioLookupItem[]) {
-  return items.filter(
-    (item, index, array) => array.findIndex((current) => current.id === item.id) === index
   );
 }

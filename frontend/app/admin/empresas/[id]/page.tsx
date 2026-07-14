@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { useRouter, useParams } from "next/navigation";
 
@@ -21,8 +21,8 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useEmpresa } from "@/domains/admin/empresa/hooks/useEmpresa";
 import { editarEmpresa } from "@/domains/admin/empresa/services/empresaService";
 
-import { EmpresaFormEdicaoSkeleton } from "@/features/admin/empresa/components/EmpresaFormEdicaoSkeleton";
 import { EmpresaFormEdit } from "@/features/admin/empresa/components/EmpresaFormEdit";
+import { EmpresaFormEditSkeleton } from "@/features/admin/empresa/components/EmpresaFormEditSkeleton";
 import { EmpresaFormDataEdicao } from "@/features/admin/empresa/schemas/empresa.schema";
 
 export default function Page() {
@@ -83,10 +83,25 @@ export default function Page() {
 							]}
 						/>
 
-						<AdminPermissionGuard permission="admin.empresa.atualizar">
-							
+						<AdminPermissionGuard 
+							permissions={[
+                "admin.empresa.atualizar",
+
+								"admin.empresa.contato.atualizar",
+								"admin.empresa.contato.cadastrar",
+								"admin.empresa.contato.excluir",
+								"admin.empresa.contato.listar",
+								"admin.empresa.contato.visualizar",
+
+								"admin.empresa.endereco.atualizar",
+								"admin.empresa.endereco.cadastrar",
+								"admin.empresa.endereco.excluir",
+								"admin.empresa.endereco.listar",
+								"admin.empresa.endereco.visualizar",
+              ]} 
+						>
 							{isLoading || !data ? (
-                <EmpresaFormEdicaoSkeleton />
+                <EmpresaFormEditSkeleton />
               ) : (
 								<EmpresaFormEdit empresa={data}/>
 							)}

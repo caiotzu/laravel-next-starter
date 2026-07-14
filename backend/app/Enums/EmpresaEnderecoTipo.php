@@ -6,6 +6,7 @@ enum EmpresaEnderecoTipo: string
 {
     case COMERCIAL = 'COMERCIAL';
     case FISCAL = 'FISCAL';
+    case CORRESPONDENCIA = 'CORRESPONDENCIA';
     case COBRANCA = 'COBRANCA';
     case ENTREGA = 'ENTREGA';
 
@@ -14,6 +15,7 @@ enum EmpresaEnderecoTipo: string
         return match ($this) {
             self::COMERCIAL => 'Comercial',
             self::FISCAL => 'Fiscal',
+            self::CORRESPONDENCIA => 'Correspondência',
             self::COBRANCA => 'Cobrança',
             self::ENTREGA => 'Entrega',
         };

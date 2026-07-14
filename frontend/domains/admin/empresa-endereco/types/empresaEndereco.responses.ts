@@ -1,4 +1,6 @@
-export interface EmpresaEnderecoDataResponse {
+import { LaravelApiResponse, LaravelResourcePagination } from "@/types/laravel";
+
+export interface empresaEnderecoDataResponse {
   id: string;
   empresa_id: string;
   tipo: string;
@@ -20,3 +22,6 @@ export interface EmpresaEnderecoDataResponse {
     uf: string;
   };
 }
+
+export type CadastrarEmpresaEnderecoResponse = LaravelApiResponse<empresaEnderecoDataResponse>;
+export type EditarEmpresaEnderecoResponse = LaravelApiResponse<empresaEnderecoDataResponse>;

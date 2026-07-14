@@ -1,12 +1,16 @@
+import { EmpresaEnderecoTipo } from "@/constants/empresa-endereco-tipos";
+
 export interface EmpresaEndereco {
   id: string;
   empresaId: string;
-  tipo: string;
+  tipo: EmpresaEnderecoTipo;
   municipioId: string;
   municipio?: {
     id: string;
     nome: string;
     uf: string;
+    codigo_ibge: string;
+    codigo_siafi: string;
   } | null;
   ativo: boolean;
   principal: boolean;

@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function EmpresaFormEdicaoSkeleton() {
+export function EmpresaFormEditSkeleton() {
   return (
     <div className="p-6 space-y-6 animate-pulse">
       <div className="flex items-center justify-between">

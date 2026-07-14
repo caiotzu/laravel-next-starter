@@ -1,8 +1,8 @@
 export const EMPRESA_ENDERECO_TIPOS = {
   COMERCIAL: "Comercial",
   FISCAL: "Fiscal",
-  CORRESPONDENCIA: "Correspondencia",
-  COBRANCA: "Cobranca",
+  CORRESPONDENCIA: "Correspondência",
+  COBRANCA: "Cobrança",
   ENTREGA: "Entrega",
 } as const;
 
