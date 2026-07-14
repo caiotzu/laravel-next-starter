@@ -2,14 +2,11 @@
 
 import { useState } from "react";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AxiosError } from "axios";
-import { Building2, Loader2, MapPinned, Phone } from "lucide-react";
-import { useFieldArray, useForm, UseFormSetError } from "react-hook-form";
-import { toast } from "sonner";
+import Link from "next/link";
 
-import { ApiErrorResponse } from "@/types/errors";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Building2, Loader2, MapPinned, Phone } from "lucide-react";
+import { useForm } from "react-hook-form";
 
 import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
 
@@ -18,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -37,151 +35,167 @@ import {
   ESTADOS_LABELS,
   ESTADOS_MAP,
   getLabelByUF,
-  UF,
 } from "@/constants/estados";
 import { useEmpresas } from "@/domains/admin/empresa/hooks/useEmpresas";
-import { editarEmpresa } from "@/domains/admin/empresa/services/empresaService";
 import { Empresa } from "@/domains/admin/empresa/types/empresa.model";
-import { maskCNPJ, onlyAlphaNumeric } from "@/lib/utils";
+import { useGrupoEmpresas } from "@/domains/admin/grupo-empresa/hooks/useGrupoEmpresas";
+import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
+import { maskCNPJ } from "@/lib/utils";
 
 import {
-  empresaSchemaEdicao,
-  EmpresaFormDataEdicao,
+  empresaSchemaCadastro,
+  EmpresaFormDataCadastro,
 } from "../schemas/empresa.schema";
 
-import { EmpresaContatosTab } from "./EmpresaContatosTab";
-import { EmpresaEnderecosTab } from "./EmpresaEnderecosTab";
+import { EmpresaFormCreateSkeleton } from "./EmpresaFormCreateSkeleton";
 
-interface EmpresaFormEdicaoProps {
-  empresa: Empresa;
+interface EmpresaFormCadastroProps {
+  onSubmit: (data: EmpresaFormDataCadastro) => Promise<void>;
+  isLoading?: boolean;
+  backendErrors?: string[] | null;
+  clearBackendErrors?: () => void;
 }
 
-export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
+export function EmpresaFormCreate({
+  onSubmit,
+  isLoading = false,
+  backendErrors = null,
+  clearBackendErrors
+}: EmpresaFormCadastroProps) {
   const {
     register,
     handleSubmit,
     formState: { errors },
-    setError,
-    clearErrors,
     setValue,
     watch,
-  } = useForm<EmpresaFormDataEdicao>({
-    resolver: zodResolver(empresaSchemaEdicao),
+  } = useForm<EmpresaFormDataCadastro>({
+    resolver: zodResolver(empresaSchemaCadastro),
     defaultValues: {
-      grupo_empresa_id: empresa.grupoEmpresaId,
-      matriz_id: empresa.matrizId ?? undefined,
-      cnpj: maskCNPJ(empresa.cnpj),
-      nome_fantasia: empresa.nomeFantasia,
-      razao_social: empresa.razaoSocial,
-      inscricao_estadual: empresa.inscricaoEstadual ?? undefined,
-      inscricao_municipal: empresa.inscricaoMunicipal ?? undefined,
-      uf: empresa.uf as UF,
+      grupo_empresa_id: undefined,
+      matriz_id: undefined,
+      cnpj: "",
+      nome_fantasia: "",
+      razao_social: "",
+      inscricao_estadual: "",
+      inscricao_municipal: "",
+      uf: undefined,
     },
   });
-  const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState("dados");
   const [matrizBusca, setMatrizBusca] = useState("");
-  const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
-
+  const [grupoEmpresaBusca, setGrupoEmpresaBusca] = useState("");
+  
   const { data: matrizesData , isLoading: isLoadingMatrizes} = useEmpresas({
     page: 1,
     excluido: false,
     por_pagina: 10,
-    id: matrizBusca ? undefined : empresa.matrizId ?? undefined,
     nome_fantasia: matrizBusca || undefined,
   });
   const matrizes = (matrizesData?.data ?? []) as Empresa[];
   const matrizSelecionada = matrizes.find((item) => item.id === watch("matriz_id")) ?? null;
 
-  const { mutate: atualizarEmpresaMutation, isPending: isPendingAtualizarEmpresa } = useMutation<
-    Empresa,
-    AxiosError<ApiErrorResponse>,
-    EmpresaFormDataEdicao
-  >({
-    mutationFn: (data) => editarEmpresa(empresa.id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["empresa", empresa.id],
-      });
-
-      toast.success("Empresa atualizada com sucesso");
-    },
-    onError: (error) => {
-      const apiErrors = error.response?.data?.errors;
-
-      if (!apiErrors) {
-        setBackendErrors(["Erro ao atualizar empresa."]);
-        return;
-      }
-
-      if (apiErrors.business) {
-        setBackendErrors(apiErrors.business);
-      }
-
-      Object.entries(apiErrors).forEach(([field, messages]) => {
-        if (!messages || field === "business") return;
-
-        setError(field as keyof EmpresaFormDataEdicao, {
-          type: "server",
-          message: messages[0],
-        });
-      });
-    },
+  const { data: gruposData , isLoading: isLoadingGrupos} = useGrupoEmpresas({
+    page: 1,
+    excluido: false,
+    por_pagina: 10,
+    nome: grupoEmpresaBusca || undefined,
   });
-
-  const onSubmitEmpresa = (data: EmpresaFormDataEdicao) => {
-    atualizarEmpresaMutation({
-      ...data,
-      cnpj: onlyAlphaNumeric(data.cnpj),
-    });
-  };
+  const grupos = (gruposData?.data ?? []) as GrupoEmpresa[];
+  const grupoSelecionado = grupos.find((item) => item.id === watch("grupo_empresa_id")) ?? null;
+ 
+  if(isLoadingMatrizes || isLoadingGrupos)
+    return (<EmpresaFormCreateSkeleton />);
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Editar Empresa</CardTitle>
+        <CardTitle>Cadastrar Empresa</CardTitle>
       </CardHeader>
 
-      <CardContent className="space-y-6 pt-6">
-        {backendErrors && backendErrors.length > 0 && (
-          <AppAlert
-            variant="error"
-            subtitle="Ocorreu um erro durante a operação"
-            messages={backendErrors}
-            onClose={() => setBackendErrors(null)}
-            className="mb-6"
-          />
-        )}
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <CardContent className="space-y-6 pt-6">
+          {backendErrors && backendErrors.length > 0 && (
+            <AppAlert
+              variant="error"
+              subtitle="Ocorreu um erro durante a operacao"
+              messages={backendErrors}
+              onClose={clearBackendErrors}
+              className="mb-6"
+            />
+          )}
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full justify-start">
-            <TabsTrigger value="dados">
-              <Building2 className="h-4 w-4" />
-              Dados da Empresa
-            </TabsTrigger>
-            <TabsTrigger value="enderecos">
-              <MapPinned className="h-4 w-4" />
-              Enderecos
-            </TabsTrigger>
-            <TabsTrigger value="contatos">
-              <Phone className="h-4 w-4" />
-              Contatos
-            </TabsTrigger>
-          </TabsList>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="w-full justify-start">
+              <TabsTrigger value="dados">
+                <Building2 className="h-4 w-4" />
+                Dados da Empresa
+              </TabsTrigger>
+              <TabsTrigger value="enderecos" disabled={true}>
+                <MapPinned className="h-4 w-4" />
+                Endereços
+              </TabsTrigger>
+              <TabsTrigger value="contatos" disabled={true}>
+                <Phone className="h-4 w-4" />
+                Contatos
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="dados" className="pt-4">
-            <form onSubmit={handleSubmit(onSubmitEmpresa)}>
-              <div className="rounded-xl border p-6 space-y-6">
+            <TabsContent value="dados" className="pt-4">
+              <div className="rounded-xl border p-6">
                 <div className="grid grid-cols-12 gap-6">
                   <div className="col-span-12 md:col-span-4 space-y-2">
-                    <Label htmlFor="grupo-empresa-nome">Grupo Empresa</Label>
-                    <Input
-                      id="grupo-empresa-nome"
-                      value={empresa.grupoEmpresa?.nome}
-                      disabled
-                      readOnly
-                    />
+                    <Label>Grupo Empresa <span className="text-red-600">*</span></Label>
+
+                    <Combobox
+                      items={grupos}
+                      value={grupoSelecionado}
+                      onValueChange={(item) => {
+                        if (item) {
+                          setValue("grupo_empresa_id", item.id, {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          });
+                        } else {
+                          setValue("grupo_empresa_id", "", {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          });
+
+                          setGrupoEmpresaBusca("");
+                        }
+                      }}
+                      itemToStringLabel={(item) => item?.nome ?? ""}
+                    >
+                      <ComboboxInput
+                        placeholder="Digite o nome da grupo empresa..."
+                        value={grupoSelecionado?.nome ?? grupoEmpresaBusca}
+                        onChange={(e) => setGrupoEmpresaBusca(e.target.value)}
+                        showClear
+                      />
+
+                      <ComboboxContent>
+                        <ComboboxEmpty>
+                          {isLoadingGrupos
+                            ? "Carregando..."
+                            : "Nenhum grupo empresa encontrado."}
+                        </ComboboxEmpty>
+
+                        <ComboboxList>
+                          {(item) => (
+                            <ComboboxItem key={item.id} value={item}>
+                              {item.nome}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+
+                    {errors.grupo_empresa_id && (
+                      <p className="text-sm text-red-700">
+                        {errors.grupo_empresa_id.message}
+                      </p>
+                    )}
                   </div>
 
                   <div className="col-span-12 md:col-span-4 space-y-2">
@@ -328,7 +342,7 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
                           "uf",
                           (label
                             ? ESTADOS_MAP.get(label)
-                            : undefined) as EmpresaFormDataEdicao["uf"],
+                            : undefined) as EmpresaFormDataCadastro["uf"],
                           {
                             shouldDirty: true,
                             shouldValidate: true,
@@ -359,62 +373,36 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
                     )}
                   </div>
                 </div>
-                <div className="flex justify-end">
-                  <AdminPermissionGuard 
-                    permission="admin.empresa.atualizar"
-                    disableFallback={true}
-                  >
-                    <Button
-                      type="submit"
-                      disabled={isPendingAtualizarEmpresa}
-                      className="cursor-pointer"
-                    >
-                      {isPendingAtualizarEmpresa && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      Salvar Empresa
-                    </Button>
-                  </AdminPermissionGuard>
-                </div>
               </div>
-            </form>
-          </TabsContent>
+            </TabsContent>
 
-          <TabsContent value="enderecos" className="pt-4">
-            <AdminPermissionGuard 
-							permissions={[
-								"admin.empresa.endereco.atualizar",
-								"admin.empresa.endereco.cadastrar",
-								"admin.empresa.endereco.excluir",
-								"admin.empresa.endereco.listar",
-								"admin.empresa.endereco.visualizar",
-              ]}
-						>
-              <EmpresaEnderecosTab
-                empresa={empresa}
-                enderecos={empresa.enderecos}
-              />
-            </AdminPermissionGuard>
-          </TabsContent>
+            <TabsContent value="enderecos" className="pt-4">
+            </TabsContent>
 
-          <TabsContent value="contatos" className="pt-4">
-            <AdminPermissionGuard 
-							permissions={[
-								"admin.empresa.contato.atualizar",
-								"admin.empresa.contato.cadastrar",
-								"admin.empresa.contato.excluir",
-								"admin.empresa.contato.listar",
-								"admin.empresa.contato.visualizar",
-              ]}
-						>
-              <EmpresaContatosTab
-                empresa={empresa}
-                contatos={empresa.contatos}
-              />
-            </AdminPermissionGuard>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
+            <TabsContent value="contatos" className="pt-4">
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+
+        <CardFooter className="flex justify-end gap-5 pt-6">
+          <Button asChild variant="outline">
+            <Link href="/admin/empresas" className="gap-2">
+              Cancelar
+            </Link>
+          </Button>
+
+          <AdminPermissionGuard
+            permission="admin.empresa.cadastrar"
+            disableFallback={true}
+          >
+            <Button type="submit" disabled={isLoading} className="cursor-pointer">
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Cadastrar Empresa
+            </Button>
+          </AdminPermissionGuard>
+          
+        </CardFooter>
+      </form>
     </Card>
   );
 }

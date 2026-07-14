@@ -1,3 +1,5 @@
+import { EmpresaStatus } from "@/constants/empresa-status";
+
 import { EmpresaContato } from "../../empresa-contato/types/empresaContato.model";
 import { EmpresaEndereco } from "../../empresa-endereco/types/empresaEndereco.model";
 import { GrupoEmpresa } from "../../grupo-empresa/types/grupoEmpresa.model";
@@ -11,7 +13,7 @@ export interface Empresa {
   razaoSocial: string;
   inscricaoEstadual: string | null;
   inscricaoMunicipal: string | null;
-  status: string;
+  status: EmpresaStatus;
   uf: string;
   createdAt: string;
   updatedAt: string | null;

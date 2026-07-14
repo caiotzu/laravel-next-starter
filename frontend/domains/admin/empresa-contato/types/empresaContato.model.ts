@@ -1,7 +1,9 @@
+import { EmpresaContatoTipo } from "@/constants/empresa-contato-tipos";
+
 export interface EmpresaContato {
   id: string;
   empresaId: string;
-  tipo: string;
+  tipo: EmpresaContatoTipo;
   valor: string;
   ativo: boolean;
   principal: boolean;

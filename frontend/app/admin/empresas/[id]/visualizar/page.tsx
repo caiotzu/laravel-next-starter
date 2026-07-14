@@ -18,8 +18,8 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 import { useEmpresa } from "@/domains/admin/empresa/hooks/useEmpresa";
 
-import { EmpresaFormEdit } from "@/features/admin/empresa/components/EmpresaFormEdit";
 import { EmpresaFormEditSkeleton } from "@/features/admin/empresa/components/EmpresaFormEditSkeleton";
+import { EmpresaFormView } from "@/features/admin/empresa/components/EmpresaFormView";
 
 export default function Page() {
   const router = useRouter();
@@ -66,27 +66,11 @@ export default function Page() {
 							]}
 						/>
 
-						<AdminPermissionGuard 
-							permissions={[
-                "admin.empresa.atualizar",
-
-								"admin.empresa.contato.atualizar",
-								"admin.empresa.contato.cadastrar",
-								"admin.empresa.contato.excluir",
-								"admin.empresa.contato.listar",
-								"admin.empresa.contato.visualizar",
-
-								"admin.empresa.endereco.atualizar",
-								"admin.empresa.endereco.cadastrar",
-								"admin.empresa.endereco.excluir",
-								"admin.empresa.endereco.listar",
-								"admin.empresa.endereco.visualizar",
-              ]} 
-						>
+						<AdminPermissionGuard permission="admin.empresa.visualizar" >
 							{isLoading || !data ? (
                 <EmpresaFormEditSkeleton />
               ) : (
-								<EmpresaFormEdit empresa={data}/>
+								<EmpresaFormView empresa={data}/>
 							)}
 						</AdminPermissionGuard>
 					</div>

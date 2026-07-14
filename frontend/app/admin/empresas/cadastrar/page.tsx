@@ -26,7 +26,7 @@ import { Empresa } from "@/domains/admin/empresa/types/empresa.model";
 import { CadastrarEmpresaRequest } from "@/domains/admin/empresa/types/empresa.requests";
 import { onlyAlphaNumeric } from "@/lib/utils";
 
-import { EmpresaFormCadastro } from "@/features/admin/empresa/components/EmpresaFormCadastro";
+import { EmpresaFormCreate } from "@/features/admin/empresa/components/EmpresaFormCreate";
 import { EmpresaFormDataCadastro } from "@/features/admin/empresa/schemas/empresa.schema";
 
 export default function Page() {
@@ -107,12 +107,11 @@ export default function Page() {
             />
 
             <AdminPermissionGuard permission="admin.empresa.cadastrar">
-              <EmpresaFormCadastro
+              <EmpresaFormCreate
                 onSubmit={handleSubmit}
                 isLoading={isPending}
                 backendErrors={backendErrors}
                 clearBackendErrors={() => setBackendErrors(null)}
-                registerSetError={(fn) => setFormError(() => fn)}
               />
             </AdminPermissionGuard>
           </div>

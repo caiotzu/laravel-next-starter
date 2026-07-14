@@ -23,7 +23,7 @@ export const protectedRoutes: RoutePermission[] = [
     { path: "/admin/dashboard", protected: true, cookieName: "admin_access_token" },
     { path: "/admin/perfil", protected: true, cookieName: "admin_access_token" },
 
-    { path: "/admin/empresas/:id/editar", protected: true, cookieName: "admin_access_token" },
+    { path: "/admin/empresas/:id/visualizar", protected: true, cookieName: "admin_access_token" },
     { path: "/admin/empresas/:id", protected: true, cookieName: "admin_access_token" },
     { path: "/admin/empresas/cadastrar", protected: true, cookieName: "admin_access_token" },
     { path: "/admin/empresas", protected: true, cookieName: "admin_access_token" },

@@ -139,7 +139,7 @@ export function EmpresaEnderecosTab({
       const apiErrors = error.response?.data?.errors;
 
       if (!apiErrors) {
-        setBackendErrors(["Erro ao atualizar empresa."]);
+        setBackendErrors(["Erro ao atualizar o endereço"]);
         return;
       }
 
@@ -178,7 +178,7 @@ export function EmpresaEnderecosTab({
       const apiErrors = error.response?.data?.errors;
 
       if (!apiErrors) {
-        setBackendErrors(["Erro ao atualizar empresa."]);
+        setBackendErrors(["Erro ao atualizar o endereço"]);
         return;
       }
 
@@ -207,7 +207,7 @@ export function EmpresaEnderecosTab({
       resetForm();
     },
     onError: () => {
-      toast.error("Erro ao excluir o endereço.");
+      toast.error("Erro ao excluir o endereço");
     },
   });
 
@@ -221,7 +221,7 @@ export function EmpresaEnderecosTab({
       setCepLookupMessage(
         response.provider
           ? `CEP encontrado via ${response.provider}.`
-          : "CEP encontrado."
+          : "CEP encontrado"
       );
 
       setValue("cep", maskCEP(response.cep ?? ""), {
@@ -301,7 +301,7 @@ export function EmpresaEnderecosTab({
     onError: (error) => {
       setCepLookupMessage(
         error.response?.data?.errors?.business?.[0] ??
-          "Não foi possível consultar o CEP."
+          "Não foi possível consultar o CEP"
       );
     },
   });
@@ -506,7 +506,7 @@ export function EmpresaEnderecosTab({
                     <ComboboxEmpty>
                       {isLoadingMunicipios
                         ? "Carregando..."
-                        : "Nenhuma município encontrado."}
+                        : "Nenhuma município encontrado"}
                     </ComboboxEmpty>
 
                     <ComboboxList>

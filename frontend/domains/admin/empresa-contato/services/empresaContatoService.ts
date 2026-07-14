@@ -1,18 +1,20 @@
 import { proxyAdminRequest } from "@/lib/proxy-admin";
 
+import { toEmpresaContato } from "../mappers/empresa-contato.mapper";
 import { EmpresaContatoRequest } from "../types/empresaContato.requests";
-import { EmpresaContatoResponse } from "../types/empresaContato.responses";
+import { CadastrarEmpresaContatoResponse, EditarEmpresaContatoResponse } from "../types/empresaContato.responses";
 
 export async function cadastrarEmpresaContato(
   empresaId: string,
   dto: EmpresaContatoRequest
 ) {
-  const response = await proxyAdminRequest<EmpresaContatoResponse>({
+  const response = await proxyAdminRequest<CadastrarEmpresaContatoResponse>({
     url: `/admin/empresas/${empresaId}/contatos`,
     method: "POST",
     data: dto,
   });
-  return response.data;
+  
+  return toEmpresaContato(response.data.data);
 }
 
 export async function atualizarEmpresaContato(
@@ -20,12 +22,13 @@ export async function atualizarEmpresaContato(
   contatoId: string,
   dto: EmpresaContatoRequest
 ) {
-  const response = await proxyAdminRequest<EmpresaContatoResponse>({
+  const response = await proxyAdminRequest<EditarEmpresaContatoResponse>({
     url: `/admin/empresas/${empresaId}/contatos/${contatoId}`,
     method: "PUT",
     data: dto,
   });
-  return response.data;
+  
+  return toEmpresaContato(response.data.data);
 }
 
 export function excluirEmpresaContato(

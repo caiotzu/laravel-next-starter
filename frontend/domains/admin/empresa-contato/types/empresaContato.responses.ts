@@ -1,4 +1,6 @@
-export interface EmpresaContatoDataResponse {
+import { LaravelApiResponse, LaravelResourcePagination } from "@/types/laravel";
+
+export interface empresaContatoDataResponse {
   id: string;
   empresa_id: string;
   tipo: string;
@@ -10,3 +12,6 @@ export interface EmpresaContatoDataResponse {
   updated_at: string | null;
   deleted_at: string | null;
 }
+
+export type CadastrarEmpresaContatoResponse = LaravelApiResponse<empresaContatoDataResponse>;
+export type EditarEmpresaContatoResponse = LaravelApiResponse<empresaContatoDataResponse>;
