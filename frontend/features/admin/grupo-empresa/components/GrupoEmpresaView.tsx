@@ -56,7 +56,7 @@ export function GrupoEmpresaView({
         </div>
       </div>
 
-      {grupoEmpresa.grupos.map((grupo) => (
+      {grupoEmpresa.grupos  && grupoEmpresa.grupos.map((grupo) => (
         <div
           key={grupo.id}
           className={`rounded-xl shadow-sm border-l-4 bg-card ${
@@ -85,7 +85,7 @@ export function GrupoEmpresaView({
 
           {expandedGroups.has(grupo.id) && (
             <div className="px-5 pb-5">
-              {grupo.usuarios.length > 0 ? (
+              {grupo.usuarios && grupo.usuarios.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                   {grupo.usuarios.map((usuario) => (
                     <UsuarioCard

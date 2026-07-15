@@ -70,7 +70,9 @@ class EmpresaService {
                 'grupoEmpresa',
                 'contatos',
                 'enderecos.municipio'
-            ])->find($id);
+            ])
+            ->withTrashed()
+            ->find($id);
 
             if (! $empresa) {
                 throw new BusinessException(

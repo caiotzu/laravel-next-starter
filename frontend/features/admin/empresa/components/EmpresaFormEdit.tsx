@@ -392,7 +392,7 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
 						>
               <EmpresaEnderecosTab
                 empresa={empresa}
-                enderecos={empresa.enderecos}
+                enderecos={empresa.enderecos ?? []}
               />
             </AdminPermissionGuard>
           </TabsContent>
@@ -409,7 +409,7 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
 						>
               <EmpresaContatosTab
                 empresa={empresa}
-                contatos={empresa.contatos}
+                contatos={empresa.contatos ?? []}
               />
             </AdminPermissionGuard>
           </TabsContent>

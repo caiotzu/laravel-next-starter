@@ -46,7 +46,7 @@ export default function UsuarioView(
           </div>
 
           <div className="flex flex-wrap gap-16">
-            <Info label="Grupo" value={usuario.grupo.descricao} />
+            <Info label="Grupo" value={usuario.grupo?.descricao ?? '---'} />
 
             <Info label="Status" value={getUsuarioStatusLabel(usuario.status)} />
 

@@ -11,7 +11,7 @@ export interface EmpresaEndereco {
     uf: string;
     codigo_ibge: string;
     codigo_siafi: string;
-  } | null;
+  };
   ativo: boolean;
   principal: boolean;
   cep: string;

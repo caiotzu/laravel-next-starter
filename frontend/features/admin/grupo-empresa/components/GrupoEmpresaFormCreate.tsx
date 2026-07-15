@@ -33,8 +33,6 @@ interface Props {
   clearBackendErrors?: () => void;
 }
 
-
-
 export function GrupoEmpresaFormCreate({
   onSubmit,
   isLoading = false,

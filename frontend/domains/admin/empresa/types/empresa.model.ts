@@ -20,8 +20,8 @@ export interface Empresa {
   deletedAt: string | null;
 
   grupoEmpresa?: GrupoEmpresa,
-  matriz?: Empresa,
+  matriz?: Empresa | null,
 
-  contatos: EmpresaContato[],
-  enderecos: EmpresaEndereco[]
+  contatos?: EmpresaContato[],
+  enderecos?: EmpresaEndereco[]
 }

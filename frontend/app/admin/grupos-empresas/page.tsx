@@ -26,8 +26,6 @@ import { GrupoEmpresasFilters } from "@/features/admin/grupo-empresa/components/
 import { GrupoEmpresasTable } from "@/features/admin/grupo-empresa/components/GrupoEmpresasTable";
 import { GrupoEmpresasTableSkeleton } from "@/features/admin/grupo-empresa/components/GrupoEmpresasTableSkeleton";
 
-
-
 export default function Page() {
   const [filters, setFilters] = useState<ListarGrupoEmpresasRequest>({
     nome: "",

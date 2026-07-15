@@ -276,10 +276,10 @@ export function GrupoFormEdit({
                 return (
                   <Card
                     key={group}
-                    className="overflow-hidden"
+                    className="overflow-hidden cursor-pointer py-0"
                   >
                     <div
-                      className="flex items-center justify-between p-4 cursor-pointer"
+                      className="flex items-center justify-between p-4"
                       onClick={() => setOpenedGroups((prev) => ({...prev,[group]: !isOpen,})) }
                     >
                       <div className="flex flex-col">

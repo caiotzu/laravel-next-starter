@@ -18,5 +18,5 @@ export interface Usuario {
   deletedAt: string | null;
 
   // relacionamentos
-  grupo: Grupo
+  grupo?: Grupo
 }

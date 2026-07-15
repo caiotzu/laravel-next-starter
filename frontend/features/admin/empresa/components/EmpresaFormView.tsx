@@ -44,6 +44,7 @@ export function EmpresaFormView({ empresa }: Props) {
               <Info label="Inscrição Municipal" value={empresa.inscricaoMunicipal ?? "---"} />
               <Info label="Criado em" value={formatDate(empresa.createdAt)} />
               <Info label="Atualizado em" value={formatDate(empresa.updatedAt)} />
+              <Info label="Excluída em" value={formatDate(empresa.deletedAt)} />
             </div>
           </div>
         </div>
@@ -54,67 +55,67 @@ export function EmpresaFormView({ empresa }: Props) {
           <h3 className="font-semibold text-lg mb-4 flex items-center gap-2"><Phone className="h-5 w-5"/>Contatos</h3>
 
           <div className="grid grid-cols-12 gap-4">
-            {empresa.contatos.length === 0 && (
+            {!empresa.contatos || empresa.contatos.length === 0 ? (
               <div className="col-span-12">
                 <p className="text-muted-foreground">
                   Nenhum contato cadastrado.
                 </p>
               </div>
-            )}
-
-            {empresa.contatos.map((contato) => (
-              <div
-                key={contato.id}
-                className="col-span-12 md:col-span-4 rounded-lg border p-4"
-              >
-                <div className="flex justify-between">
-                  <span className="font-medium">
-                    {getEmpresaContatoTipoLabel(contato.tipo)}
-                  </span>
-
-                  <div className="flex gap-2">
-                    {contato.principal && (<Badge className="bg-emerald-100 text-emerald-700">Principal</Badge>)}
-
-                    {contato.ativo ? 
-                      (<Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Ativo</Badge>)
-                      :
-                      (<Badge className="bg-emerald-100 text-red-700 hover:bg-emerald-100">Inativo</Badge>)
-                    }
-                  </div>
-                </div>
-
-                <div className="mt-3 space-y-2">
-                  <div className="flex items-center gap-2">
-                    {contato.tipo === "E" ? (
-                      <Mail className="h-4 w-4" />
-                    ) : (
-                      <Phone className="h-4 w-4" />
-                    )}
-
-                    <span>
-                      {contato.tipo === "T"
-                        ? maskPhone(contato.valor)
-                        : contato.valor}
+            ) : (
+              empresa.contatos.map((contato) => (
+                <div
+                  key={contato.id}
+                  className="col-span-12 md:col-span-4 rounded-lg border p-4"
+                >
+                  <div className="flex justify-between">
+                    <span className="font-medium">
+                      {getEmpresaContatoTipoLabel(contato.tipo)}
                     </span>
+
+                    <div className="flex gap-2">
+                      {contato.principal && (<Badge className="bg-emerald-100 text-emerald-700">Principal</Badge>)}
+
+                      {contato.ativo ? 
+                        (<Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Ativo</Badge>)
+                        :
+                        (<Badge className="bg-emerald-100 text-red-700 hover:bg-emerald-100">Inativo</Badge>)
+                      }
+                    </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-8">
-                    <Info
-                      label="Status"
-                      value={contato.ativo ? "Ativo" : "Inativo"}
-                    />
-                    <Info
-                      label="Criado em"
-                      value={formatDate(contato.createdAt)}
-                    />
-                    <Info
-                      label="Atualizado em"
-                      value={formatDate(contato.updatedAt)}
-                    />
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      {contato.tipo === "E" ? (
+                        <Mail className="h-4 w-4" />
+                      ) : (
+                        <Phone className="h-4 w-4" />
+                      )}
+
+                      <span>
+                        {contato.tipo === "T"
+                          ? maskPhone(contato.valor)
+                          : contato.valor}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-8">
+                      <Info
+                        label="Status"
+                        value={contato.ativo ? "Ativo" : "Inativo"}
+                      />
+                      <Info
+                        label="Criado em"
+                        value={formatDate(contato.createdAt)}
+                      />
+                      <Info
+                        label="Atualizado em"
+                        value={formatDate(contato.updatedAt)}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
@@ -124,7 +125,7 @@ export function EmpresaFormView({ empresa }: Props) {
           <h3 className="font-semibold text-lg mb-4 flex items-center gap-2"><MapPin className="h-5 w-5"/>Endereços</h3>
 
           <div className="grid gap-4">
-            {empresa.enderecos.length === 0 ? (
+            {!empresa.enderecos || empresa.enderecos.length === 0 ? (
               <p className="text-muted-foreground">
                 Nenhum endereço cadastrado.
               </p>
