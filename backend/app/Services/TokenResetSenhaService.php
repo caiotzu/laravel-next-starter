@@ -60,7 +60,7 @@ class TokenResetSenhaService
 
         $tokenResetSenha = TokenResetSenha::with('usuario')
             ->where('token', $hash)
-            ->lockForUpdate() // Evita concorrencia
+            ->lockForUpdate() // Evita concorrência
             ->first();
 
         if (! $tokenResetSenha) {

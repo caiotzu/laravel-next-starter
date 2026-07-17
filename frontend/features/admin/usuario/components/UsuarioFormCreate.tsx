@@ -33,14 +33,14 @@ import { Grupo } from "@/domains/admin/grupo/types/grupo.model";
 import { Usuario } from "@/domains/admin/usuario/types/usuario.model";
 
 import {
-  UsuarioFormData,
-  usuarioSchema,
+  UsuarioFormDataCadastro,
+  usuarioSchemaCadastro,
 } from "../schemas/usuario.schema";
 
 interface Props {
   onSubmit: (
-    data: UsuarioFormData,
-    setError: UseFormSetError<UsuarioFormData>
+    data: UsuarioFormDataCadastro,
+    setError: UseFormSetError<UsuarioFormDataCadastro>
   ) => Promise<void>;
   isLoading?: boolean;
   backendErrors?: string[] | null;
@@ -50,7 +50,7 @@ interface Props {
   isLoadingGrupos: boolean;
 }
 
-export function UsuarioForm({
+export function UsuarioFormCreate({
   onSubmit,
   isLoading = false,
   backendErrors = null,
@@ -66,8 +66,8 @@ export function UsuarioForm({
     watch,
     setError,
     formState: { errors },
-  } = useForm<UsuarioFormData>({
-    resolver: zodResolver(usuarioSchema),
+  } = useForm<UsuarioFormDataCadastro>({
+    resolver: zodResolver(usuarioSchemaCadastro),
 
     defaultValues: {
       nome: usuario?.nome ?? "",
@@ -78,7 +78,7 @@ export function UsuarioForm({
 
   const selectedGrupoId = watch("grupo_id");
 
-  async function handleFormSubmit(data: UsuarioFormData) {
+  async function handleFormSubmit(data: UsuarioFormDataCadastro) {
     await onSubmit(data, setError);
   }
 

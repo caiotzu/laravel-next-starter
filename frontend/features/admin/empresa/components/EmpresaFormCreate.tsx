@@ -40,7 +40,7 @@ import { useEmpresas } from "@/domains/admin/empresa/hooks/useEmpresas";
 import { Empresa } from "@/domains/admin/empresa/types/empresa.model";
 import { useGrupoEmpresas } from "@/domains/admin/grupo-empresa/hooks/useGrupoEmpresas";
 import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
-import { maskCNPJ } from "@/lib/utils";
+import { maskCNPJAlfanumerico } from "@/lib/utils";
 
 import {
   empresaSchemaCadastro,
@@ -256,7 +256,7 @@ export function EmpresaFormCreate({
                       placeholder="00.000.000/0000-00"
                       {...register("cnpj", {
                         onChange: (e) => {
-                          e.target.value = maskCNPJ(e.target.value);
+                          e.target.value = maskCNPJAlfanumerico(e.target.value);
                         },
                       })}
                     />

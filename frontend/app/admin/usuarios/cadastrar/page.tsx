@@ -25,9 +25,9 @@ import { useGrupos } from "@/domains/admin/grupo/hooks/useGrupos";
 import { cadastrarUsuario } from "@/domains/admin/usuario/services/usuarioService";
 import { Usuario } from "@/domains/admin/usuario/types/usuario.model";
 
-import { UsuarioForm } from "@/features/admin/usuario/components/UsuarioForm";
-import { UsuarioFormSkeleton } from "@/features/admin/usuario/components/UsuarioFormSkeleton";
-import { UsuarioFormData } from "@/features/admin/usuario/schemas/usuario.schema";
+import { UsuarioFormCreate } from "@/features/admin/usuario/components/UsuarioFormCreate";
+import { UsuarioFormCreateSkeleton } from "@/features/admin/usuario/components/UsuarioFormCreateSkeleton";
+import { UsuarioFormDataCadastro } from "@/features/admin/usuario/schemas/usuario.schema";
 
 export default function Page() {
   const router = useRouter();
@@ -52,8 +52,8 @@ export default function Page() {
     Usuario,
     AxiosError<ApiErrorResponse>,
     {
-      data: UsuarioFormData;
-      setError: UseFormSetError<UsuarioFormData>;
+      data: UsuarioFormDataCadastro;
+      setError: UseFormSetError<UsuarioFormDataCadastro>;
     }
   >({
     mutationFn: ({ data }) => cadastrarUsuario(data),
@@ -77,7 +77,7 @@ export default function Page() {
       Object.entries(apiErrors).forEach(([field, messages]) => {
         if (!Array.isArray(messages)) return;
 
-        variables.setError(field as keyof UsuarioFormData, {
+        variables.setError(field as keyof UsuarioFormDataCadastro, {
           type: "server",
           message: messages[0],
         });
@@ -86,8 +86,8 @@ export default function Page() {
   });
 
   async function handleSubmit(
-    data: UsuarioFormData,
-    setError: UseFormSetError<UsuarioFormData>
+    data: UsuarioFormDataCadastro,
+    setError: UseFormSetError<UsuarioFormDataCadastro>
   ) {
     setBackendErrors(null);
 
@@ -121,9 +121,9 @@ export default function Page() {
 
             <AdminPermissionGuard permission="admin.usuario.cadastrar">
 							{isLoadingGrupos ? (
-								<UsuarioFormSkeleton />
+								<UsuarioFormCreateSkeleton />
 							) : (
-								<UsuarioForm
+								<UsuarioFormCreate
 									onSubmit={handleSubmit}
 									isLoading={isPending}
 									backendErrors={backendErrors}

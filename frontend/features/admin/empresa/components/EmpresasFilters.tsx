@@ -22,6 +22,7 @@ import {
 import { EmpresaFilters } from "@/domains/admin/empresa/types/empresa.filters";
 import { Empresa } from "@/domains/admin/empresa/types/empresa.model";
 import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
+import { maskCNPJAlfanumerico, onlyAlphaNumeric } from "@/lib/utils";
 
 interface Props {
   filters: EmpresaFilters;
@@ -167,9 +168,9 @@ export function EmpresasFilters({
         <div className="flex flex-col gap-2 w-64">
           <Label>CNPJ</Label>
           <Input
-            value={filters.cnpj ?? ""}
+            value={maskCNPJAlfanumerico(filters.cnpj ?? "")}
             onChange={(e) => {
-              updateFilter("cnpj", e.target.value);
+              updateFilter("cnpj", onlyAlphaNumeric(e.target.value));
             }}
           />
         </div>

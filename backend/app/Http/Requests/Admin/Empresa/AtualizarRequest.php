@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin\Empresa;
 
+use App\Enums\EmpresaStatus;
 use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -49,6 +50,14 @@ class AtualizarRequest extends FormRequest
                 'string',
                 'max:255',
             ],
+            'status' => [
+                'nullable',
+                Rule::in([
+                    EmpresaStatus::ATIVO->value,
+                    EmpresaStatus::INATIVO->value,
+                    EmpresaStatus::BLOQUEADO->value
+                ]),
+            ],
             'uf' => [
                 'required',
                 'string',
@@ -79,6 +88,8 @@ class AtualizarRequest extends FormRequest
             'inscricao_estadual.max' => 'A inscrição estadual deve ter no máximo 255 caracteres.',
 
             'inscricao_municipal.max' => 'A inscrição municipal deve ter no máximo 255 caracteres.',
+
+            'status.in' => 'O status/situação deve ser ('.EmpresaStatus::ATIVO->value.','.EmpresaStatus::INATIVO->value.','.EmpresaStatus::BLOQUEADO->value.')',
 
             'uf.required' => 'A UF é obrigatória.',
             'uf.in' => 'A UF informada é inválida.'

@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function UsuarioFormSkeleton() {
+export function UsuarioFormEditSkeleton() {
   return (
     <div className="p-6 space-y-6 animate-pulse">
 

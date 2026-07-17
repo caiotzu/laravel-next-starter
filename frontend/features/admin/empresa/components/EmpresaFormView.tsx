@@ -13,7 +13,7 @@ import { getEmpresaContatoTipoLabel } from "@/constants/empresa-contato-tipos";
 import { getEmpresaEnderecoTipoLabel } from "@/constants/empresa-endereco-tipos";
 import { getEmpresaStatusBorder, getEmpresaStatusLabel } from "@/constants/empresa-status";
 import { Empresa } from "@/domains/admin/empresa/types/empresa.model";
-import { formatDate, maskCNPJ, maskCEP, maskPhone } from "@/lib/utils";
+import { formatDate, maskCNPJAlfanumerico, maskCEP, maskPhone } from "@/lib/utils";
 
 interface Props {
   empresa: Empresa;
@@ -22,7 +22,7 @@ interface Props {
 export function EmpresaFormView({ empresa }: Props) {
   return (
     <div className="space-y-6">
-      <div className={`rounded-xl shadow-sm border-l-4 bg-card p-6 ${getEmpresaStatusBorder(empresa.status)}`}>
+      <div className={`rounded-xl shadow-sm border-l-4 bg-card p-6 ${empresa.deletedAt ? 'border-red-500' : getEmpresaStatusBorder(empresa.status)}`}>
         <div className="flex flex-col md:flex-row gap-8">
           <Avatar className="h-28 w-28">
             <AvatarFallback><Building2 className="h-12 w-12"/></AvatarFallback>
@@ -32,7 +32,7 @@ export function EmpresaFormView({ empresa }: Props) {
             <div>
               <h2 className="text-3xl font-semibold">{empresa.nomeFantasia}</h2>
               <p className="text-muted-foreground">{empresa.razaoSocial}</p>
-              <p className="text-sm text-muted-foreground mt-1">{maskCNPJ(empresa.cnpj)}</p>
+              <p className="text-sm text-muted-foreground mt-1">{maskCNPJAlfanumerico(empresa.cnpj)}</p>
             </div>
 
             <div className="flex flex-wrap gap-10">

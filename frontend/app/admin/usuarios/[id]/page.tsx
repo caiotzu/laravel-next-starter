@@ -26,9 +26,9 @@ import { useUsuario } from "@/domains/admin/usuario/hooks/useUsuario";
 import { editarUsuario } from "@/domains/admin/usuario/services/usuarioService";
 import { Usuario } from "@/domains/admin/usuario/types/usuario.model";
 
-import { UsuarioForm } from "@/features/admin/usuario/components/UsuarioForm";
-import { UsuarioFormSkeleton } from "@/features/admin/usuario/components/UsuarioFormSkeleton";
-import { UsuarioFormData } from "@/features/admin/usuario/schemas/usuario.schema";
+import { UsuarioFormEdit } from "@/features/admin/usuario/components/UsuarioFormEdit";
+import { UsuarioFormEditSkeleton } from "@/features/admin/usuario/components/UsuarioFormEditSkeleton";
+import { UsuarioFormDataEdicao } from "@/features/admin/usuario/schemas/usuario.schema";
 
 
 export default function Page() {
@@ -59,8 +59,8 @@ export default function Page() {
 		Usuario,
 		AxiosError<ApiErrorResponse>,
 		{
-			data: UsuarioFormData,
-			setError: UseFormSetError<UsuarioFormData>
+			data: UsuarioFormDataEdicao,
+			setError: UseFormSetError<UsuarioFormDataEdicao>
 		}
 	>({
 		mutationFn: ({ data }) => editarUsuario(id, data),
@@ -84,7 +84,7 @@ export default function Page() {
       Object.entries(apiErrors).forEach(([field, messages]) => {
         if (!Array.isArray(messages)) return;
 
-        variables.setError(field as keyof UsuarioFormData, {
+        variables.setError(field as keyof UsuarioFormDataEdicao, {
           type: "server",
           message: messages[0],
         });
@@ -93,8 +93,8 @@ export default function Page() {
 	});
 
 	async function handleSubmit(
-    data: UsuarioFormData,
-    setError: UseFormSetError<UsuarioFormData>
+    data: UsuarioFormDataEdicao,
+    setError: UseFormSetError<UsuarioFormDataEdicao>
   ) {
     setBackendErrors(null);
 
@@ -127,10 +127,10 @@ export default function Page() {
             />
 
             <AdminPermissionGuard permission="admin.usuario.atualizar">
-							{isLoading ? (
-								<UsuarioFormSkeleton />
+							{!usuario || isLoading ? (
+								<UsuarioFormEditSkeleton />
 							) : (
-								<UsuarioForm
+								<UsuarioFormEdit
 									onSubmit={handleSubmit}
 									isLoading={isPending}
 									backendErrors={backendErrors}

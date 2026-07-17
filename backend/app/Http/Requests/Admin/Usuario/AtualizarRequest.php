@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin\Usuario;
 
+use App\Enums\UsuarioStatus;
 use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -31,6 +32,14 @@ class AtualizarRequest extends FormRequest
                 'max:255',
                 Rule::unique('usuarios', 'email')->ignore($this->route('id')),
             ],
+            'status' => [
+                'nullable',
+                Rule::in([
+                    UsuarioStatus::ATIVO->value,
+                    UsuarioStatus::INATIVO->value,
+                    UsuarioStatus::BLOQUEADO->value,
+                ]),
+            ],
         ];
     }
 
@@ -49,6 +58,8 @@ class AtualizarRequest extends FormRequest
             'email.email'    => 'O e-mail informado é inválido',
             'email.max'      => 'O e-mail deve ter no máximo 255 caracteres',
             'email.unique'   => 'Já existe um usuário com este e-mail',
+
+            'status.in' => 'O status/situação deve ser ('.UsuarioStatus::ATIVO->value.','.UsuarioStatus::INATIVO->value.','.UsuarioStatus::BLOQUEADO->value.')',
         ];
     }
 }

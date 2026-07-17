@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { Building2, Loader2, MapPinned, Phone } from "lucide-react";
-import { useFieldArray, useForm, UseFormSetError } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { ApiErrorResponse } from "@/types/errors";
@@ -33,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { EMPRESA_STATUS_OPTIONS, EmpresaStatus } from "@/constants/empresa-status";
 import {
   ESTADOS_LABELS,
   ESTADOS_MAP,
@@ -42,7 +43,7 @@ import {
 import { useEmpresas } from "@/domains/admin/empresa/hooks/useEmpresas";
 import { editarEmpresa } from "@/domains/admin/empresa/services/empresaService";
 import { Empresa } from "@/domains/admin/empresa/types/empresa.model";
-import { maskCNPJ, onlyAlphaNumeric } from "@/lib/utils";
+import { maskCNPJAlfanumerico, onlyAlphaNumeric } from "@/lib/utils";
 
 import {
   empresaSchemaEdicao,
@@ -57,6 +58,28 @@ interface EmpresaFormEdicaoProps {
 }
 
 export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
+  const defaultValues = useMemo<EmpresaFormDataEdicao>(() => ({
+    grupo_empresa_id: empresa.grupoEmpresaId,
+    matriz_id: empresa.matrizId ?? undefined,
+    cnpj: maskCNPJAlfanumerico(empresa.cnpj),
+    nome_fantasia: empresa.nomeFantasia,
+    razao_social: empresa.razaoSocial,
+    inscricao_estadual: empresa.inscricaoEstadual ?? undefined,
+    inscricao_municipal: empresa.inscricaoMunicipal ?? undefined,
+    status: empresa.status as EmpresaStatus,
+    uf: empresa.uf as UF,
+  }), [
+    empresa.grupoEmpresaId,
+    empresa.matrizId,
+    empresa.cnpj,
+    empresa.nomeFantasia,
+    empresa.razaoSocial,
+    empresa.inscricaoEstadual,
+    empresa.inscricaoMunicipal,
+    empresa.status,
+    empresa.uf,
+  ]);
+
   const {
     register,
     handleSubmit,
@@ -65,24 +88,23 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
     clearErrors,
     setValue,
     watch,
+    reset
   } = useForm<EmpresaFormDataEdicao>({
     resolver: zodResolver(empresaSchemaEdicao),
-    defaultValues: {
-      grupo_empresa_id: empresa.grupoEmpresaId,
-      matriz_id: empresa.matrizId ?? undefined,
-      cnpj: maskCNPJ(empresa.cnpj),
-      nome_fantasia: empresa.nomeFantasia,
-      razao_social: empresa.razaoSocial,
-      inscricao_estadual: empresa.inscricaoEstadual ?? undefined,
-      inscricao_municipal: empresa.inscricaoMunicipal ?? undefined,
-      uf: empresa.uf as UF,
-    },
+    defaultValues,
   });
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState("dados");
   const [matrizBusca, setMatrizBusca] = useState("");
   const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
+
+  const canEditStatus = empresa.status !== "pendente";
+  const statusOptions = canEditStatus
+    ? EMPRESA_STATUS_OPTIONS.filter(
+        (status) => status.value !== "pendente"
+      )
+    : EMPRESA_STATUS_OPTIONS;
 
   const { data: matrizesData , isLoading: isLoadingMatrizes} = useEmpresas({
     page: 1,
@@ -93,6 +115,11 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
   });
   const matrizes = (matrizesData?.data ?? []) as Empresa[];
   const matrizSelecionada = matrizes.find((item) => item.id === watch("matriz_id")) ?? null;
+
+  // Precisa desse useEffect pois se excluir algum endereço ou contato e status alterar para pendente ele consegue atualizar na tela
+  useEffect(() => {
+    reset(defaultValues);
+  }, [defaultValues, reset]);
 
   const { mutate: atualizarEmpresaMutation, isPending: isPendingAtualizarEmpresa } = useMutation<
     Empresa,
@@ -131,9 +158,13 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
   });
 
   const onSubmitEmpresa = (data: EmpresaFormDataEdicao) => {
+    const payload = canEditStatus
+      ? data
+      : (({ status, ...rest }) => rest)(data);
+
     atualizarEmpresaMutation({
-      ...data,
-      cnpj: onlyAlphaNumeric(data.cnpj),
+      ...payload,
+      cnpj: onlyAlphaNumeric(payload.cnpj),
     });
   };
 
@@ -242,7 +273,7 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
                       placeholder="00.000.000/0000-00"
                       {...register("cnpj", {
                         onChange: (e) => {
-                          e.target.value = maskCNPJ(e.target.value);
+                          e.target.value = maskCNPJAlfanumerico(e.target.value);
                         },
                       })}
                     />
@@ -356,6 +387,68 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
 
                     {errors.uf && (
                       <p className="text-sm text-red-700">{errors.uf.message}</p>
+                    )}
+                  </div>
+
+                  <div className="col-span-12 md:col-span-4 space-y-2">
+                    <Label>
+                      Status / Situação <span className="text-red-600">*</span>
+                    </Label>
+
+                    <Combobox
+                      disabled={!canEditStatus}
+                      items={statusOptions}
+                      value={
+                        statusOptions.find(
+                          (s) => s.value === watch("status")
+                        ) ?? null
+                      }
+                      onValueChange={(s) => {
+                        setValue("status", s?.value ?? "", {
+                          shouldValidate: true,
+                          shouldDirty: true,
+                        });
+                      }}
+                      itemToStringLabel={(s) => s?.label ?? ""}
+                    >
+                      <ComboboxInput
+                        disabled={!canEditStatus}
+                        value={
+                          statusOptions.find(
+                            (s) => s.value === watch("status")
+                          )?.label ?? ""
+                        }
+                        showClear
+                        onChange={() => {
+                          setValue("status", "", {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          });
+                        }}
+                      />
+
+                      <ComboboxContent>
+                        <ComboboxEmpty>
+                          Nenhum status encontrado.
+                        </ComboboxEmpty>
+
+                        <ComboboxList>
+                          {(status) => (
+                            <ComboboxItem
+                              key={status.value}
+                              value={status}
+                            >
+                              {status.label}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+
+                    {errors.status && (
+                      <p className="text-sm text-red-700">
+                        {errors.status.message}
+                      </p>
                     )}
                   </div>
                 </div>
