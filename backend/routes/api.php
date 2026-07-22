@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\ {
     GrupoEmpresaController,
     EmpresaContatoController,
     EmpresaEnderecoController,
+    UsuarioGrupoEmpresaController,
     AutenticacaoDoisFatoresController,
 };
 
@@ -76,6 +77,11 @@ Route::middleware('jwt')->group(function () {
             Route::get('/{id}', [GrupoEmpresaController::class, 'visualizar']);
             Route::get('/', [GrupoEmpresaController::class, 'listar']);
             Route::post('/', [GrupoEmpresaController::class, 'cadastrar']);
+
+            Route::prefix('/{grupoId}/usuarios')->group(function () {
+                Route::patch('/{usuarioId}/redefinir-senha', [UsuarioGrupoEmpresaController::class, 'redefinirSenha']);
+                Route::patch('/{usuarioId}/status', [UsuarioGrupoEmpresaController::class, 'atualizarStatus']);
+            });
         });
 
         Route::prefix('empresas')->group(function () {

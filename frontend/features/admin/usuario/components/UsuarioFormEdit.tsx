@@ -29,7 +29,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { USUARIO_STATUS, USUARIO_STATUS_OPTIONS } from "@/constants/usuario-status";
+import { USUARIO_STATUS_OPTIONS } from "@/constants/usuario-status";
 import { Grupo } from "@/domains/admin/grupo/types/grupo.model";
 import { Usuario } from "@/domains/admin/usuario/types/usuario.model";
 

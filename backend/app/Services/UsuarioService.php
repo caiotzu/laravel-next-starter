@@ -20,6 +20,7 @@ use App\DTO\Usuario\UsuarioCadastroDTO;
 use App\DTO\Usuario\UsuarioAtualizacaoDTO;
 use App\DTO\Usuario\UsuarioPrimeiroAcessoDTO;
 use App\DTO\Usuario\UsuarioRedefinirSenhaDTO;
+use App\DTO\Usuario\UsuarioAtualizacaoStatusDTO;
 
 use App\Enums\ErrorCode;
 use App\Enums\EntidadeTipo;
@@ -77,6 +78,26 @@ class UsuarioService {
                 throw new BusinessException('O grupo selecionado não é válido para este cadastro.', ErrorCode::GRUPO_REQUIRED->value);
 
             $usuario = Usuario::find($dto->id);
+            if(!$usuario)
+                throw new BusinessException('Usuário não encontrado.', ErrorCode::USUARIO_NOT_FOUND->value);
+
+            if (! $dto->temAlteracoes())
+                throw new BusinessException('Nenhum dado informado para atualização.', ErrorCode::USUARIO_REQUIRED->value);
+
+            $usuario->update($dto->paraPersistencia());
+
+            return $usuario;
+        });
+    }
+
+    public function atualizarStatus(UsuarioAtualizacaoStatusDTO $dto): Usuario
+    {
+        return DB::transaction(function () use ($dto) {
+            /**
+             * Faz atualização apenas do status. Essa função deve ser chamada apenas por usuários administrativos,
+             * caso precise atualizar o usuário normalmente, utilizar a função atualizar padrão.
+             */
+            $usuario = Usuario::where('grupo_id', $dto->grupoId)->find($dto->usuarioId);
             if(!$usuario)
                 throw new BusinessException('Usuário não encontrado.', ErrorCode::USUARIO_NOT_FOUND->value);
 
@@ -296,5 +317,22 @@ class UsuarioService {
             ->where('id', $id)
             ->where('status', UsuarioStatus::ATIVO->value)
             ->first();
+    }
+
+    public function resetarSenha(string $id, string $grupoId): void
+    {
+        /**
+         * Esse método é utilizado pelo administrativo para forçar um envio de e-mail para o usuário.
+         * Para reset de senha normal pela tela de login utilizar o fluxo padrão de esqueceu a senha
+         */
+        $usuario = Usuario::where('status', UsuarioStatus::ATIVO->value)
+            ->where('grupo_id', $grupoId)
+            ->find($id);
+        if (! $usuario) {
+            return;
+        }
+
+        $token = $this->tokenResetSenhaService->gerarToken($usuario);
+        event(new UsuarioEsqueceuSenha($usuario, $token));
     }
 }

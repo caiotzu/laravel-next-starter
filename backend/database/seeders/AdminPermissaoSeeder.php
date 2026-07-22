@@ -66,6 +66,23 @@ class AdminPermissaoSeeder extends Seeder
                     "created_at" => date("Y-m-d H:i:s"),
                     "updated_at" => date("Y-m-d H:i:s")
                 ],
+
+                // grupo empresa -> usuário
+                    [
+                        "id" => Str::uuid(),
+                        "chave" => "admin.grupo_empresa.usuario.redefinir_senha",
+                        "descricao" => "Permite redefinir a senha do cliente",
+                        "created_at" => date("Y-m-d H:i:s"),
+                        "updated_at" => date("Y-m-d H:i:s")
+                    ],
+                    [
+                        "id" => Str::uuid(),
+                        "chave" => "admin.grupo_empresa.usuario.atualizar_status",
+                        "descricao" => "Permite atualizar o status do cliente",
+                        "created_at" => date("Y-m-d H:i:s"),
+                        "updated_at" => date("Y-m-d H:i:s")
+                    ],
+                //
             //---
 
             // empresa
