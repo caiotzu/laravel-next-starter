@@ -1,19 +1,24 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 
 import axios from "axios"
-import { Monitor, CircleAlert } from "lucide-react"
+import { ArrowRight, Monitor, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
+import { AppAlert } from "@/components/feedback/AppAlert"
 import { LoginForm } from "@/components/forms/login-form"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import {
-  Alert,
-  AlertTitle,
-  AlertDescription
-} from "@/components/ui/alert"
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp"
 
 import { type LoginData } from "@/lib/validations/auth/login-schema"
 
@@ -21,20 +26,76 @@ type BackendErrorResponse = {
   errors?: Record<string, string[]>
 }
 
+type LoginResponse =
+  | {
+      "2fa_enable": true
+      temp_token: string
+    }
+  | {
+      "2fa_enable": false
+      token: string
+      expires_in: number
+    }
+
+type LoginProxyResponse = {
+  status: number
+  data: LoginResponse
+}
+
 export default function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
+  const [isLoading, setIsLoading] = useState(false)
+
+  const [requires2FA, setRequires2FA] = useState(false)
+  const [tempToken, setTempToken] = useState<string | null>(null)
+  const [codigo, setCodigo] = useState("")
+
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const toastShownRef = useRef(false)
+
+  useEffect(() => {
+    if (toastShownRef.current) return
+
+    const toastType = searchParams.get("toast")
+
+    if (!toastType) return
+
+    toastShownRef.current = true
+
+    if (toastType === "primeiro-acesso") {
+      toast.success("Senha definida com sucesso. Faça login novamente.")
+    } else if (toastType === "redefinir-senha") {
+      toast.success("Senha redefinida com sucesso. Faça login novamente.")
+    }
+
+    router.replace("/")
+  }, [router, searchParams])
 
   async function handleSubmit(data: LoginData) {
     try {
+      setIsLoading(true)
       setFieldErrors({})
 
-      await axios.post("/api/auth/private/login", {
-        email: data.email,
-        senha: data.senha,
-      })
+      const response = await axios.post<LoginProxyResponse>(
+        "/api/auth/private/login",
+        {
+          email: data.email,
+          senha: data.senha,
+        }
+      )
 
+      const payload = response.data.data
+
+      if (payload["2fa_enable"]) {
+        setRequires2FA(true)
+        setTempToken(payload.temp_token)
+        return
+      }
+
+      // Se não tem 2FA, login já foi feito e cookie já foi setado
       router.push("/dashboard")
+
     } catch (err: unknown) {
       if (axios.isAxiosError<BackendErrorResponse>(err)) {
         const backendErrors = err.response?.data?.errors || {}
@@ -44,6 +105,40 @@ export default function LoginPage() {
           business: ["Erro interno desconhecido."]
         })
       }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function handleVerify2FA() {
+    if (!tempToken) return
+
+    try {
+      setIsLoading(true)
+      setFieldErrors({})
+
+      await axios.post<LoginProxyResponse>(
+        "/api/auth/private/2fa",
+        {
+          temp_token: tempToken,
+          codigo,
+        }
+      )
+
+      // Se chegou aqui, proxy já setou cookie
+      router.push("/dashboard")
+
+    } catch (err: unknown) {
+      if (axios.isAxiosError<BackendErrorResponse>(err)) {
+        const backendErrors = err.response?.data?.errors || {}
+        setFieldErrors(backendErrors)
+      } else {
+        setFieldErrors({
+          business: ["Erro ao validar código."]
+        })
+      }
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -62,27 +157,88 @@ export default function LoginPage() {
         </div>
 
         <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-xs">
+          <div className="w-full max-w-[450px]">
+            <Card className="rounded-2xl p-8">
+              {businessErrors.length > 0 && (
+                <AppAlert
+                  variant="error"
+                  subtitle="Ocorreu um erro durante a autenticação"
+                  messages={businessErrors}
+                  onClose={() => setFieldErrors({})}
+                  className="mb-6"
+                />
+              )}
 
-            {businessErrors.length > 0 && (
-              <Alert variant="destructive" className="relative mb-8">
-                <CircleAlert className="h-5 w-5" />
-                <AlertTitle>Erro</AlertTitle>
-                <AlertDescription>
-                  <ul className="list-inside list-disc text-sm">
-                    {businessErrors.map((msg, i) => (
-                      <li key={i}>{msg}</li>
-                    ))}
-                  </ul>
-                </AlertDescription>
-              </Alert>
-            )}
+              {!requires2FA && (
+                <div className="space-y-4">
+                  <LoginForm
+                    onSubmit={handleSubmit}
+                    fieldErrors={fieldErrors}
+                  />
 
-            <LoginForm
-              onSubmit={handleSubmit}
-              fieldErrors={fieldErrors}
-            />
+                  <div className="flex justify-end">
+                    <Link
+                      href="/esqueceu-senha"
+                      className="inline-flex items-center gap-1 text-sm text-muted-foreground transition hover:text-foreground hover:underline underline-offset-4"
+                    >
+                      Esqueceu a senha?
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              )}
 
+              {requires2FA && (
+                <div className="space-y-6">
+
+                  <div className="text-center space-y-2">
+                    <h2 className="text-lg font-semibold">
+                      Autenticação em Dois Fatores
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Digite o código do seu aplicativo autenticador.
+                    </p>
+                  </div>
+
+                  <div className="flex justify-center">
+                    <InputOTP
+                      maxLength={6}
+                      value={codigo}
+                      onChange={setCodigo}
+                    >
+                      <InputOTPGroup>
+                        {[...Array(6)].map((_, i) => (
+                          <InputOTPSlot key={i} index={i} />
+                        ))}
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+
+                  <Button
+                    className="w-full"
+                    onClick={handleVerify2FA}
+                    disabled={codigo.length !== 6 || isLoading}
+                  >
+                    {isLoading && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Validar Código
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => {
+                      setRequires2FA(false)
+                      setTempToken(null)
+                      setCodigo("")
+                    }}
+                  >
+                    Voltar
+                  </Button>
+                </div>
+              )}
+            </Card>
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import * as React from "react"
 
 import {
+  FolderKanban,
   Command,
   Settings2,
 } from "lucide-react"
@@ -23,44 +24,45 @@ import {
 
 import { useUserPrivate } from "@/hooks/use-user-private"
 
-// This is sample data.
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: ''//"/avatars/shadcn.jpg",
-  },
-  navMain: [
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { data: userPrivate } = useUserPrivate();
+  
+  const navMain = [
+    {
+      title: "Cadastros",
+      url: "#",
+      icon: FolderKanban,
+      items: [
+        {
+          title: "Empresas",
+          url: "/empresas",
+          permission: "private.empresa.menu"
+        },
+      ],
+    },
     {
       title: "Configurações",
       url: "#",
       icon: Settings2,
-      isActive: true,
       items: [
         {
-          title: "Empresas",
-          url: "#",
-        },
-        {
           title: "Grupos",
-          url: "#",
+          url: "/grupos",
+          permission: "private.grupo.menu"
         },
         {
           title: "Usuários",
-          url: "#",
+          url: "/usuarios",
+          permission: "private.usuario.menu"
         },
       ],
     }
-  ],
-}
-
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { data: userPrivate } = useUserPrivate();
-
+  ]
+  
   const user = {
     name: userPrivate?.nome || 'shadcn',
     email: userPrivate?.email || 'm@example.com',
-    avatar: ''//"/avatars/shadcn.jpg",
+    avatar: userPrivate?.avatar || '',
   };
 
   return (
@@ -84,7 +86,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navMain} />
       </SidebarContent>
 
       <SidebarFooter>

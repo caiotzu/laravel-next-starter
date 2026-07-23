@@ -1,0 +1,38 @@
+import axios, { AxiosError, Method } from "axios";
+
+import { ApiErrorResponse } from "@/types/errors";
+
+interface ProxyPayload {
+  url: string;
+  method?: Method;
+  data?: unknown;
+}
+
+interface ProxyResponse<T> {
+  status: number;
+  data: T;
+}
+
+export async function proxyPrivateRequest<T>({
+  url,
+  method = "GET",
+  data,
+}: ProxyPayload): Promise<ProxyResponse<T>> {
+  try {
+    const response = await axios.post<ProxyResponse<T>>(
+      "/api/proxy/private",
+      { url, method, data }
+    );
+
+    return response.data;
+  } catch (err) {
+    const error = err as AxiosError<ApiErrorResponse>;
+
+    if (error.response?.status === 401) {
+      window.location.href = "/";
+      return Promise.reject(error);
+    }
+
+    throw error;
+  }
+}

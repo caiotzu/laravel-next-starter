@@ -7,23 +7,33 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+    // Captura headers originais do navegador
+    const userAgent = req.headers.get("user-agent") || "";
+    const forwardedFor = req.headers.get("x-forwarded-for") || "";
+    const realIp = req.headers.get("x-real-ip") || "";
+
     const response = await axios.post(
       `${process.env.BACKEND_URL}/login`,
       body,
       {
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "User-Agent": userAgent,
+          "X-Forwarded-For": forwardedFor,
+          "X-Real-IP": realIp,
+        },
         timeout: 10000,
         validateStatus: () => true, // nunca lança erro por status
       }
     );
 
-    const data = response.data;
+    const data = response.data.data;
 
     // Se for erro (400+), repassa o erro exatamente como veio
     if (response.status >= 400) {
       return NextResponse.json(
-        data,
-        { status: response.status }
+        response.data,
+        { status: response.status },
       );
     }
 

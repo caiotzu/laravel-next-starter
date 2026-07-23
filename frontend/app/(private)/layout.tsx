@@ -1,9 +1,13 @@
 import { Geist, Geist_Mono } from "next/font/google";
 
 import type { Metadata } from "next";
+import { Toaster } from "sonner";
 
 import { ReactQueryProvider } from "@/components/providers/react-query-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+
+import { PrivatePermissionProvider } from "./providers/private-permission-provider";
+
 import "@/app/globals.css";
 
 const geistSans = Geist({
@@ -38,7 +42,14 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <PrivatePermissionProvider>
+              {children}
+            </PrivatePermissionProvider>
+            <Toaster
+              position="top-right"
+              richColors
+              closeButton
+            />
           </ThemeProvider>
         </ReactQueryProvider>
       </body>

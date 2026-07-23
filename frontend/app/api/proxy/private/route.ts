@@ -25,26 +25,79 @@ export async function POST(req: Request): Promise<NextResponse> {
       );
     }
 
-    const { url, method = "GET", data, headers: clientHeaders } = body;
+    const {
+      url,
+      method = "GET",
+      data,
+      headers: clientHeaders,
+    } = body;
 
     const cookieStore = await cookies();
-    const token = cookieStore.get("private_access_token")?.value;
+
+    const token =
+      cookieStore.get("private_access_token")?.value;
+
+    // Headers originais do cliente
+    const userAgent =
+      req.headers.get("user-agent") || "";
+
+    const forwardedFor =
+      req.headers.get("x-forwarded-for") || "";
+
+    const realIp =
+      req.headers.get("x-real-ip") || "";
 
     const backendResponse = await axios.request({
       url: `${process.env.BACKEND_URL}${url}`,
       method,
+
       headers: {
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+
+        "User-Agent": userAgent,
+        "X-Forwarded-For": forwardedFor,
+        "X-Real-IP": realIp,
+
+        ...(token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {}),
+
         ...(clientHeaders || {}),
       },
-      data: ["GET", "HEAD"].includes(method.toUpperCase())
+
+      data: ["GET", "HEAD"].includes(
+        method.toUpperCase()
+      )
         ? undefined
         : data,
-      validateStatus: () => true, // nunca lança erro por status
+
+      validateStatus: () => true,
     });
 
+    // Token expirado
     if (backendResponse.status === 401) {
+      cookieStore.set(
+        "private_access_token",
+        "",
+        {
+          httpOnly: true,
+          secure:
+            process.env.NODE_ENV ===
+            "production",
+
+          sameSite:
+            process.env.NODE_ENV ===
+            "production"
+              ? "none"
+              : "lax",
+
+          path: "/",
+          maxAge: 0,
+        }
+      );
+
       return NextResponse.json(
         {
           ...backendResponse.data,
@@ -54,27 +107,32 @@ export async function POST(req: Request): Promise<NextResponse> {
       );
     }
 
-    // Se for erro (400+), repassa o erro exatamente como veio
+    // Repassa erros exatamente como vieram
     if (backendResponse.status >= 400) {
       return NextResponse.json(
         backendResponse.data,
-        { status: backendResponse.status }
+        {
+          status: backendResponse.status,
+        }
       );
     }
 
+    // Repassa resposta original do backend
     return NextResponse.json({
       status: backendResponse.status,
       data: backendResponse.data,
     });
+
   } catch {
     return NextResponse.json(
       {
         errors: {
-          business: ["Ocorreu um erro inesperado"],
+          business: [
+            "Ocorreu um erro inesperado.",
+          ],
         },
       },
       { status: 500 }
     );
   }
 }
-

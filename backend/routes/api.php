@@ -25,7 +25,8 @@ use App\Http\Controllers\Admin\ {
 
 use App\Http\Controllers\Private\ {
     AuthController as PrivateAuthController,
-    AutenticacaoDoisFatoresController as PrivateAutenticacaoDoisFatoresController
+    AutenticacaoDoisFatoresController as PrivateAutenticacaoDoisFatoresController,
+    PerfilController as PrivatePerfilController
 };
 
 // #region Admin
@@ -153,6 +154,14 @@ Route::middleware('jwt')->group(function () {
         Route::post('/habilitar', [PrivateAutenticacaoDoisFatoresController::class, 'habilitar']);
         Route::post('/confirmar', [PrivateAutenticacaoDoisFatoresController::class, 'confirmar']);
         Route::delete('/desabilitar', [PrivateAutenticacaoDoisFatoresController::class, 'desabilitar']);
+    });
+
+    Route::prefix('perfil')->group(function () {
+        Route::delete('/sessoes/{id}/encerrar', [PrivatePerfilController::class, 'encerrarSessao']);
+        Route::patch('/avatar', [PrivatePerfilController::class, 'atualizarAvatarBase64']);
+        Route::patch('/senha', [PrivatePerfilController::class, 'atualizarSenha']);
+        Route::get('/sessoes', [PrivatePerfilController::class, 'sessoes']);
+        Route::patch('/', [PrivatePerfilController::class, 'atualizar']);
     });
     // #endregion Private
 });

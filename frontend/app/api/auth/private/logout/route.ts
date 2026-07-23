@@ -3,10 +3,15 @@ import { NextResponse } from "next/server";
 
 import axios from "axios";
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("private_access_token")?.value;
+
+    // Pega o user-agent original do navegador
+    const userAgent = req.headers.get("user-agent") || "";
+    const forwardedFor = req.headers.get("x-forwarded-for") || "";
+    const realIp = req.headers.get("x-real-ip") || "";
 
     const response = await axios.post(
       `${process.env.BACKEND_URL}/logout`,
@@ -14,6 +19,9 @@ export async function POST() {
       {
         headers: {
           "Content-Type": "application/json",
+          "User-Agent": userAgent,
+          "X-Forwarded-For": forwardedFor,
+          "X-Real-IP": realIp,
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         timeout: 10000,
@@ -21,7 +29,7 @@ export async function POST() {
       }
     );
 
-    const data = response.data;
+    const data = response.data.data;
 
     if (response.status >= 400) {
       return NextResponse.json(data, {
@@ -38,11 +46,11 @@ export async function POST() {
       maxAge: 0,
     });
 
-
     return NextResponse.json({
       status: response.status,
-      data: data
+      data: data,
     });
+
   } catch {
     return NextResponse.json(
       {
@@ -54,4 +62,3 @@ export async function POST() {
     );
   }
 }
-
