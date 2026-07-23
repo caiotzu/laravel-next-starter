@@ -24,9 +24,11 @@ use App\Http\Controllers\Admin\ {
 };
 
 use App\Http\Controllers\Private\ {
-    AuthController as PrivateAuthController
+    AuthController as PrivateAuthController,
+    AutenticacaoDoisFatoresController as PrivateAutenticacaoDoisFatoresController
 };
 
+// #region Admin
 Route::prefix('admin')->group(function() {
     Route::get('/primeiro-acesso/validar', [AuthController::class, 'primeiroAcessoValidar']);
     Route::post('/primeiro-acesso', [AuthController::class, 'primeiroAcesso']);
@@ -36,21 +38,29 @@ Route::prefix('admin')->group(function() {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/2fa/verificar', [AuthController::class, 'verificar2fa']);
 });
+// #endregion Admin
 
-Route::post('/login', [PrivateAuthController::class, 'login']);
+// #region Private
+Route::get('primeiro-acesso/validar', [PrivateAuthController::class, 'primeiroAcessoValidar']);
+Route::post('primeiro-acesso', [PrivateAuthController::class, 'primeiroAcesso']);
+Route::post('esqueceu-senha', [PrivateAuthController::class, 'esqueceuSenha']);
+Route::get('redefinir-senha/validar', [PrivateAuthController::class, 'redefinirSenhaValidar']);
+Route::post('redefinir-senha', [PrivateAuthController::class, 'redefinirSenha']);
+Route::post('login', [PrivateAuthController::class, 'login']);
+Route::post('2fa/verificar', [PrivateAuthController::class, 'verificar2fa']);
+// #endregion Private
 
 Route::middleware('jwt')->group(function () {
-    Route::get('/me', [PrivateAuthController::class, 'me']);
-    Route::post('/logout', [PrivateAuthController::class, 'logout']);
-    Route::post('/refresh', [PrivateAuthController::class, 'refresh']);
-
+    // #region Lookup
     Route::prefix('lookup')->group(function() {
         Route::get('/ceps/{cep}', [CepController::class, 'consultar']);
         Route::get('/municipios', [MunicipioController::class, 'listar']);
         Route::get('/contatos-tipos', [ContatoTipoController::class, 'listar']);
         Route::get('/enderecos-tipos', [EnderecoTipoController::class, 'listar']);
     });
+    // #endregion Lookup
 
+    // #region Admin
     Route::prefix('admin')->group(function() {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
@@ -132,4 +142,17 @@ Route::middleware('jwt')->group(function () {
             Route::post('/', [UsuarioController::class, 'cadastrar']);
         });
     });
+    // #endregion Admin
+
+    // #region Private
+    Route::get('/me', [PrivateAuthController::class, 'me']);
+    Route::post('/logout', [PrivateAuthController::class, 'logout']);
+    Route::post('/refresh', [PrivateAuthController::class, 'refresh']);
+
+    Route::prefix('2fa')->group(function () {
+        Route::post('/habilitar', [PrivateAutenticacaoDoisFatoresController::class, 'habilitar']);
+        Route::post('/confirmar', [PrivateAutenticacaoDoisFatoresController::class, 'confirmar']);
+        Route::delete('/desabilitar', [PrivateAutenticacaoDoisFatoresController::class, 'desabilitar']);
+    });
+    // #endregion Private
 });

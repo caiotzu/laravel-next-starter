@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Private;
 
 use App\Http\Controllers\Controller;
 
@@ -9,16 +9,16 @@ use Illuminate\Support\Facades\Auth;
 
 use App\Services\AutenticacaoDoisFatoresService;
 
-use App\Http\Requests\Admin\AutenticacaoDoisFatores\HabilitarRequest;
-use App\Http\Requests\Admin\AutenticacaoDoisFatores\ConfirmarRequest;
-use App\Http\Requests\Admin\AutenticacaoDoisFatores\DesabilitarRequest;
+use App\Http\Requests\Private\AutenticacaoDoisFatores\HabilitarRequest;
+use App\Http\Requests\Private\AutenticacaoDoisFatores\ConfirmarRequest;
+use App\Http\Requests\Private\AutenticacaoDoisFatores\DesabilitarRequest;
 
 use App\DTO\AutenticacaoDoisFatores\AutenticacaoDoisFatoresHabilitacaoDTO;
 use App\DTO\AutenticacaoDoisFatores\AutenticacaoDoisFatoresConfirmacaoDTO;
 use App\DTO\AutenticacaoDoisFatores\AutenticacaoDoisFatoresDesabilitacaoDTO;
 
-use App\Http\Resources\Admin\Acoes\MensagemResource;
-use App\Http\Resources\Admin\AutenticacaoDoisFatores\AutenticacaoDoisFatoresResource;
+use App\Http\Resources\Private\Acoes\MensagemResource;
+use App\Http\Resources\Private\AutenticacaoDoisFatores\AutenticacaoDoisFatoresResource;
 
 class AutenticacaoDoisFatoresController extends Controller
 {
