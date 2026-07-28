@@ -25,8 +25,11 @@ use App\Http\Controllers\Admin\ {
 
 use App\Http\Controllers\Private\ {
     AuthController as PrivateAuthController,
-    AutenticacaoDoisFatoresController as PrivateAutenticacaoDoisFatoresController,
-    PerfilController as PrivatePerfilController
+    GrupoController as PrivateGrupoController,
+    PerfilController as PrivatePerfilController,
+    UsuarioController as PrivateUsuarioController,
+    PermissaoController as PrivatePermissaoController,
+    AutenticacaoDoisFatoresController as PrivateAutenticacaoDoisFatoresController
 };
 
 // #region Admin
@@ -162,6 +165,27 @@ Route::middleware('jwt')->group(function () {
         Route::patch('/senha', [PrivatePerfilController::class, 'atualizarSenha']);
         Route::get('/sessoes', [PrivatePerfilController::class, 'sessoes']);
         Route::patch('/', [PrivatePerfilController::class, 'atualizar']);
+    });
+
+    Route::prefix('grupos')->group(function () {
+        Route::patch('/{id}/permissoes', [PrivateGrupoController::class, 'sincronizarPermissoes']);
+        Route::patch('/{id}/ativar', [PrivateGrupoController::class, 'ativar']);
+        Route::put('/{id}', [PrivateGrupoController::class, 'atualizar']);
+        Route::delete('/{id}', [PrivateGrupoController::class, 'excluir']);
+        Route::get('/{id}', [PrivateGrupoController::class, 'visualizar']);
+        Route::get('/', [PrivateGrupoController::class, 'listar']);
+        Route::post('/', [PrivateGrupoController::class, 'cadastrar']);
+    });
+
+    Route::get('/permissoes', [PrivatePermissaoController::class, 'listar']);
+
+    Route::prefix('usuarios')->group(function () {
+        Route::patch('/{id}/ativar', [PrivateUsuarioController::class, 'ativar']);
+        Route::put('/{id}', [PrivateUsuarioController::class, 'atualizar']);
+        Route::delete('/{id}', [PrivateUsuarioController::class, 'excluir']);
+        Route::get('/{id}', [PrivateUsuarioController::class, 'visualizar']);
+        Route::get('/', [PrivateUsuarioController::class, 'listar']);
+        Route::post('/', [PrivateUsuarioController::class, 'cadastrar']);
     });
     // #endregion Private
 });

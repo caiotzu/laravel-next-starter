@@ -16,6 +16,7 @@ use App\DTO\Grupo\SincronizarPermissoesDTO;
 use App\Enums\ErrorCode;
 
 use App\Exceptions\BusinessException;
+use App\Models\Permissao;
 
 class GrupoService {
 
@@ -156,6 +157,22 @@ class GrupoService {
     public function sincronizarPermissoes(SincronizarPermissoesDTO $dto)
     {
         return DB::transaction(function () use ($dto) {
+
+            /**
+             * Verifica se todas as permissões passadas são do tipo para
+             * poder efetuar a atualização
+             */
+            $permissoesInvalidas = Permissao::whereIn('id', $dto->permissoes)
+                ->where('chave', 'not like', $dto->permissao_tipo->value . '%')
+                ->exists();
+
+            if ($permissoesInvalidas) {
+                 throw new BusinessException(
+                    'Existem permissões incompatíveis com o tipo do grupo.',
+                    ErrorCode::GRUPO_NOT_FOUND->value
+                );
+            }
+
             /**
              * Para sincronizar o grupo precisa ser do mesmo tipo de entidade. Ex: admin, private
              * e também deve pertencer ao mesmo identificador da entidade. Ex: null (admin), grupo_empresas.

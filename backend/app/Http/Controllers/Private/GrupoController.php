@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Private;
 
 
 use App\Http\Controllers\Controller;
@@ -9,18 +9,18 @@ use Illuminate\Http\JsonResponse;
 
 use App\Services\GrupoService;
 
-use App\Http\Requests\Admin\Grupo\ListarRequest;
-use App\Http\Requests\Admin\Grupo\CadastrarRequest;
-use App\Http\Requests\Admin\Grupo\AtualizarRequest;
-use App\Http\Requests\Admin\Grupo\SincronizarPermissoesRequest;
+use App\Http\Requests\Private\Grupo\ListarRequest;
+use App\Http\Requests\Private\Grupo\CadastrarRequest;
+use App\Http\Requests\Private\Grupo\AtualizarRequest;
+use App\Http\Requests\Private\Grupo\SincronizarPermissoesRequest;
 
 use App\DTO\Grupo\GrupoFiltroDTO;
 use App\DTO\Grupo\GrupoCadastroDTO;
 use App\DTO\Grupo\GrupoAtualizacaoDTO;
 use App\DTO\Grupo\SincronizarPermissoesDTO;
 
-use App\Http\Resources\Admin\Grupo\GrupoResource;
-use App\Http\Resources\Admin\Grupo\GrupoVisualizarResource;
+use App\Http\Resources\Private\Grupo\GrupoResource;
+use App\Http\Resources\Private\Grupo\GrupoVisualizarResource;
 
 use App\Enums\PermissaoTipo;
 
@@ -32,7 +32,7 @@ class GrupoController extends Controller
 
     public function cadastrar(CadastrarRequest $request): JsonResponse
     {
-        $this->authorize('admin.grupo.cadastrar');
+        $this->authorize('private.grupo.cadastrar');
 
         $grupo = $this->grupoService->cadastrar(GrupoCadastroDTO::criarParaCadastro($request->validated()));
 
@@ -41,7 +41,7 @@ class GrupoController extends Controller
 
     public function atualizar(AtualizarRequest $request, string $id): JsonResponse
     {
-        $this->authorize('admin.grupo.atualizar');
+        $this->authorize('private.grupo.atualizar');
 
         $grupo = $this->grupoService->atualizar(
             GrupoAtualizacaoDTO::criarParaAtualizacao(
@@ -55,7 +55,7 @@ class GrupoController extends Controller
 
     public function visualizar(string $id): JsonResponse
     {
-        $this->authorize('admin.grupo.visualizar');
+        $this->authorize('private.grupo.visualizar');
 
         $grupo = $this->grupoService->visualizar($id);
 
@@ -64,7 +64,7 @@ class GrupoController extends Controller
 
     public function excluir(string $id): JsonResponse
     {
-        $this->authorize('admin.grupo.excluir');
+        $this->authorize('private.grupo.excluir');
 
         $this->grupoService->excluir($id);
 
@@ -73,7 +73,7 @@ class GrupoController extends Controller
 
     public function ativar(string $id): JsonResponse
     {
-        $this->authorize('admin.grupo.ativar');
+        $this->authorize('private.grupo.ativar');
 
         $grupo = $this->grupoService->ativar($id);
 
@@ -82,7 +82,7 @@ class GrupoController extends Controller
 
     public function listar(ListarRequest $request): JsonResponse
     {
-        $this->authorize('admin.grupo.listar');
+        $this->authorize('private.grupo.listar');
 
         $grupos = $this->grupoService->listar(GrupoFiltroDTO::criarParaFiltro($request->validated()));
 
@@ -91,11 +91,11 @@ class GrupoController extends Controller
 
     public function sincronizarPermissoes(SincronizarPermissoesRequest $request, string $id)
     {
-        $this->authorize('admin.grupo.sincronizar_permissao');
+        $this->authorize('private.grupo.sincronizar_permissao');
 
         $grupo = $this->grupoService->sincronizarPermissoes(SincronizarPermissoesDTO::criarParaSincronizacaoDasPermissoes(
             $id,
-            PermissaoTipo::ADMIN,
+            PermissaoTipo::PRIVATE,
             $request->validated()
         ));
 
