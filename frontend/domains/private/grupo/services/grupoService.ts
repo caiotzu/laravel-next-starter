@@ -1,0 +1,117 @@
+import qs from "qs";
+
+import { LaravelResourcePagination } from "@/types/laravel";
+
+import { proxyPrivateRequest } from "@/lib/proxy-private";
+
+import { toGrupo } from "../mappers/grupo.mapper";
+import { Grupo } from "../types/grupo.model";
+import {
+  CadastrarGrupoRequest,
+  EditarGrupoRequest,
+  ListarGruposRequest,
+  SincronizarPermissoesGrupoRequest,
+} from "../types/grupo.requests";
+import { AtivarGrupoResponse, CadastrarGrupoResponse, EditarGrupoResponse, ListarGruposResponse, VisualizarGrupoResponse } from "../types/grupo.responses";
+
+export async function cadastrarGrupo(
+  dto: CadastrarGrupoRequest
+) {
+  const response = 
+    await proxyPrivateRequest<CadastrarGrupoResponse>({
+      url: "/grupos",
+      method: "POST",
+      data: dto,
+    });
+
+  return toGrupo(response.data.data);  
+}
+
+export async function editarGrupo(
+  id: string,
+  dto: EditarGrupoRequest
+) {
+  const response = 
+    await proxyPrivateRequest<EditarGrupoResponse>({
+      url: `/grupos/${id}`,
+      method: "PUT",
+      data: dto,
+    });
+
+  return toGrupo(response.data.data);  
+}
+
+export async function excluirGrupo(
+  id: string
+) {
+  return proxyPrivateRequest<null>({
+    url: `/grupos/${id}`,
+    method: "DELETE"
+  });
+}
+
+export async function ativarGrupo(
+  id: string
+) {
+  const response = 
+    await proxyPrivateRequest<AtivarGrupoResponse>({
+      url: `/grupos/${id}/ativar`,
+      method: "PATCH"
+    });
+
+  return toGrupo(response.data.data);  
+}
+
+export async function listarGrupos(
+  dto: ListarGruposRequest
+): Promise<LaravelResourcePagination<Grupo>> {
+  const query = qs.stringify(dto, {
+    skipNulls: true,
+    filter: (_, value) => {
+      if (
+        value === "" ||
+        value === undefined
+      ) {
+        return undefined;
+      }
+
+      return value;
+    },
+  });
+
+  const response =
+    await proxyPrivateRequest<ListarGruposResponse>({
+      url: `/grupos?${query}`,
+      method: "GET",
+    });
+
+  return {
+    ...response.data,
+    data: response.data.data.map(
+      toGrupo
+    ),
+  };
+}
+
+export async function visualizarGrupo(id: string) {
+  const response = await proxyPrivateRequest<VisualizarGrupoResponse>({
+    url: `/grupos/${id}`,
+    method: "GET",
+  });
+  
+  return toGrupo(response.data.data);
+}
+
+export async function sincronizarPermissoesGrupo(
+  id: string,
+  dto: SincronizarPermissoesGrupoRequest
+) {
+  const response = 
+    await proxyPrivateRequest<EditarGrupoResponse>({
+      url: `/grupos/${id}/permissoes`,
+      method: "PATCH",
+      data: dto,
+    });
+
+  return toGrupo(response.data.data);  
+}
