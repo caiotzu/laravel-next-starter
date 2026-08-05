@@ -20,6 +20,8 @@ use App\Http\Resources\Admin\Empresa\EmpresaResource;
 use App\Http\Resources\Admin\Empresa\EmpresaListarResource;
 use App\Http\Resources\Admin\Empresa\EmpresaVisualizarResource;
 
+use App\Enums\EntidadeTipo;
+
 class EmpresaController extends Controller
 {
     public function __construct(
@@ -43,7 +45,8 @@ class EmpresaController extends Controller
             EmpresaAtualizacaoDTO::criarParaAtualizacao(
                 $id,
                 $request->validated()
-            )
+            ),
+            EntidadeTipo::ADMIN
         );
 
         return EmpresaResource::make($empresa)->response()->setStatusCode(200);
@@ -53,7 +56,7 @@ class EmpresaController extends Controller
     {
         $this->authorize('admin.empresa.visualizar');
 
-        $empresa = $this->empresaService->visualizar($id);
+        $empresa = $this->empresaService->visualizar($id, EntidadeTipo::ADMIN);
 
         return EmpresaVisualizarResource::make($empresa)->response()->setStatusCode(200);
     }
@@ -80,7 +83,10 @@ class EmpresaController extends Controller
     {
         $this->authorize('admin.empresa.listar');
 
-        $empresas = $this->empresaService->listar(EmpresaFiltroDTO::criarParaFiltro($request->validated()));
+        $empresas = $this->empresaService->listar(
+            EmpresaFiltroDTO::criarParaFiltro($request->validated()),
+            EntidadeTipo::ADMIN
+        );
 
         return EmpresaListarResource::collection($empresas)->response()->setStatusCode(200);
     }

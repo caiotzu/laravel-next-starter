@@ -17,6 +17,8 @@ use App\DTO\EmpresaContato\EmpresaContatoAtualizacaoDTO;
 
 use App\Http\Resources\Admin\EmpresaContato\EmpresaContatoResource;
 
+use App\Enums\EntidadeTipo;
+
 class EmpresaContatoController extends Controller
 {
     public function __construct(
@@ -31,7 +33,8 @@ class EmpresaContatoController extends Controller
             EmpresaContatoCadastroDTO::criarParaCadastro(
                 $empresaId,
                 dados: $request->validated()
-            )
+            ),
+            EntidadeTipo::ADMIN
         );
 
         return EmpresaContatoResource::make($contato)->response()->setStatusCode(201);
@@ -46,7 +49,8 @@ class EmpresaContatoController extends Controller
                 $empresaId,
                 $contatoId,
                 $request->validated()
-            )
+            ),
+            EntidadeTipo::ADMIN
         );
 
         return EmpresaContatoResource::make($contato)->response()->setStatusCode(200);
@@ -56,7 +60,7 @@ class EmpresaContatoController extends Controller
     {
         $this->authorize('admin.empresa.contato.visualizar');
 
-        $contato = $this->empresaContatoService->visualizar($empresaId, $contatoId);
+        $contato = $this->empresaContatoService->visualizar($empresaId, $contatoId, EntidadeTipo::ADMIN);
 
         return EmpresaContatoResource::make($contato)->response()->setStatusCode(200);
     }
@@ -65,7 +69,7 @@ class EmpresaContatoController extends Controller
     {
         $this->authorize('admin.empresa.contato.excluir');
 
-        $this->empresaContatoService->excluir($empresaId, $contatoId);
+        $this->empresaContatoService->excluir($empresaId, $contatoId, EntidadeTipo::ADMIN);
 
         return response()->json(null, 204);
     }
@@ -74,7 +78,7 @@ class EmpresaContatoController extends Controller
     {
         $this->authorize('admin.empresa.contato.ativar');
 
-        $contato = $this->empresaContatoService->ativar($empresaId, $contatoId);
+        $contato = $this->empresaContatoService->ativar($empresaId, $contatoId, EntidadeTipo::ADMIN);
 
         return EmpresaContatoResource::make($contato)->response()->setStatusCode(200);
     }
@@ -84,8 +88,10 @@ class EmpresaContatoController extends Controller
         $this->authorize('admin.empresa.contato.listar');
 
         $contatos = $this->empresaContatoService->listar(EmpresaContatoFiltroDTO::criarParaFiltro([
-            'empresa_id' => $empresaId
-        ]));
+                'empresa_id' => $empresaId
+            ]),
+            EntidadeTipo::ADMIN
+        );
 
         return EmpresaContatoResource::collection($contatos)->response()->setStatusCode(200);
     }

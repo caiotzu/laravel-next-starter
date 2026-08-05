@@ -27,8 +27,11 @@ use App\Http\Controllers\Private\ {
     AuthController as PrivateAuthController,
     GrupoController as PrivateGrupoController,
     PerfilController as PrivatePerfilController,
+    EmpresaController as PrivateEmpresaController,
     UsuarioController as PrivateUsuarioController,
     PermissaoController as PrivatePermissaoController,
+    EmpresaContatoController as PrivateEmpresaContatoController,
+    EmpresaEnderecoController as PrivateEmpresaEnderecoController,
     AutenticacaoDoisFatoresController as PrivateAutenticacaoDoisFatoresController
 };
 
@@ -165,6 +168,30 @@ Route::middleware('jwt')->group(function () {
         Route::patch('/senha', [PrivatePerfilController::class, 'atualizarSenha']);
         Route::get('/sessoes', [PrivatePerfilController::class, 'sessoes']);
         Route::patch('/', [PrivatePerfilController::class, 'atualizar']);
+    });
+
+    Route::prefix('empresas')->group(function () {
+        Route::put('/{id}', [PrivateEmpresaController::class, 'atualizar']);
+        Route::get('/{id}', [PrivateEmpresaController::class, 'visualizar']);
+        Route::get('/', [PrivateEmpresaController::class, 'listar']);
+
+        Route::prefix('{empresaId}/contatos')->group(function () {
+            Route::patch('/{contatoId}/ativar', [PrivateEmpresaContatoController::class, 'ativar']);
+            Route::put('/{contatoId}', [PrivateEmpresaContatoController::class, 'atualizar']);
+            Route::get('/{contatoId}', [PrivateEmpresaContatoController::class, 'visualizar']);
+            Route::delete('/{contatoId}', [PrivateEmpresaContatoController::class, 'excluir']);
+            Route::get('/', [PrivateEmpresaContatoController::class, 'listar']);
+            Route::post('/', [PrivateEmpresaContatoController::class, 'cadastrar']);
+        });
+
+        Route::prefix('{empresaId}/enderecos')->group(function () {
+            Route::patch('/{enderecoId}/ativar', [PrivateEmpresaEnderecoController::class, 'ativar']);
+            Route::put('/{enderecoId}', [PrivateEmpresaEnderecoController::class, 'atualizar']);
+            Route::get('/{enderecoId}', [PrivateEmpresaEnderecoController::class, 'visualizar']);
+            Route::delete('/{enderecoId}', [PrivateEmpresaEnderecoController::class, 'excluir']);
+            Route::get('/', [PrivateEmpresaEnderecoController::class, 'listar']);
+            Route::post('/', [PrivateEmpresaEnderecoController::class, 'cadastrar']);
+        });
     });
 
     Route::prefix('grupos')->group(function () {

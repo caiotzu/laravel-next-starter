@@ -1,0 +1,461 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+import { Building2, Loader2, MapPinned, Phone } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+
+import { ApiErrorResponse } from "@/types/errors";
+
+import { PrivatePermissionGuard } from "@/app/(private)/_components/guard/PrivatePermissionGuard";
+
+import { AppAlert } from "@/components/feedback/AppAlert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import { EMPRESA_STATUS_OPTIONS, EmpresaStatus } from "@/constants/empresa-status";
+import {
+  ESTADOS_LABELS,
+  ESTADOS_MAP,
+  getLabelByUF,
+  UF,
+} from "@/constants/estados";
+import { useEmpresas } from "@/domains/private/empresa/hooks/useEmpresas";
+import { editarEmpresa } from "@/domains/private/empresa/services/empresaService";
+import { Empresa } from "@/domains/private/empresa/types/empresa.model";
+import { maskCNPJAlfanumerico, onlyAlphaNumeric } from "@/lib/utils";
+
+import {
+  empresaSchemaEdicao,
+  EmpresaFormDataEdicao,
+} from "../schemas/empresa.schema";
+
+import { EmpresaContatosTab } from "./EmpresaContatosTab";
+import { EmpresaEnderecosTab } from "./EmpresaEnderecosTab";
+
+interface EmpresaFormEdicaoProps {
+  empresa: Empresa;
+}
+
+export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
+  const defaultValues = useMemo<EmpresaFormDataEdicao>(() => ({
+    grupo_empresa_id: empresa.grupoEmpresaId,
+    matriz_id: empresa.matrizId ?? undefined,
+    cnpj: maskCNPJAlfanumerico(empresa.cnpj),
+    nome_fantasia: empresa.nomeFantasia,
+    razao_social: empresa.razaoSocial,
+    inscricao_estadual: empresa.inscricaoEstadual ?? undefined,
+    inscricao_municipal: empresa.inscricaoMunicipal ?? undefined,
+    status: empresa.status as EmpresaStatus,
+    uf: empresa.uf as UF,
+  }), [
+    empresa.grupoEmpresaId,
+    empresa.matrizId,
+    empresa.cnpj,
+    empresa.nomeFantasia,
+    empresa.razaoSocial,
+    empresa.inscricaoEstadual,
+    empresa.inscricaoMunicipal,
+    empresa.status,
+    empresa.uf,
+  ]);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+    clearErrors,
+    setValue,
+    watch,
+    reset
+  } = useForm<EmpresaFormDataEdicao>({
+    resolver: zodResolver(empresaSchemaEdicao),
+    defaultValues,
+  });
+  const queryClient = useQueryClient();
+
+  const [activeTab, setActiveTab] = useState("dados");
+  const [matrizBusca, setMatrizBusca] = useState("");
+  const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
+
+  const canEditStatus = empresa.status !== "pendente";
+  const statusOptions = canEditStatus
+    ? EMPRESA_STATUS_OPTIONS.filter(
+        (status) => status.value !== "pendente"
+      )
+    : EMPRESA_STATUS_OPTIONS;
+
+  const { data: matrizesData , isLoading: isLoadingMatrizes} = useEmpresas({
+    page: 1,
+    excluido: false,
+    por_pagina: 10,
+    id: matrizBusca ? undefined : empresa.matrizId ?? undefined,
+    nome_fantasia: matrizBusca || undefined,
+  });
+  const matrizes = (matrizesData?.data ?? []) as Empresa[];
+  const matrizSelecionada = matrizes.find((item) => item.id === watch("matriz_id")) ?? null;
+
+  // Precisa desse useEffect pois se excluir algum endereço ou contato e status alterar para pendente ele consegue atualizar na tela
+  useEffect(() => {
+    reset(defaultValues);
+  }, [defaultValues, reset]);
+
+  const { mutate: atualizarEmpresaMutation, isPending: isPendingAtualizarEmpresa } = useMutation<
+    Empresa,
+    AxiosError<ApiErrorResponse>,
+    EmpresaFormDataEdicao
+  >({
+    mutationFn: (data) => editarEmpresa(empresa.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["empresa", empresa.id],
+      });
+
+      toast.success("Empresa atualizada com sucesso");
+    },
+    onError: (error) => {
+      const apiErrors = error.response?.data?.errors;
+
+      if (!apiErrors) {
+        setBackendErrors(["Erro ao atualizar empresa."]);
+        return;
+      }
+
+      if (apiErrors.business) {
+        setBackendErrors(apiErrors.business);
+      }
+
+      Object.entries(apiErrors).forEach(([field, messages]) => {
+        if (!messages || field === "business") return;
+
+        setError(field as keyof EmpresaFormDataEdicao, {
+          type: "server",
+          message: messages[0],
+        });
+      });
+    },
+  });
+
+  const onSubmitEmpresa = (data: EmpresaFormDataEdicao) => {
+    const payload = canEditStatus
+      ? data
+      : (({ status, ...rest }) => rest)(data);
+
+    atualizarEmpresaMutation({
+      ...payload,
+      cnpj: onlyAlphaNumeric(payload.cnpj),
+    });
+  };
+
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Editar Empresa</CardTitle>
+      </CardHeader>
+
+      <CardContent className="space-y-6 pt-6">
+        {backendErrors && backendErrors.length > 0 && (
+          <AppAlert
+            variant="error"
+            subtitle="Ocorreu um erro durante a operação"
+            messages={backendErrors}
+            onClose={() => setBackendErrors(null)}
+            className="mb-6"
+          />
+        )}
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full justify-start">
+            <TabsTrigger value="dados">
+              <Building2 className="h-4 w-4" />
+              Dados da Empresa
+            </TabsTrigger>
+            <TabsTrigger value="enderecos">
+              <MapPinned className="h-4 w-4" />
+              Enderecos
+            </TabsTrigger>
+            <TabsTrigger value="contatos">
+              <Phone className="h-4 w-4" />
+              Contatos
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dados" className="pt-4">
+            <form onSubmit={handleSubmit(onSubmitEmpresa)}>
+              <div className="rounded-xl border p-6 space-y-6">
+                <div className="grid grid-cols-12 gap-6">
+                  <div className="col-span-12 md:col-span-4 space-y-2">
+                    <Label htmlFor="grupo-empresa-nome">Grupo Empresa</Label>
+                    <Input
+                      id="grupo-empresa-nome"
+                      value={empresa.grupoEmpresa?.nome}
+                      disabled
+                      readOnly
+                    />
+                  </div>
+
+                  <div className="col-span-12 md:col-span-4 space-y-2">
+                    <Label>Matriz</Label>
+
+                    <Combobox
+                      items={matrizes}
+                      value={matrizSelecionada}
+                      onValueChange={(item) => {
+                        setValue("matriz_id", item?.id ?? undefined, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        });
+
+                        if (!item) {
+                          setMatrizBusca("");
+                        }
+                      }}
+                      itemToStringLabel={(item) => item?.nomeFantasia ?? ""}
+                    >
+                      <ComboboxInput
+                        placeholder="Digite o nome da matriz..."
+                        value={matrizSelecionada?.nomeFantasia ?? matrizBusca}
+                        onChange={(e) => setMatrizBusca(e.target.value)}
+                        showClear
+                      />
+
+                      <ComboboxContent>
+                        <ComboboxEmpty>
+                          {isLoadingMatrizes
+                            ? "Carregando..."
+                            : "Nenhuma matriz encontrada."}
+                        </ComboboxEmpty>
+
+                        <ComboboxList>
+                          {(item) => (
+                            <ComboboxItem key={item.id} value={item}>
+                              {item.nomeFantasia}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+
+                    {errors.matriz_id && (
+                      <p className="text-sm text-red-700">
+                        {errors.matriz_id.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="col-span-12 md:col-span-4 space-y-2">
+                    <Label htmlFor="cnpj">
+                      CNPJ <span className="text-red-600">*</span>
+                    </Label>
+                    <Input
+                      id="cnpj"
+                      value={maskCNPJAlfanumerico(empresa.cnpj)}
+                      disabled
+                      readOnly
+                    />
+                    {errors.cnpj && (
+                      <p className="text-sm text-red-700">{errors.cnpj.message}</p>
+                    )}
+                  </div>
+
+                  <div className="col-span-12 md:col-span-4 space-y-2">
+                    <Label htmlFor="nome_fantasia">
+                      Nome Fantasia <span className="text-red-600">*</span>
+                    </Label>
+                    <Input
+                      id="nome_fantasia"
+                      placeholder="Digite o nome fantasia"
+                      {...register("nome_fantasia")}
+                    />
+                    {errors.nome_fantasia && (
+                      <p className="text-sm text-red-700">
+                        {errors.nome_fantasia.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="col-span-12 md:col-span-4 space-y-2">
+                    <Label htmlFor="razao_social">
+                      Razao Social <span className="text-red-600">*</span>
+                    </Label>
+                    <Input
+                      id="razao_social"
+                      placeholder="Digite a razao social"
+                      {...register("razao_social")}
+                    />
+                    {errors.razao_social && (
+                      <p className="text-sm text-red-700">
+                        {errors.razao_social.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="col-span-12 md:col-span-4 space-y-2">
+                    <Label htmlFor="inscricao_estadual">Inscricao Estadual</Label>
+                    <Input
+                      id="inscricao_estadual"
+                      placeholder="Digite a inscricao estadual"
+                      {...register("inscricao_estadual")}
+                    />
+                    {errors.inscricao_estadual && (
+                      <p className="text-sm text-red-700">
+                        {errors.inscricao_estadual.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="col-span-12 md:col-span-4 space-y-2">
+                    <Label htmlFor="inscricao_municipal">Inscricao Municipal</Label>
+                    <Input
+                      id="inscricao_municipal"
+                      placeholder="Digite a inscricao municipal"
+                      {...register("inscricao_municipal")}
+                    />
+                    {errors.inscricao_municipal && (
+                      <p className="text-sm text-red-700">
+                        {errors.inscricao_municipal.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="col-span-12 md:col-span-4 space-y-2">
+                    <Label>
+                      UF <span className="text-red-600">*</span>
+                    </Label>
+
+                    <Combobox
+                      items={ESTADOS_LABELS}
+                      value={
+                        watch("uf")
+                          ? getLabelByUF(watch("uf")!)
+                          : null
+                      }
+                      onValueChange={(label) =>
+                        setValue(
+                          "uf",
+                          (label
+                            ? ESTADOS_MAP.get(label)
+                            : undefined) as EmpresaFormDataEdicao["uf"],
+                          {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          }
+                        )
+                      }
+                    >
+                      <ComboboxInput
+                        placeholder="Selecione a UF"
+                        showClear
+                      />
+
+                      <ComboboxContent>
+                        <ComboboxEmpty>Nenhum estado encontrado.</ComboboxEmpty>
+
+                        <ComboboxList>
+                          {(item) => (
+                            <ComboboxItem key={item} value={item}>
+                              {item}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+
+                    {errors.uf && (
+                      <p className="text-sm text-red-700">{errors.uf.message}</p>
+                    )}
+                  </div>
+
+                  <div className="col-span-12 md:col-span-4 space-y-2">
+                    <Label>
+                      Status / Situação <span className="text-red-600">*</span>
+                    </Label>
+
+                    <Input
+                      id="grupo-empresa-nome"
+                      value={statusOptions.find((s) => s.value === watch("status"))?.label ?? ""}
+                      disabled
+                      readOnly
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <PrivatePermissionGuard 
+                    permission="private.empresa.atualizar"
+                    disableFallback={true}
+                  >
+                    <Button
+                      type="submit"
+                      disabled={isPendingAtualizarEmpresa}
+                      className="cursor-pointer"
+                    >
+                      {isPendingAtualizarEmpresa && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Salvar Empresa
+                    </Button>
+                  </PrivatePermissionGuard>
+                </div>
+              </div>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="enderecos" className="pt-4">
+            <PrivatePermissionGuard 
+							permissions={[
+								"private.empresa.endereco.atualizar",
+								"private.empresa.endereco.cadastrar",
+								"private.empresa.endereco.excluir",
+								"private.empresa.endereco.listar",
+								"private.empresa.endereco.visualizar",
+              ]}
+						>
+              <EmpresaEnderecosTab
+                empresa={empresa}
+                enderecos={empresa.enderecos ?? []}
+              />
+            </PrivatePermissionGuard>
+          </TabsContent>
+
+          <TabsContent value="contatos" className="pt-4">
+            <PrivatePermissionGuard 
+							permissions={[
+								"private.empresa.contato.atualizar",
+								"private.empresa.contato.cadastrar",
+								"private.empresa.contato.excluir",
+								"private.empresa.contato.listar",
+								"private.empresa.contato.visualizar",
+              ]}
+						>
+              <EmpresaContatosTab
+                empresa={empresa}
+                contatos={empresa.contatos ?? []}
+              />
+            </PrivatePermissionGuard>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+}

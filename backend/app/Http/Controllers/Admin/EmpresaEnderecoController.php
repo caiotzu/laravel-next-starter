@@ -16,6 +16,9 @@ use App\DTO\EmpresaEndereco\EmpresaEnderecoCadastroDTO;
 use App\DTO\EmpresaEndereco\EmpresaEnderecoAtualizacaoDTO;
 
 use App\Http\Resources\Admin\EmpresaEndereco\EmpresaEnderecoResource;
+
+use App\Enums\EntidadeTipo;
+
 class EmpresaEnderecoController extends Controller
 {
     public function __construct(
@@ -30,7 +33,8 @@ class EmpresaEnderecoController extends Controller
             EmpresaEnderecoCadastroDTO::criarParaCadastro(
                 $empresaId,
                 dados: $request->validated()
-            )
+            ),
+            EntidadeTipo::ADMIN
         );
 
         return EmpresaEnderecoResource::make($endereco)->response()->setStatusCode(201);
@@ -45,7 +49,8 @@ class EmpresaEnderecoController extends Controller
                 $empresaId,
                 $enderecoId,
                 $request->validated()
-            )
+            ),
+            EntidadeTipo::ADMIN
         );
 
         return EmpresaEnderecoResource::make($endereco)->response()->setStatusCode(200);
@@ -55,7 +60,7 @@ class EmpresaEnderecoController extends Controller
     {
         $this->authorize('admin.empresa.endereco.visualizar');
 
-        $endereco = $this->empresaEnderecoService->visualizar($empresaId, $enderecoId);
+        $endereco = $this->empresaEnderecoService->visualizar($empresaId, $enderecoId, EntidadeTipo::ADMIN);
 
         return EmpresaEnderecoResource::make($endereco)->response()->setStatusCode(200);
     }
@@ -64,7 +69,7 @@ class EmpresaEnderecoController extends Controller
     {
         $this->authorize('admin.empresa.endereco.excluir');
 
-        $this->empresaEnderecoService->excluir($empresaId, $enderecoId);
+        $this->empresaEnderecoService->excluir($empresaId, $enderecoId, EntidadeTipo::ADMIN);
 
         return response()->json(null, 204);
     }
@@ -73,7 +78,7 @@ class EmpresaEnderecoController extends Controller
     {
         $this->authorize('admin.empresa.endereco.ativar');
 
-        $endereco = $this->empresaEnderecoService->ativar($empresaId, $enderecoId);
+        $endereco = $this->empresaEnderecoService->ativar($empresaId, $enderecoId, EntidadeTipo::ADMIN);
 
         return EmpresaEnderecoResource::make($endereco)->response()->setStatusCode(200);
     }
@@ -83,8 +88,10 @@ class EmpresaEnderecoController extends Controller
         $this->authorize('admin.empresa.endereco.listar');
 
         $enderecos = $this->empresaEnderecoService->listar(EmpresaEnderecoFiltroDTO::criarParaFiltro([
-            'empresa_id' => $empresaId
-        ]));
+                'empresa_id' => $empresaId
+            ]),
+            EntidadeTipo::ADMIN
+        );
 
         return EmpresaEnderecoResource::collection($enderecos)->response()->setStatusCode(200);
     }

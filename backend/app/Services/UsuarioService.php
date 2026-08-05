@@ -172,8 +172,7 @@ class UsuarioService {
     {
         return DB::transaction(function () use ($id) {
 
-            $usuario = Usuario::onlyTrashed()
-                ->find($id);
+            $usuario = Usuario::onlyTrashed()->find($id);
             if (!$usuario) {
                 throw new BusinessException(
                     'Usuário não encontrado para ativação.',

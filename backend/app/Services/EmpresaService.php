@@ -3,23 +3,36 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 use App\Events\EmpresaDadosObrigatoriosAtualizados;
 
 use App\Models\Empresa;
-use App\Models\EmpresaContato;
-use App\Models\EmpresaEndereco;
 
 use App\DTO\Empresa\EmpresaCadastroDTO;
 use App\DTO\Empresa\EmpresaAtualizacaoDTO;
 use App\DTO\Empresa\EmpresaFiltroDTO;
 
 use App\Enums\ErrorCode;
+use App\Enums\EntidadeTipo;
 
 use App\Exceptions\BusinessException;
 
 class EmpresaService {
+
+    private function aplicarEscopoEntidade(Builder $query, EntidadeTipo $entidadeTipo): Builder
+    {
+        if ($entidadeTipo === EntidadeTipo::ADMIN) {
+            return $query;
+        }
+
+        return $query->where(
+            'grupo_empresa_id',
+            Auth::user()->grupo->entidade_id
+        );
+    }
 
     public function cadastrar(EmpresaCadastroDTO $dto): Empresa
     {
@@ -44,15 +57,18 @@ class EmpresaService {
         });
     }
 
-    public function atualizar(EmpresaAtualizacaoDTO $dto): Empresa
+    public function atualizar(EmpresaAtualizacaoDTO $dto, EntidadeTipo $entidadeTipo): Empresa
     {
-        return DB::transaction(function () use ($dto) {
+        return DB::transaction(function () use ($dto, $entidadeTipo) {
+            $query = Empresa::query();
 
-            $empresa = Empresa::find($dto->empresa_id);
+            $this->aplicarEscopoEntidade($query, $entidadeTipo);
+
+            $empresa = $query->find($dto->empresa_id);
             if(!$empresa)
                 throw new BusinessException('Empresa não encontrada.', ErrorCode::EMPRESA_NOT_FOUND->value);
 
-            $empresa->update($dto->paraPersistencia());
+            $empresa->update($dto->paraPersistencia($entidadeTipo));
 
             /**
              * Dispara o evento para verificar se a empresa pode ser ativada
@@ -63,16 +79,18 @@ class EmpresaService {
         });
     }
 
-    public function visualizar(string $id): Empresa
+    public function visualizar(string $id, EntidadeTipo $entidadeTipo): Empresa
     {
-        return DB::transaction(function () use ($id) {
-            $empresa = Empresa::with([
+        return DB::transaction(function () use ($id, $entidadeTipo) {
+            $query = Empresa::with([
                 'grupoEmpresa',
                 'contatos',
                 'enderecos.municipio'
-            ])
-            ->withTrashed()
-            ->find($id);
+            ])->withTrashed();
+
+            $this->aplicarEscopoEntidade($query, $entidadeTipo);
+
+            $empresa = $query->find($id);
 
             if (! $empresa) {
                 throw new BusinessException(
@@ -134,14 +152,17 @@ class EmpresaService {
         });
     }
 
-    public function listar(EmpresaFiltroDTO $filtro): LengthAwarePaginator
+    public function listar(EmpresaFiltroDTO $filtro, EntidadeTipo $entidadeTipo): LengthAwarePaginator
     {
-        return Empresa::query()
+        $query = Empresa::query()
             ->with([
                 'grupoEmpresa',
                 'matriz'
-            ])
-            ->when($filtro->id, fn ($q) =>
+            ]);
+
+        $this->aplicarEscopoEntidade($query, $entidadeTipo);
+
+        return $query->when($filtro->id, fn ($q) =>
                 $q->where('id', $filtro->id)
             )
             ->when($filtro->grupo_empresa_id, fn ($q) =>

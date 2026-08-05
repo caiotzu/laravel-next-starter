@@ -2,7 +2,7 @@ import { proxyAdminRequest } from "@/lib/proxy-admin";
 
 import { toEmpresaEndereco } from "../mappers/empresa-endereco.mapper";
 import { EmpresaEnderecoRequest } from "../types/empresaEndereco.requests";
-import { CadastrarEmpresaEnderecoResponse, EditarEmpresaEnderecoResponse, empresaEnderecoDataResponse } from "../types/empresaEndereco.responses";
+import { CadastrarEmpresaEnderecoResponse, EditarEmpresaEnderecoResponse } from "../types/empresaEndereco.responses";
 
 export async function cadastrarEmpresaEndereco(
   empresaId: string,
