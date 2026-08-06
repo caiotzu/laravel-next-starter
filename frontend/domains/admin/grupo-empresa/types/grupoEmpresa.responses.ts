@@ -1,6 +1,6 @@
 import { LaravelApiResponse, LaravelResourcePagination } from "@/types/laravel";
 
-import { grupoDataResponse } from "../../grupo/types/grupo.responses";
+import { GrupoDataResponse } from "../../grupo/types/grupo.responses";
 
 export interface GrupoEmpresaDataResponse {
   id: string;
@@ -9,7 +9,7 @@ export interface GrupoEmpresaDataResponse {
   updated_at: string | null;
   deleted_at: string | null;
 
-  grupos?: grupoDataResponse[]
+  grupos?: GrupoDataResponse[]
 }
 
 export type CadastrarGrupoEmpresaResponse = LaravelApiResponse<GrupoEmpresaDataResponse>;

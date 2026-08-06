@@ -2,7 +2,7 @@ import { LaravelApiResponse, LaravelResourcePagination } from "@/types/laravel";
 
 import { UsuarioStatus } from "@/constants/usuario-status";
 
-import { grupoDataResponse } from "../../grupo/types/grupo.responses";
+import { GrupoDataResponse } from "../../grupo/types/grupo.responses";
 
 export interface UsuarioDataResponse {
   id: string;
@@ -19,7 +19,7 @@ export interface UsuarioDataResponse {
   updated_at: string | null;
   deleted_at: string | null;
 
-  grupo?: grupoDataResponse
+  grupo?: GrupoDataResponse
 }
 
 export type CadastrarUsuarioResponse = LaravelApiResponse<UsuarioDataResponse>;

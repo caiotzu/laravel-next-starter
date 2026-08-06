@@ -2,7 +2,7 @@ import { LaravelApiResponse } from "@/types/laravel";
 
 import { UsuarioStatus } from "@/constants/usuario-status";
 
-import { grupoDataResponse } from "../../grupo/types/grupo.responses";
+import { GrupoDataResponse } from "../../grupo/types/grupo.responses";
 
 export interface UsuarioGrupoEmpresaDataResponse {
   id: string;
@@ -19,7 +19,7 @@ export interface UsuarioGrupoEmpresaDataResponse {
   updated_at: string | null;
   deleted_at: string | null;
 
-  grupo?: grupoDataResponse
+  grupo?: GrupoDataResponse
 }
 
 export interface RedefinirSenhaDataResponse {

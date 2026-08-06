@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import Link from "next/link";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,8 +39,7 @@ export function GrupoEmpresaFormEdit({
     register, 
     handleSubmit, 
     formState: { errors }, 
-    setError, 
-    reset 
+    setError
   } = useForm<GrupoEmpresasFormDataEdicao>({
     resolver: zodResolver(grupoEmpresaSchemaEdicao),
     defaultValues: grupoEmpresa,

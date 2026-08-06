@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, User } from "lucide-react";
+import { User } from "lucide-react";
 
 import { Info } from "@/components/common/Info";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

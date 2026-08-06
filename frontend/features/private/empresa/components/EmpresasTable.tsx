@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 import Link from "next/link";
 
 import { MoreHorizontal, Pencil, Eye } from "lucide-react";
@@ -33,15 +31,8 @@ interface Props {
   data: Empresa[];
 }
 
-type ModalState = {
-  tipo: "excluir" | "ativar" | null;
-  empresaId: string | null;
-};
-
 export function EmpresasTable({ data }: Props) {
-  const [modal, setModal] = useState<ModalState>({ tipo: null, empresaId: null });
 
- 
   if (!data.length) {
     return (
       <Card className="rounded-2xl border shadow-sm p-8 text-center text-muted-foreground">
@@ -49,8 +40,6 @@ export function EmpresasTable({ data }: Props) {
       </Card>
     );
   }
-
-  const empresaSelecionada = data.find((g) => g.id === modal.empresaId);
 
   function getStatusBadge(status: string) {
     switch (status) {

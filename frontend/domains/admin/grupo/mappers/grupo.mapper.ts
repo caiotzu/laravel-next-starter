@@ -2,10 +2,10 @@
 import { toPermissao } from "../../permissao/mappers/permissao.mapper";
 import { toUsuario } from "../../usuario/mappers/usuario.mapper";
 import { Grupo } from "../types/grupo.model";
-import { grupoDataResponse } from "../types/grupo.responses";
+import { GrupoDataResponse } from "../types/grupo.responses";
 
 export function toGrupo(
-  data: grupoDataResponse
+  data: GrupoDataResponse
 ): Grupo {
   return {
     id: data.id,

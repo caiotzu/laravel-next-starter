@@ -1,4 +1,4 @@
-import { LaravelApiResponse, LaravelResourcePagination } from "@/types/laravel";
+import { LaravelApiResponse } from "@/types/laravel";
 
 import { EmpresaEnderecoTipo } from "@/constants/empresa-endereco-tipos";
 

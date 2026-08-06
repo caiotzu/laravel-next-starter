@@ -85,7 +85,6 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
     handleSubmit,
     formState: { errors },
     setError,
-    clearErrors,
     setValue,
     watch,
     reset

@@ -1,9 +1,6 @@
 import qs from "qs";
 
-import { LaravelPaginationMeta, LaravelPaginationUrls } from "@/types/laravel";
-
 import { proxyAdminRequest } from "@/lib/proxy-admin";
-
 
 import { toGrupoEmpresa } from "../mappers/grupo-empresa.mapper";
 import { CadastrarGrupoEmpresaRequest, EditarGrupoEmpresaRequest, ListarGrupoEmpresasRequest } from "../types/grupoEmpresa.requests";

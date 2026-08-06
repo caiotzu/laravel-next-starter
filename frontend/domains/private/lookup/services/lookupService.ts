@@ -26,5 +26,6 @@ export async function consultarCep(cep: string) {
     url: `/lookup/ceps/${cep}`,
     method: "GET",
   });
+
   return response.data.data;
 }

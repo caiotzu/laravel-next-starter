@@ -23,13 +23,12 @@ import {
 
 import { useGrupos } from "@/domains/private/grupo/hooks/useGrupos";
 import { cadastrarUsuario } from "@/domains/private/usuario/services/usuarioService";
-
+import { Usuario } from "@/domains/private/usuario/types/usuario.model";
 
 import { UsuarioFormCreate } from "@/features/private/usuario/components/UsuarioFormCreate";
 import { UsuarioFormCreateSkeleton } from "@/features/private/usuario/components/UsuarioFormCreateSkeleton";
 import { UsuarioFormDataCadastro } from "@/features/private/usuario/schemas/usuario.schema";
 
-import { Usuario } from "@/domains/private/usuario/types/usuario.model";
 
 export default function Page() {
   const router = useRouter();

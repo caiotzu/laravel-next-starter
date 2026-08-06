@@ -1,14 +1,14 @@
 "use client";
 
-import { Camera, User } from "lucide-react";
+import { User } from "lucide-react";
 
 import { Info } from "@/components/common/Info";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { getUsuarioStatusBorder, getUsuarioStatusLabel } from "@/constants/usuario-status";
+import { Usuario } from "@/domains/private/usuario/types/usuario.model";
 import { formatDate } from "@/lib/utils";
 
-import { Usuario } from "@/domains/private/usuario/types/usuario.model";
 
 interface Props {
     usuario: Usuario

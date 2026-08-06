@@ -38,7 +38,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { getUsuarioStatusClassName, getUsuarioStatusClassText, getUsuarioStatusLabel } from "@/constants/usuario-status";
+import { getUsuarioStatusClassText, getUsuarioStatusLabel } from "@/constants/usuario-status";
 import { ativarUsuario, excluirUsuario } from "@/domains/admin/usuario/services/usuarioService";
 import { Usuario } from "@/domains/admin/usuario/types/usuario.model";
 import { formatDate } from "@/lib/utils";

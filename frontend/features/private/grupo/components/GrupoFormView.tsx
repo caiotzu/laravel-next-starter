@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/tabs";
 
 import { Grupo } from "@/domains/private/grupo/types/grupo.model";
-
 import { Permissao } from "@/domains/private/permissao/types/permissao.model";
 
 interface Props {

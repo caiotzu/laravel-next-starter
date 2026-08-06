@@ -11,8 +11,6 @@ import {
   ListarEmpresasRequest,
 } from "../types/empresa.requests";
 import {
-  AtivarEmpresaResponse,
-  CadastrarEmpresaResponse,
   EditarEmpresaResponse,
   ListarEmpresasResponse,
   VisualizarEmpresaResponse,

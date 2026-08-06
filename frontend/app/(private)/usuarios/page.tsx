@@ -21,12 +21,12 @@ import {
 import { useGrupos } from "@/domains/private/grupo/hooks/useGrupos";
 import { useUsuarios } from "@/domains/private/usuario/hooks/useUsuarios";
 import { ListarUsuariosRequest } from "@/domains/private/usuario/types/usuario.requests";
+import { ListarUsuariosResponse } from "@/domains/private/usuario/types/usuario.responses";
 
 import { UsuariosFilters } from "@/features/private/usuario/components/UsuariosFilters";
 import { UsuariosTable } from "@/features/private/usuario/components/UsuariosTable";
 import { UsuariosTableSkeleton } from "@/features/private/usuario/components/UsuariosTableSkeleton";
 
-import { ListarUsuariosResponse } from "@/domains/private/usuario/types/usuario.responses";
 
 export default function Page() {
   const [filters, setFilters] = useState<ListarUsuariosRequest>({

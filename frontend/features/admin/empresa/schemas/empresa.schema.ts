@@ -3,9 +3,6 @@ import { z } from "zod";
 import { ESTADOS, type UF } from "@/constants/estados";
 import { onlyAlphaNumeric } from "@/lib/utils";
 
-import { empresaContatoSchema } from "../../empresa-contato/schemas/empresa-contato.schema";
-import { empresaEnderecoSchema } from "../../empresa-endereco/schemas/empresa-endereco.schema";
-
 const UF_VALUES = Object.keys(ESTADOS) as [UF, ...UF[]];
 
 export const empresaSchemaCadastro = z.object({
@@ -20,9 +17,7 @@ export const empresaSchemaCadastro = z.object({
   inscricao_municipal: z.string().optional(),
   uf: z.enum(UF_VALUES, {
     message: "A UF é obrigatória",
-  }),
-  enderecos: z.array(empresaEnderecoSchema).default([]),
-  contatos: z.array(empresaContatoSchema).default([]),
+  })
 });
 
 export const empresaSchemaEdicao = z.object({
@@ -38,9 +33,7 @@ export const empresaSchemaEdicao = z.object({
   status: z.string().min(1, "O status/situação é obrigatório").optional(),
   uf: z.enum(UF_VALUES, {
     message: "A UF e obrigatória",
-  }),
-  enderecos: z.array(empresaEnderecoSchema).default([]),
-  contatos: z.array(empresaContatoSchema).default([]),
+  })
 });
 
 export type EmpresaFormDataCadastro = z.input<typeof empresaSchemaCadastro>;

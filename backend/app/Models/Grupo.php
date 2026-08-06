@@ -74,4 +74,40 @@ class Grupo extends Model
     {
         return $this->belongsTo(EntidadeTipo::class, 'entidade_tipo_id', 'id');
     }
+
+    public function grupoEmpresa(): BelongsTo
+    {
+        return $this->belongsTo(GrupoEmpresa::class, 'entidade_id', 'id');
+    }
+
+    /**
+     * OBS: Essa função só pode ser chamada depois de carregado, não pode ser usada no with do eloquent.
+     */
+    public function entidade(): ?Model
+    {
+        $classe = match ($this->entidadeTipo->entidade_tabela) {
+            'grupo_empresas' => GrupoEmpresa::class,
+            default => null,
+        };
+
+        if (!$classe) {
+            return null;
+        }
+
+        return $classe::find($this->entidade_id);
+    }
+
+    /**
+     * Verifica se a entidade está ativa. Essa entidade pode ser a tabela (grupo_empresas) ou
+     * outras tabelas, tudo vai depender da tabela que está configurada na coluna (entidade_tabela) na
+     * tabela (entidade_tipos).
+     *
+     * OBS: Essa função só pode ser chamada depois de carregado, não pode ser usada no with do eloquent
+     */
+    public function entidadeEstaAtiva(): bool
+    {
+        $entidade = $this->entidade();
+
+        return $entidade !== null && $entidade->deleted_at === null;
+    }
 }

@@ -31,13 +31,13 @@ import { Label } from "@/components/ui/label";
 
 import { USUARIO_STATUS_OPTIONS } from "@/constants/usuario-status";
 import { Grupo } from "@/domains/private/grupo/types/grupo.model";
+import { Usuario } from "@/domains/private/usuario/types/usuario.model";
 
 import {
   UsuarioFormDataEdicao,
   usuarioSchemaEdicao,
 } from "../schemas/usuario.schema";
 
-import { Usuario } from "@/domains/private/usuario/types/usuario.model";
 
 
 interface Props {

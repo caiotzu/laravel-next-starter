@@ -44,7 +44,6 @@ import { formatDate } from "@/lib/utils";
 
 interface Props {
   data: GrupoEmpresa[];
-  isLoading: boolean;
 }
 
 type ModalState = {
@@ -52,7 +51,7 @@ type ModalState = {
   grupoId: string | null;
 };
 
-export function GrupoEmpresasTable({ data, isLoading }: Props) {
+export function GrupoEmpresasTable({ data }: Props) {
   const queryClient = useQueryClient();
   const [modal, setModal] = useState<ModalState>({ tipo: null, grupoId: null });
 

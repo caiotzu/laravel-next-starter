@@ -32,7 +32,7 @@ import { EmpresaFormDataCadastro } from "@/features/admin/empresa/schemas/empres
 export default function Page() {
   const router = useRouter();
   const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
-  const [formError, setFormError] = useState<UseFormSetError<EmpresaFormDataCadastro> | null>(null);
+  const [formError] = useState<UseFormSetError<EmpresaFormDataCadastro> | null>(null);
 
   const { mutateAsync, isPending } = useMutation<
     Empresa,

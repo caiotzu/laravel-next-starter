@@ -9,8 +9,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 use App\Events\UsuarioCriado;
+use App\Events\UsuarioExcluido;
 use App\Events\SenhaUsuarioAlterada;
 use App\Events\UsuarioEsqueceuSenha;
+use App\Events\UsuarioStatusAlterado;
 
 use App\Models\Grupo;
 use App\Models\Usuario;
@@ -85,6 +87,7 @@ class UsuarioService {
                 throw new BusinessException('Nenhum dado informado para atualização.', ErrorCode::USUARIO_REQUIRED->value);
 
             $usuario->update($dto->paraPersistencia());
+            event(new UsuarioStatusAlterado($usuario));
 
             return $usuario;
         });
@@ -105,6 +108,7 @@ class UsuarioService {
                 throw new BusinessException('Nenhum dado informado para atualização.', ErrorCode::USUARIO_REQUIRED->value);
 
             $usuario->update($dto->paraPersistencia());
+            event(new UsuarioStatusAlterado($usuario));
 
             return $usuario;
         });
@@ -165,6 +169,8 @@ class UsuarioService {
 
             $usuario->delete();
             $usuario->fresh();
+
+            event(new UsuarioExcluido($usuario));
         });
     }
 
@@ -298,12 +304,24 @@ class UsuarioService {
 
     public function obterUsuarioAtivoPorEmail(string $email, EntidadeTipo $entidadeTipo): Usuario | null
     {
-        return Usuario::with('grupo.entidadeTipo')
+        return Usuario::with('grupo.entidadeTipo', 'grupo.grupoEmpresa')
             ->whereHas('grupo.entidadeTipo', function (Builder $query) use ($entidadeTipo) {
-                return $query->where('chave', $entidadeTipo->value);
+                $query->where('chave', $entidadeTipo->value);
             })
             ->where('email', $email)
             ->where('status', UsuarioStatus::ATIVO->value)
+            ->when($entidadeTipo !== EntidadeTipo::ADMIN, function (Builder $query) {
+                $query->whereHas('grupo', function (Builder $query) {
+                    $query->where(function ($query) {
+                        // Não é grupo_empresa, não precisa validar entidade
+                        $query->whereHas('entidadeTipo', function ($query) {
+                            $query->where('entidade_tabela', '!=', 'grupo_empresas');
+                        })
+                        // Ou é grupo_empresa e precisa existir
+                        ->orWhereHas('grupoEmpresa');
+                    });
+                });
+            })
             ->first();
     }
 

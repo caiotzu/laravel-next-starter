@@ -4,7 +4,7 @@ import { PermissaoDataResponse } from "../../permissao/types/permissao.responses
 import { UsuarioDataResponse } from "../../usuario/types/usuario.responses";
 
 // retono com todos os relacionamentos
-export interface grupoDataResponse {
+export interface GrupoDataResponse {
   id: string;
   versao?: number;
   descricao: string;
@@ -16,8 +16,8 @@ export interface grupoDataResponse {
   permissoes?: PermissaoDataResponse[];
 }
 
-export type CadastrarGrupoResponse = LaravelApiResponse<grupoDataResponse>;
-export type EditarGrupoResponse = LaravelApiResponse<grupoDataResponse>;
-export type ListarGruposResponse = LaravelResourcePagination<grupoDataResponse>;
-export type AtivarGrupoResponse = LaravelApiResponse<grupoDataResponse>;
-export type VisualizarGrupoResponse = LaravelApiResponse<grupoDataResponse>;
+export type CadastrarGrupoResponse = LaravelApiResponse<GrupoDataResponse>;
+export type EditarGrupoResponse = LaravelApiResponse<GrupoDataResponse>;
+export type ListarGruposResponse = LaravelResourcePagination<GrupoDataResponse>;
+export type AtivarGrupoResponse = LaravelApiResponse<GrupoDataResponse>;
+export type VisualizarGrupoResponse = LaravelApiResponse<GrupoDataResponse>;

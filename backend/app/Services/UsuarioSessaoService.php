@@ -85,9 +85,9 @@ class UsuarioSessaoService {
         ]);
     }
 
-    public function encerrarSessao(Usuario $user, string $id): void
+    public function encerrarSessao(Usuario $Usuario, string $id): void
     {
-        $sessao = $user->usuarioSessoes()->where('id', $id)->firstOrFail();
+        $sessao = $Usuario->usuarioSessoes()->where('id', $id)->firstOrFail();
 
         $sessao->update([
             'ativo' => false,

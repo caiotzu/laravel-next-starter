@@ -7,7 +7,6 @@ import { Info } from "@/components/common/Info";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 import { getEmpresaContatoTipoLabel } from "@/constants/empresa-contato-tipos";
 import { getEmpresaEnderecoTipoLabel } from "@/constants/empresa-endereco-tipos";

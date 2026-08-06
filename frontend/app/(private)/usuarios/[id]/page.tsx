@@ -24,13 +24,12 @@ import {
 import { useGrupos } from "@/domains/private/grupo/hooks/useGrupos";
 import { useUsuario } from "@/domains/private/usuario/hooks/useUsuario";
 import { editarUsuario } from "@/domains/private/usuario/services/usuarioService";
-
+import { Usuario } from "@/domains/private/usuario/types/usuario.model";
 
 import { UsuarioFormEdit } from "@/features/private/usuario/components/UsuarioFormEdit";
 import { UsuarioFormEditSkeleton } from "@/features/private/usuario/components/UsuarioFormEditSkeleton";
 import { UsuarioFormDataEdicao } from "@/features/private/usuario/schemas/usuario.schema";
 
-import { Usuario } from "@/domains/private/usuario/types/usuario.model";
 
 
 export default function Page() {

@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
+use App\Events\GrupoExcluido;
+
 use App\Models\Grupo;
 
 use App\DTO\Grupo\GrupoFiltroDTO;
@@ -100,6 +102,8 @@ class GrupoService {
 
             $grupo->delete();
             $grupo->fresh();
+
+            event(new GrupoExcluido($grupo));
         });
     }
 

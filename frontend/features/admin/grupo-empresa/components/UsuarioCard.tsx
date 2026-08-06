@@ -19,14 +19,6 @@ import {
   ComboboxList,
 } from "@/components/ui/combobox";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -36,11 +28,11 @@ import { Label } from "@/components/ui/label";
 
 import { getUsuarioStatusBorder, getUsuarioStatusLabel, USUARIO_STATUS_OPTIONS } from "@/constants/usuario-status";
 import { alterarStatusUsuarioGrupoEmpresa, redefinirSenhaUsuarioGrupoEmpresa } from "@/domains/admin/usuario-grupo-empresa/services/usuarioGrupoEmpresaService";
+import { UsuarioGrupoEmpresa } from "@/domains/admin/usuario-grupo-empresa/types/usuario.model";
 import { formatDate } from "@/lib/utils";
 
 import { UsuarioGrupoEmpresaFormDataAlteraStatus, usuarioGrupoEmpresaSchemaAlteraStatus } from "../schemas/usuarioGrupoEmpresa.schema";
 
-import { UsuarioGrupoEmpresa } from "@/domains/admin/usuario-grupo-empresa/types/usuario.model";
 interface Props {
   usuario: UsuarioGrupoEmpresa;
 }
@@ -64,11 +56,9 @@ type ModalState = {
 
 export function UsuarioCard({ usuario }: Props) {
   const {
-    register,
     handleSubmit,
     setValue,
     watch,
-    setError,
     reset,
     formState: { errors },
   } = useForm<UsuarioGrupoEmpresaFormDataAlteraStatus>({
@@ -103,7 +93,7 @@ export function UsuarioCard({ usuario }: Props) {
     },
   });
 
-  const { mutate: alterarStatusMutation, isPending: isAlterandoStatus, } = useMutation({
+  const { mutate: alterarStatusMutation } = useMutation({
     mutationFn: ({ usuarioId, grupoId, data }: AlterarStatusProps) => alterarStatusUsuarioGrupoEmpresa(usuarioId, grupoId, data),
     onSuccess: () => {
       toast.success(`O status do cliente ( ${usuario.nome} foi alterado com sucesso)`);

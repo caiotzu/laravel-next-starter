@@ -30,13 +30,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { Grupo } from "@/domains/private/grupo/types/grupo.model";
+import { Usuario } from "@/domains/private/usuario/types/usuario.model";
 
 import {
   UsuarioFormDataCadastro,
   usuarioSchemaCadastro,
 } from "../schemas/usuario.schema";
 
-import { Usuario } from "@/domains/private/usuario/types/usuario.model";
 
 
 interface Props {

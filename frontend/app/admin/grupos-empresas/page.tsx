@@ -92,7 +92,6 @@ export default function Page() {
               ) : (
                 <GrupoEmpresasTable
                   data={data?.data ?? []}
-                  isLoading={isLoading}
                 />
               )}
 

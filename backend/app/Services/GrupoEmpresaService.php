@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 use App\Events\UsuarioCriado;
+use App\Events\GrupoEmpresaExcluido;
 
 use App\Models\Grupo;
 use App\Models\Usuario;
@@ -110,6 +111,8 @@ class GrupoEmpresaService {
 
             $grupoEmpresa->delete();
             $grupoEmpresa->fresh();
+
+            event(new GrupoEmpresaExcluido($grupoEmpresa));
         });
     }
 

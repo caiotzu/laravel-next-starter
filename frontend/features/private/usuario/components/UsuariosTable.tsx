@@ -38,11 +38,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { getUsuarioStatusClassName, getUsuarioStatusClassText, getUsuarioStatusLabel } from "@/constants/usuario-status";
+import { getUsuarioStatusClassText, getUsuarioStatusLabel } from "@/constants/usuario-status";
 import { ativarUsuario, excluirUsuario } from "@/domains/private/usuario/services/usuarioService";
+import { Usuario } from "@/domains/private/usuario/types/usuario.model";
 import { formatDate } from "@/lib/utils";
 
-import { Usuario } from "@/domains/private/usuario/types/usuario.model";
 
 interface Props {
 	data: Usuario[];

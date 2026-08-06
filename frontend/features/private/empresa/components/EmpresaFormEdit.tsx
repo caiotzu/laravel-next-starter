@@ -43,7 +43,7 @@ import {
 import { useEmpresas } from "@/domains/private/empresa/hooks/useEmpresas";
 import { editarEmpresa } from "@/domains/private/empresa/services/empresaService";
 import { Empresa } from "@/domains/private/empresa/types/empresa.model";
-import { maskCNPJAlfanumerico, onlyAlphaNumeric } from "@/lib/utils";
+import { maskCNPJAlfanumerico } from "@/lib/utils";
 
 import {
   empresaSchemaEdicao,
@@ -85,7 +85,6 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
     handleSubmit,
     formState: { errors },
     setError,
-    clearErrors,
     setValue,
     watch,
     reset
@@ -162,10 +161,7 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
       ? data
       : (({ status, ...rest }) => rest)(data);
 
-    atualizarEmpresaMutation({
-      ...payload,
-      cnpj: onlyAlphaNumeric(payload.cnpj),
-    });
+    atualizarEmpresaMutation({...payload});
   };
 
   return (
@@ -274,9 +270,6 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
                       disabled
                       readOnly
                     />
-                    {errors.cnpj && (
-                      <p className="text-sm text-red-700">{errors.cnpj.message}</p>
-                    )}
                   </div>
 
                   <div className="col-span-12 md:col-span-4 space-y-2">

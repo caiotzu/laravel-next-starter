@@ -72,13 +72,10 @@ export function EmpresaContatosTab({
   contatos
 }: Props) {
   const {
-    register,
     handleSubmit,
     control,
     formState: { errors },
     setError,
-    clearErrors,
-    setValue,
     reset,
     watch
   } = useForm<EmpresaContatoFormData>({

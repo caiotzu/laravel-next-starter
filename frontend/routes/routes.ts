@@ -23,15 +23,15 @@ export const protectedRoutes: RoutePermission[] = [
     { path: "/admin/dashboard", protected: true, cookieName: "admin_access_token" },
     { path: "/admin/perfil", protected: true, cookieName: "admin_access_token" },
 
-    { path: "/admin/empresas/:id/visualizar", protected: true, cookieName: "admin_access_token" },
-    { path: "/admin/empresas/:id", protected: true, cookieName: "admin_access_token" },
-    { path: "/admin/empresas/cadastrar", protected: true, cookieName: "admin_access_token" },
-    { path: "/admin/empresas", protected: true, cookieName: "admin_access_token" },
-
     { path: "/admin/grupos-empresas/:id/visualizar", protected: true, cookieName: "admin_access_token" },
     { path: "/admin/grupos-empresas/:id", protected: true, cookieName: "admin_access_token" },
     { path: "/admin/grupos-empresas/cadastrar", protected: true, cookieName: "admin_access_token" },
     { path: "/admin/grupos-empresas", protected: true, cookieName: "admin_access_token" },
+
+    { path: "/admin/empresas/:id/visualizar", protected: true, cookieName: "admin_access_token" },
+    { path: "/admin/empresas/:id", protected: true, cookieName: "admin_access_token" },
+    { path: "/admin/empresas/cadastrar", protected: true, cookieName: "admin_access_token" },
+    { path: "/admin/empresas", protected: true, cookieName: "admin_access_token" },
 
     { path: "/admin/grupos/:id/visualizar", protected: true, cookieName: "admin_access_token" },
     { path: "/admin/grupos/:id", protected: true, cookieName: "admin_access_token" },
@@ -45,8 +45,28 @@ export const protectedRoutes: RoutePermission[] = [
   //---
 
   // rotas privadas
+    { path: "/esqueceu-senha", protected: false, isLoginRoute: true, cookieName: "private_access_token" },
+    { path: "/primeiro-acesso", protected: false, isLoginRoute: true, cookieName: "private_access_token" },
+    { path: "/redefinir-senha", protected: false, isLoginRoute: true, cookieName: "private_access_token" },
     { path: "/", protected: false, isLoginRoute: true, cookieName: "private_access_token" },
-    { path: "/dashboard", protected: true, cookieName: "private_access_token" }
+
+    { path: "/", protected: false, isLoginRoute: true, cookieName: "private_access_token" },
+    { path: "/dashboard", protected: true, cookieName: "private_access_token" },
+
+    { path: "/empresas/:id/visualizar", protected: true, cookieName: "private_access_token" },
+    { path: "/empresas/:id", protected: true, cookieName: "private_access_token" },
+    { path: "/empresas/cadastrar", protected: true, cookieName: "private_access_token" },
+    { path: "/empresas", protected: true, cookieName: "private_access_token" },
+
+    { path: "/grupos/:id/visualizar", protected: true, cookieName: "private_access_token" },
+    { path: "/grupos/:id", protected: true, cookieName: "private_access_token" },
+    { path: "/grupos/cadastrar", protected: true, cookieName: "private_access_token" },
+    { path: "/grupos", protected: true, cookieName: "private_access_token" },
+
+    { path: "/usuarios/:id/visualizar", protected: true, cookieName: "private_access_token" },
+    { path: "/usuarios/:id", protected: true, cookieName: "private_access_token" },
+    { path: "/usuarios/cadastrar", protected: true, cookieName: "private_access_token" },
+    { path: "/usuarios", protected: true, cookieName: "private_access_token" },
   //---
 ];
 

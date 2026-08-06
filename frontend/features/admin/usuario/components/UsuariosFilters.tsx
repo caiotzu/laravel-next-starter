@@ -74,7 +74,7 @@ export function UsuariosFilters({
             <ComboboxInput
               value={grupos.find((g) => g.id === filters.grupo_id)?.descricao ?? ""}
               showClear
-              onChange={(e) => {
+              onChange={() => {
                 setFilters((prev) => ({
                   ...prev,
                   grupo_id: "",

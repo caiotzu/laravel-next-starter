@@ -126,7 +126,7 @@ export default function Page() {
 									permissoes={permissoes.data}
 									backendErrors={backendErrors}
 									clearBackendErrors={() => setBackendErrors(null)}
-									onSubmitGrupo={async (data, setError) => { await atualizarGrupoMutation.mutateAsync(data); }}
+									onSubmitGrupo={async (data) => { await atualizarGrupoMutation.mutateAsync(data); }}
 									onSubmitPermissoes={async (permissoes) => { await sincronizarPermissoesMutation.mutateAsync(permissoes); }}
 									isLoadingGrupo={atualizarGrupoMutation.isPending}
 									isLoadingPermissoes={sincronizarPermissoesMutation.isPending}
