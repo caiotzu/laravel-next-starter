@@ -10,10 +10,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+use App\Auditoria\Auditavel;
+
 class Grupo extends Model
 {
     use HasUuids;
     use SoftDeletes;
+    use Auditavel;
 
     protected $table = 'grupos';
 
@@ -25,6 +28,15 @@ class Grupo extends Model
     ];
 
     protected $guarded = [
+        'versao'
+    ];
+
+    /**
+     * `versao` é um contador técnico de lock otimista (incrementado a cada
+     * update, inclusive em touch() forçado). Não é um dado de negócio, então
+     * fica de fora do antes/depois da auditoria.
+     */
+    protected array $auditavelOculto = [
         'versao'
     ];
 

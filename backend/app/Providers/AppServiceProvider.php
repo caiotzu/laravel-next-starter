@@ -13,6 +13,8 @@ use App\Services\External\Email\AmazonSesService;
 
 use App\Contracts\Email\EmailProviderInterface;
 
+use App\Auditoria\AuditoriaContexto;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -20,6 +22,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->singleton(AuditoriaContexto::class);
+
         $this->app->when(CepService::class)
             ->needs('$providers')
             ->give([

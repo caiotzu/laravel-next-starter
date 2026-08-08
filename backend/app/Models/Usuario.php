@@ -12,10 +12,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
+use App\Auditoria\Auditavel;
+
 use App\Enums\UsuarioStatus;
 class Usuario extends Authenticatable implements JWTSubject
 {
     use HasUuids;
+    use Auditavel;
     use SoftDeletes;
 
     protected $table = 'usuarios';
@@ -49,6 +52,14 @@ class Usuario extends Authenticatable implements JWTSubject
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime'
+    ];
+
+    /**
+     * Campos que alteram quando usuário loga, não é necessário realizar auditoria.
+     */
+    protected array $auditavelOculto = [
+        'ultimo_login_em',
+        'ultimo_ip'
     ];
 
     protected function avatar(): Attribute

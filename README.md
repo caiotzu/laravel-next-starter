@@ -85,7 +85,12 @@ php artisan jwt:secret
 php artisan migrate --seed
 ```
 
-8. Certifique-se de **configurar e executar os JOBs** para processar tarefas assíncronas e filas, caso necessário.
+8. Execute workers:
+```
+php artisan queue:work
+```
+
+9. Certifique-se de **configurar e executar os JOBs** para processar tarefas assíncronas e filas, caso necessário.
 
 ---
 

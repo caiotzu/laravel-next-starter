@@ -16,6 +16,7 @@ use App\DTO\Grupo\GrupoAtualizacaoDTO;
 use App\DTO\Grupo\SincronizarPermissoesDTO;
 
 use App\Enums\ErrorCode;
+use App\Enums\AuditoriaAcao;
 
 use App\Exceptions\BusinessException;
 use App\Models\Permissao;
@@ -188,7 +189,24 @@ class GrupoService {
                 ->where('entidade_id', $user->grupo->entidade_id)
                 ->findOrFail($dto->grupo_id);
 
+            /**
+             * sync() altera a tabela pivô grupo_permissoes diretamente, sem
+             * disparar eventos do Model — por isso capturamos o antes/depois
+             * manualmente aqui e registramos a auditoria explicitamente.
+             */
+            $permissoesAntes = $grupo->permissoes()->pluck('chave')->sort()->values()->all();
+
             $grupo->permissoes()->sync($dto->permissoes);
+
+            $permissoesDepois = $grupo->permissoes()->pluck('chave')->sort()->values()->all();
+
+            if ($permissoesAntes !== $permissoesDepois) {
+                $grupo->registrarAuditoriaManual(
+                    AuditoriaAcao::ATUALIZACAO,
+                    ['permissoes' => $permissoesAntes],
+                    ['permissoes' => $permissoesDepois]
+                );
+            }
 
             /**
              * Força o disparo do evento 'updating' do Grupo

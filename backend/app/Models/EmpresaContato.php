@@ -9,9 +9,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 use App\Enums\EmpresaContatoTipo;
 
+use App\Auditoria\Auditavel;
+
 class EmpresaContato extends Model
 {
     use HasUuids;
+    use Auditavel;
     use SoftDeletes;
 
     protected $table = 'empresa_contatos';
@@ -35,5 +38,16 @@ class EmpresaContato extends Model
     public function empresa(): BelongsTo
     {
         return $this->belongsTo(Empresa::class, 'empresa_id', 'id');
+    }
+
+    /**
+     * Usado pela trait Auditavel para agrupar o histórico deste contato sob
+     * o histórico da Empresa dona dele, sem precisar de uma query extra.
+     */
+    protected function auditavelAgrupador(): ?Model
+    {
+        return $this->empresa_id
+            ? new Empresa(['id' => $this->empresa_id])
+            : null;
     }
 }

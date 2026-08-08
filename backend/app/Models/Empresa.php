@@ -10,9 +10,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 use App\Enums\EmpresaStatus;
 
+use App\Auditoria\Auditavel;
+
 class Empresa extends Model
 {
     use HasUuids;
+    use Auditavel;
     use SoftDeletes;
 
     protected $table = 'empresas';
