@@ -16,6 +16,16 @@ class AdminPermissaoSeeder extends Seeder
     public function run(): void
     {
         DB::table("permissoes")->insert([
+            // auditoria
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.auditoria.listar",
+                    "descricao" => "Permite listar as auditorias do sistema",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+            //---
+
             // grupo empresa
                 [
                     "id" => Str::uuid(),

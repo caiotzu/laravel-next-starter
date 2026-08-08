@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ {
     PerfilController,
     EmpresaController,
     UsuarioController,
+    AuditoriaController,
     PermissaoController,
     GrupoEmpresaController,
     EmpresaContatoController,
@@ -86,6 +87,8 @@ Route::middleware('jwt')->group(function () {
             Route::get('/sessoes', [PerfilController::class, 'sessoes']);
             Route::patch('/', [PerfilController::class, 'atualizar']);
         });
+
+        Route::get('/auditorias', [AuditoriaController::class, 'listar']);
 
         Route::prefix('grupos-empresas')->group(function () {
             Route::patch('/{id}/ativar', [GrupoEmpresaController::class, 'ativar']);

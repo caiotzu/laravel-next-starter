@@ -8,65 +8,48 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use App\Models\Auditoria;
 
 use App\DTO\Auditoria\AuditoriaFiltroDTO;
-
 class AuditoriaService
 {
     /**
-     * Histórico individual de UM registro específico.
-     * Ex.: só as alterações feitas diretamente na Empresa X (sem contatos/endereços).
+     * Única fonte de verdade da query de auditoria. Cobre tanto a busca
+     * abrangente (admin) quanto a consulta de uma entidade específica —
+     * basta informar entidade_tabela/entidade_id no filtro.
+     *
+     * Quando incluir_dependentes = true (junto com entidade_tabela/entidade_id),
+     * o resultado também inclui registros de entidades "filhas" que apontam
+     * para essa entidade como agrupador (ex.: EmpresaContato/EmpresaEndereco
+     * de uma Empresa) — usado na tela "Histórico da Empresa".
      */
-    public function listarPorEntidade(string $entidadeTabela, string $entidadeId, AuditoriaFiltroDTO $filtro): LengthAwarePaginator
+    public function listar(AuditoriaFiltroDTO $filtro): LengthAwarePaginator
     {
-        $query = Auditoria::query()
-            ->where('entidade_tabela', $entidadeTabela)
-            ->where('entidade_id', $entidadeId);
+        $query = Auditoria::query();
 
-        return $this->aplicarFiltros($query, $filtro)
-            ->with('usuario:id,nome,email')
-            ->orderBy('criado_em', 'DESC')
-            ->paginate($filtro->paginacao->por_pagina);
-    }
-
-    /**
-     * Histórico agrupado (ex.: Empresa X + tudo que pertence a ela, como
-     * EmpresaContato e EmpresaEndereco). Usado na tela "Histórico da Empresa".
-     */
-    public function listarPorAgrupador(string $agrupadorTabela, string $agrupadorId, AuditoriaFiltroDTO $filtro): LengthAwarePaginator
-    {
-        $query = Auditoria::query()->where(function (Builder $query) use ($agrupadorTabela, $agrupadorId) {
-            // A própria entidade (ex.: alteração direta na Empresa)...
-            $query->where(function (Builder $q) use ($agrupadorTabela, $agrupadorId) {
-                $q->where('entidade_tabela', $agrupadorTabela)
-                    ->where('entidade_id', $agrupadorId);
-            })
-            // ...ou qualquer registro filho que aponte para ela como agrupador
-            // (ex.: EmpresaContato e EmpresaEndereco desta Empresa).
-            ->orWhere(function (Builder $q) use ($agrupadorTabela, $agrupadorId) {
-                $q->where('agrupador_tabela', $agrupadorTabela)
-                    ->where('agrupador_id', $agrupadorId);
+        if ($filtro->entidade_tabela && $filtro->entidade_id && $filtro->incluir_dependentes) {
+            $query->where(function (Builder $q) use ($filtro) {
+                $q->where(function (Builder $q2) use ($filtro) {
+                    $q2->where('entidade_tabela', $filtro->entidade_tabela)
+                        ->where('entidade_id', $filtro->entidade_id);
+                })->orWhere(function (Builder $q2) use ($filtro) {
+                    $q2->where('agrupador_tabela', $filtro->entidade_tabela)
+                        ->where('agrupador_id', $filtro->entidade_id);
+                });
             });
-        });
+        } else {
+            $query
+                ->when($filtro->entidade_tabela, fn (Builder $q) =>
+                    $q->where('entidade_tabela', $filtro->entidade_tabela)
+                )
+                ->when($filtro->entidade_id, fn (Builder $q) =>
+                    $q->where('entidade_id', $filtro->entidade_id)
+                )
+                ->when($filtro->agrupador_tabela, fn (Builder $q) =>
+                    $q->where('agrupador_tabela', $filtro->agrupador_tabela)
+                )
+                ->when($filtro->agrupador_id, fn (Builder $q) =>
+                    $q->where('agrupador_id', $filtro->agrupador_id)
+                );
+        }
 
-        return $this->aplicarFiltros($query, $filtro)
-            ->with('usuario:id,nome,email')
-            ->orderBy('criado_em', 'DESC')
-            ->paginate($filtro->paginacao->por_pagina);
-    }
-
-    /**
-     * Tudo que um usuário específico fez, independente da entidade.
-     */
-    public function listarPorUsuario(string $usuarioId, AuditoriaFiltroDTO $filtro): LengthAwarePaginator
-    {
-        $query = Auditoria::query()->where('usuario_id', $usuarioId);
-
-        return $this->aplicarFiltros($query, $filtro)
-            ->orderBy('criado_em', 'DESC')
-            ->paginate($filtro->paginacao->por_pagina);
-    }
-
-    private function aplicarFiltros(Builder $query, AuditoriaFiltroDTO $filtro): Builder
-    {
         return $query
             ->when($filtro->acao, fn (Builder $q) =>
                 $q->where('acao', $filtro->acao->value)
@@ -79,6 +62,9 @@ class AuditoriaService
             )
             ->when($filtro->data_fim, fn (Builder $q) =>
                 $q->whereDate('criado_em', '<=', $filtro->data_fim)
-            );
+            )
+            ->with('usuario:id,nome,email')
+            ->orderBy('criado_em', 'DESC')
+            ->paginate($filtro->paginacao->por_pagina);
     }
 }
