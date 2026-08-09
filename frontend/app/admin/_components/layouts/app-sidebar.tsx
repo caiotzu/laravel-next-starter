@@ -6,6 +6,7 @@ import {
   FolderKanban,
   Command,
   Settings2,
+  Monitor,
 } from "lucide-react"
 
 import { NavMain } from "@/app/admin/_components/layouts/nav-main"
@@ -28,6 +29,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: userAdmin } = useUserAdmin();
   
   const navMain = [
+    {
+      title: "Monitoramento",
+      url: "#",
+      icon: Monitor,
+      items: [
+        {
+          title: "Auditoria",
+          url: "/admin/auditorias",
+          permission: "admin.auditoria.menu"
+        },
+      ],
+    },
     {
       title: "Cadastros",
       url: "#",

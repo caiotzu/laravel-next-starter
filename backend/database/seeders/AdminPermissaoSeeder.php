@@ -19,6 +19,13 @@ class AdminPermissaoSeeder extends Seeder
             // auditoria
                 [
                     "id" => Str::uuid(),
+                    "chave" => "admin.auditoria.menu",
+                    "descricao" => "Permite visualizar o menu de auditoria",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
                     "chave" => "admin.auditoria.listar",
                     "descricao" => "Permite listar as auditorias do sistema",
                     "created_at" => date("Y-m-d H:i:s"),
