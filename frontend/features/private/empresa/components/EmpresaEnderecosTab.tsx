@@ -662,7 +662,7 @@ export function EmpresaEnderecosTab({
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="hover:bg-transparent">
                   <TableHead>Tipo</TableHead>
                   <TableHead>Município</TableHead>
                   <TableHead>CEP</TableHead>
@@ -676,7 +676,7 @@ export function EmpresaEnderecosTab({
                 </TableRow>
               </TableHeader>
 
-              <TableBody>
+              <TableBody className="text-sm text-muted-foreground">
                 {enderecos.map((item, index) => (
                   <TableRow key={`${item.tipo}-${item.municipioId}-${index}`}>
                     <TableCell>{getEmpresaEnderecoTipoLabel(item.tipo)}</TableCell>
@@ -690,8 +690,8 @@ export function EmpresaEnderecosTab({
                       <Badge
                         className={
                           item.principal
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-red-100 text-red-700"
+                            ? "bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400"
+                            : "bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400"
                         }
                       >
                         {item.principal ? "Sim" : "Nao"}
@@ -701,8 +701,8 @@ export function EmpresaEnderecosTab({
                       <Badge
                         className={
                           item.ativo
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-red-100 text-red-700"
+                            ? "bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400"
+                            : "bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400"
                         }
                       >
                         {item.ativo ? "Sim" : "Nao"}

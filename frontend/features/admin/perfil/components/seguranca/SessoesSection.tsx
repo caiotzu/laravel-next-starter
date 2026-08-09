@@ -52,7 +52,7 @@ export function SessoesSection() {
                 Ultimo Acesso: {formatDate(sessao.ultimoAcessoEm)} <br />
               </p>
               {sessao.atual && (
-                <Badge className="bg-emerald-100 text-emerald-700">Sessão atual</Badge>
+                <Badge className="bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400">Sessão atual</Badge>
               )}
             </div>
 

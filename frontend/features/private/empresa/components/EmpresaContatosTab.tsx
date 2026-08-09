@@ -406,7 +406,7 @@ export function EmpresaContatosTab({
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="hover:bg-transparent">
                   <TableHead>Tipo</TableHead>
                   <TableHead>Valor</TableHead>
                   <TableHead>Principal</TableHead>
@@ -415,7 +415,7 @@ export function EmpresaContatosTab({
                 </TableRow>
               </TableHeader>
 
-              <TableBody>
+              <TableBody className="text-sm text-muted-foreground">
                 {contatos.map((item, index) => (
                   <TableRow key={`${item.tipo}-${item.valor}-${index}`}>
                     <TableCell>{getEmpresaContatoTipoLabel(item.tipo)}</TableCell>
@@ -426,8 +426,8 @@ export function EmpresaContatosTab({
                       <Badge
                         className={
                           item.principal
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-red-100 text-red-700"
+                            ? "bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400"
+                            : "bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400"
                         }
                       >
                         {item.principal ? "Sim" : "Nao"}
@@ -437,8 +437,8 @@ export function EmpresaContatosTab({
                       <Badge
                         className={
                           item.ativo
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-red-100 text-red-700"
+                            ? "bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400"
+                            : "bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400"
                         }
                       >
                         {item.ativo ? "Sim" : "Nao"}

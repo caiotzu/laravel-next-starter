@@ -144,11 +144,11 @@ export function AuditoriasTable({ data }: Props) {
   }
 
   return (
-    <Card className="overflow-hidden">
-      <Table>
+    <Card className="overflow-hidden p-4">
+      <Table >
         <TableHeader>
-          <TableRow>
-            <TableHead>Entidade</TableHead>
+          <TableRow className="hover:bg-transparent">
+            <TableHead  className="bold">Entidade</TableHead>
 
             <TableHead className="text-center">
               Ação
@@ -172,7 +172,7 @@ export function AuditoriasTable({ data }: Props) {
           </TableRow>
         </TableHeader>
 
-        <TableBody>
+        <TableBody className="text-sm text-muted-foreground">
           {data.map((auditoria) => (
             <TableRow
               key={auditoria.id}
@@ -196,7 +196,7 @@ export function AuditoriasTable({ data }: Props) {
                 </Badge>
               </TableCell>
 
-              <TableCell className="text-sm text-muted-foreground">
+              <TableCell className="text-sm">
                 {auditoria.camposAlterados?.length
                   ? auditoria.camposAlterados.join(", ")
                   : "---"}
@@ -206,7 +206,7 @@ export function AuditoriasTable({ data }: Props) {
                 {auditoria.usuario?.nome ?? "Sistema"}
               </TableCell>
 
-              <TableCell className="text-center text-sm text-muted-foreground">
+              <TableCell className="text-center">
                 {formatDate(auditoria.criadoEm)}
               </TableCell>
 

@@ -44,43 +44,43 @@ export function EmpresasTable({ data }: Props) {
   function getStatusBadge(status: string) {
     switch (status) {
       case "ativo":
-        return <Badge className="bg-emerald-100 text-emerald-700">Ativo</Badge>;
+        return <Badge className="bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400">Ativo</Badge>;
       case "pendente":
-        return <Badge className="bg-amber-100 text-amber-700">Pendente</Badge>;
+        return <Badge className="bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400">Pendente</Badge>;
       case "bloqueado":
-        return <Badge className="bg-red-100 text-red-700">Bloqueado</Badge>;
+        return <Badge className="bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400">Bloqueado</Badge>;
       default:
-        return <Badge className="bg-slate-100 text-slate-700">Inativo</Badge>;
+        return <Badge className="bg-slate-100 dark:bg-slate-950/30 text-slate-700 dark:text-slate-400">Inativo</Badge>;
     }
   }
 
   return (
-    <Card className="w-full rounded-2xl border shadow-sm p-0 overflow-hidden">
+    <Card className="overflow-hidden p-4">
       <Table>
         <TableHeader>
-          <TableRow className="bg-primary hover:bg-primary shadow-inner border-b border-white/10">
-            <TableHead className="text-primary-foreground tracking-wider font-semibold py-4">
+          <TableRow className="hover:bg-transparent">
+            <TableHead>
               CNPJ
             </TableHead>
-            <TableHead className="text-primary-foreground tracking-wider font-semibold py-4">
+            <TableHead>
               Nome Fantasia
             </TableHead>
-            <TableHead className="text-primary-foreground tracking-wider font-semibold py-4">
+            <TableHead>
               Grupo
             </TableHead>
-            <TableHead className="text-primary-foreground tracking-wider font-semibold py-4">
+            <TableHead>
               Matriz
             </TableHead>
-            <TableHead className="text-primary-foreground tracking-wider font-semibold py-4 text-center">
+            <TableHead className="text-center">
               UF
             </TableHead>
-            <TableHead className="text-primary-foreground tracking-wider font-semibold py-4 text-center">
+            <TableHead className="text-center">
               Criado em
             </TableHead>
-            <TableHead className="text-primary-foreground tracking-wider font-semibold py-4 text-center">
+            <TableHead className="text-center">
               Status
             </TableHead>
-            <TableHead className="text-primary-foreground tracking-wider font-semibold py-4 text-right">
+            <TableHead className="text-right">
               Ações
             </TableHead>
           </TableRow>
@@ -100,7 +100,7 @@ export function EmpresasTable({ data }: Props) {
               <TableCell className="text-sm text-muted-foreground text-center">{formatDate(empresa.createdAt)}</TableCell>
               <TableCell className="text-center">
                 {empresa.deletedAt ? (
-                  <Badge className="bg-red-100 text-red-700">Excluído</Badge>
+                  <Badge className="bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400">Excluído</Badge>
                 ) : (
                   getStatusBadge(empresa.status)
                 )}

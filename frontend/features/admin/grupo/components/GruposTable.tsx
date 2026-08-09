@@ -86,26 +86,26 @@ export function GruposTable({ data }: Props) {
   const grupoSelecionado = data.find((g) => g.id === modal.grupoId);
 
   return (
-    <Card className="w-full rounded-2xl border shadow-sm p-0 overflow-hidden">
+    <Card className="overflow-hidden p-4">
       <Table>
         <TableHeader>
-          <TableRow className="bg-primary hover:bg-primary shadow-inner border-b border-white/10">
-            <TableHead className="text-primary-foreground tracking-wider font-semibold py-4">
+          <TableRow className="hover:bg-transparent">
+            <TableHead>
               Descrição
             </TableHead>
-            <TableHead className="text-primary-foreground tracking-wider font-semibold py-4 text-center">
+            <TableHead className="text-center">
               Criado em
             </TableHead>
-            <TableHead className="text-primary-foreground tracking-wider font-semibold py-4 text-center">
+            <TableHead className="text-center">
               Status
             </TableHead>
-            <TableHead className="text-primary-foreground tracking-wider font-semibold py-4 text-right">
+            <TableHead className="text-right">
               Ações
             </TableHead>
           </TableRow>
         </TableHeader>
 
-        <TableBody>
+        <TableBody className="text-sm text-muted-foreground">
           {data.map((grupo) => (
             <TableRow
               key={grupo.id}
@@ -115,9 +115,9 @@ export function GruposTable({ data }: Props) {
               <TableCell className="text-sm text-muted-foreground text-center">{formatDate(grupo.createdAt)}</TableCell>
               <TableCell className="text-center">
                 {grupo.deletedAt ? (
-                  <Badge className="bg-red-100 text-red-700">Excluído</Badge>
+                  <Badge className="bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400">Excluído</Badge>
                 ) : (
-                  <Badge className="bg-emerald-100 text-emerald-700">Ativo</Badge>
+                  <Badge className="bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400">Ativo</Badge>
                 )}
               </TableCell>
 

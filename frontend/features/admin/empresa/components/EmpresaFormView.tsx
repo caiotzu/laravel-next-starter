@@ -21,7 +21,7 @@ interface Props {
 export function EmpresaFormView({ empresa }: Props) {
   return (
     <div className="space-y-6">
-      <div className={`rounded-xl shadow-sm border-l-4 bg-card p-6 ${empresa.deletedAt ? 'border-red-500' : getEmpresaStatusBorder(empresa.status)}`}>
+      <div className={`rounded-xl shadow-sm border-l-4 bg-card p-6 ${empresa.deletedAt ? 'border-red-500 dark:border-red-900/60' : getEmpresaStatusBorder(empresa.status)}`}>
         <div className="flex flex-col md:flex-row gap-8">
           <Avatar className="h-28 w-28">
             <AvatarFallback><Building2 className="h-12 w-12"/></AvatarFallback>
@@ -72,12 +72,12 @@ export function EmpresaFormView({ empresa }: Props) {
                     </span>
 
                     <div className="flex gap-2">
-                      {contato.principal && (<Badge className="bg-emerald-100 text-emerald-700">Principal</Badge>)}
+                      {contato.principal && (<Badge className="bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400">Principal</Badge>)}
 
                       {contato.ativo ? 
-                        (<Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Ativo</Badge>)
+                        (<Badge className="bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400">Ativo</Badge>)
                         :
-                        (<Badge className="bg-emerald-100 text-red-700 hover:bg-emerald-100">Inativo</Badge>)
+                        (<Badge className="bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400">Inativo</Badge>)
                       }
                     </div>
                   </div>
@@ -143,12 +143,12 @@ export function EmpresaFormView({ empresa }: Props) {
                       </div>
 
                       <div className="flex gap-2">
-                        {endereco.principal && (<Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Principal</Badge>)}
+                        {endereco.principal && (<Badge className="bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400">Principal</Badge>)}
 
                         {endereco.ativo ? 
-                          (<Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Ativo</Badge>)
+                          (<Badge className="bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400">Ativo</Badge>)
                           :
-                          (<Badge className="bg-emerald-100 text-red-700 hover:bg-emerald-100">Inativo</Badge>)
+                          (<Badge className="bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400">Inativo</Badge>)
                         }
                       </div>
                     </div>

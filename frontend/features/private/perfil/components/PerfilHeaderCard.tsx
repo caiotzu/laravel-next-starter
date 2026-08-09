@@ -24,8 +24,8 @@ export function PerfilHeaderCard({ user }: Props) {
     <div
       className={`rounded-xl shadow-sm border-l-4 bg-card p-6 ${
         user.status === 'ativo'
-          ? "border-emerald-500"
-          : "border-red-500"
+          ? "border-emerald-500 dark:border-emerald-900/60"
+          : "border-red-500 dark:border-red-900/60"
       }`}
     >
       <div className="flex flex-col md:flex-row items-center md:items-start gap-10 p-8">

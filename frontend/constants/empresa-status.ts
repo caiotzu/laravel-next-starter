@@ -9,10 +9,10 @@ export type EmpresaStatus = keyof typeof EMPRESA_STATUS;
 
 export const EMPRESA_STATUS_BORDER:
   Record<EmpresaStatus, string> = {
-    pendente: "border-amber-500",
-    ativo: "border-emerald-500",
-    inativo: "border-zinc-500",
-    bloqueado: "border-red-500",
+    pendente: "border-amber-500 dark:border-amber-900/60",
+    ativo: "border-emerald-500 dark:border-emerald-900/60",
+    inativo: "border-zinc-500 dark:border-zinc-900/60",
+    bloqueado: "border-red-500 dark:border-red-900/60",
   };
 
 export const EMPRESA_STATUS_OPTIONS = Object.entries(

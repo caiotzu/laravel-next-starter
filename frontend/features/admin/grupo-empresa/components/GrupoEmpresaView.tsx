@@ -37,8 +37,8 @@ export function GrupoEmpresaView({
       <div
         className={`rounded-xl shadow-sm border-l-4 bg-card p-6 ${
           grupoEmpresa.deletedAt
-            ? "border-red-500"
-            : "border-emerald-500"
+            ? "border-red-500 dark:border-red-900/60"
+            : "border-emerald-500 dark:border-emerald-900/60"
         }`}
       >
         <div className="flex justify-between items-start mb-6">
@@ -61,8 +61,8 @@ export function GrupoEmpresaView({
           key={grupo.id}
           className={`rounded-xl shadow-sm border-l-4 bg-card ${
             grupo.deletedAt
-              ? "border-red-500"
-              : "border-emerald-500"
+              ? "border-red-500 dark:border-red-900/60"
+              : "border-emerald-500 dark:border-emerald-900/60"
           }`}
         >
           <div
