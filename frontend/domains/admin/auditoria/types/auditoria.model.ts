@@ -8,6 +8,7 @@ export interface Auditoria {
   id: string;
   entidadeTabela: string;
   entidadeId: string;
+  registro: string | null;
   agrupadorTabela: string | null;
   agrupadorId: string | null;
   acao: string;

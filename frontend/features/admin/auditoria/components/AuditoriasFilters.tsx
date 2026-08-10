@@ -24,6 +24,7 @@ import {
 import { Switch } from "@/components/ui/switch"
 
 import { AUDITORIA_ACAO_OPTIONS } from "@/constants/auditoria-acao";
+import { useDebouncedValue } from "@/hooks/use-debounce";
 import { useAuditoriaEntidadeRegistros } from "@/domains/admin/auditoria/hooks/useAuditoriaEntidadeRegistros";
 import {
   AuditoriaEntidadeOption,
@@ -46,10 +47,15 @@ export function AuditoriasFilters({
   isLoadingUsuarios,
   entidades,
 }: Props) {
+  // Só a busca (parâmetro enviado à API) é debounced; o valor exibido no
+  // input continua instantâneo (filters.entidade_nome), evitando disparar
+  // uma requisição a cada tecla digitada.
+  const buscaRegistroDebounced = useDebouncedValue(filters.entidade_nome, 1000);
+
   const { data: registrosEntidade, isLoading: isLoadingRegistrosEntidade } =
     useAuditoriaEntidadeRegistros(
       filters.entidade_tabela || undefined,
-      { busca: filters.entidade_nome, por_pagina: 10 },
+      { busca: buscaRegistroDebounced, por_pagina: 10 },
     );
 
   // Guardamos o item selecionado localmente, desacoplado da lista de

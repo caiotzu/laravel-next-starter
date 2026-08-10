@@ -6,6 +6,7 @@ export function toAuditoria(data: AuditoriaDataResponse): Auditoria {
     id: data.id,
     entidadeTabela: data.entidade_tabela,
     entidadeId: data.entidade_id,
+    registro: data.registro,
     agrupadorTabela: data.agrupador_tabela,
     agrupadorId: data.agrupador_id,
     acao: data.acao,

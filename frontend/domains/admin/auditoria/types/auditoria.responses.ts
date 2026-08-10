@@ -10,6 +10,7 @@ export interface AuditoriaDataResponse {
   id: string;
   entidade_tabela: string;
   entidade_id: string;
+  registro: string | null;
   agrupador_tabela: string | null;
   agrupador_id: string | null;
   acao: string;

@@ -18,15 +18,16 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 
-
 import { useAuditoriaEntidadeRegistros } from "@/domains/admin/auditoria/hooks/useAuditoriaEntidadeRegistros";
 import { useAuditoriaEntidades } from "@/domains/admin/auditoria/hooks/useAuditoriaEntidades";
 import { useAuditorias } from "@/domains/admin/auditoria/hooks/useAuditorias";
 import { AuditoriaFilters } from "@/domains/admin/auditoria/types/auditoria.filters";
+import { useDebouncedValue } from "@/hooks/use-debounce";
 
 import { AuditoriasFilters } from "@/features/admin/auditoria/components/AuditoriasFilters";
 import { AuditoriasTable } from "@/features/admin/auditoria/components/AuditoriasTable";
 import { AuditoriasTableSkeleton } from "@/features/admin/auditoria/components/AuditoriasTableSkeleton";
+
 
 export default function Page() {
   const [filters, setFilters] = useState<AuditoriaFilters>({
@@ -43,9 +44,11 @@ export default function Page() {
     por_pagina: 10,
   });
 
+  const buscaUsuarioDebounced = useDebouncedValue(filters.usuario_nome, 1000);
+
   const { data: usuarios = [], isLoading: isLoadingUsuarios } =
     useAuditoriaEntidadeRegistros("usuarios", {
-      busca: filters.usuario_nome,
+      busca: buscaUsuarioDebounced,
       por_pagina: 10,
     });
   const { data: entidades = [] } = useAuditoriaEntidades();

@@ -30,6 +30,13 @@ class AuditoriaService
             ->when($filtro->busca, function (Builder $query, string $busca) use ($entidade) {
                 $query->where(function (Builder $query) use ($entidade, $busca) {
                     foreach ($entidade->camposPesquisa() as $campo) {
+                        if ($campo === 'id') {
+                            // O id costuma ser uuid; o operador ilike não
+                            // existe para uuid sem cast explícito para text.
+                            $query->orWhereRaw("id::text ilike ?", ["%{$busca}%"]);
+                            continue;
+                        }
+
                         $query->orWhere($campo, 'ilike', "%{$busca}%");
                     }
                 });
@@ -86,7 +93,7 @@ class AuditoriaService
                 );
         }
 
-        return $query
+        $auditorias = $query
             ->when($filtro->acao, fn (Builder $q) =>
                 $q->where('acao', $filtro->acao->value)
             )
@@ -102,5 +109,47 @@ class AuditoriaService
             ->with('usuario:id,nome,email')
             ->orderBy('criado_em', 'DESC')
             ->paginate($filtro->paginacao->por_pagina);
+
+        $this->anexarDescricaoRegistro($auditorias);
+
+        return $auditorias;
+    }
+
+    /**
+     * Preenche o atributo virtual `registro` (descrição amigável do registro
+     * auditado) em cada item da página, reutilizando a mesma configuração de
+     * AuditoriaEntidade já usada nos filtros (camposPesquisa/formatarRegistro),
+     * sem lógica if/switch por entidade.
+     *
+     * Faz no máximo uma query por entidade_tabela presente na página (não uma
+     * por linha), e resolve silenciosamente para null quando a entidade não
+     * está configurada em AuditoriaEntidade ou o registro não existe mais.
+     */
+    private function anexarDescricaoRegistro(LengthAwarePaginator $auditorias): void
+    {
+        $auditorias->getCollection()
+            ->groupBy('entidade_tabela')
+            ->each(function ($itens, string $tabela) {
+                $entidade = AuditoriaEntidade::tryFrom($tabela);
+
+                if (! $entidade) {
+                    return;
+                }
+
+                $ids = $itens->pluck('entidade_id')->filter()->unique()->values();
+
+                $labelsPorId = $entidade->modelClass()::query()
+                    ->withTrashed()
+                    ->whereIn('id', $ids)
+                    ->get()
+                    ->mapWithKeys(fn ($registro) => [
+                        (string) $registro->getKey() => $entidade->formatarRegistro($registro)['label'],
+                    ]);
+
+
+                $itens->each(function (Auditoria $auditoria) use ($labelsPorId) {
+                    $auditoria->registro = $labelsPorId->get($auditoria->entidade_id);
+                });
+            });
     }
 }

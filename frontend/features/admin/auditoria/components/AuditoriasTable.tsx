@@ -148,9 +148,11 @@ export function AuditoriasTable({ data }: Props) {
       <Table >
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead  className="bold">Identificador</TableHead>
-            
             <TableHead  className="bold">Entidade</TableHead>
+
+            <TableHead className="bold">
+              Registro
+            </TableHead>
 
             <TableHead className="text-center">
               Ação
@@ -181,13 +183,13 @@ export function AuditoriasTable({ data }: Props) {
               className="border-b transition-colors last:border-0 even:bg-muted/20 hover:bg-muted/40"
             >
               <TableCell className="font-medium">
-                {auditoria.entidadeId ?? "---"}
-              </TableCell>
-
-              <TableCell className="font-medium">
                 {getAuditoriaEntidadeLabel(
                   auditoria.entidadeTabela
                 )}
+              </TableCell>
+
+              <TableCell className="font-medium">
+                {auditoria.registro ?? "---"}
               </TableCell>
 
               <TableCell className="text-center">

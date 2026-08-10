@@ -13,6 +13,7 @@ class AuditoriaResource extends JsonResource
             'id' => $this->id,
             'entidade_tabela' => $this->entidade_tabela,
             'entidade_id' => $this->entidade_id,
+            'registro' => $this->registro ?? null,
             'agrupador_tabela' => $this->agrupador_tabela,
             'agrupador_id' => $this->agrupador_id,
             'acao' => $this->acao,
