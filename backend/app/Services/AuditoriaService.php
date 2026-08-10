@@ -8,8 +8,44 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use App\Models\Auditoria;
 
 use App\DTO\Auditoria\AuditoriaFiltroDTO;
+use App\DTO\Auditoria\AuditoriaEntidadeFiltroDTO;
+use App\Enums\AuditoriaEntidade;
 class AuditoriaService
 {
+    public function listarEntidadesAuditaveis(): array
+    {
+        return array_map(fn (AuditoriaEntidade $entidade) => [
+            'value' => $entidade->value,
+            'label' => $entidade->label(),
+        ], AuditoriaEntidade::cases());
+    }
+
+    public function listarRegistrosEntidade(
+        AuditoriaEntidade $entidade,
+        AuditoriaEntidadeFiltroDTO $filtro,
+    ): LengthAwarePaginator {
+        $model = $entidade->modelClass();
+
+        $registros = $model::query()
+            ->when($filtro->busca, function (Builder $query, string $busca) use ($entidade) {
+                $query->where(function (Builder $query) use ($entidade, $busca) {
+                    foreach ($entidade->camposPesquisa() as $campo) {
+                        $query->orWhere($campo, 'ilike', "%{$busca}%");
+                    }
+                });
+            })
+            ->orderBy($entidade->campoOrdenacao())
+            ->paginate($filtro->paginacao->por_pagina);
+
+        $registros->setCollection(
+            $registros->getCollection()->map(
+                fn ($registro) => $entidade->formatarRegistro($registro)
+            )
+        );
+
+        return $registros;
+    }
+
     /**
      * Única fonte de verdade da query de auditoria. Cobre tanto a busca
      * abrangente (admin) quanto a consulta de uma entidade específica —

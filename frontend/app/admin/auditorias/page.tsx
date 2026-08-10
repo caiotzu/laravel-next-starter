@@ -19,10 +19,10 @@ import {
 } from "@/components/ui/sidebar";
 
 
+import { useAuditoriaEntidadeRegistros } from "@/domains/admin/auditoria/hooks/useAuditoriaEntidadeRegistros";
+import { useAuditoriaEntidades } from "@/domains/admin/auditoria/hooks/useAuditoriaEntidades";
 import { useAuditorias } from "@/domains/admin/auditoria/hooks/useAuditorias";
 import { AuditoriaFilters } from "@/domains/admin/auditoria/types/auditoria.filters";
-import { useUsuarios } from "@/domains/admin/usuario/hooks/useUsuarios";
-import { Usuario } from "@/domains/admin/usuario/types/usuario.model";
 
 import { AuditoriasFilters } from "@/features/admin/auditoria/components/AuditoriasFilters";
 import { AuditoriasTable } from "@/features/admin/auditoria/components/AuditoriasTable";
@@ -32,6 +32,7 @@ export default function Page() {
   const [filters, setFilters] = useState<AuditoriaFilters>({
     entidade_tabela: "",
     entidade_id: "",
+    entidade_nome: "",
     acao: "",
     usuario_id: "",
     usuario_nome: "",
@@ -42,23 +43,12 @@ export default function Page() {
     por_pagina: 10,
   });
 
-  const { data: usuariosData, isLoading: isLoadingUsuarios } = useUsuarios({
-    nome: filters.usuario_nome,
-    excluido: false,
-    por_pagina: 10,
-  });
-  const usuarios = (usuariosData?.data ?? []) as Usuario[];
-
-  // const auditoriaParams = {
-  //   entidade_tabela: filters.entidade_tabela,
-  //   entidade_id: filters.entidade_id,
-  //   acao: filters.acao,
-  //   usuario_id: filters.usuario_id,
-  //   data_inicio: filters.data_inicio,
-  //   data_fim: filters.data_fim,
-  //   page: filters.page,
-  //   por_pagina: filters.por_pagina,
-  // };
+  const { data: usuarios = [], isLoading: isLoadingUsuarios } =
+    useAuditoriaEntidadeRegistros("usuarios", {
+      busca: filters.usuario_nome,
+      por_pagina: 10,
+    });
+  const { data: entidades = [] } = useAuditoriaEntidades();
 
   const {
     data: auditorias,
@@ -115,6 +105,7 @@ export default function Page() {
                 setFilters={setFilters}
                 usuarios={usuarios}
                 isLoadingUsuarios={isLoadingUsuarios}
+                entidades={entidades}
               />
 
               {isLoadingAuditorias ? (

@@ -39,7 +39,6 @@ class ListarRequest extends FormRequest
             'entidade_id' => [
                 'nullable',
                 'uuid',
-                'required_with:entidade_tabela',
             ],
             'agrupador_tabela' => [
                 'nullable',
@@ -94,8 +93,6 @@ class ListarRequest extends FormRequest
             'entidade_tabela.required_if' => 'Informe a entidade_tabela para usar incluir_dependentes',
 
             'entidade_id.uuid'           => 'O identificador da entidade informado não é um UUID válido',
-            'entidade_id.required_with'  => 'Informe o identificador da entidade quando filtrar por entidade_tabela',
-
             'agrupador_tabela.string' => 'O agrupador informado deve ser um texto',
             'agrupador_tabela.max'    => 'O agrupador informado deve ter no máximo 60 caracteres',
 

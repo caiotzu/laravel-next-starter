@@ -88,7 +88,12 @@ Route::middleware('jwt')->group(function () {
             Route::patch('/', [PerfilController::class, 'atualizar']);
         });
 
-        Route::get('/auditorias', [AuditoriaController::class, 'listar']);
+        Route::prefix('auditorias')->group(function () {
+            Route::get('/entidades', [AuditoriaController::class, 'listarEntidadesAuditaveis']);
+            Route::get('/usuarios', [AuditoriaController::class, 'listarUsuarios']);
+            Route::get('/entidades/{entidade}', [AuditoriaController::class, 'listarRegistrosEntidade']);
+            Route::get('/', [AuditoriaController::class, 'listar']);
+        });
 
         Route::prefix('grupos-empresas')->group(function () {
             Route::patch('/{id}/ativar', [GrupoEmpresaController::class, 'ativar']);
