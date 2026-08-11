@@ -237,7 +237,7 @@ export function AuditoriasTable({ data }: Props) {
           open
           onOpenChange={fecharAuditoria}
         >
-          <DialogContent className="flex max-h-[85vh] flex-col gap-0 bg-white p-0 dark:bg-zinc-900 sm:max-w-2xl lg:max-w-4xl">
+          <DialogContent className="flex max-h-[85vh] flex-col gap-0 bg-white p-0 dark:bg-zinc-900 sm:max-w-2xl lg:max-w-6xl">
             <DialogHeader className="shrink-0 border-b px-6 py-4 pr-12">
               <div className="flex items-center justify-between gap-4">
                 <DialogTitle className="flex items-center gap-2">
@@ -285,13 +285,18 @@ export function AuditoriasTable({ data }: Props) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-3 gap-8">
                 <Info
                   label="Usuário"
                   value={
                     auditoriaSelecionada.usuario?.nome ??
                     "Sistema"
                   }
+                />
+
+                <Info
+                  label="Registro"
+                  value={auditoriaSelecionada.registro ?? "---"}
                 />
 
                 <Info

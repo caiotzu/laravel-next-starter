@@ -24,13 +24,13 @@ import {
 import { Switch } from "@/components/ui/switch"
 
 import { AUDITORIA_ACAO_OPTIONS } from "@/constants/auditoria-acao";
-import { useDebouncedValue } from "@/hooks/use-debounce";
 import { useAuditoriaEntidadeRegistros } from "@/domains/admin/auditoria/hooks/useAuditoriaEntidadeRegistros";
 import {
   AuditoriaEntidadeOption,
   AuditoriaEntidadeRegistro,
 } from "@/domains/admin/auditoria/types/auditoria-entidade";
 import { AuditoriaFilters } from "@/domains/admin/auditoria/types/auditoria.filters";
+import { useDebouncedValue } from "@/hooks/use-debounce";
 
 interface Props {
   filters: AuditoriaFilters;
@@ -52,10 +52,15 @@ export function AuditoriasFilters({
   // uma requisição a cada tecla digitada.
   const buscaRegistroDebounced = useDebouncedValue(filters.entidade_nome, 1000);
 
+  // A busca só deve ocorrer quando o usuário começar a digitar; selecionar
+  // a entidade (Empresas, Usuários ou Grupos) sozinha não deve disparar
+  // nenhuma consulta de registros. Esse fluxo é o mesmo independente da
+  // entidade escolhida.
   const { data: registrosEntidade, isLoading: isLoadingRegistrosEntidade } =
     useAuditoriaEntidadeRegistros(
       filters.entidade_tabela || undefined,
       { busca: buscaRegistroDebounced, por_pagina: 10 },
+      { enabled: Boolean(buscaRegistroDebounced) },
     );
 
   // Guardamos o item selecionado localmente, desacoplado da lista de
@@ -140,6 +145,7 @@ export function AuditoriasFilters({
             items={registrosEntidade ?? []}
             value={selectedRegistro}
             disabled={!filters.entidade_tabela}
+            filter={null}
             onValueChange={(item) => {
               setSelectedRegistro(item);
 
@@ -160,7 +166,7 @@ export function AuditoriasFilters({
           >
             <ComboboxInput
               className="w-full"
-              placeholder="Pesquise um registro..."
+              placeholder="Digite o nome/descrição ou ID para pesquisar..."
               value={filters.entidade_nome ?? ""}
               disabled={!filters.entidade_tabela}
               showClear
@@ -177,7 +183,9 @@ export function AuditoriasFilters({
 
             <ComboboxContent>
               <ComboboxEmpty>
-                {isLoadingRegistrosEntidade
+                {!filters.entidade_nome
+                  ? "Digite o nome/descrição ou ID para pesquisar."
+                  : isLoadingRegistrosEntidade
                   ? "Carregando..."
                   : "Nenhum registro encontrado."}
               </ComboboxEmpty>
@@ -224,6 +232,7 @@ export function AuditoriasFilters({
           <Combobox
             items={usuarios}
             value={selectedUsuario}
+            filter={null}
             onValueChange={(item) => {
               setSelectedUsuario(item);
 
@@ -244,6 +253,7 @@ export function AuditoriasFilters({
           >
             <ComboboxInput
               className="w-full"
+              placeholder="Digite o nome ou ID para pesquisar..."
               value={filters.usuario_nome ?? ""}
               showClear
               onChange={(e) => {
@@ -259,7 +269,9 @@ export function AuditoriasFilters({
 
             <ComboboxContent>
               <ComboboxEmpty>
-                {isLoadingUsuarios
+                {!filters.usuario_nome
+                  ? "Digite o nome ou ID para pesquisar."
+                  : isLoadingUsuarios
                   ? "Carregando..."
                   : "Nenhum usuário encontrado."}
               </ComboboxEmpty>

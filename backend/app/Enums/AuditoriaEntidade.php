@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Grupo;
 use App\Models\Empresa;
 use App\Models\Usuario;
+use App\Enums\EntidadeTipo as EntidadeTipoChave;
 
 enum AuditoriaEntidade: string
 {
@@ -50,20 +51,69 @@ enum AuditoriaEntidade: string
         };
     }
 
+    /**
+     * Relacionamentos que devem ser eager-loaded para montar o label em
+     * formatarRegistro(), evitando N+1 (ex.: Usuario->grupo->entidadeTipo
+     * para diferenciar Usuário de Usuário Entidade).
+     */
+    public function relacionamentosParaListagem(): array
+    {
+        return match ($this) {
+            self::USUARIOS => ['grupo.entidadeTipo'],
+            self::GRUPOS => ['grupoEmpresa', 'entidadeTipo'],
+            default => [],
+        };
+    }
+
+    // public function formatarRegistro(Model $registro): array
+    // {
+    //     // dd($registro);
+    //     return match ($this) {
+    //         self::EMPRESAS => [
+    //             'id' => $registro->id,
+    //             'label' => $registro->cnpj.' - '.$registro->nome_fantasia,
+    //         ],
+    //         self::USUARIOS => [
+    //             'id' => $registro->id,
+    //             'label' => $registro->nome . ' — ' . $registro->grupo->entidadeTipo->chave->name . ' (' . $registro->email . ')',
+    //         ],
+    //         self::GRUPOS => [
+    //             'id' => $registro->id,
+    //             'label' => $registro->grupoEmpresa
+    //                 ? $registro->descricao . ' → ' . $registro->grupoEmpresa->nome . ' — ' . $registro->entidadeTipo->chave->name
+    //                 : $registro->descricao . ' — ' . $registro->entidadeTipo->chave->name,
+    //         ],
+    //     };
+    // }
+
     public function formatarRegistro(Model $registro): array
     {
         return match ($this) {
             self::EMPRESAS => [
                 'id' => $registro->id,
-                'label' => $registro->cnpj.' - '.$registro->nome_fantasia,
+                'label' => formatar_cpf_cnpj($registro->cnpj) . ' • ' . $registro->nome_fantasia,
             ],
+
             self::USUARIOS => [
                 'id' => $registro->id,
-                'label' => $registro->nome.' ('.$registro->email.')',
+                'label' => $registro->nome
+                    . ' • '
+                    . $registro->email
+                    . ' • '
+                    . $registro->grupo->entidadeTipo->chave->name,
             ],
+
             self::GRUPOS => [
                 'id' => $registro->id,
-                'label' => $registro->descricao,
+                'label' => $registro->grupoEmpresa
+                    ? $registro->descricao
+                        . ' • '
+                        . $registro->grupoEmpresa->nome
+                        . ' • '
+                        . $registro->entidadeTipo->chave->name
+                    : $registro->descricao
+                        . ' • '
+                        . $registro->entidadeTipo->chave->name,
             ],
         };
     }

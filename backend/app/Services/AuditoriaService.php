@@ -27,6 +27,7 @@ class AuditoriaService
         $model = $entidade->modelClass();
 
         $registros = $model::query()
+            ->with($entidade->relacionamentosParaListagem())
             ->when($filtro->busca, function (Builder $query, string $busca) use ($entidade) {
                 $query->where(function (Builder $query) use ($entidade, $busca) {
                     foreach ($entidade->camposPesquisa() as $campo) {
@@ -42,6 +43,7 @@ class AuditoriaService
                 });
             })
             ->orderBy($entidade->campoOrdenacao())
+            ->withTrashed() // Para auditoria é bom trazer registros deletados também, para não perder histórico.
             ->paginate($filtro->paginacao->por_pagina);
 
         $registros->setCollection(
@@ -127,6 +129,7 @@ class AuditoriaService
      */
     private function anexarDescricaoRegistro(LengthAwarePaginator $auditorias): void
     {
+        /** @var \Illuminate\Pagination\LengthAwarePaginator $auditorias */
         $auditorias->getCollection()
             ->groupBy('entidade_tabela')
             ->each(function ($itens, string $tabela) {
@@ -139,6 +142,7 @@ class AuditoriaService
                 $ids = $itens->pluck('entidade_id')->filter()->unique()->values();
 
                 $labelsPorId = $entidade->modelClass()::query()
+                    ->with($entidade->relacionamentosParaListagem())
                     ->withTrashed()
                     ->whereIn('id', $ids)
                     ->get()

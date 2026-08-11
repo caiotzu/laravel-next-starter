@@ -14,11 +14,16 @@ import {
 export function useAuditoriaEntidadeRegistros(
   entidade: string | undefined,
   params: ListarRegistrosAuditoriaEntidadeRequest,
+  options?: { enabled?: boolean },
 ) {
   return useQuery<AuditoriaEntidadeRegistro[], AxiosError<ApiErrorResponse>>({
     queryKey: ["auditoria-entidade-registros", entidade, params],
     queryFn: () => listarRegistrosEntidadeAuditavel(entidade!, params),
-    enabled: Boolean(entidade),
-    placeholderData: (previousData) => previousData,
+    enabled: Boolean(entidade) && (options?.enabled ?? true),
+    // Só reaproveita o resultado anterior como placeholder enquanto a busca
+    // é refeita para a MESMA entidade; evita mostrar por um instante
+    // registros de uma entidade diferente da que está selecionada agora.
+    placeholderData: (previousData, previousQuery) =>
+      previousQuery?.queryKey[1] === entidade ? previousData : undefined,
   });
 }

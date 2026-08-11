@@ -47,10 +47,11 @@ export default function Page() {
   const buscaUsuarioDebounced = useDebouncedValue(filters.usuario_nome, 1000);
 
   const { data: usuarios = [], isLoading: isLoadingUsuarios } =
-    useAuditoriaEntidadeRegistros("usuarios", {
-      busca: buscaUsuarioDebounced,
-      por_pagina: 10,
-    });
+    useAuditoriaEntidadeRegistros(
+      "usuarios",
+      { busca: buscaUsuarioDebounced, por_pagina: 10 },
+      { enabled: Boolean(buscaUsuarioDebounced) },
+    );
   const { data: entidades = [] } = useAuditoriaEntidades();
 
   const {
