@@ -61,7 +61,7 @@ import { atualizarEmpresaEndereco, cadastrarEmpresaEndereco, excluirEmpresaEnder
 import { EmpresaEndereco } from "@/domains/private/empresa-endereco/types/empresaEndereco.model";
 import { useMunicipios } from "@/domains/private/lookup/hooks/useMunicipios";
 import { consultarCep, listarMunicipios } from "@/domains/private/lookup/services/lookupService";
-import { ConsultarCepResponse, MunicipioLookupItem } from "@/domains/private/lookup/types/lookup.responses";
+import { ConsultarCepData, MunicipioLookupItem } from "@/domains/private/lookup/types/lookup.responses";
 import { maskCEP } from "@/lib/utils";
 
 import { EmpresaEnderecoFormData, empresaEnderecoSchema } from "../../empresa-endereco/schemas/empresa-endereco.schema";
@@ -213,7 +213,7 @@ export function EmpresaEnderecosTab({
   });
 
   const { mutate: consultarCepMutation, isPending: isLoadingCep } = useMutation<
-    ConsultarCepResponse,
+    ConsultarCepData,
     AxiosError<ApiErrorResponse>,
     string
   >({

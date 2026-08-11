@@ -13,16 +13,19 @@ export interface MunicipioLookupItem {
 
 export type ListarMunicipiosResponse = LaravelPagination<MunicipioLookupItem>;
 
-export interface ConsultarCepResponse {
-  data: {
-    cep: string;
-    logradouro: string | null;
-    bairro: string | null;
-    cidade: string | null;
-    uf: string | null;
-    ibge: string | null;
-    siafi: string | null;
-    encontrado: boolean;
-    provider: string;
-  }
+export interface ConsultarCepData {
+  cep: string;
+  logradouro: string | null;
+  bairro: string | null;
+  cidade: string | null;
+  uf: string | null;
+  ibge: string | null;
+  siafi: string | null;
+  encontrado: boolean;
+  provider: string;
 }
+
+export interface ConsultarCepResponse {
+  data: ConsultarCepData;
+}
+
