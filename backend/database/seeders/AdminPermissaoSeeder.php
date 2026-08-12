@@ -352,6 +352,37 @@ class AdminPermissaoSeeder extends Seeder
                     "descricao" => "Permite listar os usuários",
                     "created_at" => date("Y-m-d H:i:s"),
                     "updated_at" => date("Y-m-d H:i:s")
+                ],
+            //---
+
+            // mensagem
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.mensagem.menu",
+                    "descricao" => "Permite visualizar o menu de mensagens",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.mensagem.cadastrar",
+                    "descricao" => "Permite cadastrar/enviar uma nova mensagem",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.mensagem.visualizar",
+                    "descricao" => "Permite visualizar os detalhes de uma mensagem",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.mensagem.listar",
+                    "descricao" => "Permite listar as mensagens enviadas",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
                 ]
             //---
         ]);

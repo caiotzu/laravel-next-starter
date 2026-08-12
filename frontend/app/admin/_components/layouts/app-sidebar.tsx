@@ -56,6 +56,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           url: "/admin/empresas",
           permission: "admin.empresa.menu"
         },
+        {
+          title: "Mensagens",
+          url: "/admin/mensagens",
+          permission: "admin.mensagem.menu"
+        },
       ],
     },
     {

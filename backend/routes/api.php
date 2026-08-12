@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ {
     PerfilController,
     EmpresaController,
     UsuarioController,
+    MensagemController,
     AuditoriaController,
     PermissaoController,
     GrupoEmpresaController,
@@ -30,6 +31,7 @@ use App\Http\Controllers\Private\ {
     PerfilController as PrivatePerfilController,
     EmpresaController as PrivateEmpresaController,
     UsuarioController as PrivateUsuarioController,
+    MensagemController as PrivateMensagemController,
     PermissaoController as PrivatePermissaoController,
     EmpresaContatoController as PrivateEmpresaContatoController,
     EmpresaEnderecoController as PrivateEmpresaEnderecoController,
@@ -136,6 +138,12 @@ Route::middleware('jwt')->group(function () {
             });
         });
 
+        Route::prefix('mensagens')->group(function () {
+            Route::get('/{id}', [MensagemController::class, 'visualizar']);
+            Route::get('/', [MensagemController::class, 'listar']);
+            Route::post('/', [MensagemController::class, 'cadastrar']);
+        });
+
         Route::prefix('grupos')->group(function () {
             Route::patch('/{id}/permissoes', [GrupoController::class, 'sincronizarPermissoes']);
             Route::patch('/{id}/ativar', [GrupoController::class, 'ativar']);
@@ -176,6 +184,13 @@ Route::middleware('jwt')->group(function () {
         Route::patch('/senha', [PrivatePerfilController::class, 'atualizarSenha']);
         Route::get('/sessoes', [PrivatePerfilController::class, 'sessoes']);
         Route::patch('/', [PrivatePerfilController::class, 'atualizar']);
+    });
+
+    Route::prefix('mensagens')->group(function () {
+        Route::get('/nao-lidas/contador', [PrivateMensagemController::class, 'contarNaoLidas']);
+        Route::patch('/marcar-todas-lidas', [PrivateMensagemController::class, 'marcarTodasComoLidas']);
+        Route::patch('/{id}/marcar-lida', [PrivateMensagemController::class, 'marcarComoLida']);
+        Route::get('/', [PrivateMensagemController::class, 'listar']);
     });
 
     Route::prefix('empresas')->group(function () {

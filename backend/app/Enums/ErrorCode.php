@@ -36,4 +36,9 @@ enum ErrorCode: int
     // Grupo (model) -> 07
     case GRUPO_NOT_FOUND = 40407;
     case GRUPO_REQUIRED = 42207;
+
+    // Mensagem (model) -> 08
+    case MENSAGEM_NOT_FOUND = 40408;
+    case MENSAGEM_REQUIRED = 42208;
+    case MENSAGEM_DIRECIONAMENTO_INVALIDO = 42209;
 }

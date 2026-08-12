@@ -2,6 +2,8 @@ import { ModeToggle } from "@/components/ui/mode-toggle"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
+import { MensagensBellButton } from "@/features/private/mensagem/components/MensagensBellButton"
+
 
 export function SiteHeader() {
   return (
@@ -14,6 +16,7 @@ export function SiteHeader() {
         />
         <h1 className="text-base font-medium">Painel privado</h1>
         <div className="ml-auto flex items-center gap-2">
+          <MensagensBellButton />
           <ModeToggle />
         </div>
       </div>
