@@ -26,14 +26,28 @@ interface Props {
 function direcionamentoLabel(mensagem: Mensagem): string {
   if (!mensagem.direcionamento) return "---";
 
-  if (mensagem.direcionamento.tipo === "grupo_empresa") {
-    return mensagem.direcionamento.grupoEmpresaNome
-      ? `Grupo: ${mensagem.direcionamento.grupoEmpresaNome}`
+  const direcionamento = mensagem.direcionamento;
+
+  if (direcionamento.tipo === "geral") {
+    return "Geral";
+  }
+
+  if (direcionamento.tipo === "entidade") {
+    return direcionamento.entidadeTipo === "admin"
+      ? "Entidade: Admin"
+      : direcionamento.entidadeTipo === "private"
+        ? "Entidade: Private"
+        : "Entidade";
+  }
+
+  if (direcionamento.tipo === "grupo_empresa") {
+    return direcionamento.grupoEmpresaNome
+      ? `Grupo: ${direcionamento.grupoEmpresaNome}`
       : "Grupo de empresa";
   }
 
-  return mensagem.direcionamento.usuarioNome
-    ? `Usuário: ${mensagem.direcionamento.usuarioNome}`
+  return direcionamento.usuarioNome
+    ? `Usuário: ${direcionamento.usuarioNome}`
     : "Usuário";
 }
 

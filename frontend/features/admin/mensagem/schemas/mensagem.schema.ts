@@ -7,13 +7,25 @@ export const mensagemSchemaCadastro = z
       .min(1, "O título da mensagem é obrigatório")
       .max(120, "O título deve ter no máximo 120 caracteres"),
     conteudo: z.string().min(1, "O conteúdo da mensagem é obrigatório"),
-    direcionamento_tipo: z.enum(["grupo_empresa", "usuario"], {
-      message: "Selecione o direcionamento da mensagem",
-    }),
+    direcionamento_tipo: z.enum(
+      ["geral", "entidade", "grupo_empresa", "usuario"],
+      {
+        message: "Selecione o direcionamento da mensagem",
+      }
+    ),
+    entidade_tipo: z.enum(["admin", "private"]).optional(),
     grupo_empresa_id: z.string().optional(),
     usuario_id: z.string().optional(),
   })
   .superRefine((data, ctx) => {
+    if (data.direcionamento_tipo === "entidade" && !data.entidade_tipo) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["entidade_tipo"],
+        message: "Selecione a entidade de destino",
+      });
+    }
+
     if (data.direcionamento_tipo === "grupo_empresa" && !data.grupo_empresa_id) {
       ctx.addIssue({
         code: "custom",

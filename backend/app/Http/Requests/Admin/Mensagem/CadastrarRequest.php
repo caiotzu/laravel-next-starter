@@ -6,6 +6,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
 use App\Enums\MensagemDirecionamentoTipo;
+use App\Enums\EntidadeTipo;
 
 class CadastrarRequest extends FormRequest
 {
@@ -29,6 +30,11 @@ class CadastrarRequest extends FormRequest
             'direcionamento.tipo' => [
                 'required',
                 Rule::enum(MensagemDirecionamentoTipo::class),
+            ],
+            'direcionamento.entidade_tipo' => [
+                Rule::requiredIf(fn () => $this->input('direcionamento.tipo') === MensagemDirecionamentoTipo::ENTIDADE->value),
+                'nullable',
+                Rule::enum(EntidadeTipo::class),
             ],
             'direcionamento.grupo_empresa_id' => [
                 Rule::requiredIf(fn () => $this->input('direcionamento.tipo') === MensagemDirecionamentoTipo::GRUPO_EMPRESA->value),
@@ -56,6 +62,9 @@ class CadastrarRequest extends FormRequest
 
             'direcionamento.tipo.required' => 'O direcionamento da mensagem é obrigatório',
             'direcionamento.tipo.enum'     => 'O direcionamento informado é inválido',
+
+            'direcionamento.entidade_tipo.required' => 'Selecione a entidade de destino',
+            'direcionamento.entidade_tipo.enum'     => 'A entidade informada é inválida',
 
             'direcionamento.grupo_empresa_id.required' => 'Selecione o grupo de empresa de destino',
             'direcionamento.grupo_empresa_id.uuid'      => 'O grupo de empresa informado não é um UUID válido',

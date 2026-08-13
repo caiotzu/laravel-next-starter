@@ -13,7 +13,7 @@ use App\Enums\ErrorCode;
 
 use App\Exceptions\BusinessException;
 
-class MensagemPrivateService {
+class MensagemDestinatarioService {
 
     public function listar(MensagemConsultaFiltroDTO $filtro, string $usuarioId): LengthAwarePaginator
     {
@@ -24,6 +24,30 @@ class MensagemPrivateService {
             ->when($filtro->lida === false, fn ($q) => $q->naoLidas())
             ->orderBy('created_at', 'DESC')
             ->paginate($filtro->paginacao->por_pagina);
+    }
+
+    /**
+     * Detalhe de uma mensagem recebida. Assim como `marcarComoLida`, a
+     * busca é sempre filtrada pelo usuário autenticado: um usuário nunca
+     * consegue visualizar uma mensagem destinada a outro usuário apenas
+     * trocando o ID na requisição.
+     */
+    public function visualizar(string $mensagemId, string $usuarioId): MensagemDestinatario
+    {
+        $destinatario = MensagemDestinatario::query()
+            ->where('mensagem_id', $mensagemId)
+            ->doUsuario($usuarioId)
+            ->with('mensagem')
+            ->first();
+
+        if (! $destinatario) {
+            throw new BusinessException(
+                'Mensagem não encontrada.',
+                ErrorCode::MENSAGEM_NOT_FOUND->value
+            );
+        }
+
+        return $destinatario;
     }
 
     public function marcarComoLida(string $mensagemId, string $usuarioId): MensagemDestinatario

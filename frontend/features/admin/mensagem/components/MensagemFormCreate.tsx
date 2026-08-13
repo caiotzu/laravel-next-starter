@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2, Send, User } from "lucide-react";
+import { Building2, Globe, Layers, Send, User } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import { AppAlert } from "@/components/feedback/AppAlert";
@@ -24,6 +24,13 @@ import {
   ComboboxList,
 } from "@/components/ui/combobox";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   ToggleGroup,
@@ -32,8 +39,7 @@ import {
 
 import { useGrupoEmpresas } from "@/domains/admin/grupo-empresa/hooks/useGrupoEmpresas";
 import { GrupoEmpresa } from "@/domains/admin/grupo-empresa/types/grupoEmpresa.model";
-import { useUsuarios } from "@/domains/admin/usuario/hooks/useUsuarios";
-import { Usuario } from "@/domains/admin/usuario/types/usuario.model";
+import { useBuscarUsuariosMensagem } from "@/domains/admin/mensagem/hooks/useBuscarUsuariosMensagem";
 
 import {
   mensagemSchemaCadastro,
@@ -46,6 +52,11 @@ interface MensagemFormCreateProps {
   backendErrors?: string[] | null;
   clearBackendErrors?: () => void;
 }
+
+const ENTIDADE_OPCOES = [
+  { value: "admin", label: "Admin" },
+  { value: "private", label: "Private" },
+] as const;
 
 export function MensagemFormCreate({
   onSubmit,
@@ -66,12 +77,14 @@ export function MensagemFormCreate({
       titulo: "",
       conteudo: "",
       direcionamento_tipo: "grupo_empresa",
+      entidade_tipo: undefined,
       grupo_empresa_id: undefined,
       usuario_id: undefined,
     },
   });
 
   const direcionamentoTipo = watch("direcionamento_tipo");
+  const entidadeTipo = watch("entidade_tipo");
 
   const [grupoEmpresaBusca, setGrupoEmpresaBusca] = useState("");
   const [usuarioBusca, setUsuarioBusca] = useState("");
@@ -86,15 +99,25 @@ export function MensagemFormCreate({
   const grupoSelecionado =
     grupos.find((item) => item.id === watch("grupo_empresa_id")) ?? null;
 
-  const { data: usuariosData, isLoading: isLoadingUsuarios } = useUsuarios({
-    page: 1,
-    excluido: false,
-    por_pagina: 10,
-    nome: usuarioBusca || undefined,
-  });
-  const usuarios = (usuariosData?.data ?? []) as Usuario[];
+  /**
+   * Busca de qualquer usuário do sistema (não escopada pela entidade/grupo
+   * do admin autenticado), conforme o direcionamento individual exige.
+   */
+  const { data: usuariosData, isLoading: isLoadingUsuarios } =
+    useBuscarUsuariosMensagem({
+      page: 1,
+      por_pagina: 10,
+      nome: usuarioBusca || undefined,
+    });
+  const usuarios = usuariosData?.data ?? [];
   const usuarioSelecionado =
     usuarios.find((item) => item.id === watch("usuario_id")) ?? null;
+
+  function limparDestinos() {
+    setValue("entidade_tipo", undefined);
+    setValue("grupo_empresa_id", undefined);
+    setValue("usuario_id", undefined);
+  }
 
   async function handleFormSubmit(data: MensagemFormDataCadastro) {
     await onSubmit(data);
@@ -163,28 +186,75 @@ export function MensagemFormCreate({
               value={direcionamentoTipo}
               onValueChange={(value) => {
                 if (!value) return;
-
                 setValue(
                   "direcionamento_tipo",
                   value as MensagemFormDataCadastro["direcionamento_tipo"],
                   { shouldDirty: true, shouldValidate: true }
                 );
-
-                setValue("grupo_empresa_id", undefined);
-                setValue("usuario_id", undefined);
+                limparDestinos();
               }}
-              className="justify-start"
+              className="w-full"
             >
-              <ToggleGroupItem value="grupo_empresa" className="gap-2 px-4">
+              <ToggleGroupItem value="geral" className="gap-2 px-4 flex-1 min-w-fit whitespace-nowrap">
+                <Globe className="h-4 w-4" />
+                Geral
+              </ToggleGroupItem>
+              <ToggleGroupItem value="entidade" className="gap-2 px-4 flex-1 min-w-fit whitespace-nowrap">
+                <Layers className="h-4 w-4" />
+                Entidade
+              </ToggleGroupItem>
+              <ToggleGroupItem value="grupo_empresa" className="gap-2 px-4 flex-1 min-w-fit whitespace-nowrap">
                 <Building2 className="h-4 w-4" />
                 Grupo de empresa
               </ToggleGroupItem>
-              <ToggleGroupItem value="usuario" className="gap-2 px-4">
+              <ToggleGroupItem value="usuario" className="gap-2 px-4 flex-1 min-w-fit whitespace-nowrap">
                 <User className="h-4 w-4" />
                 Usuário
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
+
+          {direcionamentoTipo === "geral" && (
+            <p className="text-sm text-muted-foreground">
+              A mensagem será enviada para todos os usuários do sistema.
+            </p>
+          )}
+
+          {direcionamentoTipo === "entidade" && (
+            <div className="space-y-2">
+              <Label>
+                Entidade <span className="text-red-600">*</span>
+              </Label>
+
+              <Select
+                value={entidadeTipo}
+                onValueChange={(value) =>
+                  setValue(
+                    "entidade_tipo",
+                    value as MensagemFormDataCadastro["entidade_tipo"],
+                    { shouldDirty: true, shouldValidate: true }
+                  )
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione a entidade" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ENTIDADE_OPCOES.map((opcao) => (
+                    <SelectItem key={opcao.value} value={opcao.value}>
+                      {opcao.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {errors.entidade_tipo && (
+                <p className="text-sm text-red-700">
+                  {errors.entidade_tipo.message}
+                </p>
+              )}
+            </div>
+          )}
 
           {direcionamentoTipo === "grupo_empresa" && (
             <div className="space-y-2">
@@ -206,6 +276,7 @@ export function MensagemFormCreate({
                 itemToStringLabel={(item) => item?.nome ?? ""}
               >
                 <ComboboxInput
+                  className="w-full"
                   placeholder="Digite o nome do grupo de empresa..."
                   value={grupoSelecionado?.nome ?? grupoEmpresaBusca}
                   onChange={(e) => setGrupoEmpresaBusca(e.target.value)}
@@ -257,7 +328,8 @@ export function MensagemFormCreate({
                 itemToStringLabel={(item) => item?.nome ?? ""}
               >
                 <ComboboxInput
-                  placeholder="Digite o nome do usuário..."
+                  className="w-full"
+                  placeholder="Digite o nome do usuário (qualquer usuário do sistema)..."
                   value={usuarioSelecionado?.nome ?? usuarioBusca}
                   onChange={(e) => setUsuarioBusca(e.target.value)}
                   showClear
@@ -273,7 +345,7 @@ export function MensagemFormCreate({
                   <ComboboxList>
                     {(item) => (
                       <ComboboxItem key={item.id} value={item}>
-                        {item.nome}
+                        {item.nome} • {item.email}
                       </ComboboxItem>
                     )}
                   </ComboboxList>

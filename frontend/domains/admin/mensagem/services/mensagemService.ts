@@ -3,8 +3,8 @@ import qs from "qs";
 import { proxyAdminRequest } from "@/lib/proxy-admin";
 
 import { toMensagem } from "../mappers/mensagem.mapper";
-import { CadastrarMensagemRequest, ListarMensagensRequest } from "../types/mensagem.requests";
-import { CadastrarMensagemResponse, ListarMensagensResponse, VisualizarMensagemResponse } from "../types/mensagem.responses";
+import { BuscarUsuariosMensagemRequest, CadastrarMensagemRequest, ListarMensagensRequest } from "../types/mensagem.requests";
+import { BuscarUsuariosMensagemResponse, CadastrarMensagemResponse, ListarMensagensResponse, VisualizarMensagemResponse } from "../types/mensagem.responses";
 
 export async function cadastrarMensagem(
   dto: CadastrarMensagemRequest
@@ -56,4 +56,34 @@ export async function visualizarMensagem(id: string) {
   });
 
   return toMensagem(response.data.data);
+}
+
+/**
+ * Busca usuários em TODO o sistema (não escopado pela entidade/grupo do
+ * admin autenticado), usada exclusivamente no autocomplete de destinatário
+ * individual do cadastro de mensagem.
+ */
+export async function buscarUsuariosMensagem(
+  dto: BuscarUsuariosMensagemRequest
+) {
+  const query = qs.stringify(dto, {
+    skipNulls: true,
+    filter: (_, value) => {
+      if (
+        value === "" ||
+        value === undefined
+      ) {
+        return undefined;
+      }
+
+      return value;
+    },
+  });
+
+  const response = await proxyAdminRequest<BuscarUsuariosMensagemResponse>({
+    url: `/admin/mensagens/usuarios?${query}`,
+    method: "GET",
+  });
+
+  return response.data;
 }

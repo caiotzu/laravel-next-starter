@@ -79,6 +79,10 @@ export default function Page() {
       conteudo: data.conteudo,
       direcionamento: {
         tipo: data.direcionamento_tipo,
+        entidade_tipo:
+          data.direcionamento_tipo === "entidade"
+            ? data.entidade_tipo
+            : undefined,
         grupo_empresa_id:
           data.direcionamento_tipo === "grupo_empresa"
             ? data.grupo_empresa_id

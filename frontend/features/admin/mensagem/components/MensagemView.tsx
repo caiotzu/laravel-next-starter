@@ -57,18 +57,36 @@ export function MensagemView({ mensagem }: Props) {
             <Info
               label="Tipo"
               value={
-                direcionamento.tipo === "grupo_empresa"
-                  ? "Grupo de empresa"
-                  : "Usuário"
+                {
+                  geral: "Geral",
+                  entidade: "Entidade",
+                  grupo_empresa: "Grupo de empresa",
+                  usuario: "Usuário",
+                }[direcionamento.tipo]
               }
             />
 
-            {direcionamento.tipo === "grupo_empresa" ? (
+            {direcionamento.tipo === "entidade" && (
+              <Info
+                label="Entidade"
+                value={
+                  direcionamento.entidadeTipo === "admin"
+                    ? "Admin"
+                    : direcionamento.entidadeTipo === "private"
+                      ? "Private"
+                      : "---"
+                }
+              />
+            )}
+
+            {direcionamento.tipo === "grupo_empresa" && (
               <Info
                 label="Grupo de empresa"
                 value={direcionamento.grupoEmpresaNome ?? "---"}
               />
-            ) : (
+            )}
+
+            {direcionamento.tipo === "usuario" && (
               <Info
                 label="Usuário"
                 value={direcionamento.usuarioNome ?? "---"}

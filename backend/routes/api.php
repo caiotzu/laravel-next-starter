@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Global\ {
+    MensagemController as GlobalMensagemController,
+};
 use App\Http\Controllers\Lookup\ {
     CepController,
     MunicipioController,
@@ -31,7 +34,6 @@ use App\Http\Controllers\Private\ {
     PerfilController as PrivatePerfilController,
     EmpresaController as PrivateEmpresaController,
     UsuarioController as PrivateUsuarioController,
-    MensagemController as PrivateMensagemController,
     PermissaoController as PrivatePermissaoController,
     EmpresaContatoController as PrivateEmpresaContatoController,
     EmpresaEnderecoController as PrivateEmpresaEnderecoController,
@@ -69,6 +71,17 @@ Route::middleware('jwt')->group(function () {
         Route::get('/enderecos-tipos', [EnderecoTipoController::class, 'listar']);
     });
     // #endregion Lookup
+
+    // #region Global
+     Route::prefix('mensagens')->group(function () {
+        Route::get('/nao-lidas/contador', [GlobalMensagemController::class, 'contarNaoLidas']);
+        Route::patch('/marcar-todas-lidas', [GlobalMensagemController::class, 'marcarTodasComoLidas']);
+        Route::patch('/{id}/marcar-lida', [GlobalMensagemController::class, 'marcarComoLida']);
+        Route::get('/{id}', [GlobalMensagemController::class, 'visualizar']);
+        Route::get('/', [GlobalMensagemController::class, 'listar']);
+    });
+    // #endregion Global
+
 
     // #region Admin
     Route::prefix('admin')->group(function() {
@@ -139,6 +152,7 @@ Route::middleware('jwt')->group(function () {
         });
 
         Route::prefix('mensagens')->group(function () {
+            Route::get('/usuarios', [MensagemController::class, 'buscarUsuarios']);
             Route::get('/{id}', [MensagemController::class, 'visualizar']);
             Route::get('/', [MensagemController::class, 'listar']);
             Route::post('/', [MensagemController::class, 'cadastrar']);
@@ -184,13 +198,6 @@ Route::middleware('jwt')->group(function () {
         Route::patch('/senha', [PrivatePerfilController::class, 'atualizarSenha']);
         Route::get('/sessoes', [PrivatePerfilController::class, 'sessoes']);
         Route::patch('/', [PrivatePerfilController::class, 'atualizar']);
-    });
-
-    Route::prefix('mensagens')->group(function () {
-        Route::get('/nao-lidas/contador', [PrivateMensagemController::class, 'contarNaoLidas']);
-        Route::patch('/marcar-todas-lidas', [PrivateMensagemController::class, 'marcarTodasComoLidas']);
-        Route::patch('/{id}/marcar-lida', [PrivateMensagemController::class, 'marcarComoLida']);
-        Route::get('/', [PrivateMensagemController::class, 'listar']);
     });
 
     Route::prefix('empresas')->group(function () {

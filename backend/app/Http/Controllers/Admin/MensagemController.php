@@ -10,12 +10,15 @@ use App\Services\MensagemService;
 
 use App\Http\Requests\Admin\Mensagem\ListarRequest;
 use App\Http\Requests\Admin\Mensagem\CadastrarRequest;
+use App\Http\Requests\Admin\Mensagem\BuscarUsuarioRequest;
 
 use App\DTO\Mensagem\MensagemFiltroDTO;
 use App\DTO\Mensagem\MensagemCadastroDTO;
+use App\DTO\Mensagem\MensagemBuscaUsuarioFiltroDTO;
 
 use App\Http\Resources\Admin\Mensagem\MensagemResource;
 use App\Http\Resources\Admin\Mensagem\MensagemVisualizarResource;
+use App\Http\Resources\Admin\Mensagem\UsuarioBuscaResource;
 
 class MensagemController extends Controller
 {
@@ -48,5 +51,22 @@ class MensagemController extends Controller
         $mensagens = $this->mensagemService->listar(MensagemFiltroDTO::criarParaFiltro($request->validated()));
 
         return MensagemResource::collection($mensagens)->response()->setStatusCode(200);
+    }
+
+    /**
+     * Busca usuários de qualquer entidade/grupo/empresa do sistema, usada
+     * exclusivamente para selecionar o destinatário individual no cadastro
+     * de mensagem. Usa a mesma permissão de cadastro, já que só é acessada
+     * a partir do formulário de envio.
+     */
+    public function buscarUsuarios(BuscarUsuarioRequest $request): JsonResponse
+    {
+        $this->authorize('admin.mensagem.cadastrar');
+
+        $usuarios = $this->mensagemService->buscarUsuarios(
+            MensagemBuscaUsuarioFiltroDTO::criarParaFiltro($request->validated())
+        );
+
+        return UsuarioBuscaResource::collection($usuarios)->response()->setStatusCode(200);
     }
 }

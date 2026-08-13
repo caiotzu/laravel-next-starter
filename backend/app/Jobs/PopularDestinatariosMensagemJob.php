@@ -11,6 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
 use App\Models\Usuario;
+use App\Models\Grupo;
 use App\Models\GrupoEmpresa;
 
 use App\Enums\MensagemDirecionamentoTipo;
@@ -18,8 +19,9 @@ use App\Enums\MensagemDirecionamentoTipo;
 /**
  * Resolve os usuários destinatários de uma mensagem e materializa uma linha
  * por usuário em `mensagem_destinatarios`, em lotes (chunks), para suportar
- * o envio para grupos de empresa com um volume grande de usuários sem
- * comprometer a memória/performance da aplicação.
+ * o envio para grupos de empresa (ou para todos os usuários do sistema) com
+ * um volume grande de usuários sem comprometer a memória/performance da
+ * aplicação.
  */
 class PopularDestinatariosMensagemJob implements ShouldQueue
 {
@@ -32,26 +34,67 @@ class PopularDestinatariosMensagemJob implements ShouldQueue
     public function __construct(
         public readonly string $mensagemId,
         public readonly MensagemDirecionamentoTipo $tipo,
+        public readonly ?string $entidadeTipoId = null,
         public readonly ?string $grupoEmpresaId = null,
         public readonly ?string $usuarioId = null,
     ) {}
 
     public function handle(): void
     {
-        if ($this->tipo === MensagemDirecionamentoTipo::USUARIO) {
-            $this->inserirDestinatarios([$this->usuarioId]);
+        match ($this->tipo) {
+            MensagemDirecionamentoTipo::USUARIO => $this->inserirDestinatarios([$this->usuarioId]),
+            MensagemDirecionamentoTipo::GERAL => $this->processarGeral(),
+            MensagemDirecionamentoTipo::ENTIDADE => $this->processarEntidade(),
+            MensagemDirecionamentoTipo::GRUPO_EMPRESA => $this->processarGrupoEmpresa(),
+        };
+    }
+
+    /**
+     * GERAL: todos os usuários do sistema, independente da entidade a que
+     * pertencem.
+     */
+    private function processarGeral(): void
+    {
+        Usuario::query()
+            ->select('id')
+            ->orderBy('id')
+            ->chunkById(self::TAMANHO_LOTE, function ($usuarios) {
+                $this->inserirDestinatarios($usuarios->pluck('id')->all());
+            });
+    }
+
+    /**
+     * ENTIDADE: todos os usuários cujo grupo pertence à entidade
+     * selecionada (ex: ADMIN, PRIVATE), via `grupos.entidade_tipo_id`.
+     */
+    private function processarEntidade(): void
+    {
+        if (! $this->entidadeTipoId) {
             return;
         }
 
+        Usuario::query()
+            ->whereIn('grupo_id', Grupo::where('entidade_tipo_id', $this->entidadeTipoId)->select('id'))
+            ->select('id')
+            ->orderBy('id')
+            ->chunkById(self::TAMANHO_LOTE, function ($usuarios) {
+                $this->inserirDestinatarios($usuarios->pluck('id')->all());
+            });
+    }
+
+    /**
+     * GRUPO_EMPRESA: todos os usuários pertencentes às empresas de um
+     * grupo de empresa (mesma lógica já utilizada em
+     * InvalidarSessoesDosUsuariosDoGrupoEmpresa).
+     */
+    private function processarGrupoEmpresa(): void
+    {
         $grupoEmpresa = GrupoEmpresa::find($this->grupoEmpresaId);
 
         if (! $grupoEmpresa) {
             return;
         }
 
-        // Mesma lógica já utilizada em InvalidarSessoesDosUsuariosDoGrupoEmpresa
-        // para resolver os usuários pertencentes às empresas de um grupo de
-        // empresa, porém processada em chunks para não carregar tudo em memória.
         Usuario::query()
             ->whereIn('grupo_id', $grupoEmpresa->grupos()->select('id'))
             ->select('id')

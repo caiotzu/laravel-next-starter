@@ -11,6 +11,7 @@ export function toMensagem(data: MensagemDataResponse): Mensagem {
     direcionamento: data.direcionamento
       ? {
           tipo: data.direcionamento.tipo,
+          entidadeTipo: data.direcionamento.entidade_tipo,
           grupoEmpresaId: data.direcionamento.grupo_empresa_id,
           grupoEmpresaNome: data.direcionamento.grupo_empresa_nome,
           usuarioId: data.direcionamento.usuario_id,

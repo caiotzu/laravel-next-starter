@@ -11,6 +11,7 @@ class MensagemDirecionamentoResource extends JsonResource
     {
         return [
             'tipo' => $this->tipo,
+            'entidade_tipo' => $this->whenLoaded('entidadeTipo', fn () => $this->entidadeTipo?->chave),
             'grupo_empresa_id' => $this->grupo_empresa_id,
             'grupo_empresa_nome' => $this->whenLoaded('grupoEmpresa', fn () => $this->grupoEmpresa?->nome),
             'usuario_id' => $this->usuario_id,

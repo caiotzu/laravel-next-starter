@@ -18,6 +18,7 @@ class MensagemDirecionamento extends Model
         'id',
         'mensagem_id',
         'tipo',
+        'entidade_tipo_id',
         'grupo_empresa_id',
         'usuario_id',
     ];
@@ -31,6 +32,11 @@ class MensagemDirecionamento extends Model
     public function mensagem(): BelongsTo
     {
         return $this->belongsTo(Mensagem::class, 'mensagem_id', 'id');
+    }
+
+    public function entidadeTipo(): BelongsTo
+    {
+        return $this->belongsTo(EntidadeTipo::class, 'entidade_tipo_id', 'id');
     }
 
     public function grupoEmpresa(): BelongsTo

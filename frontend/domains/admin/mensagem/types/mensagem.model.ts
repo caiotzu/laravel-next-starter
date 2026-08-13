@@ -1,9 +1,16 @@
 export type MensagemOrigem = "sistema" | "admin";
 
-export type MensagemDirecionamentoTipo = "grupo_empresa" | "usuario";
+export type MensagemDirecionamentoTipo =
+  | "geral"
+  | "entidade"
+  | "grupo_empresa"
+  | "usuario";
+
+export type EntidadeTipo = "admin" | "private";
 
 export interface MensagemDirecionamento {
   tipo: MensagemDirecionamentoTipo;
+  entidadeTipo: EntidadeTipo | null;
   grupoEmpresaId: string | null;
   grupoEmpresaNome: string | null;
   usuarioId: string | null;
