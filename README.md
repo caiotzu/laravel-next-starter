@@ -18,10 +18,12 @@ cp .env.example .env
 ./vendor/bin/sail artisan key:generate
 ./vendor/bin/sail artisan jwt:secret
 ./vendor/bin/sail artisan migrate --seed
+./vendor/bin/sail artisan migrate:fresh --seed # Reiniciar toda base
 
 # Frontend (em outro terminal)
 cd frontend
 npm install
+cp .env.example .env
 npm run dev
 ```
 

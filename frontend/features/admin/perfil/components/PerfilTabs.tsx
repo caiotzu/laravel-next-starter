@@ -1,12 +1,11 @@
 "use client";
 
-import { User, Shield, Bell } from "lucide-react";
+import { User, Shield } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { Usuario } from "@/domains/admin/perfil/usuario/types/usuario.model";
 
-import { NotificacoesTabContent } from "./NotificacoesTabContent";
 import { PerfilTabContent } from "./PerfilTabContent";
 import { SegurancaTabContent } from "./SegurancaTabContent";
 
@@ -17,7 +16,7 @@ interface Props {
 export function PerfilTabs({ user }: Props) {
   return (
     <Tabs defaultValue="perfil" className="w-full space-y-6">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="perfil" className="flex items-center gap-2">
           <User size={16} />
           Perfil
@@ -27,11 +26,6 @@ export function PerfilTabs({ user }: Props) {
           <Shield size={16} />
           Segurança
         </TabsTrigger>
-
-        <TabsTrigger value="notificacoes" className="flex items-center gap-2">
-          <Bell size={16} />
-          Notificações
-        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="perfil">
@@ -40,10 +34,6 @@ export function PerfilTabs({ user }: Props) {
 
       <TabsContent value="seguranca">
         <SegurancaTabContent twoFactorEnabled={user.google2fa_enable}/>
-      </TabsContent>
-
-      <TabsContent value="notificacoes">
-        <NotificacoesTabContent />
       </TabsContent>
     </Tabs>
   );
