@@ -1,0 +1,4614 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Laravel Next Starter API — Global, Private & Lookup",
+        "description": "Documentação das APIs **Global**, **Private** e **Lookup** do projeto Laravel Next Starter.\n\n- **Global**: endpoints comuns, disponíveis para qualquer usuário autenticado (ex.: mensagens/notificações).\n- **Private**: área autosserviço para empresas clientes (multi-tenant, escopado pelo grupo de empresa do usuário autenticado).\n- **Lookup**: endpoints de apoio (consulta de CEP, municípios, tipos de contato/endereço).\n\nA documentação da área **Admin** fica em uma spec separada e protegida, disponível em `/api/documentation/admin`.\n\nAutenticação via **Bearer JWT**, obtido em `POST /api/login` (fluxo Private).",
+        "contact": {
+            "name": "Equipe de Desenvolvimento"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api",
+            "description": "Servidor da API (relativo ao host onde o Swagger UI está sendo servido)"
+        }
+    ],
+    "paths": {
+        "/mensagens": {
+            "get": {
+                "tags": [
+                    "Global"
+                ],
+                "summary": "Global — Listar mensagens do usuário autenticado",
+                "description": "Lista as mensagens/notificações recebidas pelo usuário autenticado, com filtro por lida/não lida e paginação.",
+                "operationId": "0595a6921e7c8569ce24f03ace554338",
+                "parameters": [
+                    {
+                        "name": "lida",
+                        "in": "query",
+                        "description": "Filtra por mensagens lidas (true) ou não lidas (false).",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "por_pagina",
+                        "in": "query",
+                        "description": "Itens por página (1 a 100).",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número da página.",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista paginada de mensagens.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/GlobalMensagem"
+                                            }
+                                        },
+                                        "links": {
+                                            "$ref": "#/components/schemas/PaginationLinks"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mensagens/{id}": {
+            "get": {
+                "tags": [
+                    "Global"
+                ],
+                "summary": "Global — Visualizar mensagem",
+                "description": "Retorna os detalhes de uma mensagem recebida pelo usuário autenticado.",
+                "operationId": "45b70c16088d44efb2598aa254f24c7c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID do vínculo de destinatário da mensagem.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mensagem encontrada.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/GlobalMensagem"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mensagens/{id}/marcar-lida": {
+            "patch": {
+                "tags": [
+                    "Global"
+                ],
+                "summary": "Global — Marcar mensagem como lida",
+                "description": "Marca uma mensagem recebida pelo usuário autenticado como lida.",
+                "operationId": "a9e4e1a697a0a7572cfa34c857cb045f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID do vínculo de destinatário da mensagem.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mensagem marcada como lida.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/GlobalMensagem"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mensagens/marcar-todas-lidas": {
+            "patch": {
+                "tags": [
+                    "Global"
+                ],
+                "summary": "Global — Marcar todas as mensagens como lidas",
+                "description": "Marca todas as mensagens não lidas do usuário autenticado como lidas.",
+                "operationId": "562ab5c724f495935e0e98baf88d358c",
+                "responses": {
+                    "204": {
+                        "$ref": "#/components/responses/NoContent"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/mensagens/nao-lidas/contador": {
+            "get": {
+                "tags": [
+                    "Global"
+                ],
+                "summary": "Global — Contar mensagens não lidas",
+                "description": "Retorna a quantidade de mensagens não lidas do usuário autenticado (uso comum: badge de notificações).",
+                "operationId": "f451fe3d10b6f2473b0150187a5ac7b4",
+                "responses": {
+                    "200": {
+                        "description": "Contador de mensagens não lidas.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "total_nao_lidas": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/lookup/ceps/{cep}": {
+            "get": {
+                "tags": [
+                    "Lookup"
+                ],
+                "summary": "Lookup — Consultar CEP",
+                "description": "Consulta um CEP em provedores externos configurados (o primeiro provedor que encontrar o CEP responde). Os dígitos não numéricos são removidos automaticamente antes da consulta.",
+                "operationId": "b741ae6532f934642743f9f8dbab0ee4",
+                "parameters": [
+                    {
+                        "name": "cep",
+                        "in": "path",
+                        "description": "CEP a ser consultado, com ou sem máscara (ex.: 01310-100 ou 01310100).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "01310-100"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "CEP encontrado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "cep": {
+                                                    "type": "string",
+                                                    "example": "01310100"
+                                                },
+                                                "logradouro": {
+                                                    "type": "string",
+                                                    "example": "Avenida Paulista"
+                                                },
+                                                "bairro": {
+                                                    "type": "string",
+                                                    "example": "Bela Vista"
+                                                },
+                                                "cidade": {
+                                                    "type": "string",
+                                                    "example": "São Paulo"
+                                                },
+                                                "uf": {
+                                                    "type": "string",
+                                                    "example": "SP"
+                                                },
+                                                "ibge": {
+                                                    "type": "string",
+                                                    "example": "3550308",
+                                                    "nullable": true
+                                                },
+                                                "siafi": {
+                                                    "type": "string",
+                                                    "example": "7107",
+                                                    "nullable": true
+                                                },
+                                                "encontrado": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "provider": {
+                                                    "type": "string",
+                                                    "example": "viacep"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BusinessError"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/lookup/contatos-tipos": {
+            "get": {
+                "tags": [
+                    "Lookup"
+                ],
+                "summary": "Lookup — Listar tipos de contato",
+                "description": "Lista os tipos de contato de empresa suportados pelo sistema (enum App\\Enums\\EmpresaContatoTipo), para uso em selects de formulário.",
+                "operationId": "e658d2e2f31ada7625e6c2a9578b7984",
+                "responses": {
+                    "200": {
+                        "description": "Lista de tipos de contato.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "valor": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "T",
+                                                            "E"
+                                                        ],
+                                                        "example": "T"
+                                                    },
+                                                    "descricao": {
+                                                        "type": "string",
+                                                        "example": "Telefone"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/lookup/enderecos-tipos": {
+            "get": {
+                "tags": [
+                    "Lookup"
+                ],
+                "summary": "Lookup — Listar tipos de endereço",
+                "description": "Lista os tipos de endereço de empresa suportados pelo sistema (enum App\\Enums\\EmpresaEnderecoTipo), para uso em selects de formulário.",
+                "operationId": "3255d164242240d57302fd70063c47f9",
+                "responses": {
+                    "200": {
+                        "description": "Lista de tipos de endereço.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "valor": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "COMERCIAL",
+                                                            "FISCAL",
+                                                            "CORRESPONDENCIA",
+                                                            "COBRANCA",
+                                                            "ENTREGA"
+                                                        ],
+                                                        "example": "COMERCIAL"
+                                                    },
+                                                    "descricao": {
+                                                        "type": "string",
+                                                        "example": "Comercial"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/lookup/municipios": {
+            "get": {
+                "tags": [
+                    "Lookup"
+                ],
+                "summary": "Lookup — Listar municípios",
+                "description": "Lista municípios cadastrados, com filtros e paginação. Ordenado por nome (ASC).",
+                "operationId": "da5347be9ff38766dbcff14ef58109ee",
+                "parameters": [
+                    {
+                        "name": "nome",
+                        "in": "query",
+                        "description": "Filtro por nome do município (busca parcial, case-insensitive).",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 255
+                        }
+                    },
+                    {
+                        "name": "uf",
+                        "in": "query",
+                        "description": "Filtro por UF (2 letras).",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "AC",
+                                "AL",
+                                "AP",
+                                "AM",
+                                "BA",
+                                "CE",
+                                "DF",
+                                "ES",
+                                "GO",
+                                "MA",
+                                "MT",
+                                "MS",
+                                "MG",
+                                "PA",
+                                "PB",
+                                "PR",
+                                "PE",
+                                "PI",
+                                "RJ",
+                                "RN",
+                                "RS",
+                                "RO",
+                                "RR",
+                                "SC",
+                                "SP",
+                                "SE",
+                                "TO"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "codigo_ibge",
+                        "in": "query",
+                        "description": "Filtro por código IBGE (7 dígitos).",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 7
+                        }
+                    },
+                    {
+                        "name": "codigo_siafi",
+                        "in": "query",
+                        "description": "Filtro por código SIAFI.",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 10
+                        }
+                    },
+                    {
+                        "name": "por_pagina",
+                        "in": "query",
+                        "description": "Itens por página (1 a 100).",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número da página.",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista paginada de municípios.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "nome": {
+                                                        "type": "string",
+                                                        "example": "São Paulo"
+                                                    },
+                                                    "uf": {
+                                                        "type": "string",
+                                                        "example": "SP"
+                                                    },
+                                                    "codigo_ibge": {
+                                                        "type": "string",
+                                                        "example": "3550308"
+                                                    },
+                                                    "codigo_siafi": {
+                                                        "type": "string",
+                                                        "example": "7107"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "links": {
+                                            "$ref": "#/components/schemas/PaginationLinks"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/2fa/habilitar": {
+            "post": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Iniciar habilitação do 2FA",
+                "description": "Gera o secret TOTP e a URL otpauth para configurar o app autenticador. O 2FA só é efetivamente habilitado após a confirmação do código em /2fa/confirmar.",
+                "operationId": "b28d09e2703efc0b9c4e0e7c28b920c3",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "senha"
+                                ],
+                                "properties": {
+                                    "senha": {
+                                        "description": "Senha atual do usuário, para confirmar a identidade antes de gerar o secret.",
+                                        "type": "string",
+                                        "format": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Dados para configurar o app autenticador.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AutenticacaoDoisFatoresHabilitarResponse"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BusinessError"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/2fa/confirmar": {
+            "post": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Confirmar habilitação do 2FA",
+                "description": "Confirma o código gerado pelo app autenticador, efetivando a habilitação do 2FA para o usuário.",
+                "operationId": "25445061c31048c761851e24935181b2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "codigo"
+                                ],
+                                "properties": {
+                                    "codigo": {
+                                        "type": "string",
+                                        "pattern": "^[0-9]{6}$",
+                                        "example": "123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "2FA ativado com sucesso.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AcaoMensagemResponse"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BusinessError"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/2fa/desabilitar": {
+            "delete": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Desabilitar 2FA",
+                "description": "Desabilita o 2FA do usuário autenticado, exigindo a senha atual e um código válido do app autenticador.",
+                "operationId": "bacb656c6e646ca9fe5acae7cf4c26ef",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "senha",
+                                    "codigo"
+                                ],
+                                "properties": {
+                                    "senha": {
+                                        "type": "string",
+                                        "format": "password"
+                                    },
+                                    "codigo": {
+                                        "type": "string",
+                                        "pattern": "^[0-9]{6}$",
+                                        "example": "123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "2FA desabilitado com sucesso.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AcaoMensagemResponse"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BusinessError"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/login": {
+            "post": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Login",
+                "description": "Autentica um usuário da entidade Private (empresa cliente). Se o e-mail/senha forem válidos e o 2FA não estiver habilitado, retorna direto o token JWT. Se o 2FA estiver habilitado, retorna um temp_token para ser confirmado em /2fa/verificar. Sujeito a rate limit (5 tentativas por e-mail+IP).",
+                "operationId": "e8b712486bbbd8b876f078541b61d921",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginRequestBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login concluído ou 2FA solicitado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/LoginResponse"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/Login2faRequiredResponse"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/BusinessError"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/2fa/verificar": {
+            "post": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Confirmar código 2FA do login",
+                "description": "Segunda etapa do login quando o usuário tem 2FA habilitado: confirma o código do Google Authenticator usando o temp_token retornado por /login. Sujeito a rate limit (9 tentativas por IP).",
+                "operationId": "c68a6c977fb960d4dac73924bafa5476",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Verificar2faRequestBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login concluído.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LoginResponse"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/logout": {
+            "post": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Logout",
+                "description": "Invalida a sessão associada ao token JWT atual e invalida o próprio token no JWTAuth.",
+                "operationId": "ed39d8b8a5918efaa7d6adad8713d5a8",
+                "responses": {
+                    "200": {
+                        "description": "Desconectado com sucesso.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LogoutResponse"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BusinessError"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/me": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Dados do usuário autenticado",
+                "description": "Retorna os dados do usuário (empresa cliente) autenticado, incluindo a lista de permissões (chaves) do seu grupo.",
+                "operationId": "4432cf9bf9564c34f9c2e34335e020a0",
+                "responses": {
+                    "200": {
+                        "description": "Dados do usuário autenticado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MeResponse"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/refresh": {
+            "post": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Renovar token JWT",
+                "description": "Gera um novo token JWT a partir do token atual (ainda válido), estendendo a sessão sem exigir novo login.",
+                "operationId": "f12f81166e13d192b2339e8cecbbe10c",
+                "responses": {
+                    "200": {
+                        "description": "Novo token gerado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/RefreshResponse"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/primeiro-acesso/validar": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Validar token de primeiro acesso",
+                "description": "Valida um token de primeiro acesso (enviado por e-mail ao usuário recém-criado) antes de exibir o formulário de definição de senha.",
+                "operationId": "4fbb5bf7bd634a5c3da1695329b6966a",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "query",
+                        "description": "Token de primeiro acesso recebido por e-mail.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Token válido.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PrimeiroAcessoValidarResponse"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BusinessError"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/primeiro-acesso": {
+            "post": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Concluir primeiro acesso",
+                "description": "Define a senha inicial do usuário a partir do token de primeiro acesso, ativando sua conta.",
+                "operationId": "7ac28143e360d31a2fa1c11ce1443172",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PrimeiroAcessoRequestBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "$ref": "#/components/responses/NoContent"
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BusinessError"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/esqueceu-senha": {
+            "post": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Solicitar redefinição de senha",
+                "description": "Dispara o e-mail de redefinição de senha, caso o e-mail informado esteja cadastrado. Sempre retorna a mesma mensagem genérica (200), independentemente de o e-mail existir ou não, para evitar enumeração de usuários.",
+                "operationId": "4531fe6c459d9dbea618d96f57694625",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EsqueceuSenhaRequestBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Solicitação processada.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/EsqueceuSenhaResponse"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/redefinir-senha/validar": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Validar token de redefinição de senha",
+                "description": "Valida um token de redefinição de senha antes de exibir o formulário de nova senha.",
+                "operationId": "4bfe5fd25a6f7bb83def6abf0fb78c3f",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "query",
+                        "description": "Token de redefinição de senha recebido por e-mail.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Token válido.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/RedefinirSenhaValidarResponse"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BusinessError"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/redefinir-senha": {
+            "post": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Redefinir senha",
+                "description": "Define uma nova senha a partir do token de redefinição de senha.",
+                "operationId": "ace9d591f0db84c46b6b7f97e3965fff",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RedefinirSenhaRequestBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "$ref": "#/components/responses/NoContent"
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BusinessError"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/empresas/{empresaId}/contatos": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Listar contatos da empresa",
+                "operationId": "b93d061548071a80e20f3fa8963b53a9",
+                "parameters": [
+                    {
+                        "name": "empresaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de contatos.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/EmpresaContato"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Cadastrar contato da empresa",
+                "operationId": "f7317c6b7343a9a673f04d8b96a7541b",
+                "parameters": [
+                    {
+                        "name": "empresaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "tipo",
+                                    "valor",
+                                    "principal",
+                                    "ativo"
+                                ],
+                                "properties": {
+                                    "tipo": {
+                                        "description": "T = Telefone, E = E-mail",
+                                        "type": "string",
+                                        "enum": [
+                                            "T",
+                                            "E"
+                                        ]
+                                    },
+                                    "valor": {
+                                        "type": "string",
+                                        "maxLength": 100
+                                    },
+                                    "principal": {
+                                        "description": "Só pode existir um contato principal por tipo em cada empresa.",
+                                        "type": "boolean"
+                                    },
+                                    "ativo": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Contato cadastrado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/EmpresaContato"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/empresas/{empresaId}/contatos/{contatoId}": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Visualizar contato da empresa",
+                "operationId": "a37283b1c2e28080ab82aab001ae104a",
+                "parameters": [
+                    {
+                        "name": "empresaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "contatoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Contato encontrado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/EmpresaContato"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Atualizar contato da empresa",
+                "operationId": "74e151ba55323c4e03e6e109c90afbfe",
+                "parameters": [
+                    {
+                        "name": "empresaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "contatoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "tipo",
+                                    "valor",
+                                    "principal",
+                                    "ativo"
+                                ],
+                                "properties": {
+                                    "tipo": {
+                                        "type": "string",
+                                        "enum": [
+                                            "T",
+                                            "E"
+                                        ]
+                                    },
+                                    "valor": {
+                                        "type": "string",
+                                        "maxLength": 100
+                                    },
+                                    "principal": {
+                                        "type": "boolean"
+                                    },
+                                    "ativo": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Contato atualizado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/EmpresaContato"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Excluir contato da empresa",
+                "operationId": "796e2fa51a636c56d39f8a5cb8b0c75c",
+                "parameters": [
+                    {
+                        "name": "empresaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "contatoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "$ref": "#/components/responses/NoContent"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/empresas/{empresaId}/contatos/{contatoId}/ativar": {
+            "patch": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Ativar/reativar contato da empresa",
+                "operationId": "c1834b66e260cb7b39f5e5e2c6319ca7",
+                "parameters": [
+                    {
+                        "name": "empresaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "contatoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Contato ativado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/EmpresaContato"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/empresas/{id}": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Visualizar empresa",
+                "description": "Retorna os dados de uma empresa do grupo empresa do usuário autenticado, incluindo contatos e endereços.",
+                "operationId": "14731efacbe467ea081748531c7f0937",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Empresa encontrada.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/EmpresaVisualizar"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Atualizar empresa",
+                "description": "Atualiza uma empresa do grupo empresa do usuário autenticado.",
+                "operationId": "1fc84220d31443b3604da37a4fb0bf13",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nome_fantasia",
+                                    "razao_social",
+                                    "uf"
+                                ],
+                                "properties": {
+                                    "matriz_id": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "nullable": true
+                                    },
+                                    "nome_fantasia": {
+                                        "type": "string",
+                                        "maxLength": 60
+                                    },
+                                    "razao_social": {
+                                        "type": "string",
+                                        "maxLength": 60
+                                    },
+                                    "inscricao_estadual": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "inscricao_municipal": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "uf": {
+                                        "type": "string",
+                                        "example": "SP"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Empresa atualizada.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Empresa"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/empresas": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Listar empresas",
+                "description": "Lista as empresas do grupo empresa do usuário autenticado.",
+                "operationId": "3c869adffc12a57a62329ce8a350bbb4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "grupo_empresa_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "matriz_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "cnpj",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 14,
+                            "minLength": 14
+                        }
+                    },
+                    {
+                        "name": "nome_fantasia",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 60
+                        }
+                    },
+                    {
+                        "name": "razao_social",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 60
+                        }
+                    },
+                    {
+                        "name": "inscricao_estadual",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "inscricao_municipal",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "uf",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 2,
+                            "minLength": 2
+                        }
+                    },
+                    {
+                        "name": "excluido",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "por_pagina",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista paginada de empresas.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/EmpresaListarItem"
+                                            }
+                                        },
+                                        "links": {
+                                            "$ref": "#/components/schemas/PaginationLinks"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/empresas/{empresaId}/enderecos": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Listar endereços da empresa",
+                "operationId": "3dbedbe9567ee79d17c7b20d8a8d76bd",
+                "parameters": [
+                    {
+                        "name": "empresaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de endereços.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/EmpresaEndereco"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Cadastrar endereço da empresa",
+                "operationId": "432ad8c3be4dd6cf25023a37d810addb",
+                "parameters": [
+                    {
+                        "name": "empresaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "tipo",
+                                    "municipio_id",
+                                    "principal",
+                                    "ativo",
+                                    "cep",
+                                    "logradouro",
+                                    "numero",
+                                    "bairro"
+                                ],
+                                "properties": {
+                                    "tipo": {
+                                        "type": "string",
+                                        "enum": [
+                                            "COMERCIAL",
+                                            "FISCAL",
+                                            "CORRESPONDENCIA",
+                                            "COBRANCA",
+                                            "ENTREGA"
+                                        ]
+                                    },
+                                    "municipio_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "principal": {
+                                        "description": "Só pode existir um endereço principal por empresa.",
+                                        "type": "boolean"
+                                    },
+                                    "ativo": {
+                                        "type": "boolean"
+                                    },
+                                    "cep": {
+                                        "description": "Somente dígitos (a máscara é removida automaticamente).",
+                                        "type": "string",
+                                        "pattern": "^[0-9]{8}$",
+                                        "example": "01310100"
+                                    },
+                                    "logradouro": {
+                                        "type": "string",
+                                        "maxLength": 100
+                                    },
+                                    "numero": {
+                                        "type": "string",
+                                        "maxLength": 5
+                                    },
+                                    "bairro": {
+                                        "type": "string",
+                                        "maxLength": 100
+                                    },
+                                    "complemento": {
+                                        "type": "string",
+                                        "maxLength": 50,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Endereço cadastrado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/EmpresaEndereco"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/empresas/{empresaId}/enderecos/{enderecoId}": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Visualizar endereço da empresa",
+                "operationId": "7bd10ad4c4511001004b2f084cdf3bae",
+                "parameters": [
+                    {
+                        "name": "empresaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "enderecoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Endereço encontrado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/EmpresaEndereco"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Atualizar endereço da empresa",
+                "operationId": "60ae6c380e14afdefa43209e33d8833c",
+                "parameters": [
+                    {
+                        "name": "empresaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "enderecoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "tipo",
+                                    "municipio_id",
+                                    "principal",
+                                    "ativo",
+                                    "cep",
+                                    "logradouro",
+                                    "numero",
+                                    "bairro"
+                                ],
+                                "properties": {
+                                    "tipo": {
+                                        "type": "string",
+                                        "enum": [
+                                            "COMERCIAL",
+                                            "FISCAL",
+                                            "CORRESPONDENCIA",
+                                            "COBRANCA",
+                                            "ENTREGA"
+                                        ]
+                                    },
+                                    "municipio_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "principal": {
+                                        "description": "Só pode existir um endereço principal por empresa.",
+                                        "type": "boolean"
+                                    },
+                                    "ativo": {
+                                        "type": "boolean"
+                                    },
+                                    "cep": {
+                                        "description": "Somente dígitos (a máscara é removida automaticamente).",
+                                        "type": "string",
+                                        "pattern": "^[0-9]{8}$",
+                                        "example": "01310100"
+                                    },
+                                    "logradouro": {
+                                        "type": "string",
+                                        "maxLength": 100
+                                    },
+                                    "numero": {
+                                        "type": "string",
+                                        "maxLength": 5
+                                    },
+                                    "bairro": {
+                                        "type": "string",
+                                        "maxLength": 100
+                                    },
+                                    "complemento": {
+                                        "type": "string",
+                                        "maxLength": 50,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Endereço atualizado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/EmpresaEndereco"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Excluir endereço da empresa",
+                "operationId": "82bf3985f643d73cac7a17b3094c7caf",
+                "parameters": [
+                    {
+                        "name": "empresaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "enderecoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "$ref": "#/components/responses/NoContent"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/empresas/{empresaId}/enderecos/{enderecoId}/ativar": {
+            "patch": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Ativar/reativar endereço da empresa",
+                "operationId": "a9dca4d9ba555b9fb0313e9f7de4ea54",
+                "parameters": [
+                    {
+                        "name": "empresaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "enderecoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Endereço ativado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/EmpresaEndereco"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/grupos": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Listar grupos",
+                "operationId": "ad00962927a10bfb4ce08ed038831ca3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "descricao",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 255
+                        }
+                    },
+                    {
+                        "name": "excluido",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "por_pagina",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista paginada de grupos.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Grupo"
+                                            }
+                                        },
+                                        "links": {
+                                            "$ref": "#/components/schemas/PaginationLinks"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Cadastrar grupo",
+                "operationId": "b695e6218d521d38e312d3a89cd0d25a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "descricao"
+                                ],
+                                "properties": {
+                                    "descricao": {
+                                        "description": "Deve ser única entre os grupos.",
+                                        "type": "string",
+                                        "maxLength": 255
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Grupo cadastrado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Grupo"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/grupos/{id}": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Visualizar grupo",
+                "description": "Retorna o grupo com as permissões vinculadas e os usuários de cada permissão.",
+                "operationId": "b1e3dbd07f38aea46b68b2adb7734fb6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Grupo encontrado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/GrupoVisualizar"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Atualizar grupo",
+                "operationId": "520139f7a36c4397750a21f4ef5e5c25",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "descricao"
+                                ],
+                                "properties": {
+                                    "descricao": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Grupo atualizado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Grupo"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Excluir grupo",
+                "operationId": "37c8927178a77e2c9a4330f4c97d7ae3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "$ref": "#/components/responses/NoContent"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/grupos/{id}/ativar": {
+            "patch": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Ativar/reativar grupo",
+                "operationId": "200ec73e971bd0aaf95935e50d6f13f8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Grupo ativado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Grupo"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/grupos/{id}/permissoes": {
+            "patch": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Sincronizar permissões do grupo",
+                "description": "Substitui o conjunto de permissões do grupo pela lista informada (sincronização completa: remove as que não estiverem na lista e adiciona as novas).",
+                "operationId": "9cd3378616efb47be9cf38936bb8295e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "permissoes"
+                                ],
+                                "properties": {
+                                    "permissoes": {
+                                        "description": "IDs das permissões a serem vinculadas ao grupo.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "minItems": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Permissões sincronizadas.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/GrupoVisualizar"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/perfil": {
+            "patch": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Atualizar dados do perfil",
+                "description": "Atualiza nome e/ou e-mail do usuário autenticado. Ambos os campos são opcionais (envie apenas o que deseja alterar).",
+                "operationId": "3da7f143c54439cd29469f7a2122acc3",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "nome": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "email": {
+                                        "description": "Deve ser único entre os usuários.",
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Perfil atualizado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Usuario"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/perfil/senha": {
+            "patch": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Atualizar senha do perfil",
+                "description": "Atualiza a senha do usuário autenticado. Exige a senha atual (validada no servidor) e a nova senha, com política mínima de complexidade.",
+                "operationId": "759e0ed4c5b53ed569f371ccc89a3e7b",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "senha_atual",
+                                    "senha_nova",
+                                    "senha_nova_confirma"
+                                ],
+                                "properties": {
+                                    "senha_atual": {
+                                        "type": "string",
+                                        "format": "password"
+                                    },
+                                    "senha_nova": {
+                                        "description": "Mínimo 8 caracteres, com maiúscula, minúscula, número e símbolo. Deve ser diferente da senha atual.",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "NovaSenhaForte@123"
+                                    },
+                                    "senha_nova_confirma": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "NovaSenhaForte@123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Senha atualizada.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Usuario"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/perfil/avatar": {
+            "patch": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Atualizar avatar do perfil",
+                "description": "Atualiza o avatar do usuário autenticado a partir de uma imagem codificada em Base64 (apenas PNG ou JPG).",
+                "operationId": "5c9359592e29668d7ab87f35c79a6c0e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "avatar"
+                                ],
+                                "properties": {
+                                    "avatar": {
+                                        "description": "Conteúdo da imagem (PNG ou JPG) codificado em Base64.",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Avatar atualizado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Usuario"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/perfil/sessoes": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Listar sessões ativas do perfil",
+                "description": "Lista as sessões ativas (dispositivos/navegadores logados) do usuário autenticado.",
+                "operationId": "4d1438f22b1702f912856f6a2d5ece46",
+                "responses": {
+                    "200": {
+                        "description": "Lista de sessões ativas.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/UsuarioSessao"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/perfil/sessoes/{id}/encerrar": {
+            "delete": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Encerrar sessão do perfil",
+                "description": "Encerra uma sessão ativa específica do usuário autenticado (ex.: deslogar remotamente de outro dispositivo).",
+                "operationId": "ded5f7f974e975e75a42d8bbfd487d2c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "$ref": "#/components/responses/NoContent"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/permissoes": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Listar permissões disponíveis",
+                "description": "Lista todas as permissões cadastradas com prefixo \"private.\" (não paginado), usadas para compor grupos.",
+                "operationId": "e603919974f2ea9008b499952745cfa4",
+                "responses": {
+                    "200": {
+                        "description": "Lista de permissões.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Permissao"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/usuarios": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Listar usuários",
+                "operationId": "2849bb7f157c2cb33a8d7ce13ff7106b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "grupo_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "nome",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 255
+                        }
+                    },
+                    {
+                        "name": "excluido",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "por_pagina",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista paginada de usuários.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/UsuarioListarItem"
+                                            }
+                                        },
+                                        "links": {
+                                            "$ref": "#/components/schemas/PaginationLinks"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Cadastrar usuário",
+                "description": "Cria o usuário com status \"convidado\" e dispara e-mail de primeiro acesso (a senha é definida pelo próprio usuário via token).",
+                "operationId": "7eed78da6683e373a74969b3be0a4a8b",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "grupo_id",
+                                    "nome",
+                                    "email"
+                                ],
+                                "properties": {
+                                    "grupo_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "nome": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "email": {
+                                        "description": "Deve ser único entre os usuários.",
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Usuário cadastrado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Usuario"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/usuarios/{id}": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Visualizar usuário",
+                "operationId": "683c93d1ef893de87dacbdf97e598f7f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuário encontrado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/UsuarioVisualizar"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Atualizar usuário",
+                "operationId": "23bc36c1c5186dd23486c44663262ef4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "grupo_id",
+                                    "nome",
+                                    "email"
+                                ],
+                                "properties": {
+                                    "grupo_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "nome": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "ativo",
+                                            "inativo",
+                                            "bloqueado"
+                                        ],
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Usuário atualizado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Usuario"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Excluir usuário",
+                "operationId": "2bfac6cb9699d4f92034af7a6398cf0f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "$ref": "#/components/responses/NoContent"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/usuarios/{id}/ativar": {
+            "patch": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Ativar/reativar usuário",
+                "operationId": "13e7ae7b1e7137b7d966590749ab3be1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuário ativado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Usuario"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "GlobalMensagem": {
+                "description": "Mensagem/notificação do ponto de vista do destinatário. O `id` exposto é o do vínculo de destinatário (mensagem_destinatarios), usado nas ações de marcar como lida.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "mensagem_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "titulo": {
+                        "type": "string",
+                        "example": "Manutenção programada"
+                    },
+                    "conteudo": {
+                        "type": "string",
+                        "example": "O sistema ficará indisponível das 02h às 04h."
+                    },
+                    "origem": {
+                        "type": "string",
+                        "enum": [
+                            "sistema",
+                            "admin"
+                        ]
+                    },
+                    "lida": {
+                        "type": "boolean"
+                    },
+                    "lida_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "LoginRequestBody": {
+                "required": [
+                    "email",
+                    "senha"
+                ],
+                "properties": {
+                    "email": {
+                        "description": "Schemas de autenticação compartilhados entre as áreas Admin e Private,\nque reutilizam exatamente os mesmos Form Requests (App\\Http\\Requests\\Auth\\*)\ne o mesmo formato de resposta (apenas o namespace do Resource muda).",
+                        "type": "string",
+                        "format": "email",
+                        "example": "usuario@empresa.com"
+                    },
+                    "senha": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "SenhaForte@123"
+                    }
+                },
+                "type": "object"
+            },
+            "LoginResponse": {
+                "description": "Retornado quando o 2FA não está habilitado: já contém o token de acesso.",
+                "properties": {
+                    "2fa_enable": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "token": {
+                        "type": "string",
+                        "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+                    },
+                    "expires_in": {
+                        "description": "Tempo de expiração do token em segundos.",
+                        "type": "integer",
+                        "example": 3600
+                    }
+                },
+                "type": "object"
+            },
+            "Login2faRequiredResponse": {
+                "description": "Retornado quando o usuário tem 2FA habilitado: é necessário confirmar o código no endpoint de verificação de 2FA usando o temp_token retornado aqui.",
+                "properties": {
+                    "2fa_enable": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "temp_token": {
+                        "description": "Token temporário (válido por 5 minutos), usado para concluir o login via /2fa/verificar.",
+                        "type": "string",
+                        "format": "uuid"
+                    }
+                },
+                "type": "object"
+            },
+            "Verificar2faRequestBody": {
+                "required": [
+                    "temp_token",
+                    "codigo"
+                ],
+                "properties": {
+                    "temp_token": {
+                        "description": "Token temporário retornado pelo login quando o 2FA está habilitado.",
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "codigo": {
+                        "description": "Código de 6 dígitos do Google Authenticator.",
+                        "type": "string",
+                        "pattern": "^[0-9]{6}$",
+                        "example": "123456"
+                    }
+                },
+                "type": "object"
+            },
+            "LogoutResponse": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Desconectado com sucesso"
+                    }
+                },
+                "type": "object"
+            },
+            "RefreshResponse": {
+                "properties": {
+                    "token": {
+                        "type": "string"
+                    },
+                    "expires_in": {
+                        "type": "integer",
+                        "example": 3600
+                    }
+                },
+                "type": "object"
+            },
+            "MeResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "nome": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "avatar": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "grupo": {
+                        "description": "Descrição do grupo do usuário.",
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "convidado",
+                            "ativo",
+                            "expirado",
+                            "inativo",
+                            "bloqueado"
+                        ]
+                    },
+                    "google2fa_enable": {
+                        "type": "boolean"
+                    },
+                    "google2fa_confirmado_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "ultimo_login_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "ultimo_ip": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "permissoes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "admin.empresa.listar",
+                            "admin.empresa.cadastrar"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "PrimeiroAcessoValidarResponse": {
+                "properties": {
+                    "nome": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    }
+                },
+                "type": "object"
+            },
+            "PrimeiroAcessoRequestBody": {
+                "required": [
+                    "token",
+                    "senha",
+                    "senha_confirma"
+                ],
+                "properties": {
+                    "token": {
+                        "description": "Token de primeiro acesso recebido por e-mail.",
+                        "type": "string"
+                    },
+                    "senha": {
+                        "description": "Mínimo 8 caracteres, com maiúscula, minúscula, número e símbolo.",
+                        "type": "string",
+                        "format": "password",
+                        "example": "SenhaForte@123"
+                    },
+                    "senha_confirma": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "SenhaForte@123"
+                    }
+                },
+                "type": "object"
+            },
+            "EsqueceuSenhaRequestBody": {
+                "required": [
+                    "email"
+                ],
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    }
+                },
+                "type": "object"
+            },
+            "EsqueceuSenhaResponse": {
+                "properties": {
+                    "mensagem": {
+                        "type": "string",
+                        "example": "Se o e-mail estiver cadastrado, as instruções de redefinição serão enviadas."
+                    }
+                },
+                "type": "object"
+            },
+            "RedefinirSenhaValidarResponse": {
+                "properties": {
+                    "nome": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    }
+                },
+                "type": "object"
+            },
+            "RedefinirSenhaRequestBody": {
+                "required": [
+                    "token",
+                    "senha",
+                    "senha_confirma"
+                ],
+                "properties": {
+                    "token": {
+                        "description": "Token de redefinição de senha recebido por e-mail.",
+                        "type": "string"
+                    },
+                    "senha": {
+                        "description": "Mínimo 8 caracteres, com maiúscula, minúscula, número e símbolo.",
+                        "type": "string",
+                        "format": "password",
+                        "example": "SenhaForte@123"
+                    },
+                    "senha_confirma": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "SenhaForte@123"
+                    }
+                },
+                "type": "object"
+            },
+            "PaginationLinks": {
+                "properties": {
+                    "first": {
+                        "description": "Meta de paginação padrão do Laravel (LengthAwarePaginator serializado\npor um ResourceCollection), usada em todos os endpoints \"listar\".",
+                        "type": "string",
+                        "format": "uri",
+                        "example": "/api/admin/empresas?page=1",
+                        "nullable": true
+                    },
+                    "last": {
+                        "type": "string",
+                        "format": "uri",
+                        "example": "/api/admin/empresas?page=5",
+                        "nullable": true
+                    },
+                    "prev": {
+                        "type": "string",
+                        "format": "uri",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "next": {
+                        "type": "string",
+                        "format": "uri",
+                        "example": "/api/admin/empresas?page=2",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaginationMeta": {
+                "properties": {
+                    "current_page": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "from": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "last_page": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "path": {
+                        "type": "string",
+                        "example": "/api/admin/empresas"
+                    },
+                    "per_page": {
+                        "type": "integer",
+                        "example": 15
+                    },
+                    "to": {
+                        "type": "integer",
+                        "example": 15,
+                        "nullable": true
+                    },
+                    "total": {
+                        "type": "integer",
+                        "example": 68
+                    }
+                },
+                "type": "object"
+            },
+            "ValidationErrorResponse": {
+                "properties": {
+                    "errors": {
+                        "description": "Formato de erro de validação (422), produzido pelo handler de exceções\nglobal (bootstrap/app.php) a partir de uma ValidationException.",
+                        "type": "object",
+                        "example": {
+                            "campo": [
+                                "A mensagem de validação correspondente."
+                            ]
+                        },
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "BusinessErrorResponse": {
+                "properties": {
+                    "errors": {
+                        "properties": {
+                            "business": {
+                                "description": "Formato padrão de erro de negócio/HTTP (400/401/403/404/500), produzido\npelo mesmo handler global para BusinessException, AuthorizationException,\nModelNotFoundException, HttpExceptionInterface, etc.",
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": [
+                                    "Descrição do erro de negócio."
+                                ]
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "Empresa": {
+                "properties": {
+                    "id": {
+                        "description": "Schemas de domínio reutilizados pelas áreas Admin e Private, cujos\nResources têm exatamente os mesmos campos (apenas o namespace muda).\nMantidos em um único lugar para não duplicar a definição em cada área.",
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "grupo_empresa_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "matriz_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "cnpj": {
+                        "type": "string",
+                        "example": "12345678000190"
+                    },
+                    "nome_fantasia": {
+                        "type": "string",
+                        "maxLength": 60
+                    },
+                    "razao_social": {
+                        "type": "string",
+                        "maxLength": 60
+                    },
+                    "inscricao_estadual": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "inscricao_municipal": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pendente",
+                            "ativo",
+                            "inativo",
+                            "bloqueado"
+                        ]
+                    },
+                    "status_descricao": {
+                        "type": "string",
+                        "example": "Ativo"
+                    },
+                    "uf": {
+                        "type": "string",
+                        "example": "SP"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "deleted_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "EmpresaListarItem": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/Empresa"
+                    },
+                    {
+                        "properties": {
+                            "grupo_empresa": {
+                                "$ref": "#/components/schemas/GrupoEmpresa"
+                            },
+                            "matriz": {
+                                "oneOf": [
+                                    {
+                                        "$ref": "#/components/schemas/Empresa"
+                                    }
+                                ],
+                                "nullable": true,
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                ]
+            },
+            "EmpresaVisualizar": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/Empresa"
+                    },
+                    {
+                        "properties": {
+                            "grupo_empresa": {
+                                "$ref": "#/components/schemas/GrupoEmpresa"
+                            },
+                            "contatos": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/EmpresaContato"
+                                }
+                            },
+                            "enderecos": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/EmpresaEndereco"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    }
+                ]
+            },
+            "EmpresaContato": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "empresa_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "tipo": {
+                        "type": "string",
+                        "enum": [
+                            "T",
+                            "E"
+                        ]
+                    },
+                    "tipo_descricao": {
+                        "type": "string",
+                        "example": "Telefone"
+                    },
+                    "valor": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "ativo": {
+                        "type": "boolean"
+                    },
+                    "principal": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "EmpresaEndereco": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "empresa_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "tipo": {
+                        "type": "string",
+                        "enum": [
+                            "COMERCIAL",
+                            "FISCAL",
+                            "CORRESPONDENCIA",
+                            "COBRANCA",
+                            "ENTREGA"
+                        ]
+                    },
+                    "tipo_descricao": {
+                        "type": "string",
+                        "example": "Comercial"
+                    },
+                    "municipio_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "ativo": {
+                        "type": "boolean"
+                    },
+                    "principal": {
+                        "type": "boolean"
+                    },
+                    "cep": {
+                        "type": "string",
+                        "example": "01310100"
+                    },
+                    "logradouro": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "numero": {
+                        "type": "string",
+                        "maxLength": 5
+                    },
+                    "bairro": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "complemento": {
+                        "type": "string",
+                        "maxLength": 50,
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "deleted_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "municipio": {
+                        "$ref": "#/components/schemas/Municipio"
+                    }
+                },
+                "type": "object"
+            },
+            "Municipio": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "nome": {
+                        "type": "string",
+                        "example": "São Paulo"
+                    },
+                    "uf": {
+                        "type": "string",
+                        "example": "SP"
+                    },
+                    "codigo_ibge": {
+                        "type": "string",
+                        "example": "3550308"
+                    },
+                    "codigo_siafi": {
+                        "type": "string",
+                        "example": "7107"
+                    }
+                },
+                "type": "object"
+            },
+            "GrupoEmpresa": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "nome": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "deleted_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "GrupoEmpresaVisualizar": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/GrupoEmpresa"
+                    },
+                    {
+                        "properties": {
+                            "grupos": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "descricao": {
+                                            "type": "string"
+                                        },
+                                        "versao": {
+                                            "type": "integer"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "deleted_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "nullable": true
+                                        },
+                                        "usuarios": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Usuario"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    }
+                ]
+            },
+            "Grupo": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "descricao": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "deleted_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "GrupoVisualizar": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/Grupo"
+                    },
+                    {
+                        "properties": {
+                            "permissoes": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Permissao"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    }
+                ]
+            },
+            "Permissao": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "chave": {
+                        "type": "string",
+                        "example": "admin.empresa.cadastrar"
+                    },
+                    "descricao": {
+                        "type": "string",
+                        "example": "Cadastrar empresa"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "deleted_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Usuario": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "grupo_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "nome": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "convidado",
+                            "ativo",
+                            "expirado",
+                            "inativo",
+                            "bloqueado"
+                        ]
+                    },
+                    "avatar": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "google2fa_enable": {
+                        "type": "boolean"
+                    },
+                    "google2fa_confirmado_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "ultimo_login_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "ultimo_ip": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "deleted_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "UsuarioListarItem": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/Usuario"
+                    },
+                    {
+                        "properties": {
+                            "grupo": {
+                                "$ref": "#/components/schemas/Grupo"
+                            }
+                        },
+                        "type": "object"
+                    }
+                ]
+            },
+            "UsuarioVisualizar": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/Usuario"
+                    },
+                    {
+                        "properties": {
+                            "grupo": {
+                                "$ref": "#/components/schemas/Grupo"
+                            }
+                        },
+                        "type": "object"
+                    }
+                ]
+            },
+            "UsuarioSessao": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "usuario_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "ip": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "user_agent": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "browser": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "plataforma": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "dispositivo": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "ativo": {
+                        "type": "boolean"
+                    },
+                    "ultimo_acesso_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "logout_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "atual": {
+                        "description": "Indica se é a sessão da requisição atual.",
+                        "type": "boolean"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "deleted_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "AcaoMensagemResponse": {
+                "description": "Resposta simples de confirmação para ações pontuais (ex.: habilitar/confirmar/desabilitar 2FA).",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Ação realizada com sucesso."
+                    }
+                },
+                "type": "object"
+            },
+            "AutenticacaoDoisFatoresHabilitarResponse": {
+                "description": "Dados para configurar o app autenticador (ex.: Google Authenticator): o secret pode ser digitado manualmente e o otpauth_url pode ser transformado em QR Code no front-end.",
+                "properties": {
+                    "secret": {
+                        "type": "string",
+                        "example": "JBSWY3DPEHPK3PXP"
+                    },
+                    "otpauth_url": {
+                        "type": "string",
+                        "example": "otpauth://totp/LaravelNextStarter:usuario@empresa.com?secret=JBSWY3DPEHPK3PXP&issuer=LaravelNextStarter"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "responses": {
+            "ValidationError": {
+                "description": "Erro de validação dos campos enviados.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ValidationErrorResponse"
+                        }
+                    }
+                }
+            },
+            "BusinessError": {
+                "description": "Erro de regra de negócio (ex.: violação de uma regra da aplicação).",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/BusinessErrorResponse"
+                        }
+                    }
+                }
+            },
+            "Unauthorized": {
+                "description": "Não autenticado: token ausente, inválido, expirado, ou sessão associada ao token não está mais ativa.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/BusinessErrorResponse"
+                        }
+                    }
+                }
+            },
+            "Forbidden": {
+                "description": "Autenticado, porém sem permissão para executar esta ação.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/BusinessErrorResponse"
+                        }
+                    }
+                }
+            },
+            "NotFound": {
+                "description": "Registro não encontrado.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/BusinessErrorResponse"
+                        }
+                    }
+                }
+            },
+            "ServerError": {
+                "description": "Erro inesperado no servidor.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/BusinessErrorResponse"
+                        }
+                    }
+                }
+            },
+            "NoContent": {
+                "description": "Operação realizada com sucesso, sem conteúdo de retorno."
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "description": "Autenticação via **JSON Web Token (JWT)**.\n\n1. Faça login em `POST /api/login` (Private) ou `POST /api/admin/login` (Admin).\n2. Envie o token retornado no header `Authorization: Bearer {token}` nas demais requisições.\nO token carrega um `session_id`, validado a cada requisição contra a sessão ativa do usuário (tabela de sessões).",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Global",
+            "description": "Endpoints comuns a qualquer usuário autenticado (Admin ou Private)."
+        },
+        {
+            "name": "Private",
+            "description": "Área autosserviço das empresas clientes (self-service), escopada pelo grupo de empresa do usuário logado."
+        },
+        {
+            "name": "Lookup",
+            "description": "Endpoints de apoio/consulta (CEP, municípios, tipos auxiliares)."
+        }
+    ],
+    "security": [
+        {
+            "bearerAuth": []
+        }
+    ]
+}

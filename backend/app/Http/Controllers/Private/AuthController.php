@@ -48,6 +48,8 @@ use App\Exceptions\BusinessException;
 
 use App\Enums\EntidadeTipo;
 
+use OpenApi\Attributes as OA;
+
 
 class AuthController extends Controller
 {
@@ -58,6 +60,26 @@ class AuthController extends Controller
         protected AutenticacaoDoisFatoresService $autenticacaoDoisFatoresService
     ) {}
 
+    #[OA\Post(
+        path: '/login',
+        summary: 'Private — Login',
+        description: 'Autentica um usuário da entidade Private (empresa cliente). Se o e-mail/senha forem válidos e o 2FA não estiver habilitado, retorna direto o token JWT. Se o 2FA estiver habilitado, retorna um temp_token para ser confirmado em /2fa/verificar. Sujeito a rate limit (5 tentativas por e-mail+IP).',
+        security: [],
+        tags: ['Private'],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/LoginRequestBody')),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Login concluído ou 2FA solicitado.',
+                content: new OA\JsonContent(oneOf: [
+                    new OA\Schema(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/LoginResponse', type: 'object')], type: 'object'),
+                    new OA\Schema(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/Login2faRequiredResponse', type: 'object')], type: 'object'),
+                ])
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/BusinessError'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+        ]
+    )]
     public function login(LoginRequest $request): JsonResponse
     {
         /**
@@ -106,6 +128,22 @@ class AuthController extends Controller
         }
     }
 
+    #[OA\Post(
+        path: '/2fa/verificar',
+        summary: 'Private — Confirmar código 2FA do login',
+        description: 'Segunda etapa do login quando o usuário tem 2FA habilitado: confirma o código do Google Authenticator usando o temp_token retornado por /login. Sujeito a rate limit (9 tentativas por IP).',
+        security: [],
+        tags: ['Private'],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/Verificar2faRequestBody')),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Login concluído.',
+                content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/LoginResponse', type: 'object')], type: 'object')
+            ),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+        ]
+    )]
     public function verificar2fa(Verificar2faRequest $request): JsonResponse
     {
         /**
@@ -186,6 +224,23 @@ class AuthController extends Controller
         ])->response()->setStatusCode(200);
     }
 
+    #[OA\Post(
+        path: '/logout',
+        summary: 'Private — Logout',
+        description: 'Invalida a sessão associada ao token JWT atual e invalida o próprio token no JWTAuth.',
+        security: [['bearerAuth' => []]],
+        tags: ['Private'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Desconectado com sucesso.',
+                content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/LogoutResponse', type: 'object')], type: 'object')
+            ),
+            new OA\Response(response: 400, ref: '#/components/responses/BusinessError'),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
+            new OA\Response(response: 500, ref: '#/components/responses/ServerError'),
+        ]
+    )]
     public function logout(): JsonResponse
     {
         try {
@@ -221,6 +276,22 @@ class AuthController extends Controller
         }
     }
 
+    #[OA\Get(
+        path: '/me',
+        summary: 'Private — Dados do usuário autenticado',
+        description: 'Retorna os dados do usuário (empresa cliente) autenticado, incluindo a lista de permissões (chaves) do seu grupo.',
+        security: [['bearerAuth' => []]],
+        tags: ['Private'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Dados do usuário autenticado.',
+                content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/MeResponse', type: 'object')], type: 'object')
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
+            new OA\Response(response: 500, ref: '#/components/responses/ServerError'),
+        ]
+    )]
     public function me(): JsonResponse
     {
         try {
@@ -262,6 +333,21 @@ class AuthController extends Controller
         }
     }
 
+    #[OA\Post(
+        path: '/refresh',
+        summary: 'Private — Renovar token JWT',
+        description: 'Gera um novo token JWT a partir do token atual (ainda válido), estendendo a sessão sem exigir novo login.',
+        security: [['bearerAuth' => []]],
+        tags: ['Private'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Novo token gerado.',
+                content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/RefreshResponse', type: 'object')], type: 'object')
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
+        ]
+    )]
     public function refresh(): JsonResponse
     {
         return RefreshResource::make([
@@ -270,6 +356,25 @@ class AuthController extends Controller
         ])->response()->setStatusCode(200);
     }
 
+    #[OA\Get(
+        path: '/primeiro-acesso/validar',
+        summary: 'Private — Validar token de primeiro acesso',
+        description: 'Valida um token de primeiro acesso (enviado por e-mail ao usuário recém-criado) antes de exibir o formulário de definição de senha.',
+        security: [],
+        tags: ['Private'],
+        parameters: [
+            new OA\Parameter(name: 'token', description: 'Token de primeiro acesso recebido por e-mail.', in: 'query', required: true, schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Token válido.',
+                content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/PrimeiroAcessoValidarResponse', type: 'object')], type: 'object')
+            ),
+            new OA\Response(response: 400, ref: '#/components/responses/BusinessError'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+        ]
+    )]
     public function primeiroAcessoValidar(PrimeiroAcessoValidarRequest $request): JsonResponse
     {
         $token = $request->validated('token');
@@ -277,6 +382,19 @@ class AuthController extends Controller
         return PrimeiroAcessoValidarResource::make($tokenResetSenha)->response()->setStatusCode(200);
     }
 
+    #[OA\Post(
+        path: '/primeiro-acesso',
+        summary: 'Private — Concluir primeiro acesso',
+        description: 'Define a senha inicial do usuário a partir do token de primeiro acesso, ativando sua conta.',
+        security: [],
+        tags: ['Private'],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/PrimeiroAcessoRequestBody')),
+        responses: [
+            new OA\Response(response: 204, ref: '#/components/responses/NoContent'),
+            new OA\Response(response: 400, ref: '#/components/responses/BusinessError'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+        ]
+    )]
     public function primeiroAcesso(PrimeiroAcessoRequest $request): JsonResponse
     {
         $this->usuarioService->primeiroAcesso(
@@ -288,6 +406,22 @@ class AuthController extends Controller
         return response()->json(null, 204);
     }
 
+    #[OA\Post(
+        path: '/esqueceu-senha',
+        summary: 'Private — Solicitar redefinição de senha',
+        description: 'Dispara o e-mail de redefinição de senha, caso o e-mail informado esteja cadastrado. Sempre retorna a mesma mensagem genérica (200), independentemente de o e-mail existir ou não, para evitar enumeração de usuários.',
+        security: [],
+        tags: ['Private'],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/EsqueceuSenhaRequestBody')),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Solicitação processada.',
+                content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/EsqueceuSenhaResponse', type: 'object')], type: 'object')
+            ),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+        ]
+    )]
     public function esqueceuSenha(EsqueceuSenhaRequest $request): JsonResponse
     {
         $this->usuarioService->esqueceuSenha($request->email, EntidadeTipo::PRIVATE);
@@ -297,6 +431,25 @@ class AuthController extends Controller
         ])->response()->setStatusCode(200);
     }
 
+    #[OA\Get(
+        path: '/redefinir-senha/validar',
+        summary: 'Private — Validar token de redefinição de senha',
+        description: 'Valida um token de redefinição de senha antes de exibir o formulário de nova senha.',
+        security: [],
+        tags: ['Private'],
+        parameters: [
+            new OA\Parameter(name: 'token', description: 'Token de redefinição de senha recebido por e-mail.', in: 'query', required: true, schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Token válido.',
+                content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/RedefinirSenhaValidarResponse', type: 'object')], type: 'object')
+            ),
+            new OA\Response(response: 400, ref: '#/components/responses/BusinessError'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+        ]
+    )]
     public function redefinirSenhaValidar(RedefinirSenhaValidarRequest $request): JsonResponse
     {
         $token = $request->validated('token');
@@ -304,6 +457,19 @@ class AuthController extends Controller
         return RedefinirSenhaValidarResource::make($tokenResetSenha)->response()->setStatusCode(200);
     }
 
+    #[OA\Post(
+        path: '/redefinir-senha',
+        summary: 'Private — Redefinir senha',
+        description: 'Define uma nova senha a partir do token de redefinição de senha.',
+        security: [],
+        tags: ['Private'],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/RedefinirSenhaRequestBody')),
+        responses: [
+            new OA\Response(response: 204, ref: '#/components/responses/NoContent'),
+            new OA\Response(response: 400, ref: '#/components/responses/BusinessError'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+        ]
+    )]
     public function redefinirSenha(RedefinirSenhaRequest $request): JsonResponse
     {
         $this->usuarioService->redefinirSenha(

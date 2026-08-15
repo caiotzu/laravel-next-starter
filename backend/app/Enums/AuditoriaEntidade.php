@@ -65,27 +65,6 @@ enum AuditoriaEntidade: string
         };
     }
 
-    // public function formatarRegistro(Model $registro): array
-    // {
-    //     // dd($registro);
-    //     return match ($this) {
-    //         self::EMPRESAS => [
-    //             'id' => $registro->id,
-    //             'label' => $registro->cnpj.' - '.$registro->nome_fantasia,
-    //         ],
-    //         self::USUARIOS => [
-    //             'id' => $registro->id,
-    //             'label' => $registro->nome . ' — ' . $registro->grupo->entidadeTipo->chave->name . ' (' . $registro->email . ')',
-    //         ],
-    //         self::GRUPOS => [
-    //             'id' => $registro->id,
-    //             'label' => $registro->grupoEmpresa
-    //                 ? $registro->descricao . ' → ' . $registro->grupoEmpresa->nome . ' — ' . $registro->entidadeTipo->chave->name
-    //                 : $registro->descricao . ' — ' . $registro->entidadeTipo->chave->name,
-    //         ],
-    //     };
-    // }
-
     public function formatarRegistro(Model $registro): array
     {
         return match ($this) {

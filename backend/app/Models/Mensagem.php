@@ -17,7 +17,6 @@ class Mensagem extends Model
 {
     use HasUuids;
     use SoftDeletes;
-    use Auditavel;
 
     protected $table = 'mensagens';
 

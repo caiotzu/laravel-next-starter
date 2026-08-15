@@ -90,7 +90,24 @@ php artisan migrate --seed
 php artisan queue:work
 ```
 
-9. Certifique-se de **configurar e executar os JOBs** para processar tarefas assíncronas e filas, caso necessário.
+9.Gere o hash da senha de acesso à documentação Admin no Swagger:
+
+```bash
+php artisan swagger:admin-hash "sua-senha-forte-aqui"
+```
+
+O comando imprime as duas linhas prontas para colar no `.env` (`SWAGGER_ADMIN_USERNAME` e `SWAGGER_ADMIN_PASSWORD_HASH`).
+
+> Sem essas duas variáveis configuradas, a documentação Admin fica bloqueada
+> por padrão (fail-closed) — não é possível acessá-la publicamente por engano.
+
+```bash
+php artisan l5-swagger:generate
+```
+
+Isso gera as duas specs (`storage/api-docs/api-docs.json` e `storage/api-docs-admin/api-docs-admin.json`).
+
+10. Certifique-se de **configurar e executar os JOBs** para processar tarefas assíncronas e filas, caso necessário.
 
 ---
 
