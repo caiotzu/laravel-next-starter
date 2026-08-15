@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend — Next.js
 
-## Getting Started
+Aplicação Next.js 15 (App Router) que atua como *Backend for Frontend* (BFF) da [API Laravel](../backend/README.md) — o navegador nunca chama o backend diretamente.
 
-First, run the development server:
+Para arquitetura, autenticação e organização de pastas em detalhe, veja [`docs/frontend-arquitetura.md`](../docs/frontend-arquitetura.md).
+
+## Stack
+
+Next.js `15.5.6` (Turbopack) · React `19.1` · TypeScript · Tailwind CSS `^4` · shadcn/ui + Radix UI · TanStack Query/Table · React Hook Form + Zod.
+
+## Instalação
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd frontend
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Certifique-se de que o [backend](../backend/README.md) já está rodando antes de iniciar.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Variáveis de ambiente
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+<!-- TODO: não existe .env.local.example no repositório. Crie um .env.local com pelo menos: -->
 
-## Learn More
+| Variável | Descrição |
+|---|---|
+| `BACKEND_URL` | URL da API Laravel, usada apenas no servidor (rotas `app/api/**`). Nunca exposta ao navegador. |
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run dev      # next dev --turbopack — http://localhost:3000
+npm run build    # next build --turbopack
+npm run start    # serve o build de produção
+npm run lint     # eslint
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Saiba mais
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Arquitetura BFF (proxy + cookies httpOnly)](../docs/arquitetura.md#frontend-bff)
+- [Estrutura de pastas: `domains/`, `features/`, `components/`](../docs/frontend-arquitetura.md)
+- [Autenticação no frontend](../docs/autenticacao-e-autorizacao.md#frontend)
