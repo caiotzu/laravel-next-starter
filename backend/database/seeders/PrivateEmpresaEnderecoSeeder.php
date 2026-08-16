@@ -19,6 +19,15 @@ class PrivateEmpresaEnderecoSeeder extends Seeder
         $empresa = DB::table("empresas")->where("cnpj", "12345678000190")->first();
         $municipio = DB::table("municipios")->where("codigo_siafi", "6681")->first();
 
+        $existe = DB::table("empresa_enderecos")
+            ->where("empresa_id", $empresa->id)
+            ->where("cep", "17511395")
+            ->where("numero", "123")
+            ->exists();
+
+        if ($existe) {
+            return;
+        }
 
         DB::table("empresa_enderecos")->insert([
             "id" => Str::uuid(),

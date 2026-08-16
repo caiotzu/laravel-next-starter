@@ -15,7 +15,7 @@ class PrivatePermissaoSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table("permissoes")->insert([
+        $permissoes = [
             // empresa
                 [
                     "id" => Str::uuid(),
@@ -247,6 +247,20 @@ class PrivatePermissaoSeeder extends Seeder
                     "updated_at" => date("Y-m-d H:i:s")
                 ]
             //---
-        ]);
+        ];
+
+        $chavesExistentes = DB::table("permissoes")
+            ->whereIn("chave", array_column($permissoes, "chave"))
+            ->pluck("chave")
+            ->all();
+
+        $novas = array_values(array_filter(
+            $permissoes,
+            fn (array $permissao) => !in_array($permissao["chave"], $chavesExistentes, true)
+        ));
+
+        if (!empty($novas)) {
+            DB::table("permissoes")->insert($novas);
+        }
     }
 }

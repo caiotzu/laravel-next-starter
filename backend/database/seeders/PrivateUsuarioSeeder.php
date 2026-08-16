@@ -19,6 +19,12 @@ class PrivateUsuarioSeeder extends Seeder
     {
         $grupo = DB::table("grupos")->where("descricao", "Administrador")->orderBy("created_at")->first();
 
+        $existe = DB::table("usuarios")->where("email", "private@private.com.br")->exists();
+
+        if ($existe) {
+            return;
+        }
+
         DB::table("usuarios")->insert([
             "id" => Str::uuid(),
             "grupo_id" => $grupo->id,

@@ -15,21 +15,28 @@ class EntidadeTipoSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table("entidade_tipos")->insert([
-            [
+        $entidadeTipos = [
+            ["chave" => "admin", "entidade_tabela" => null],
+            ["chave" => "private", "entidade_tabela" => "grupo_empresas"],
+        ];
+
+        $chavesExistentes = DB::table("entidade_tipos")
+            ->whereIn("chave", array_column($entidadeTipos, "chave"))
+            ->pluck("chave")
+            ->all();
+
+        foreach ($entidadeTipos as $entidadeTipo) {
+            if (in_array($entidadeTipo["chave"], $chavesExistentes, true)) {
+                continue;
+            }
+
+            DB::table("entidade_tipos")->insert([
                 "id" => Str::uuid(),
-                "chave" => "admin",
-                "entidade_tabela" => null,
+                "chave" => $entidadeTipo["chave"],
+                "entidade_tabela" => $entidadeTipo["entidade_tabela"],
                 "created_at" => date("Y-m-d H:i:s"),
                 "updated_at" => date("Y-m-d H:i:s")
-            ],
-            [
-                "id" => Str::uuid(),
-                "chave" => "private",
-                "entidade_tabela" => "grupo_empresas",
-                "created_at" => date("Y-m-d H:i:s"),
-                "updated_at" => date("Y-m-d H:i:s")
-            ]
-        ]);
+            ]);
+        }
     }
 }

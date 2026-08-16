@@ -20,6 +20,12 @@ class PrivateEmpresaSeeder extends Seeder
     {
         $grupoEmpresa = DB::table("grupo_empresas")->where("nome", "Grupos Nexus")->first();
 
+        $existe = DB::table("empresas")->where("cnpj", "12345678000190")->exists();
+
+        if ($existe) {
+            return;
+        }
+
         DB::table("empresas")->insert([
             "id" => Str::uuid(),
             "grupo_empresa_id" => $grupoEmpresa->id,

@@ -19,28 +19,39 @@ class PrivateEmpresaContatoSeeder extends Seeder
     {
         $empresa = DB::table("empresas")->where("cnpj", "12345678000190")->first();
 
-        DB::table("empresa_contatos")->insert([
+        $contatos = [
             [
-                "id" => Str::uuid(),
-                "empresa_id" => $empresa->id,
                 "tipo" => EmpresaContatoTipo::EMAIL->value,
                 "valor" => "admin.nexus.mock@nexus.com.br",
-                "ativo" => true,
-                "principal" => true,
-                "created_at" => date("Y-m-d H:i:s"),
-                "updated_at" => date("Y-m-d H:i:s")
             ],
             [
-                "id" => Str::uuid(),
-                "empresa_id" => $empresa->id,
                 "tipo" => EmpresaContatoTipo::TELEFONE->value,
                 "valor" => "14111112222",
+            ],
+        ];
+
+        foreach ($contatos as $contato) {
+            $existe = DB::table("empresa_contatos")
+                ->where("empresa_id", $empresa->id)
+                ->where("tipo", $contato["tipo"])
+                ->where("valor", $contato["valor"])
+                ->exists();
+
+            if ($existe) {
+                continue;
+            }
+
+            DB::table("empresa_contatos")->insert([
+                "id" => Str::uuid(),
+                "empresa_id" => $empresa->id,
+                "tipo" => $contato["tipo"],
+                "valor" => $contato["valor"],
                 "ativo" => true,
                 "principal" => true,
                 "created_at" => date("Y-m-d H:i:s"),
                 "updated_at" => date("Y-m-d H:i:s")
-            ],
-        ]);
+            ]);
+        }
     }
 }
 

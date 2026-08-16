@@ -18,6 +18,16 @@ class AdminGrupoSeeder extends Seeder
     {
         $entidadeTipo = DB::table("entidade_tipos")->where("chave", "admin")->first();
 
+        $existe = DB::table("grupos")
+            ->where("descricao", "Desenvolvimento")
+            ->where("entidade_tipo_id", $entidadeTipo->id)
+            ->whereNull("entidade_id")
+            ->exists();
+
+        if ($existe) {
+            return;
+        }
+
         DB::table("grupos")->insert([
             "id" => Str::uuid(),
             "descricao" => "Desenvolvimento",

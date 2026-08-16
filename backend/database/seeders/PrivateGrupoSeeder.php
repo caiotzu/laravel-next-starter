@@ -19,6 +19,16 @@ class PrivateGrupoSeeder extends Seeder
         $entidadeTipo = DB::table("entidade_tipos")->where("chave", "private")->first();
         $grupoEmpresa = DB::table("grupo_empresas")->where("nome", "Grupos Nexus")->first();
 
+        $existe = DB::table("grupos")
+            ->where("descricao", "Administrador")
+            ->where("entidade_tipo_id", $entidadeTipo->id)
+            ->where("entidade_id", $grupoEmpresa->id)
+            ->exists();
+
+        if ($existe) {
+            return;
+        }
+
         DB::table("grupos")->insert([
             "id" => Str::uuid(),
             "descricao" => "Administrador",

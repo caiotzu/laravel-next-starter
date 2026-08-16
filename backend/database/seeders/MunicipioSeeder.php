@@ -17,7 +17,7 @@ class MunicipioSeeder extends Seeder
      */
     public function run()
     {
-        DB::table("municipios")->insert([
+        $municipios = [
             ["id" => Str::uuid(), "codigo_siafi" =>	"1", "nome" =>"GUAJARA-MIRIM", "uf" => "RO", "codigo_ibge" => "1100106", "created_at" => date("Y-m-d H:i:s") ],
             ["id" => Str::uuid(), "codigo_siafi" =>	"2", "nome" =>"ALTO ALEGRE DOS PARECIS", "uf" => "RO", "codigo_ibge" => "1100379", "created_at" => date("Y-m-d H:i:s") ],
             ["id" => Str::uuid(), "codigo_siafi" =>	"3", "nome" =>"PORTO VELHO", "uf" => "RO", "codigo_ibge" => "1100205", "created_at" => date("Y-m-d H:i:s") ],
@@ -5588,6 +5588,22 @@ class MunicipioSeeder extends Seeder
             ["id" => Str::uuid(), "codigo_siafi" =>	"1194", "nome" => "PESCARIA BRAVA", "uf" => "SC", "codigo_ibge" => "4212650", "created_at" => date("Y-m-d H:i:s") ],
             ["id" => Str::uuid(), "codigo_siafi" =>	"1196", "nome" => "PARAISO DAS AGUAS", "uf" => "MS", "codigo_ibge" => "5006275", "created_at" => date("Y-m-d H:i:s") ],
             ["id" => Str::uuid(), "codigo_siafi" =>	"3001", "nome" => "DISTRITO ESTADUAL DE FERNANDO DE NORONHA", "uf" => "PE", "codigo_ibge" => "2605459", "created_at" => date("Y-m-d H:i:s") ],
-        ]);
+        ];
+
+        // A tabela municipios não tem constraint UNIQUE em codigo_ibge,
+        // então a checagem de duplicidade é feita aqui, na aplicação.
+        $codigosExistentes = DB::table("municipios")
+            ->whereIn("codigo_ibge", array_column($municipios, "codigo_ibge"))
+            ->pluck("codigo_ibge")
+            ->all();
+
+        $novos = array_values(array_filter(
+            $municipios,
+            fn (array $municipio) => !in_array($municipio["codigo_ibge"], $codigosExistentes, true)
+        ));
+
+        foreach (array_chunk($novos, 500) as $lote) {
+            DB::table("municipios")->insert($lote);
+        }
     }
 }

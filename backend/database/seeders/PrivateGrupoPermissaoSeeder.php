@@ -29,6 +29,8 @@ class PrivateGrupoPermissaoSeeder extends Seeder
             ]);
         }
 
-        DB::table("grupo_permissoes")->insert($grupoPermissoes);
+        // grupo_permissoes tem chave primária composta (grupo_id, permissao_id);
+        // insertOrIgnore descarta silenciosamente os pares já existentes.
+        DB::table("grupo_permissoes")->insertOrIgnore($grupoPermissoes);
     }
 }

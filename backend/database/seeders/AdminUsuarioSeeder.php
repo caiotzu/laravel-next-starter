@@ -18,6 +18,12 @@ class AdminUsuarioSeeder extends Seeder
     {
         $grupo = DB::table("grupos")->where("descricao", "Desenvolvimento")->orderBy("created_at")->first();
 
+        $existe = DB::table("usuarios")->where("email", "admin@admin.com.br")->exists();
+
+        if ($existe) {
+            return;
+        }
+
         DB::table("usuarios")->insert([
             "id" => Str::uuid(),
             "grupo_id" => $grupo->id,
