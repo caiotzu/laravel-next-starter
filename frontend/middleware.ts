@@ -43,26 +43,34 @@ export function middleware(req: NextRequest) {
   // Se rota não for protegida -> libera
   if (!route.protected) return NextResponse.next();
 
-  // Pega token do cookie definido na rota
+  // Pega o token da área esperada.
   const token = route.cookieName ? req.cookies.get(route.cookieName)?.value : null;
 
-  // Se não tiver token -> redireciona para login correto
-  if (!token || !isTokenValid(token)) {
-    let loginPath = "/";
-    switch (route.cookieName) {
-      case "admin_access_token":
-        loginPath = "/admin";
-        break;
-      case "private_access_token":
-        loginPath = "/";
-        break;
-    }
-
-    return NextResponse.redirect(new URL(loginPath, req.url));
+  if (token && isTokenValid(token)) {
+    return NextResponse.next();
   }
-  
-  // Tudo certo -> permite acessar
-  return NextResponse.next();
+
+  // Uma aba de suporte usa a identidade Admin original para acessar as
+  // rotas visuais da área Private. A autorização real continua no backend:
+  // sem X-Acesso-Suporte-Id válido, as APIs Private não concedem acesso.
+  if (
+    route.cookieName === "private_access_token" &&
+    isTokenValid(req.cookies.get("admin_access_token")?.value || "")
+  ) {
+    return NextResponse.next();
+  }
+
+  let loginPath = "/";
+  switch (route.cookieName) {
+    case "admin_access_token":
+      loginPath = "/admin";
+      break;
+    case "private_access_token":
+      loginPath = "/";
+      break;
+  }
+
+  return NextResponse.redirect(new URL(loginPath, req.url));
 }
 
 // Verifica se o token é valido e não expirou

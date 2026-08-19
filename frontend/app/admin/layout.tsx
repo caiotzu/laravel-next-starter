@@ -6,6 +6,7 @@ import { Toaster } from "sonner";
 import { ReactQueryProvider } from "@/components/providers/react-query-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 
+import { AcessoSuporteProvider } from "./providers/acesso-suporte-provider";
 import { AdminPermissionProvider } from "./providers/admin-permission-provider";
 
 import "@/app/globals.css";
@@ -43,7 +44,9 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <AdminPermissionProvider>
-              {children}
+              <AcessoSuporteProvider>
+                {children}
+              </AcessoSuporteProvider>
             </AdminPermissionProvider>
             <Toaster
               position="top-right"

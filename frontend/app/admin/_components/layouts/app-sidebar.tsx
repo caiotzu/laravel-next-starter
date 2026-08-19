@@ -7,6 +7,7 @@ import {
   Command,
   Settings2,
   Monitor,
+  Headset,
 } from "lucide-react"
 
 import { NavMain } from "@/app/admin/_components/layouts/nav-main"
@@ -60,6 +61,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           title: "Mensagens",
           url: "/admin/mensagens",
           permission: "admin.mensagem.menu"
+        },
+      ],
+    },
+    {
+      title: "Suporte",
+      url: "#",
+      icon: Headset,
+      items: [
+        {
+          title: "Acessos de Suporte",
+          url: "/admin/acessos-suporte",
+          permission: "admin.acesso_suporte.menu"
         },
       ],
     },

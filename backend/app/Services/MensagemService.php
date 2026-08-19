@@ -24,15 +24,24 @@ use App\Exceptions\BusinessException;
 
 class MensagemService {
 
-    public function cadastrar(MensagemCadastroDTO $dto): Mensagem
+    /**
+     * @param MensagemOrigem $origem Padrão ADMIN (mantém o comportamento
+     *        atual do cadastro manual pela tela de Mensagens). Passe
+     *        MensagemOrigem::SISTEMA para notificações geradas
+     *        automaticamente por uma ação do sistema (ex: concessão de
+     *        Acesso de Suporte) — nesse caso remetente_id fica nulo,
+     *        seguindo a mesma convenção já documentada na migration de
+     *        `mensagens` ("Nulo quando a origem é o próprio sistema").
+     */
+    public function cadastrar(MensagemCadastroDTO $dto, MensagemOrigem $origem = MensagemOrigem::ADMIN): Mensagem
     {
-        return DB::transaction(function () use ($dto) {
+        return DB::transaction(function () use ($dto, $origem) {
 
             $mensagem = Mensagem::create([
                 'titulo' => $dto->titulo,
                 'conteudo' => $dto->conteudo,
-                'origem' => MensagemOrigem::ADMIN->value,
-                'remetente_id' => Auth::id(),
+                'origem' => $origem->value,
+                'remetente_id' => $origem === MensagemOrigem::SISTEMA ? null : Auth::id(),
             ]);
 
             /**

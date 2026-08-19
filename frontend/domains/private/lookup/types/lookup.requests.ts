@@ -6,3 +6,7 @@ export interface ListarMunicipiosRequest {
   por_pagina?: number;
   page?: number;
 }
+
+export interface ListarAdministradoresRequest {
+  busca?: string;
+}

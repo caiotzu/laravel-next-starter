@@ -1,0 +1,51 @@
+"use client";
+
+import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
+import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
+import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
+
+import { PageHeader } from "@/components/layouts/page-header";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
+
+import { useAcessosSuporteRecebidos } from "@/domains/admin/acesso-suporte/hooks/useAcessosSuporteRecebidos";
+
+import { AcessosSuporteRecebidosTable } from "@/features/admin/acesso-suporte/components/AcessosSuporteRecebidosTable";
+
+export default function Page() {
+  const { data, isLoading } = useAcessosSuporteRecebidos();
+
+  return (
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "calc(var(--spacing) * 72)",
+          "--header-height": "calc(var(--spacing) * 12)",
+        } as React.CSSProperties
+      }
+    >
+      <AppSidebar variant="inset" />
+      <SidebarInset>
+        <SiteHeader />
+
+        <div className="flex flex-1 flex-col">
+          <div className="flex flex-col gap-6 py-6 px-4 lg:px-6">
+
+            <PageHeader
+              title="Acessos de Suporte"
+              description="Acessos temporários concedidos por clientes para você realizar suporte."
+            />
+
+            <AdminPermissionGuard permission="admin.acesso_suporte.listar">
+              {isLoading ? (
+                <Skeleton className="h-48 w-full" />
+              ) : (
+                <AcessosSuporteRecebidosTable data={data ?? []} />
+              )}
+            </AdminPermissionGuard>
+          </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}

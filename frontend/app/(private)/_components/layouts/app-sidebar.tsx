@@ -6,10 +6,12 @@ import {
   FolderKanban,
   Command,
   Settings2,
+  Headset,
 } from "lucide-react"
 
 import { NavMain } from "@/app/(private)/_components/layouts/nav-main"
 import { NavUser } from "@/app/(private)/_components/layouts/nav-user"
+import { useAcessoSuporte } from "@/app/admin/providers/acesso-suporte-provider"
 
 import {
   Sidebar,
@@ -26,7 +28,8 @@ import { useUserPrivate } from "@/hooks/use-user-private"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: userPrivate } = useUserPrivate();
-  
+  const { acessoSuporteAtivo } = useAcessoSuporte();
+
   const navMain = [
     {
       title: "Cadastros",
@@ -40,6 +43,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
       ],
     },
+    ...(!acessoSuporteAtivo ? [{
+      title: "Suporte",
+      url: "#",
+      icon: Headset,
+      items: [
+        {
+          title: "Acesso de Suporte",
+          url: "/acesso-suporte",
+          permission: "private.acesso_suporte.menu"
+        },
+      ],
+    }] : []),
     {
       title: "Configurações",
       url: "#",

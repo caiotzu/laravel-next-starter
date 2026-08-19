@@ -9,7 +9,8 @@ use App\Http\Controllers\Lookup\ {
     CepController,
     MunicipioController,
     ContatoTipoController,
-    EnderecoTipoController
+    EnderecoTipoController,
+    AdministradorController
 };
 
 use App\Http\Controllers\Admin\ {
@@ -24,6 +25,7 @@ use App\Http\Controllers\Admin\ {
     GrupoEmpresaController,
     EmpresaContatoController,
     EmpresaEnderecoController,
+    AcessoSuporteController,
     UsuarioGrupoEmpresaController,
     AutenticacaoDoisFatoresController,
 };
@@ -37,6 +39,7 @@ use App\Http\Controllers\Private\ {
     PermissaoController as PrivatePermissaoController,
     EmpresaContatoController as PrivateEmpresaContatoController,
     EmpresaEnderecoController as PrivateEmpresaEnderecoController,
+    AcessoSuporteController as PrivateAcessoSuporteController,
     AutenticacaoDoisFatoresController as PrivateAutenticacaoDoisFatoresController
 };
 
@@ -62,13 +65,14 @@ Route::post('login', [PrivateAuthController::class, 'login']);
 Route::post('2fa/verificar', [PrivateAuthController::class, 'verificar2fa']);
 // #endregion Private
 
-Route::middleware('jwt')->group(function () {
+Route::middleware(['jwt', 'suporte.contexto'])->group(function () {
     // #region Lookup
     Route::prefix('lookup')->group(function() {
         Route::get('/ceps/{cep}', [CepController::class, 'consultar']);
         Route::get('/municipios', [MunicipioController::class, 'listar']);
         Route::get('/contatos-tipos', [ContatoTipoController::class, 'listar']);
         Route::get('/enderecos-tipos', [EnderecoTipoController::class, 'listar']);
+        Route::get('/administradores', [AdministradorController::class, 'listar']);
     });
     // #endregion Lookup
 
@@ -81,7 +85,6 @@ Route::middleware('jwt')->group(function () {
         Route::get('/', [GlobalMensagemController::class, 'listar']);
     });
     // #endregion Global
-
 
     // #region Admin
     Route::prefix('admin')->group(function() {
@@ -170,6 +173,11 @@ Route::middleware('jwt')->group(function () {
 
         Route::get('/permissoes', [PermissaoController::class, 'listar']);
 
+        Route::prefix('acessos-suporte')->group(function () {
+            Route::get('/', [AcessoSuporteController::class, 'listar']);
+            Route::delete('/{id}', [AcessoSuporteController::class, 'encerrar']);
+        });
+
         Route::prefix('usuarios')->group(function () {
             Route::patch('/{id}/ativar', [UsuarioController::class, 'ativar']);
             Route::put('/{id}', [UsuarioController::class, 'atualizar']);
@@ -235,6 +243,12 @@ Route::middleware('jwt')->group(function () {
     });
 
     Route::get('/permissoes', [PrivatePermissaoController::class, 'listar']);
+
+    Route::prefix('acessos-suporte')->group(function () {
+        Route::get('/', [PrivateAcessoSuporteController::class, 'listar']);
+        Route::post('/', [PrivateAcessoSuporteController::class, 'conceder']);
+        Route::delete('/{id}', [PrivateAcessoSuporteController::class, 'revogar']);
+    });
 
     Route::prefix('usuarios')->group(function () {
         Route::patch('/{id}/ativar', [PrivateUsuarioController::class, 'ativar']);

@@ -28,6 +28,7 @@ class Auditoria extends Model
         'agrupador_id',
         'acao',
         'usuario_id',
+        'acesso_suporte_id',
         'origem',
         'dados_antes',
         'dados_depois',
@@ -58,5 +59,10 @@ class Auditoria extends Model
     public function usuario(): BelongsTo
     {
         return $this->belongsTo(Usuario::class, 'usuario_id', 'id');
+    }
+
+    public function acessoSuporte(): BelongsTo
+    {
+        return $this->belongsTo(AcessoSuporte::class, 'acesso_suporte_id', 'id');
     }
 }

@@ -41,8 +41,8 @@ class GrupoService {
              */
             $user = Auth::user();
 
-            $grupo = Grupo::where('entidade_tipo_id', $user->grupo->entidade_tipo_id)
-                ->where('entidade_id', $user->grupo->entidade_id)
+            $grupo = Grupo::where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
+                ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
                 ->find($dto->id);
             if(!$grupo)
                 throw new BusinessException('Grupo não encontrado.', ErrorCode::GRUPO_NOT_FOUND->value);
@@ -66,8 +66,8 @@ class GrupoService {
             $user = Auth::user();
 
             $grupo = Grupo::with('permissoes')
-                ->where('entidade_tipo_id', $user->grupo->entidade_tipo_id)
-                ->where('entidade_id', $user->grupo->entidade_id)
+                ->where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
+                ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
                 ->find($id);
 
             if (! $grupo) {
@@ -90,8 +90,8 @@ class GrupoService {
              */
             $user = Auth::user();
 
-            $grupo = Grupo::where('entidade_tipo_id', $user->grupo->entidade_tipo_id)
-                ->where('entidade_id', $user->grupo->entidade_id)
+            $grupo = Grupo::where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
+                ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
                 ->find($id);
 
             if (!$grupo) {
@@ -118,8 +118,8 @@ class GrupoService {
             $user = Auth::user();
 
             $grupo = Grupo::onlyTrashed()
-                ->where('entidade_tipo_id', $user->grupo->entidade_tipo_id)
-                ->where('entidade_id', $user->grupo->entidade_id)
+                ->where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
+                ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
                 ->find($id);
 
             if (!$grupo) {
@@ -144,8 +144,8 @@ class GrupoService {
         $user = Auth::user();
 
         return Grupo::query()
-            ->where('entidade_tipo_id', $user->grupo->entidade_tipo_id)
-            ->where('entidade_id', $user->grupo->entidade_id)
+            ->where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
+            ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
             ->when($filtro->id, fn ($q) =>
                 $q->where('id', $filtro->id)
             )
@@ -185,8 +185,8 @@ class GrupoService {
             $user = Auth::user();
 
             $grupo = Grupo::with('permissoes')
-                ->where('entidade_tipo_id', $user->grupo->entidade_tipo_id)
-                ->where('entidade_id', $user->grupo->entidade_id)
+                ->where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
+                ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
                 ->findOrFail($dto->grupo_id);
 
             /**

@@ -3,9 +3,12 @@ import { Geist, Geist_Mono } from "next/font/google";
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
 
+import { AcessoSuporteProvider } from "@/app/admin/providers/acesso-suporte-provider";
+
 import { ReactQueryProvider } from "@/components/providers/react-query-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 
+import { AcessoSuporteBootstrap } from "./providers/acesso-suporte-bootstrap";
 import { PrivatePermissionProvider } from "./providers/private-permission-provider";
 
 import "@/app/globals.css";
@@ -42,9 +45,13 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <PrivatePermissionProvider>
-              {children}
-            </PrivatePermissionProvider>
+            <AcessoSuporteProvider>
+              <AcessoSuporteBootstrap>
+                <PrivatePermissionProvider>
+                  {children}
+                </PrivatePermissionProvider>
+              </AcessoSuporteBootstrap>
+            </AcessoSuporteProvider>
             <Toaster
               position="top-right"
               richColors

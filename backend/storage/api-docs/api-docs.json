@@ -257,6 +257,40 @@
                 ]
             }
         },
+        "/lookup/administradores": {
+            "get": {
+                "tags": [
+                    "Lookup"
+                ],
+                "summary": "Lookup — Listar administradores",
+                "description": "Lista usuários administrativos ativos, para uso em seletores (ex: concessão de Acesso de Suporte). Busca opcional por nome/e-mail.",
+                "operationId": "6232e621a90853939cf9ac46d06b199f",
+                "parameters": [
+                    {
+                        "name": "busca",
+                        "in": "query",
+                        "description": "Filtro por nome ou e-mail (busca parcial, case-insensitive).",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 255
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de administradores."
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/lookup/ceps/{cep}": {
             "get": {
                 "tags": [
@@ -613,6 +647,131 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/acessos-suporte": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Listar acessos de suporte concedidos",
+                "operationId": "2df2ce08ecb75aadd79e69a79c9a182f",
+                "responses": {
+                    "200": {
+                        "description": "Lista de acessos de suporte concedidos pela organização."
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Conceder acesso de suporte",
+                "description": "Autoriza um administrador a acessar temporariamente os dados da sua organização, por um prazo limitado e obrigatório.",
+                "operationId": "1aaf75a2826cb60e3d2323157ef96bce",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "usuario_admin_id",
+                                    "duracao_minutos"
+                                ],
+                                "properties": {
+                                    "usuario_admin_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "empresa_id": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "nullable": true
+                                    },
+                                    "motivo": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "duracao_minutos": {
+                                        "type": "integer",
+                                        "example": 30
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Acesso de suporte concedido."
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/acessos-suporte/{id}": {
+            "delete": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Revogar acesso de suporte",
+                "description": "Encerra imediatamente um acesso de suporte concedido, independentemente do tempo restante.",
+                "operationId": "36edd0f06472628b4ca9dec5f4637146",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Acesso revogado."
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
                     }
                 },
                 "security": [

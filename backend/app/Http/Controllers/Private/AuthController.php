@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Private;
 use App\Http\Controllers\Controller;
 
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,8 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
 use App\Models\Usuario;
+use App\Models\Permissao;
+use App\Models\AcessoSuporte;
 
 use App\Services\UsuarioService;
 use App\Services\UsuarioSessaoService;
@@ -47,6 +50,7 @@ use App\Http\Resources\Private\Auth\PrimeiroAcessoValidarResource;
 use App\Exceptions\BusinessException;
 
 use App\Enums\EntidadeTipo;
+use App\AcessoSuporte\AcessoSuporteContexto;
 
 use OpenApi\Attributes as OA;
 
@@ -292,7 +296,7 @@ class AuthController extends Controller
             new OA\Response(response: 500, ref: '#/components/responses/ServerError'),
         ]
     )]
-    public function me(): JsonResponse
+    public function me(Request $request): JsonResponse
     {
         try {
             /** @var \App\Models\Usuario $user */
@@ -306,13 +310,51 @@ class AuthController extends Controller
                 'grupo.permissoes:id,chave'
             ]);
 
-            $permissoes = $user->grupo
-                ? $user->grupo->permissoes
-                    ->pluck('chave')
-                    ->values()
-                : collect();
+            $contextoSuporte = app(AcessoSuporteContexto::class);
+            $acessoSuporteInfo = null;
 
-            return MeResource::make([
+            if ($contextoSuporte->ativo()) {
+                $prefixoEntidade = $contextoSuporte->entidadeTipoChave();
+
+                // O backend libera dinamicamente o namespace da entidade
+                // concedente através do Gate::before. O frontend precisa
+                // enxergar o mesmo conjunto de permissões para montar o
+                // menu Private de forma consistente com a autorização real.
+                $permissoes = $prefixoEntidade
+                    ? Permissao::query()
+                        ->where('chave', 'like', $prefixoEntidade . '.%')
+                        ->pluck('chave')
+                        ->values()
+                    : collect();
+
+                // Fonte da verdade do contador de suporte do frontend: o
+                // front nunca deve inventar/derivar expira_em localmente,
+                // apenas exibir o que o backend confirmar aqui a cada /me.
+                $acessoSuporteId = $request->header('X-Acesso-Suporte-Id');
+
+                if ($acessoSuporteId) {
+                    $acessoSuporteAtivo = AcessoSuporte::with('entidadeTipo')->find($acessoSuporteId);
+
+                    if ($acessoSuporteAtivo) {
+                        $entidade = $acessoSuporteAtivo->entidade();
+                        $nomeEntidade = $entidade?->nome ?? $acessoSuporteAtivo->entidadeTipo?->chave->value;
+
+                        $acessoSuporteInfo = [
+                            'id' => $acessoSuporteAtivo->id,
+                            'entidade_nome' => $nomeEntidade,
+                            'expira_em' => optional($acessoSuporteAtivo->expira_em)->toIso8601String(),
+                        ];
+                    }
+                }
+            } else {
+                $permissoes = $user->grupo
+                    ? $user->grupo->permissoes
+                        ->pluck('chave')
+                        ->values()
+                    : collect();
+            }
+
+            $response = MeResource::make([
                 'id' => $user->id,
                 'nome' => $user->nome,
                 'email' => $user->email,
@@ -325,6 +367,17 @@ class AuthController extends Controller
                 'ultimo_ip' => $user->ultimo_ip,
                 'permissoes' => $permissoes
             ])->response()->setStatusCode(200);
+
+            // Anexado diretamente na resposta HTTP (sem alterar o
+            // MeResource) para não mexer em um contrato/recurso que não
+            // faz parte do escopo deste ajuste.
+            if ($acessoSuporteInfo) {
+                $payload = $response->getData(true);
+                $payload['data']['acesso_suporte'] = $acessoSuporteInfo;
+                $response->setData($payload);
+            }
+
+            return $response;
 
         } catch (JWTException $e) {
             return response()->json([

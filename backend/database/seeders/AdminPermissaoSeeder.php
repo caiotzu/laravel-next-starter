@@ -383,6 +383,30 @@ class AdminPermissaoSeeder extends Seeder
                     "descricao" => "Permite listar as mensagens enviadas",
                     "created_at" => date("Y-m-d H:i:s"),
                     "updated_at" => date("Y-m-d H:i:s")
+                ],
+            //---
+
+            // suporte
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.acesso_suporte.listar",
+                    "descricao" => "Permite listar os acessos de suporte recebidos de clientes",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.acesso_suporte.encerrar",
+                    "descricao" => "Permite encerrar um acesso de suporte em uso",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.acesso_suporte.menu",
+                    "descricao" => "Permite visualizar o menu de Acessos de Suporte",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
                 ]
             //---
         ];

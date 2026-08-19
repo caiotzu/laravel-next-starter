@@ -30,7 +30,7 @@ class EmpresaService {
 
         return $query->where(
             'grupo_empresa_id',
-            Auth::user()->grupo->entidade_id
+            app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId(Auth::user())
         );
     }
 

@@ -44,8 +44,8 @@ class UsuarioService {
              */
             $user = Auth::user();
 
-            $grupo = Grupo::where('entidade_tipo_id', $user->grupo->entidade_tipo_id)
-                ->where('entidade_id', $user->grupo->entidade_id)
+            $grupo = Grupo::where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
+                ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
                 ->find($dto->grupo_id);
             if(!$grupo)
                 throw new BusinessException('O grupo selecionado não é válido para este cadastro.', ErrorCode::GRUPO_REQUIRED->value);
@@ -73,8 +73,8 @@ class UsuarioService {
              */
             $user = Auth::user();
 
-            $grupo = Grupo::where('entidade_tipo_id', $user->grupo->entidade_tipo_id)
-                ->where('entidade_id', $user->grupo->entidade_id)
+            $grupo = Grupo::where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
+                ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
                 ->find($dto->grupo_id);
             if(!$grupo)
                 throw new BusinessException('O grupo selecionado não é válido para este cadastro.', ErrorCode::GRUPO_REQUIRED->value);
@@ -126,8 +126,8 @@ class UsuarioService {
             $usuario = Usuario::query()
                 ->with('grupo')
                 ->whereHas('grupo', function (Builder $query) use ($user) {
-                    return $query->where('entidade_tipo_id', $user->grupo->entidade_tipo_id)
-                        ->where('entidade_id', $user->grupo->entidade_id);
+                    return $query->where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
+                        ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user));
                 })
                 ->find($id);
 
@@ -160,8 +160,8 @@ class UsuarioService {
              */
             $user = Auth::user();
 
-            $grupo = Grupo::where('entidade_tipo_id', $user->grupo->entidade_tipo_id)
-                ->where('entidade_id', $user->grupo->entidade_id)
+            $grupo = Grupo::where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
+                ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
                 ->withTrashed()
                 ->find($usuario->grupo_id);
             if(!$grupo)
@@ -192,8 +192,8 @@ class UsuarioService {
              */
             $user = Auth::user();
 
-            $grupo = Grupo::where('entidade_tipo_id', $user->grupo->entidade_tipo_id)
-                ->where('entidade_id', $user->grupo->entidade_id)
+            $grupo = Grupo::where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
+                ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
                 ->withTrashed()
                 ->find($usuario->grupo_id);
             if(!$grupo)
@@ -215,8 +215,8 @@ class UsuarioService {
         return Usuario::query()
             ->with('grupoComExcluidos')
             ->whereHas('grupoComExcluidos', function (Builder $query) use ($user) {
-                return $query->where('entidade_tipo_id', $user->grupo->entidade_tipo_id)
-                    ->where('entidade_id', $user->grupo->entidade_id);
+                return $query->where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
+                    ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user));
             })
             ->when($filtro->id, fn ($q) =>
                 $q->where('id', $filtro->id)

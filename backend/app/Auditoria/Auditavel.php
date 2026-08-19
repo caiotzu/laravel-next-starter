@@ -107,6 +107,7 @@ trait Auditavel
             'agrupador_id' => $agrupadorId,
             'acao' => $acao->value,
             'usuario_id' => $contexto->usuarioId(),
+            'acesso_suporte_id' => $contexto->acessoSuporteId(),
             'origem' => $contexto->origem()->value,
             'ip' => $contexto->ip(),
             'user_agent' => $contexto->userAgent(),

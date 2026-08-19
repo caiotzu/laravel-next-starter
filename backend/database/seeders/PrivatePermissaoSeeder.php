@@ -245,6 +245,34 @@ class PrivatePermissaoSeeder extends Seeder
                     "descricao" => "Permite listar os usuários",
                     "created_at" => date("Y-m-d H:i:s"),
                     "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "private.acesso_suporte.cadastrar",
+                    "descricao" => "Permite conceder acesso temporário de suporte a um administrador",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "private.acesso_suporte.listar",
+                    "descricao" => "Permite listar os acessos de suporte concedidos",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "private.acesso_suporte.revogar",
+                    "descricao" => "Permite revogar um acesso de suporte concedido",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "private.acesso_suporte.menu",
+                    "descricao" => "Permite visualizar o menu de Acesso de Suporte",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
                 ]
             //---
         ];

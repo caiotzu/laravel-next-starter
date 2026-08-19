@@ -34,8 +34,12 @@ export async function POST(req: Request): Promise<NextResponse> {
 
     const cookieStore = await cookies();
 
-    const token =
-      cookieStore.get("private_access_token")?.value;
+    const acessoSuporteId =
+      clientHeaders?.["X-Acesso-Suporte-Id"];
+
+    const token = acessoSuporteId
+      ? cookieStore.get("admin_access_token")?.value
+      : cookieStore.get("private_access_token")?.value;
 
     // Headers originais do cliente
     const userAgent =
@@ -78,8 +82,12 @@ export async function POST(req: Request): Promise<NextResponse> {
 
     // Token expirado
     if (backendResponse.status === 401) {
+      const cookieName = acessoSuporteId
+        ? "admin_access_token"
+        : "private_access_token";
+
       cookieStore.set(
-        "private_access_token",
+        cookieName,
         "",
         {
           httpOnly: true,

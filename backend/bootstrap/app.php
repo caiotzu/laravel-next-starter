@@ -13,6 +13,7 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 use App\Http\Middleware\JwtMiddleware;
 use App\Http\Middleware\SwaggerAdminAuth;
+use App\Http\Middleware\AcessoSuporteMiddleware;
 use Illuminate\Database\QueryException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'jwt' => JwtMiddleware::class,
             'swagger.admin.auth' => SwaggerAdminAuth::class,
+            'suporte.contexto' => AcessoSuporteMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

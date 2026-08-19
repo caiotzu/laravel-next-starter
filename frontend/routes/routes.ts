@@ -42,6 +42,9 @@ export const protectedRoutes: RoutePermission[] = [
     { path: "/admin/usuarios/:id", protected: true, cookieName: "admin_access_token" },
     { path: "/admin/usuarios/cadastrar", protected: true, cookieName: "admin_access_token" },
     { path: "/admin/usuarios", protected: true, cookieName: "admin_access_token" },
+
+    { path: "/admin/acessos-suporte/:id/suporte", protected: true, cookieName: "admin_access_token" },
+    { path: "/admin/acessos-suporte", protected: true, cookieName: "admin_access_token" },
   //---
 
   // rotas privadas
@@ -67,6 +70,9 @@ export const protectedRoutes: RoutePermission[] = [
     { path: "/usuarios/:id", protected: true, cookieName: "private_access_token" },
     { path: "/usuarios/cadastrar", protected: true, cookieName: "private_access_token" },
     { path: "/usuarios", protected: true, cookieName: "private_access_token" },
+
+    { path: "/acesso-suporte/conceder", protected: true, cookieName: "private_access_token" },
+    { path: "/acesso-suporte", protected: true, cookieName: "private_access_token" },
   //---
 ];
 

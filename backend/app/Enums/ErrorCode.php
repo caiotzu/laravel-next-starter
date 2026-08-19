@@ -40,5 +40,12 @@ enum ErrorCode: int
     // Mensagem (model) -> 08
     case MENSAGEM_NOT_FOUND = 40408;
     case MENSAGEM_REQUIRED = 42208;
+
+    // Mensagem (model) -> 09
     case MENSAGEM_DIRECIONAMENTO_INVALIDO = 42209;
+
+    // Acesso Suporte (model) -> 10
+    case ACESSO_SUPORTE_NOT_FOUND = 40410;
+    case ACESSO_SUPORTE_UNAUTHORIZED = 40110;
+    case ACESSO_SUPORTE_REQUIRED = 42210;
 }
