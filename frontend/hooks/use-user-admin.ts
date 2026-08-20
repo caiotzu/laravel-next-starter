@@ -5,7 +5,7 @@ import axios from "axios"
 
 import { Usuario } from "@/domains/admin/perfil/usuario/types/usuario.model";
 
-export function useUserAdmin() {
+export function useUserAdmin(options?: { enabled?: boolean }) {
   return useQuery<Usuario>({
     queryKey: ["userAdmin"],
     queryFn: async () => {
@@ -17,5 +17,6 @@ export function useUserAdmin() {
     },
     staleTime: 1000 * 60 * 5, // cache por 5 minutos
     retry: false,
+    enabled: options?.enabled ?? true,
   })
 }
