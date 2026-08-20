@@ -48,6 +48,7 @@ Principais chaves de `.env.example` — detalhes de cada uma em [`docs/banco-de-
 ```bash
 ./vendor/bin/sail artisan test              # roda a suíte de testes (Pest)
 ./vendor/bin/sail artisan queue:work        # processa a fila
+./vendor/bin/sail artisan schedule:work     # processa a comandos
 ./vendor/bin/sail artisan swagger:admin-hash "senha"   # credenciais do Swagger Admin
 ./vendor/bin/sail artisan l5-swagger:generate          # gera as specs OpenAPI
 ```

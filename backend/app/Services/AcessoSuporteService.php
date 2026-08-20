@@ -151,11 +151,7 @@ class AcessoSuporteService
         }
 
         if ($acesso->status === AcessoSuporteStatus::ATIVO && $acesso->expira_em->isPast()) {
-            $acesso->update([
-                'status' => AcessoSuporteStatus::EXPIRADO,
-                'encerrado_em' => now(),
-                'encerrado_por' => AcessoSuporteEncerradoPor::EXPIRACAO,
-            ]);
+            $this->marcarComoExpirado($acesso);
         }
 
         if (!$acesso->estaValido()) {
@@ -175,6 +171,57 @@ class AcessoSuporteService
         }
 
         return $acesso;
+    }
+
+    /**
+     * Único ponto que efetivamente grava a transição ATIVO -> EXPIRADO,
+     * reutilizado tanto pela validação por request (validarAtiva, acima)
+     * quanto pelo comando agendado (expirarVencidos, abaixo) — evita duas
+     * regras paralelas para o mesmo efeito.
+     *
+     * Sempre via ->update() em uma instância de Model (nunca um update em
+     * massa via query builder), para que a trait Auditavel continue
+     * capturando o evento 'updated' e gerando o registro de auditoria da
+     * mudança de status (ver AcessoSuporteService::expirarVencidos).
+     */
+    private function marcarComoExpirado(AcessoSuporte $acesso): void
+    {
+        $acesso->update([
+            'status' => AcessoSuporteStatus::EXPIRADO,
+            'encerrado_em' => now(),
+            'encerrado_por' => AcessoSuporteEncerradoPor::EXPIRACAO,
+        ]);
+    }
+
+    /**
+     * Expira, em lote, todos os acessos ATIVO cuja expira_em já passou —
+     * mesmo padrão do UsuarioSessaoService::limpar-expiradas, chamado pelo
+     * comando agendado `acesso-suporte:expirar-vencidos` (ver
+     * routes/console.php).
+     *
+     * Necessário porque validarAtiva() só expira um acesso no momento em
+     * que ele é revalidado por uma requisição (header X-Acesso-Suporte-Id).
+     * Um acesso que nunca volta a ser usado depois de vencer (ex: o Admin
+     * simplesmente fecha a aba) continuaria com status=ATIVO gravado no
+     * banco indefinidamente — o que é exatamente o que este comando evita,
+     * mantendo as listagens (Private e Admin) e o campo `status` sempre
+     * coerentes com a expiração real, sem depender de outra requisição
+     * acontecer para "descobrir" que o acesso venceu.
+     *
+     * Itera e atualiza um a um (nunca um update em massa) para preservar a
+     * auditoria de cada mudança de status via Auditavel.
+     */
+    public function expirarVencidos(): int
+    {
+        $expirados = AcessoSuporte::where('status', AcessoSuporteStatus::ATIVO)
+            ->where('expira_em', '<', now())
+            ->get();
+
+        foreach ($expirados as $acesso) {
+            $this->marcarComoExpirado($acesso);
+        }
+
+        return $expirados->count();
     }
 
     public function revogar(string $id, Usuario $concedente): void

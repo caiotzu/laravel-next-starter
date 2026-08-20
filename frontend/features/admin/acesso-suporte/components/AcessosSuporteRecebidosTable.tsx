@@ -55,6 +55,24 @@ export function AcessosSuporteRecebidosTable({ data }: { data: AcessoSuporte[] }
     window.open(url, "_blank", "noopener,noreferrer");
   }
 
+  /**
+   * `status` é o valor gravado no banco, que só é atualizado para
+   * "expirado" quando o backend revalida o acesso (via requisição com
+   * X-Acesso-Suporte-Id) ou pelo comando agendado `acesso-suporte:expirar-
+   * -vencidos`. Entre uma expiração real e essa atualização, `status` pode
+   * ficar defasado como "ativo". `ativo`, por outro lado, já vem calculado
+   * pelo backend considerando data/hora atuais (AcessoSuporte::estaValido()),
+   * então é sempre a fonte da verdade para o que exibimos — um acesso
+   * vencido nunca deve continuar aparecendo como "Ativo" só porque estava
+   * assim armazenado.
+   */
+  function statusEfetivo(acesso: AcessoSuporte): string {
+    if (acesso.status === "ativo" && !acesso.ativo) {
+      return "expirado";
+    }
+    return acesso.status;
+  }
+
   function getStatusBadge(status: string) {
     switch (status) {
       case "ativo":
@@ -106,7 +124,7 @@ export function AcessosSuporteRecebidosTable({ data }: { data: AcessoSuporte[] }
                     {acesso.motivo ?? "—"}
                   </TableCell>
                   <TableCell>
-                    { getStatusBadge(acesso.status) }
+                    { getStatusBadge(statusEfetivo(acesso)) }
                   </TableCell>
                   <TableCell className="text-sm">{formatarData(acesso.expiraEm)}</TableCell>
                   <TableCell className="text-right">

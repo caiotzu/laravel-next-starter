@@ -137,7 +137,7 @@ test('cliente concede acesso e o admin recebe uma mensagem automática', functio
     $token = autenticar($cenario['clienteA']['usuario']);
 
     $response = $this->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/acessos-suporte', [
+        ->postJson('/api/acessos-suporte', [
             'usuario_admin_id' => $cenario['admin']->id,
             'duracao_minutos' => 30,
             'motivo' => 'Erro ao gerar boleto',
@@ -164,7 +164,7 @@ test('não é possível conceder acesso sem duracao_minutos (expiração obrigat
     $token = autenticar($cenario['clienteA']['usuario']);
 
     $this->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/acessos-suporte', [
+        ->postJson('/api/acessos-suporte', [
             'usuario_admin_id' => $cenario['admin']->id,
         ])
         ->assertStatus(422);
@@ -176,7 +176,7 @@ test('admin sem acesso de suporte não consegue listar empresas do contexto priv
     $token = autenticar($cenario['admin']);
 
     $this->withHeader('Authorization', "Bearer {$token}")
-        ->getJson('/empresas')
+        ->getJson('/api/empresas')
         ->assertStatus(403);
 });
 
@@ -189,7 +189,7 @@ test('admin com acesso de suporte válido só enxerga a empresa da entidade auto
 
     $response = $this->withHeader('Authorization', "Bearer {$token}")
         ->withHeader('X-Acesso-Suporte-Id', $acesso->id)
-        ->getJson('/empresas');
+        ->getJson('/api/empresas');
 
     $response->assertStatus(200);
 
@@ -209,7 +209,7 @@ test('escopo não pode ser alterado por query string mesmo em modo de suporte', 
     // Tenta forçar, via query string, o grupo_empresa_id do outro cliente.
     $response = $this->withHeader('Authorization', "Bearer {$token}")
         ->withHeader('X-Acesso-Suporte-Id', $acesso->id)
-        ->getJson('/empresas?grupo_empresa_id=' . $cenario['clienteB']['grupoEmpresa']->id);
+        ->getJson('/api/empresas?grupo_empresa_id=' . $cenario['clienteB']['grupoEmpresa']->id);
 
     $response->assertStatus(200);
 
@@ -228,7 +228,7 @@ test('acesso de suporte expirado é rejeitado mesmo com status ainda ativo no ba
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->withHeader('X-Acesso-Suporte-Id', $acesso->id)
-        ->getJson('/empresas')
+        ->getJson('/api/empresas')
         ->assertStatus(403);
 
     expect($acesso->fresh()->status)->toBe(AcessoSuporteStatus::EXPIRADO);
@@ -247,7 +247,7 @@ test('acesso de suporte revogado pelo cliente é rejeitado imediatamente', funct
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->withHeader('X-Acesso-Suporte-Id', $acesso->id)
-        ->getJson('/empresas')
+        ->getJson('/api/empresas')
         ->assertStatus(403);
 });
 
@@ -261,7 +261,7 @@ test('cliente consegue revogar um acesso concedido', function () {
     $token = autenticar($cenario['clienteA']['usuario']);
 
     $this->withHeader('Authorization', "Bearer {$token}")
-        ->deleteJson("/acessos-suporte/{$acesso->id}")
+        ->deleteJson("/api/acessos-suporte/{$acesso->id}")
         ->assertStatus(204);
 
     expect($acesso->fresh()->status)->toBe(AcessoSuporteStatus::REVOGADO);
@@ -285,7 +285,7 @@ test('admin não consegue usar um acesso de suporte concedido a outro admin', fu
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->withHeader('X-Acesso-Suporte-Id', $acesso->id)
-        ->getJson('/empresas')
+        ->getJson('/api/empresas')
         ->assertStatus(403);
 });
 
@@ -298,7 +298,7 @@ test('o mesmo admin pode possuir acessos de suporte ativos para grupos empresa d
     $tokenClienteA = autenticar($cenario['clienteA']['usuario']);
 
     $this->withHeader('Authorization', "Bearer {$tokenClienteA}")
-        ->postJson('/acessos-suporte', [
+        ->postJson('/api/acessos-suporte', [
             'usuario_admin_id' => $cenario['admin']->id,
             'duracao_minutos' => 30,
         ])
@@ -307,7 +307,7 @@ test('o mesmo admin pode possuir acessos de suporte ativos para grupos empresa d
     $tokenClienteB = autenticar($cenario['clienteB']['usuario']);
 
     $this->withHeader('Authorization', "Bearer {$tokenClienteB}")
-        ->postJson('/acessos-suporte', [
+        ->postJson('/api/acessos-suporte', [
             'usuario_admin_id' => $cenario['admin']->id,
             'duracao_minutos' => 30,
         ])
@@ -330,7 +330,7 @@ test('não é possível conceder um segundo acesso ativo para o mesmo admin/enti
     $token = autenticar($cenario['clienteA']['usuario']);
 
     $this->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/acessos-suporte', [
+        ->postJson('/api/acessos-suporte', [
             'usuario_admin_id' => $cenario['admin']->id,
             'duracao_minutos' => 30,
         ])
@@ -348,12 +348,12 @@ test('encerrar o acesso pelo admin bloqueia requisições seguintes com o mesmo 
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->withHeader('X-Acesso-Suporte-Id', $acesso->id)
-        ->deleteJson("/admin/acessos-suporte/{$acesso->id}")
+        ->deleteJson("/api/admin/acessos-suporte/{$acesso->id}")
         ->assertStatus(204);
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->withHeader('X-Acesso-Suporte-Id', $acesso->id)
-        ->getJson('/empresas')
+        ->getJson('/api/empresas')
         ->assertStatus(403);
 
     expect($acesso->fresh()->encerrado_por)->toBe(AcessoSuporteEncerradoPor::ADMIN);
@@ -368,7 +368,7 @@ test('auditoria registra o admin real e o acesso de suporte utilizado, sem troca
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->withHeader('X-Acesso-Suporte-Id', $acesso->id)
-        ->putJson("/empresas/{$cenario['clienteA']['empresa']->id}", [
+        ->putJson("/api/empresas/{$cenario['clienteA']['empresa']->id}", [
             'nome_fantasia' => 'Empresa a Atualizada',
             'razao_social' => $cenario['clienteA']['empresa']->razao_social,
             'uf' => 'SP',
@@ -383,6 +383,58 @@ test('auditoria registra o admin real e o acesso de suporte utilizado, sem troca
     // usuario_id é sempre o Admin real — Auth::id() nunca foi trocado.
     expect($auditoria->usuario_id)->toBe($cenario['admin']->id);
     expect($auditoria->acesso_suporte_id)->toBe($acesso->id);
+});
+
+test('comando agendado expira acessos ativos vencidos e gera auditoria da mudança de status', function () {
+    $cenario = criarCenarioAcessoSuporte();
+
+    // Vencido há 5 minutos, mas nunca foi revalidado por nenhuma
+    // requisição (X-Acesso-Suporte-Id) — sem o comando agendado, ficaria
+    // com status=ATIVO gravado no banco para sempre.
+    $acessoVencido = criarAcessoAtivo($cenario, [
+        'expira_em' => now()->subMinutes(5),
+    ]);
+
+    // Ainda dentro do prazo — não deve ser tocado pelo comando.
+    $acessoDentroDoPrazo = criarAcessoAtivo($cenario, [
+        'entidade_id' => $cenario['clienteB']['grupoEmpresa']->id,
+        'usuario_concedente_id' => $cenario['clienteB']['usuario']->id,
+        'expira_em' => now()->addMinutes(30),
+    ]);
+
+    $this->artisan('acesso-suporte:expirar-vencidos')->assertExitCode(0);
+
+    expect($acessoVencido->fresh()->status)->toBe(AcessoSuporteStatus::EXPIRADO);
+    expect($acessoVencido->fresh()->encerrado_por)->toBe(AcessoSuporteEncerradoPor::EXPIRACAO);
+    expect($acessoVencido->fresh()->encerrado_em)->not->toBeNull();
+
+    // O que ainda está dentro do prazo permanece intocado.
+    expect($acessoDentroDoPrazo->fresh()->status)->toBe(AcessoSuporteStatus::ATIVO);
+    expect($acessoDentroDoPrazo->fresh()->encerrado_em)->toBeNull();
+
+    $auditoria = Auditoria::where('entidade_tabela', 'acessos_suporte')
+        ->where('entidade_id', $acessoVencido->id)
+        ->where('acao', 'atualizacao')
+        ->latest('criado_em')
+        ->first();
+
+    expect($auditoria)->not->toBeNull();
+    // Expiração automática é feita pelo sistema (comando agendado, sem um
+    // Admin autenticado usando o acesso), então não há um acesso_suporte_id
+    // "em uso" no momento — diferente da auditoria de uma Empresa alterada
+    // durante uma sessão de suporte (testada em outro cenário acima).
+    expect($auditoria->acesso_suporte_id)->toBeNull();
+    expect($auditoria->campos_alterados)->toContain('status');
+
+    // Rodar de novo não deve re-expirar nem re-auditar o que já está EXPIRADO.
+    $this->artisan('acesso-suporte:expirar-vencidos')->assertExitCode(0);
+
+    $totalAuditorias = Auditoria::where('entidade_tabela', 'acessos_suporte')
+        ->where('entidade_id', $acessoVencido->id)
+        ->where('acao', 'atualizacao')
+        ->count();
+
+    expect($totalAuditorias)->toBe(1);
 });
 
 test('a mesma estrutura de AcessoSuporte funciona para uma entidade concedente diferente de private', function () {
