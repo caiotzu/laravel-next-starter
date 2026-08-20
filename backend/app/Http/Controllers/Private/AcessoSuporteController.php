@@ -48,7 +48,7 @@ class AcessoSuporteController extends Controller
     )]
     public function conceder(ConcederRequest $request): JsonResponse
     {
-        $this->authorize('private.acesso_suporte.cadastrar');
+        $this->authorize('private.acesso_suporte.conceder');
 
         $concedente = Auth::user();
 

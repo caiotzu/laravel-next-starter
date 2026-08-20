@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Grupo;
 use App\Models\Empresa;
 use App\Models\Usuario;
+
 use App\Enums\EntidadeTipo as EntidadeTipoChave;
 
 enum AuditoriaEntidade: string
@@ -20,7 +21,7 @@ enum AuditoriaEntidade: string
         return match ($this) {
             self::EMPRESAS => 'Empresas',
             self::USUARIOS => 'Usuários',
-            self::GRUPOS => 'Grupos',
+            self::GRUPOS => 'Grupos'
         };
     }
 
@@ -29,7 +30,7 @@ enum AuditoriaEntidade: string
         return match ($this) {
             self::EMPRESAS => Empresa::class,
             self::USUARIOS => Usuario::class,
-            self::GRUPOS => Grupo::class,
+            self::GRUPOS => Grupo::class
         };
     }
 
@@ -38,7 +39,7 @@ enum AuditoriaEntidade: string
         return match ($this) {
             self::EMPRESAS => ['id', 'nome_fantasia', 'razao_social', 'cnpj'],
             self::USUARIOS => ['id', 'nome', 'email'],
-            self::GRUPOS => ['id', 'descricao'],
+            self::GRUPOS => ['id', 'descricao']
         };
     }
 
@@ -47,7 +48,7 @@ enum AuditoriaEntidade: string
         return match ($this) {
             self::EMPRESAS => 'nome_fantasia',
             self::USUARIOS => 'nome',
-            self::GRUPOS => 'descricao',
+            self::GRUPOS => 'descricao'
         };
     }
 

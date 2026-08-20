@@ -8,6 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { useForm, UseFormSetError } from "react-hook-form";
 
+import { PrivatePermissionGuard } from "@/app/(private)/_components/guard/PrivatePermissionGuard";
+
 import { AppAlert } from "@/components/feedback/AppAlert";
 import {
   AlertDialog,
@@ -359,17 +361,19 @@ export function AcessoSuporteFormConceder({
                     </Link>
                   </Button>
 
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className="h-11 w-full cursor-pointer gap-2 sm:w-auto"
-                  >
-                    {isLoading && (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    )}
+                  <PrivatePermissionGuard permission="private.acesso_suporte.conceder">
+                    <Button
+                      type="submit"
+                      disabled={isLoading}
+                      className="h-11 w-full cursor-pointer gap-2 sm:w-auto"
+                    >
+                      {isLoading && (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      )}
 
-                    Conceder acesso
-                  </Button>
+                      Conceder acesso
+                    </Button>
+                  </PrivatePermissionGuard>
                 </div>
               </div>
             </form>

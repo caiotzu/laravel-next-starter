@@ -24,6 +24,7 @@ class AuditoriaResource extends JsonResource
             'ip' => $this->ip,
             'user_agent' => $this->user_agent,
             'criado_em' => $this->criado_em,
+            'acesso_suporte_id' => $this->acesso_suporte_id,
             'usuario' => $this->whenLoaded('usuario', fn () => [
                 'id' => $this->usuario->id,
                 'nome' => $this->usuario->nome,

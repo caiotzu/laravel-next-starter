@@ -7,6 +7,7 @@ import {
   Code2,
   Copy,
   Eye,
+  Headset,
 } from "lucide-react";
 
 import { Info } from "@/components/common/Info";
@@ -211,7 +212,12 @@ export function AuditoriasTable({ data }: Props) {
               </TableCell>
 
               <TableCell className="font-medium">
-                {auditoria.usuario?.nome ?? "Sistema"}
+                <div className="flex flex-col">
+                  {auditoria.usuario?.nome ?? "Sistema"}
+                  <span className="text-xs">
+                    {auditoria.usuario?.email ?? ""}
+                  </span>
+                </div>
               </TableCell>
 
               <TableCell className="text-center">
@@ -254,6 +260,13 @@ export function AuditoriasTable({ data }: Props) {
                       auditoriaSelecionada.acao
                     )}
                   </Badge>
+
+                  {auditoriaSelecionada.acessoSuporteId && (
+                    <Badge className="inline-flex items-center gap-1.5 bg-violet-100 text-violet-700 dark:bg-violet-950/30 dark:text-violet-400">
+                      <Headset strokeWidth={2.5} />
+                      <span>Via suporte</span>
+                    </Badge>
+                  )}
                 </DialogTitle>
 
                 <div className="flex items-center gap-2">
@@ -288,10 +301,8 @@ export function AuditoriasTable({ data }: Props) {
               <div className="grid grid-cols-3 gap-8">
                 <Info
                   label="Usuário"
-                  value={
-                    auditoriaSelecionada.usuario?.nome ??
-                    "Sistema"
-                  }
+                  value={auditoriaSelecionada.usuario?.nome ?? "Sistema"}
+                  subValue={auditoriaSelecionada.usuario?.email}
                 />
 
                 <Info

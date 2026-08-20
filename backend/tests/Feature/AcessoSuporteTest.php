@@ -132,7 +132,7 @@ function criarAcessoAtivo(array $cenario, array $overrides = []): AcessoSuporte
 test('cliente concede acesso e o admin recebe uma mensagem automática', function () {
     $cenario = criarCenarioAcessoSuporte();
 
-    concederPermissao($cenario['clienteA']['grupo'], 'private.acesso_suporte.cadastrar');
+    concederPermissao($cenario['clienteA']['grupo'], 'private.acesso_suporte.conceder');
 
     $token = autenticar($cenario['clienteA']['usuario']);
 
@@ -159,7 +159,7 @@ test('cliente concede acesso e o admin recebe uma mensagem automática', functio
 test('não é possível conceder acesso sem duracao_minutos (expiração obrigatória)', function () {
     $cenario = criarCenarioAcessoSuporte();
 
-    concederPermissao($cenario['clienteA']['grupo'], 'private.acesso_suporte.cadastrar');
+    concederPermissao($cenario['clienteA']['grupo'], 'private.acesso_suporte.conceder');
 
     $token = autenticar($cenario['clienteA']['usuario']);
 
@@ -292,8 +292,8 @@ test('admin não consegue usar um acesso de suporte concedido a outro admin', fu
 test('o mesmo admin pode possuir acessos de suporte ativos para grupos empresa diferentes', function () {
     $cenario = criarCenarioAcessoSuporte();
 
-    concederPermissao($cenario['clienteA']['grupo'], 'private.acesso_suporte.cadastrar');
-    concederPermissao($cenario['clienteB']['grupo'], 'private.acesso_suporte.cadastrar');
+    concederPermissao($cenario['clienteA']['grupo'], 'private.acesso_suporte.conceder');
+    concederPermissao($cenario['clienteB']['grupo'], 'private.acesso_suporte.conceder');
 
     $tokenClienteA = autenticar($cenario['clienteA']['usuario']);
 
@@ -325,7 +325,7 @@ test('não é possível conceder um segundo acesso ativo para o mesmo admin/enti
 
     criarAcessoAtivo($cenario);
 
-    concederPermissao($cenario['clienteA']['grupo'], 'private.acesso_suporte.cadastrar');
+    concederPermissao($cenario['clienteA']['grupo'], 'private.acesso_suporte.conceder');
 
     $token = autenticar($cenario['clienteA']['usuario']);
 

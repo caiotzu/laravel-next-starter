@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
+use App\Services\UsuarioService;
+
 use App\Models\Usuario;
 
 use App\Enums\EntidadeTipo;
@@ -23,6 +25,10 @@ use OpenApi\Attributes as OA;
  */
 class AdministradorController extends Controller
 {
+    public function __construct(
+        protected UsuarioService $usuarioService
+    ) {}
+
     #[OA\Get(
         path: '/lookup/administradores',
         summary: 'Lookup — Listar administradores',
@@ -39,22 +45,7 @@ class AdministradorController extends Controller
     )]
     public function listar(Request $request): JsonResponse
     {
-        $busca = $request->query('busca');
-
-        $administradores = Usuario::query()
-            ->whereHas('grupo.entidadeTipo', fn ($q) =>
-                $q->where('chave', EntidadeTipo::ADMIN->value)
-            )
-            ->where('status', UsuarioStatus::ATIVO->value)
-            ->when($busca, fn ($q) =>
-                $q->where(fn ($sub) =>
-                    $sub->where('nome', 'ilike', "%{$busca}%")
-                        ->orWhere('email', 'ilike', "%{$busca}%")
-                )
-            )
-            ->orderBy('nome')
-            ->limit(20)
-            ->get();
+        $administradores = $this->usuarioService->listarAdministradoresComAcessoSuporte($request->query('busca'));
 
         return AdministradorResource::collection($administradores)->response()->setStatusCode(200);
     }

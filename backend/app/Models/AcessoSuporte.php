@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-use App\Auditoria\Auditavel;
-
 use App\Enums\AcessoSuporteStatus;
 use App\Enums\AcessoSuporteEncerradoPor;
 
@@ -31,7 +29,6 @@ use App\Enums\AcessoSuporteEncerradoPor;
 class AcessoSuporte extends Model
 {
     use HasUuids;
-    use Auditavel;
 
     protected $table = 'acessos_suporte';
 

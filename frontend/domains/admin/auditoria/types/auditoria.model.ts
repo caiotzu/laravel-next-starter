@@ -19,6 +19,7 @@ export interface Auditoria {
   ip: string | null;
   userAgent: string | null;
   criadoEm: string;
+  acessoSuporteId: string | null;
 
   usuario?: AuditoriaUsuario | null;
 }

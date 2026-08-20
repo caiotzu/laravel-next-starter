@@ -26,7 +26,7 @@ class AuditoriaService
     ): LengthAwarePaginator {
         $model = $entidade->modelClass();
 
-        $registros = $model::query()
+        $query = $model::query()
             ->with($entidade->relacionamentosParaListagem())
             ->when($filtro->busca, function (Builder $query, string $busca) use ($entidade) {
                 $query->where(function (Builder $query) use ($entidade, $busca) {
@@ -42,9 +42,13 @@ class AuditoriaService
                     }
                 });
             })
-            ->orderBy($entidade->campoOrdenacao())
-            ->withTrashed() // Para auditoria é bom trazer registros deletados também, para não perder histórico.
-            ->paginate($filtro->paginacao->por_pagina);
+            ->orderBy($entidade->campoOrdenacao());
+
+        // Nem todo model auditável usa soft delete; withTrashed() só existe
+        // quando o model usa o trait SoftDeletes.
+        $this->comSoftDeletesSeSuportado($query, $model);
+
+        $registros = $query->paginate($filtro->paginacao->por_pagina);
 
         $registros->setCollection(
             $registros->getCollection()->map(
@@ -141,10 +145,15 @@ class AuditoriaService
 
                 $ids = $itens->pluck('entidade_id')->filter()->unique()->values();
 
-                $labelsPorId = $entidade->modelClass()::query()
+                $modelClass = $entidade->modelClass();
+
+                $query = $modelClass::query()
                     ->with($entidade->relacionamentosParaListagem())
-                    ->withTrashed()
-                    ->whereIn('id', $ids)
+                    ->whereIn('id', $ids);
+
+                $this->comSoftDeletesSeSuportado($query, $modelClass);
+
+                $labelsPorId = $query
                     ->get()
                     ->mapWithKeys(fn ($registro) => [
                         (string) $registro->getKey() => $entidade->formatarRegistro($registro)['label'],
@@ -155,5 +164,23 @@ class AuditoriaService
                     $auditoria->registro = $labelsPorId->get($auditoria->entidade_id);
                 });
             });
+    }
+
+    /**
+     * Aplica withTrashed() na query somente se o model utilizar o trait
+     * SoftDeletes. Nem todas as entidades auditáveis têm soft delete, e
+     * chamar withTrashed() em um model sem o trait gera
+     * "Call to undefined method Builder::withTrashed()".
+     *
+     * @param class-string $modelClass
+     */
+    private function comSoftDeletesSeSuportado(Builder $query, string $modelClass): void
+    {
+        if (in_array(
+            \Illuminate\Database\Eloquent\SoftDeletes::class,
+            class_uses_recursive($modelClass)
+        )) {
+            $query->withTrashed();
+        }
     }
 }

@@ -29,14 +29,7 @@ import {
 
 import { useRevogarAcessoSuporte } from "@/domains/private/acesso-suporte/hooks/useRevogarAcessoSuporte";
 import { AcessoSuporte } from "@/domains/private/acesso-suporte/types/acessoSuporte.model";
-
-function formatarData(data: string | null): string {
-  if (!data) return "—";
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(data));
-}
+import { formatDate } from "@/lib/utils";
 
 export function AcessosSuporteTable({ data }: { data: AcessoSuporte[] }) {
   const [paraRevogar, setParaRevogar] = useState<AcessoSuporte | null>(null);
@@ -44,9 +37,11 @@ export function AcessosSuporteTable({ data }: { data: AcessoSuporte[] }) {
 
   if (data.length === 0) {
     return (
-      <div className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">
-        Nenhum acesso de suporte concedido até o momento.
-      </div>
+      <Card className="overflow-hidden p-4">
+        <div className="rounded-md p-8 text-center text-sm text-muted-foreground">
+          Nenhum acesso de suporte concedido até o momento.
+        </div>
+      </Card>
     );
   }
 
@@ -109,7 +104,7 @@ export function AcessosSuporteTable({ data }: { data: AcessoSuporte[] }) {
                 <TableCell>
                   { getStatusBadge(statusEfetivo(acesso)) }
                 </TableCell>
-                <TableCell className="text-sm">{formatarData(acesso.expiraEm)}</TableCell>
+                <TableCell className="text-sm">{formatDate(acesso.expiraEm)}</TableCell>
                 <TableCell className="text-right">
                   {acesso.ativo && (
                     <Button

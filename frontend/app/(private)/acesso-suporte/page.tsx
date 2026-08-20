@@ -39,7 +39,7 @@ export default function Page() {
                   label: "Conceder acesso",
                   href: "/acesso-suporte/conceder",
                   icon: null,
-                  permission: "private.acesso_suporte.cadastrar",
+                  permission: "private.acesso_suporte.conceder",
                   variant: "default",
                 },
               ]}

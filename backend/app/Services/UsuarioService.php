@@ -352,4 +352,29 @@ class UsuarioService {
         $token = $this->tokenResetSenhaService->gerarToken($usuario);
         event(new UsuarioEsqueceuSenha($usuario, $token));
     }
+
+    public function listarAdministradoresComAcessoSuporte(string | null $busca)
+    {
+        $permissoes = [
+            'admin.acesso_suporte.listar' // A listagem já permite o acesso por parte do admin
+        ];
+
+        return Usuario::query()
+            ->whereHas('grupo.entidadeTipo', fn ($q) =>
+                $q->where('chave', EntidadeTipo::ADMIN->value)
+            )
+            ->where('status', UsuarioStatus::ATIVO->value)
+            ->when($busca, fn ($q) =>
+                $q->where(fn ($sub) =>
+                    $sub->where('nome', 'ilike', "%{$busca}%")
+                        ->orWhere('email', 'ilike', "%{$busca}%")
+                )
+            )
+            ->whereHas('grupo.permissoes', fn ($q) =>
+                $q->whereIn('chave', $permissoes)
+            )
+            ->orderBy('nome')
+            ->limit(20)
+            ->get();
+    }
 }

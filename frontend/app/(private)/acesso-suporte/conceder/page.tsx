@@ -95,7 +95,7 @@ export default function Page() {
               description="Conceder novo acesso"
             />
 
-            <PrivatePermissionGuard permission="private.acesso_suporte.cadastrar">
+            <PrivatePermissionGuard permission="private.acesso_suporte.conceder">
               <AcessoSuporteFormConceder
                 onSubmit={handleSubmit}
                 isLoading={isPending}

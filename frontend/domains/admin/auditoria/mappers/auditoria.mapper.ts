@@ -17,6 +17,7 @@ export function toAuditoria(data: AuditoriaDataResponse): Auditoria {
     ip: data.ip,
     userAgent: data.user_agent,
     criadoEm: data.criado_em,
+    acessoSuporteId: data.acesso_suporte_id,
     usuario: data.usuario
       ? {
           id: data.usuario.id,

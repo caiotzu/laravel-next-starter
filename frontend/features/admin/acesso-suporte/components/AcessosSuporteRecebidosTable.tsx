@@ -4,6 +4,8 @@ import { useState } from "react";
 
 import { Loader2, LogIn, ShieldOff } from "lucide-react";
 
+import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,14 +30,7 @@ import {
 
 import { useEncerrarAcessoSuporte } from "@/domains/admin/acesso-suporte/hooks/useEncerrarAcessoSuporte";
 import { AcessoSuporte } from "@/domains/admin/acesso-suporte/types/acessoSuporte.model";
-
-function formatarData(data: string | null): string {
-  if (!data) return "—";
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(data));
-}
+import { formatDate } from "@/lib/utils";
 
 export function AcessosSuporteRecebidosTable({ data }: { data: AcessoSuporte[] }) {
   const [paraEncerrar, setParaEncerrar] = useState<AcessoSuporte | null>(null);
@@ -126,7 +121,7 @@ export function AcessosSuporteRecebidosTable({ data }: { data: AcessoSuporte[] }
                   <TableCell>
                     { getStatusBadge(statusEfetivo(acesso)) }
                   </TableCell>
-                  <TableCell className="text-sm">{formatarData(acesso.expiraEm)}</TableCell>
+                  <TableCell className="text-sm">{formatDate(acesso.expiraEm)}</TableCell>
                   <TableCell className="text-right">
                     {acesso.ativo && (
                       <div className="flex justify-end gap-2">
@@ -139,15 +134,17 @@ export function AcessosSuporteRecebidosTable({ data }: { data: AcessoSuporte[] }
                           <LogIn className="size-3.5" />
                           Acessar
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          className="gap-1.5"
-                          onClick={() => setParaEncerrar(acesso)}
-                        >
-                          <ShieldOff className="size-3.5" />
-                          Encerrar
-                        </Button>
+                        <AdminPermissionGuard permission="admin.acesso_suporte.encerrar" disableFallback={true}>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="gap-1.5"
+                            onClick={() => setParaEncerrar(acesso)}
+                          >
+                            <ShieldOff className="size-3.5" />
+                            Encerrar
+                          </Button>
+                        </AdminPermissionGuard>
                       </div>
                     )}
                   </TableCell>

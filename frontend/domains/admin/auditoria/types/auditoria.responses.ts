@@ -21,7 +21,7 @@ export interface AuditoriaDataResponse {
   ip: string | null;
   user_agent: string | null;
   criado_em: string;
-
+  acesso_suporte_id: string | null;
   usuario?: AuditoriaUsuarioDataResponse | null;
 }
 
