@@ -3,13 +3,14 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 use App\Models\Usuario;
 use App\Models\AcessoSuporte;
 use App\Models\EntidadeTipo;
 
 use App\DTO\AcessoSuporte\AcessoSuporteConcessaoDTO;
+use App\DTO\Common\PaginationDTO;
 use App\DTO\Mensagem\MensagemCadastroDTO;
 
 use App\Enums\ErrorCode;
@@ -278,19 +279,19 @@ class AcessoSuporteService
         });
     }
 
-    public function listarConcedidos(Usuario $concedente): Collection
+    public function listarConcedidos(Usuario $concedente, PaginationDTO $paginacao): LengthAwarePaginator
     {
         return AcessoSuporte::with(['admin', 'entidadeTipo'])
             ->where('usuario_concedente_id', $concedente->id)
             ->latest('created_at')
-            ->get();
+            ->paginate($paginacao->por_pagina);
     }
 
-    public function listarRecebidos(Usuario $admin): Collection
+    public function listarRecebidos(Usuario $admin, PaginationDTO $paginacao): LengthAwarePaginator
     {
         return AcessoSuporte::with(['concedente', 'entidadeTipo'])
             ->where('usuario_admin_id', $admin->id)
             ->latest('created_at')
-            ->get();
+            ->paginate($paginacao->por_pagina);
     }
 }

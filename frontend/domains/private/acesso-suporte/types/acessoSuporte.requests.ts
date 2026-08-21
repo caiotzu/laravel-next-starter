@@ -4,3 +4,8 @@ export interface ConcederAcessoSuporteRequest {
   motivo?: string;
   empresa_id?: string;
 }
+
+export interface ListarAcessosSuporteRequest {
+  page?: number;
+  por_pagina?: number;
+}

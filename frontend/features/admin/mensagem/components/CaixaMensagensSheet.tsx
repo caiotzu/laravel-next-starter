@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useRef, useState } from "react";
 
 import { CheckCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { useCaixaMensagens } from "@/domains/admin/mensagem/hooks/useCaixaMensagens";
+import { useCaixaContadorMensagensNaoLidas } from "@/domains/admin/mensagem/hooks/useCaixaContadorMensagensNaoLidas";
+import { useCaixaMensagensInfinita } from "@/domains/admin/mensagem/hooks/useCaixaMensagensInfinita";
 import { useMarcarCaixaMensagemComoLida } from "@/domains/admin/mensagem/hooks/useMarcarCaixaMensagemComoLida";
 import { useMarcarTodasCaixaMensagensComoLidas } from "@/domains/admin/mensagem/hooks/useMarcarTodasCaixaMensagensComoLidas";
 
@@ -28,34 +29,36 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
-/**
- * Mesmo comportamento do Sheet de mensagens da área Private: busca uma
- * única página com um volume alto de mensagens (mais recentes) e filtra
- * localmente ao trocar de aba, evitando uma requisição ao backend a cada
- * troca de filtro (Todas / Não lidas / Lidas).
- */
-const QUANTIDADE_CARREGADA = 100;
+const FILTRO_PARA_LIDA: Record<FiltroMensagem, boolean | undefined> = {
+  todas: undefined,
+  nao_lidas: false,
+  lidas: true,
+};
 
+/**
+ * Mesmo padrão do Sheet de mensagens da área Private (ver
+ * features/private/mensagem/components/MensagensSheet.tsx): carregamento
+ * incremental (infinite scroll) conforme o painel é rolado, com o filtro
+ * Todas/Não lidas/Lidas resolvido pelo backend (`lida`), em vez de um lote
+ * fixo carregado de uma vez e recortado em memória.
+ */
 export function CaixaMensagensSheet({ open, onOpenChange }: Props) {
   const [filtro, setFiltro] = useState<FiltroMensagem>("todas");
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { data, isLoading } = useCaixaMensagens(
-    { por_pagina: QUANTIDADE_CARREGADA, page: 1 },
-    open
-  );
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useCaixaMensagensInfinita({ lida: FILTRO_PARA_LIDA[filtro], enabled: open });
 
-  const mensagens = useMemo(() => data?.data ?? [], [data]);
+  const mensagens = data?.pages.flatMap((pagina) => pagina.data) ?? [];
 
-  const mensagensFiltradas = useMemo(() => {
-    if (filtro === "nao_lidas") return mensagens.filter((m) => !m.lida);
-    if (filtro === "lidas") return mensagens.filter((m) => m.lida);
-    return mensagens;
-  }, [mensagens, filtro]);
-
-  const totalNaoLidas = useMemo(
-    () => mensagens.filter((m) => !m.lida).length,
-    [mensagens]
-  );
+  // Contador dedicado, independente de quantas mensagens já foram
+  // carregadas pela rolagem.
+  const { data: totalNaoLidas = 0 } = useCaixaContadorMensagensNaoLidas();
 
   const { mutate: marcarComoLida, isPending: isMarcandoComoLida } =
     useMarcarCaixaMensagemComoLida();
@@ -74,6 +77,16 @@ export function CaixaMensagensSheet({ open, onOpenChange }: Props) {
       onSuccess: () => toast.success("Todas as mensagens foram marcadas como lidas."),
       onError: () => toast.error("Não foi possível marcar as mensagens como lidas."),
     });
+  }
+
+  function handleScroll() {
+    const el = scrollRef.current;
+    if (!el || isFetchingNextPage || !hasNextPage) return;
+
+    const proximoDoFim = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    if (proximoDoFim) {
+      fetchNextPage();
+    }
   }
 
   return (
@@ -115,24 +128,36 @@ export function CaixaMensagensSheet({ open, onOpenChange }: Props) {
             </Button>
           )}
 
-          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-3 pb-4">
+          <div
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-3 pb-4"
+          >
             {isLoading ? (
               <p className="text-sm text-muted-foreground text-center py-8">
                 Carregando mensagens...
               </p>
-            ) : mensagensFiltradas.length === 0 ? (
+            ) : mensagens.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">
                 Nenhuma mensagem encontrada.
               </p>
             ) : (
-              mensagensFiltradas.map((mensagem) => (
-                <CaixaMensagemItem
-                  key={mensagem.id}
-                  mensagem={mensagem}
-                  onMarcarComoLida={handleMarcarComoLida}
-                  isMarcandoComoLida={isMarcandoComoLida}
-                />
-              ))
+              <>
+                {mensagens.map((mensagem) => (
+                  <CaixaMensagemItem
+                    key={mensagem.id}
+                    mensagem={mensagem}
+                    onMarcarComoLida={handleMarcarComoLida}
+                    isMarcandoComoLida={isMarcandoComoLida}
+                  />
+                ))}
+
+                {isFetchingNextPage && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Carregando mais mensagens...
+                  </p>
+                )}
+              </>
             )}
           </div>
         </div>

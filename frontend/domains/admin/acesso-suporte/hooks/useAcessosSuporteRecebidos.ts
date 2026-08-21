@@ -6,14 +6,23 @@ import { AxiosError } from "axios";
 import { ApiErrorResponse } from "@/types/errors";
 
 import { listarAcessosSuporteRecebidos } from "../services/acessoSuporteService";
-import { AcessoSuporte } from "../types/acessoSuporte.model";
+import { ListarAcessosSuporteRequest } from "../types/acessoSuporte.requests";
 
-export function useAcessosSuporteRecebidos() {
-  return useQuery<AcessoSuporte[], AxiosError<ApiErrorResponse>>({
-    queryKey: ["acessosSuporteRecebidos"],
-    queryFn: listarAcessosSuporteRecebidos,
+export function useAcessosSuporteRecebidos(params?: ListarAcessosSuporteRequest) {
+  const safeParams = params ?? {};
+
+  return useQuery<
+    Awaited<ReturnType<typeof listarAcessosSuporteRecebidos>>,
+    AxiosError<ApiErrorResponse>
+  >({
+    queryKey: ["acessosSuporteRecebidos", safeParams],
+    queryFn: ({ queryKey }) => {
+      const [, queryParams] = queryKey;
+      return listarAcessosSuporteRecebidos(queryParams as ListarAcessosSuporteRequest);
+    },
+    placeholderData: (previousData) => previousData,
     refetchInterval: (query) => {
-      const temAtivo = query.state.data?.some((a) => a.ativo);
+      const temAtivo = query.state.data?.data.some((a) => a.ativo);
       return temAtivo ? 15_000 : false;
     },
   });

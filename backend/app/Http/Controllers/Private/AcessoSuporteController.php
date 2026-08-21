@@ -10,8 +10,10 @@ use Illuminate\Support\Facades\Auth;
 use App\Services\AcessoSuporteService;
 
 use App\Http\Requests\Private\AcessoSuporte\ConcederRequest;
+use App\Http\Requests\Private\AcessoSuporte\ListarRequest;
 
 use App\DTO\AcessoSuporte\AcessoSuporteConcessaoDTO;
+use App\DTO\Common\PaginationDTO;
 
 use App\Http\Resources\Private\AcessoSuporte\AcessoSuporteResource;
 
@@ -69,17 +71,32 @@ class AcessoSuporteController extends Controller
         summary: 'Private — Listar acessos de suporte concedidos',
         security: [['bearerAuth' => []]],
         tags: ['Private'],
+        parameters: [
+            new OA\Parameter(name: 'por_pagina', description: 'Itens por página (1 a 100).', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 10)),
+            new OA\Parameter(name: 'page', description: 'Número da página.', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, default: 1)),
+        ],
         responses: [
-            new OA\Response(response: 200, description: 'Lista de acessos de suporte concedidos pela organização.'),
+            new OA\Response(
+                response: 200,
+                description: 'Lista paginada de acessos de suporte concedidos pela organização.',
+                content: new OA\JsonContent(properties: [
+                    new OA\Property(property: 'links', ref: '#/components/schemas/PaginationLinks', type: 'object'),
+                    new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta', type: 'object'),
+                ], type: 'object')
+            ),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
             new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
         ]
     )]
-    public function listar(): JsonResponse
+    public function listar(ListarRequest $request): JsonResponse
     {
         $this->authorize('private.acesso_suporte.listar');
 
-        $acessos = $this->acessoSuporteService->listarConcedidos(Auth::user());
+        $acessos = $this->acessoSuporteService->listarConcedidos(
+            Auth::user(),
+            PaginationDTO::criarParaPaginar($request->validated())
+        );
 
         return AcessoSuporteResource::collection($acessos)->response()->setStatusCode(200);
     }

@@ -1,3 +1,5 @@
+import { LaravelResourcePagination } from "@/types/laravel";
+
 export interface AcessoSuporteDataResponse {
   id: string;
   status: string;
@@ -20,8 +22,6 @@ export interface AcessoSuporteDataResponse {
   created_at: string;
 }
 
-export interface ListarAcessosSuporteResponse {
-  data: AcessoSuporteDataResponse[];
-}
+export type ListarAcessosSuporteResponse = LaravelResourcePagination<AcessoSuporteDataResponse>;
 
 export type EncerrarAcessoSuporteResponse = void;

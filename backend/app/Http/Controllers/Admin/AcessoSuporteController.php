@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Auth;
 
 use App\Services\AcessoSuporteService;
 
+use App\Http\Requests\Admin\AcessoSuporte\ListarRequest;
+
+use App\DTO\Common\PaginationDTO;
+
 use App\Http\Resources\Admin\AcessoSuporte\AcessoSuporteResource;
 
 use OpenApi\Attributes as OA;
@@ -25,17 +29,32 @@ class AcessoSuporteController extends Controller
         description: 'Lista os acessos de suporte concedidos a este administrador por clientes Private, incluindo os já expirados/encerrados.',
         security: [['bearerAuth' => []]],
         tags: ['Admin'],
+        parameters: [
+            new OA\Parameter(name: 'por_pagina', description: 'Itens por página (1 a 100).', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 10)),
+            new OA\Parameter(name: 'page', description: 'Número da página.', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, default: 1)),
+        ],
         responses: [
-            new OA\Response(response: 200, description: 'Lista de acessos de suporte recebidos.'),
+            new OA\Response(
+                response: 200,
+                description: 'Lista paginada de acessos de suporte recebidos.',
+                content: new OA\JsonContent(properties: [
+                    new OA\Property(property: 'links', ref: '#/components/schemas/PaginationLinks', type: 'object'),
+                    new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta', type: 'object'),
+                ], type: 'object')
+            ),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
             new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
         ]
     )]
-    public function listar(): JsonResponse
+    public function listar(ListarRequest $request): JsonResponse
     {
         $this->authorize('admin.acesso_suporte.listar');
 
-        $acessos = $this->acessoSuporteService->listarRecebidos(Auth::user());
+        $acessos = $this->acessoSuporteService->listarRecebidos(
+            Auth::user(),
+            PaginationDTO::criarParaPaginar($request->validated())
+        );
 
         return AcessoSuporteResource::collection($acessos)->response()->setStatusCode(200);
     }

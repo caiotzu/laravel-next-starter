@@ -1,4 +1,4 @@
-import { LaravelApiResponse } from "@/types/laravel";
+import { LaravelApiResponse, LaravelResourcePagination } from "@/types/laravel";
 
 export interface AcessoSuporteDataResponse {
   id: string;
@@ -18,7 +18,5 @@ export interface AcessoSuporteDataResponse {
 }
 
 export type ConcederAcessoSuporteResponse = LaravelApiResponse<AcessoSuporteDataResponse>;
-export interface ListarAcessosSuporteResponse {
-  data: AcessoSuporteDataResponse[];
-}
+export type ListarAcessosSuporteResponse = LaravelResourcePagination<AcessoSuporteDataResponse>;
 export type RevogarAcessoSuporteResponse = void;

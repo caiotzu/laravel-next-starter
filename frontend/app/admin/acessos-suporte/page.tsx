@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
+
 import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
 
+import { Pagination } from "@/components/data-tables/Pagination";
 import { PageHeader } from "@/components/layouts/page-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,7 +16,9 @@ import { useAcessosSuporteRecebidos } from "@/domains/admin/acesso-suporte/hooks
 import { AcessosSuporteRecebidosTable } from "@/features/admin/acesso-suporte/components/AcessosSuporteRecebidosTable";
 
 export default function Page() {
-  const { data, isLoading } = useAcessosSuporteRecebidos();
+  const [page, setPage] = useState(1);
+
+  const { data, isLoading } = useAcessosSuporteRecebidos({ page });
 
   return (
     <SidebarProvider
@@ -40,7 +45,18 @@ export default function Page() {
               {isLoading ? (
                 <Skeleton className="h-48 w-full" />
               ) : (
-                <AcessosSuporteRecebidosTable data={data ?? []} />
+                <AcessosSuporteRecebidosTable data={data?.data ?? []} />
+              )}
+
+              {data && (
+                <Pagination
+                  currentPage={data.meta.current_page}
+                  lastPage={data.meta.last_page}
+                  total={data.meta.total}
+                  from={data.meta.from ?? 0}
+                  to={data.meta.to ?? 0}
+                  onPageChange={setPage}
+                />
               )}
             </AdminPermissionGuard>
           </div>

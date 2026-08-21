@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useRef, useState } from "react";
 
 import { CheckCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -15,9 +15,10 @@ import {
 } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { useContadorMensagensNaoLidas } from "@/domains/private/mensagem/hooks/useContadorMensagensNaoLidas";
 import { useMarcarMensagemComoLida } from "@/domains/private/mensagem/hooks/useMarcarMensagemComoLida";
 import { useMarcarTodasMensagensComoLidas } from "@/domains/private/mensagem/hooks/useMarcarTodasMensagensComoLidas";
-import { useMensagens } from "@/domains/private/mensagem/hooks/useMensagens";
+import { useMensagensInfinita } from "@/domains/private/mensagem/hooks/useMensagensInfinita";
 
 import { MensagemItem } from "./MensagemItem";
 
@@ -28,33 +29,37 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
-/**
- * Busca uma única página com um volume alto de mensagens (mais recentes) e
- * filtra localmente ao trocar de aba, evitando uma requisição ao backend a
- * cada troca de filtro (Todas / Não lidas / Lidas), conforme especificado.
- */
-const QUANTIDADE_CARREGADA = 100;
+const FILTRO_PARA_LIDA: Record<FiltroMensagem, boolean | undefined> = {
+  todas: undefined,
+  nao_lidas: false,
+  lidas: true,
+};
 
+/**
+ * Carrega as mensagens sob demanda conforme o usuário rola o painel
+ * (infinite scroll) em vez de buscar um lote fixo inteiro de uma vez — o
+ * filtro Todas/Não lidas/Lidas agora é resolvido pelo backend (parâmetro
+ * `lida`), então trocar de aba gera uma nova lista paginada do zero, em vez
+ * de recortar em memória um snapshot que pode nem conter os itens da aba.
+ */
 export function MensagensSheet({ open, onOpenChange }: Props) {
   const [filtro, setFiltro] = useState<FiltroMensagem>("todas");
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { data, isLoading } = useMensagens(
-    { por_pagina: QUANTIDADE_CARREGADA, page: 1 },
-    open
-  );
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useMensagensInfinita({ lida: FILTRO_PARA_LIDA[filtro], enabled: open });
 
-  const mensagens = useMemo(() => data?.data ?? [], [data]);
+  const mensagens = data?.pages.flatMap((pagina) => pagina.data) ?? [];
 
-  const mensagensFiltradas = useMemo(() => {
-    if (filtro === "nao_lidas") return mensagens.filter((m) => !m.lida);
-    if (filtro === "lidas") return mensagens.filter((m) => m.lida);
-    return mensagens;
-  }, [mensagens, filtro]);
-
-  const totalNaoLidas = useMemo(
-    () => mensagens.filter((m) => !m.lida).length,
-    [mensagens]
-  );
+  // Contador dedicado (independe de quantas mensagens já foram carregadas
+  // na rolagem), evitando que "Marcar todas como lidas" suma/apareça de
+  // forma inconsistente com o que ainda não foi rolado até o fim.
+  const { data: totalNaoLidas = 0 } = useContadorMensagensNaoLidas();
 
   const { mutate: marcarComoLida, isPending: isMarcandoComoLida } =
     useMarcarMensagemComoLida();
@@ -73,6 +78,16 @@ export function MensagensSheet({ open, onOpenChange }: Props) {
       onSuccess: () => toast.success("Todas as mensagens foram marcadas como lidas."),
       onError: () => toast.error("Não foi possível marcar as mensagens como lidas."),
     });
+  }
+
+  function handleScroll() {
+    const el = scrollRef.current;
+    if (!el || isFetchingNextPage || !hasNextPage) return;
+
+    const proximoDoFim = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    if (proximoDoFim) {
+      fetchNextPage();
+    }
   }
 
   return (
@@ -114,24 +129,36 @@ export function MensagensSheet({ open, onOpenChange }: Props) {
             </Button>
           )}
 
-          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-3 pb-4">
+          <div
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-3 pb-4"
+          >
             {isLoading ? (
               <p className="text-sm text-muted-foreground text-center py-8">
                 Carregando mensagens...
               </p>
-            ) : mensagensFiltradas.length === 0 ? (
+            ) : mensagens.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">
                 Nenhuma mensagem encontrada.
               </p>
             ) : (
-              mensagensFiltradas.map((mensagem) => (
-                <MensagemItem
-                  key={mensagem.id}
-                  mensagem={mensagem}
-                  onMarcarComoLida={handleMarcarComoLida}
-                  isMarcandoComoLida={isMarcandoComoLida}
-                />
-              ))
+              <>
+                {mensagens.map((mensagem) => (
+                  <MensagemItem
+                    key={mensagem.id}
+                    mensagem={mensagem}
+                    onMarcarComoLida={handleMarcarComoLida}
+                    isMarcandoComoLida={isMarcandoComoLida}
+                  />
+                ))}
+
+                {isFetchingNextPage && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Carregando mais mensagens...
+                  </p>
+                )}
+              </>
             )}
           </div>
         </div>

@@ -268,6 +268,49 @@ test('cliente consegue revogar um acesso concedido', function () {
     expect($acesso->fresh()->encerrado_por)->toBe(AcessoSuporteEncerradoPor::CLIENTE);
 });
 
+test('listagem de acessos de suporte é paginada, tanto no Private quanto no Admin', function () {
+    $cenario = criarCenarioAcessoSuporte();
+
+    concederPermissao($cenario['clienteA']['grupo'], 'private.acesso_suporte.listar');
+    concederPermissao($cenario['admin']->grupo, 'admin.acesso_suporte.listar');
+
+    // 3 acessos do mesmo concedente/admin, para pedir por_pagina=2 e
+    // conferir que só 2 vêm na primeira página (nunca a coleção inteira).
+    criarAcessoAtivo($cenario, ['expira_em' => now()->addMinutes(10)]);
+    criarAcessoAtivo($cenario, ['expira_em' => now()->addMinutes(20), 'status' => AcessoSuporteStatus::EXPIRADO]);
+    criarAcessoAtivo($cenario, ['expira_em' => now()->addMinutes(30), 'status' => AcessoSuporteStatus::REVOGADO]);
+
+    $tokenCliente = autenticar($cenario['clienteA']['usuario']);
+
+    $respostaPrivate = $this->withHeader('Authorization', "Bearer {$tokenCliente}")
+        ->getJson('/api/acessos-suporte?por_pagina=2')
+        ->assertStatus(200)
+        ->assertJsonPath('meta.per_page', 2)
+        ->assertJsonPath('meta.total', 3)
+        ->assertJsonPath('meta.last_page', 2)
+        ->assertJsonCount(2, 'data');
+
+    // Página 2 traz o restante, sem repetir os já retornados na página 1.
+    $idsPagina1 = collect($respostaPrivate->json('data'))->pluck('id');
+
+    $respostaPagina2 = $this->withHeader('Authorization', "Bearer {$tokenCliente}")
+        ->getJson('/api/acessos-suporte?por_pagina=2&page=2')
+        ->assertStatus(200)
+        ->assertJsonCount(1, 'data');
+
+    $idsPagina2 = collect($respostaPagina2->json('data'))->pluck('id');
+    expect($idsPagina1->intersect($idsPagina2))->toHaveCount(0);
+
+    $tokenAdmin = autenticar($cenario['admin']);
+
+    $this->withHeader('Authorization', "Bearer {$tokenAdmin}")
+        ->getJson('/api/admin/acessos-suporte?por_pagina=2')
+        ->assertStatus(200)
+        ->assertJsonPath('meta.per_page', 2)
+        ->assertJsonPath('meta.total', 3)
+        ->assertJsonCount(2, 'data');
+});
+
 test('admin não consegue usar um acesso de suporte concedido a outro admin', function () {
     $cenario = criarCenarioAcessoSuporte();
 
