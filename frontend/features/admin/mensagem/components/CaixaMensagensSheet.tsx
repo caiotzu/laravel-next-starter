@@ -1,9 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { CheckCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+
+import { useCaixaMensagemContador } from "@/app/admin/providers/caixa-mensagem-contador-provider";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +18,6 @@ import {
 } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { useCaixaContadorMensagensNaoLidas } from "@/domains/admin/mensagem/hooks/useCaixaContadorMensagensNaoLidas";
 import { useCaixaMensagensInfinita } from "@/domains/admin/mensagem/hooks/useCaixaMensagensInfinita";
 import { useMarcarCaixaMensagemComoLida } from "@/domains/admin/mensagem/hooks/useMarcarCaixaMensagemComoLida";
 import { useMarcarTodasCaixaMensagensComoLidas } from "@/domains/admin/mensagem/hooks/useMarcarTodasCaixaMensagensComoLidas";
@@ -45,6 +47,7 @@ const FILTRO_PARA_LIDA: Record<FiltroMensagem, boolean | undefined> = {
 export function CaixaMensagensSheet({ open, onOpenChange }: Props) {
   const [filtro, setFiltro] = useState<FiltroMensagem>("todas");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
   const {
     data,
@@ -57,8 +60,21 @@ export function CaixaMensagensSheet({ open, onOpenChange }: Props) {
   const mensagens = data?.pages.flatMap((pagina) => pagina.data) ?? [];
 
   // Contador dedicado, independente de quantas mensagens já foram
-  // carregadas pela rolagem.
-  const { data: totalNaoLidas = 0 } = useCaixaContadorMensagensNaoLidas();
+  // carregadas pela rolagem. Vem do provider persistente (mesma instância
+  // que alimenta o sino).
+  const totalNaoLidas = useCaixaMensagemContador();
+
+  // Mesmo ajuste do Private (ver MensagensSheet.tsx): força revalidar o
+  // contador assim que o painel abre, em vez de esperar o próximo ciclo de
+  // polling (até 60s) — evita a mensagem aparecer na lista sem o badge do
+  // sino refletir isso até um reload.
+  useEffect(() => {
+    if (open) {
+      queryClient.invalidateQueries({
+        queryKey: ["mensagens-caixa-admin-contador-nao-lidas"],
+      });
+    }
+  }, [open, queryClient]);
 
   const { mutate: marcarComoLida, isPending: isMarcandoComoLida } =
     useMarcarCaixaMensagemComoLida();

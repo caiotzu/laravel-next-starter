@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
+import { useQueryClient } from "@tanstack/react-query"
 import axios from "axios"
 import {
   BadgeCheck,
@@ -45,13 +46,24 @@ export function NavUser({
 }) {
   const router = useRouter();
   const { isMobile } = useSidebar();
+  const queryClient = useQueryClient();
 
   const handleLogout = async () => {
     try {
       await axios.post("/api/auth/admin/logout");
-      router.push("/admin")
     } catch (error) {
       console.error("Erro ao fazer logout:", error)
+    } finally {
+      // O QueryClient é uma instância única e persistente para toda a SPA
+      // (ver components/providers/react-query-provider.tsx) — sobrevive à
+      // navegação client-side entre login/logout. Sem isso, o cache do
+      // usuário anterior (permissões, menus, mensagens etc, sob chaves
+      // como "userAdmin" que não incluem o id do usuário) continua servido
+      // como válido para o próximo usuário que logar, até um F5 recriar o
+      // QueryClient do zero. Limpa tudo aqui, no único momento em que a
+      // identidade realmente muda — não em qualquer outro lugar da app.
+      queryClient.clear();
+      router.push("/admin")
     }
   }
 

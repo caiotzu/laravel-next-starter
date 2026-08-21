@@ -4,16 +4,16 @@ import { useState } from "react";
 
 import { Bell } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { useCaixaMensagemContador } from "@/app/admin/providers/caixa-mensagem-contador-provider";
 
-import { useCaixaContadorMensagensNaoLidas } from "@/domains/admin/mensagem/hooks/useCaixaContadorMensagensNaoLidas";
+import { Button } from "@/components/ui/button";
 
 import { CaixaMensagensSheet } from "./CaixaMensagensSheet";
 
 export function CaixaMensagensBellButton() {
   const [open, setOpen] = useState(false);
 
-  const { data: totalNaoLidas = 0 } = useCaixaContadorMensagensNaoLidas();
+  const totalNaoLidas = useCaixaMensagemContador();
 
   return (
     <>

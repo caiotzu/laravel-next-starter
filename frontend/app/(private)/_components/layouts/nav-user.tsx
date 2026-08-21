@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
+import { useQueryClient } from "@tanstack/react-query"
 import axios from "axios"
 import {
   BadgeCheck,
@@ -45,13 +46,21 @@ export function NavUser({
 }) {
   const router = useRouter();
   const { isMobile } = useSidebar();
+  const queryClient = useQueryClient();
 
   const handleLogout = async () => {
     try {
       await axios.post("/api/auth/private/logout");
-      router.push("/")
     } catch (error) {
       console.error("Erro ao fazer logout:", error)
+    } finally {
+      // Mesmo fix do Admin (ver app/admin/_components/layouts/nav-user.tsx):
+      // o QueryClient é único para toda a SPA e sobrevive à navegação
+      // client-side entre logout/login — limpa aqui, no momento exato em
+      // que a identidade muda, para o próximo usuário não herdar cache do
+      // anterior.
+      queryClient.clear();
+      router.push("/")
     }
   }
 

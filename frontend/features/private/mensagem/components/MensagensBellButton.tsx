@@ -4,16 +4,16 @@ import { useState } from "react";
 
 import { Bell } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { useMensagemContador } from "@/app/(private)/providers/mensagem-contador-provider";
 
-import { useContadorMensagensNaoLidas } from "@/domains/private/mensagem/hooks/useContadorMensagensNaoLidas";
+import { Button } from "@/components/ui/button";
 
 import { MensagensSheet } from "./MensagensSheet";
 
 export function MensagensBellButton() {
   const [open, setOpen] = useState(false);
 
-  const { data: totalNaoLidas = 0 } = useContadorMensagensNaoLidas();
+  const totalNaoLidas = useMensagemContador();
 
   return (
     <>

@@ -1,9 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { CheckCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+
+import { useMensagemContador } from "@/app/(private)/providers/mensagem-contador-provider";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +18,6 @@ import {
 } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { useContadorMensagensNaoLidas } from "@/domains/private/mensagem/hooks/useContadorMensagensNaoLidas";
 import { useMarcarMensagemComoLida } from "@/domains/private/mensagem/hooks/useMarcarMensagemComoLida";
 import { useMarcarTodasMensagensComoLidas } from "@/domains/private/mensagem/hooks/useMarcarTodasMensagensComoLidas";
 import { useMensagensInfinita } from "@/domains/private/mensagem/hooks/useMensagensInfinita";
@@ -45,6 +47,7 @@ const FILTRO_PARA_LIDA: Record<FiltroMensagem, boolean | undefined> = {
 export function MensagensSheet({ open, onOpenChange }: Props) {
   const [filtro, setFiltro] = useState<FiltroMensagem>("todas");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
   const {
     data,
@@ -58,8 +61,25 @@ export function MensagensSheet({ open, onOpenChange }: Props) {
 
   // Contador dedicado (independe de quantas mensagens já foram carregadas
   // na rolagem), evitando que "Marcar todas como lidas" suma/apareça de
-  // forma inconsistente com o que ainda não foi rolado até o fim.
-  const { data: totalNaoLidas = 0 } = useContadorMensagensNaoLidas();
+  // forma inconsistente com o que ainda não foi rolado até o fim. Vem do
+  // provider persistente (mesma instância que alimenta o sino), não de uma
+  // nova chamada à query.
+  const totalNaoLidas = useMensagemContador();
+
+  // O contador do provider tem staleTime de 30s/polling de 60s — dentro
+  // desse intervalo, uma mensagem nova pode já aparecer na lista (que é
+  // buscada do zero sempre que o painel abre) sem que o badge do sino
+  // tenha sido atualizado ainda. Ao abrir o painel, força uma revalidação
+  // imediata do contador em vez de esperar o próximo ciclo de polling —
+  // sem isso, o usuário via a mensagem na lista mas o número do sino só
+  // corrigia sozinho até 60s depois (ou nunca, se navegasse antes disso).
+  useEffect(() => {
+    if (open) {
+      queryClient.invalidateQueries({
+        queryKey: ["mensagens-private-contador-nao-lidas"],
+      });
+    }
+  }, [open, queryClient]);
 
   const { mutate: marcarComoLida, isPending: isMarcandoComoLida } =
     useMarcarMensagemComoLida();

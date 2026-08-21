@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 
 import { AcessoSuporteProvider } from "./providers/acesso-suporte-provider";
 import { AdminPermissionProvider } from "./providers/admin-permission-provider";
+import { CaixaMensagemContadorProvider } from "./providers/caixa-mensagem-contador-provider";
 
 import "@/app/globals.css";
 
@@ -45,7 +46,9 @@ export default function RootLayout({
           >
             <AdminPermissionProvider>
               <AcessoSuporteProvider>
-                {children}
+                <CaixaMensagemContadorProvider>
+                  {children}
+                </CaixaMensagemContadorProvider>
               </AcessoSuporteProvider>
             </AdminPermissionProvider>
             <Toaster
