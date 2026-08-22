@@ -95,7 +95,7 @@ export function AcessosSuporteRecebidosTable({ data }: { data: AcessoSuporte[] }
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className="text-sm text-muted-foreground">
             {data.map((acesso) => {
               return (
                 <TableRow key={acesso.id}>

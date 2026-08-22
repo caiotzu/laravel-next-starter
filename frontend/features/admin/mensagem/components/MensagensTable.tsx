@@ -80,7 +80,7 @@ export function MensagensTable({ data }: Props) {
               key={mensagem.id}
               className="border-b last:border-0 hover:bg-muted/40 even:bg-muted/20 transition-colors"
             >
-              <TableCell className="font-medium text-foreground">
+              <TableCell>
                 {mensagem.titulo}
               </TableCell>
 

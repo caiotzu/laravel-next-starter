@@ -1,11 +1,14 @@
 "use client";
 
-import { Loader2, Pencil, Send } from "lucide-react";
+import Link from "next/link";
+
+import { Eye, Loader2, Pencil, Send } from "lucide-react";
 
 import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -28,22 +31,26 @@ function formatarData(data: string | null): string {
 
 interface Props {
   releases: Release[];
-  onEditar: (release: Release) => void;
   onPublicar: (release: Release) => void;
   publicandoId?: string | null;
 }
 
-export function ReleasesGerenciarTable({ releases, onEditar, onPublicar, publicandoId }: Props) {
+/**
+ * Cadastro/edição agora são páginas próprias (ver app/admin/releases/
+ * gerenciar/cadastrar e /[id]/editar) — a coluna de ações só navega para
+ * elas, sem callback de abrir modal.
+ */
+export function ReleasesGerenciarTable({ releases, onPublicar, publicandoId }: Props) {
   if (releases.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed py-16 text-center">
+      <Card className="overflow-hidden p-4">
         <p className="text-sm text-muted-foreground">Nenhuma release encontrada.</p>
-      </div>
+      </Card>
     );
   }
 
   return (
-    <div className="rounded-md border">
+    <Card className="overflow-hidden p-4">
       <Table>
         <TableHeader>
           <TableRow>
@@ -56,7 +63,7 @@ export function ReleasesGerenciarTable({ releases, onEditar, onPublicar, publica
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody className="text-sm text-muted-foreground">
           {releases.map((release) => (
             <TableRow key={release.id}>
               <TableCell className="max-w-[280px] truncate font-medium">{release.titulo}</TableCell>
@@ -71,9 +78,17 @@ export function ReleasesGerenciarTable({ releases, onEditar, onPublicar, publica
               <TableCell>{formatarData(release.publicadoEm)}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link href={`/admin/releases/${release.id}`}>
+                      <Eye className="size-4" />
+                    </Link>
+                  </Button>
+
                   <AdminPermissionGuard permission="admin.release.editar">
-                    <Button variant="ghost" size="icon" onClick={() => onEditar(release)}>
-                      <Pencil className="size-4" />
+                    <Button variant="ghost" size="icon" asChild>
+                      <Link href={`/admin/releases/gerenciar/${release.id}/editar`}>
+                        <Pencil className="size-4" />
+                      </Link>
                     </Button>
                   </AdminPermissionGuard>
 
@@ -99,6 +114,7 @@ export function ReleasesGerenciarTable({ releases, onEditar, onPublicar, publica
           ))}
         </TableBody>
       </Table>
-    </div>
+    </Card>
   );
 }
+
