@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Global\ {
     MensagemController as GlobalMensagemController,
+    VersionController,
 };
 use App\Http\Controllers\Lookup\ {
     CepController,
@@ -28,6 +29,7 @@ use App\Http\Controllers\Admin\ {
     AcessoSuporteController,
     UsuarioGrupoEmpresaController,
     AutenticacaoDoisFatoresController,
+    ReleaseController,
 };
 
 use App\Http\Controllers\Private\ {
@@ -40,7 +42,8 @@ use App\Http\Controllers\Private\ {
     EmpresaContatoController as PrivateEmpresaContatoController,
     EmpresaEnderecoController as PrivateEmpresaEnderecoController,
     AcessoSuporteController as PrivateAcessoSuporteController,
-    AutenticacaoDoisFatoresController as PrivateAutenticacaoDoisFatoresController
+    AutenticacaoDoisFatoresController as PrivateAutenticacaoDoisFatoresController,
+    ReleaseController as PrivateReleaseController
 };
 
 // #region Admin
@@ -64,6 +67,9 @@ Route::post('redefinir-senha', [PrivateAuthController::class, 'redefinirSenha'])
 Route::post('login', [PrivateAuthController::class, 'login']);
 Route::post('2fa/verificar', [PrivateAuthController::class, 'verificar2fa']);
 // #endregion Private
+
+// Sem autenticação — pode ser exibida inclusive nas telas de login.
+Route::get('version', [VersionController::class, 'obter']);
 
 Route::middleware(['jwt', 'suporte.contexto'])->group(function () {
     // #region Lookup
@@ -178,6 +184,14 @@ Route::middleware(['jwt', 'suporte.contexto'])->group(function () {
             Route::delete('/{id}', [AcessoSuporteController::class, 'encerrar']);
         });
 
+        Route::prefix('releases')->group(function () {
+            Route::patch('/{id}/publicar', [ReleaseController::class, 'publicar']);
+            Route::put('/{id}', [ReleaseController::class, 'atualizar']);
+            Route::get('/{id}', [ReleaseController::class, 'visualizar']);
+            Route::get('/', [ReleaseController::class, 'listar']);
+            Route::post('/', [ReleaseController::class, 'cadastrar']);
+        });
+
         Route::prefix('usuarios')->group(function () {
             Route::patch('/{id}/ativar', [UsuarioController::class, 'ativar']);
             Route::put('/{id}', [UsuarioController::class, 'atualizar']);
@@ -248,6 +262,11 @@ Route::middleware(['jwt', 'suporte.contexto'])->group(function () {
         Route::get('/', [PrivateAcessoSuporteController::class, 'listar']);
         Route::post('/', [PrivateAcessoSuporteController::class, 'conceder']);
         Route::delete('/{id}', [PrivateAcessoSuporteController::class, 'revogar']);
+    });
+
+    Route::prefix('releases')->group(function () {
+        Route::get('/{id}', [PrivateReleaseController::class, 'visualizar']);
+        Route::get('/', [PrivateReleaseController::class, 'listar']);
     });
 
     Route::prefix('usuarios')->group(function () {

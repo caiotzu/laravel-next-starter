@@ -268,6 +268,44 @@ class AdminPermissaoSeeder extends Seeder
                 ],
             //---
 
+            // release
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.release.menu",
+                    "descricao" => "Permite visualizar o menu de Releases",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.release.listar",
+                    "descricao" => "Permite listar e visualizar releases",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.release.cadastrar",
+                    "descricao" => "Permite cadastrar uma nova release",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.release.editar",
+                    "descricao" => "Permite editar uma release",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.release.publicar",
+                    "descricao" => "Permite publicar uma release",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+            //---
+
             // grupo
                 [
                     "id" => Str::uuid(),

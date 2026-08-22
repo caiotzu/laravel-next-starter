@@ -7,10 +7,12 @@ import {
   Command,
   Settings2,
   Headset,
+  Rocket,
 } from "lucide-react"
 
 import { NavMain } from "@/app/(private)/_components/layouts/nav-main"
 import { NavUser } from "@/app/(private)/_components/layouts/nav-user"
+import { PlataformaVersaoLabel } from "@/app/(private)/_components/layouts/plataforma-versao-label"
 import { useAcessoSuporte } from "@/app/admin/providers/acesso-suporte-provider"
 
 import {
@@ -55,6 +57,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
       ],
     }] : []),
+    {
+      title: "Releases",
+      url: "#",
+      icon: Rocket,
+      items: [
+        {
+          title: "Novidades",
+          url: "/releases",
+          permission: "private.release.menu"
+        },
+      ],
+    },
     {
       title: "Configurações",
       url: "#",
@@ -106,6 +120,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarFooter>
         <NavUser user={user} />
+        <PlataformaVersaoLabel />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

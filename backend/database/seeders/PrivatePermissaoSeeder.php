@@ -168,6 +168,23 @@ class PrivatePermissaoSeeder extends Seeder
                 ],
             //---
 
+            // release
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "private.release.menu",
+                    "descricao" => "Permite visualizar o menu de Releases",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "private.release.listar",
+                    "descricao" => "Permite listar e visualizar releases",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+            //---
+
             // grupo
                 [
                     "id" => Str::uuid(),

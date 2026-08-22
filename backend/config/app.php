@@ -15,6 +15,18 @@ return [
 
     'name' => env('APP_NAME', 'Laravel Next Starter'),
 
+    /**
+     * Versão de build da plataforma, exposta via GET /version (ver
+     * App\Http\Controllers\Global\VersionController) para o frontend
+     * nunca ter a versão hardcoded (Admin/Private consomem a mesma API).
+     * Não há tag de versão semântica no Git nem em composer.json/
+     * package.json neste projeto até o momento — variável de ambiente é a
+     * fonte mais simples e sem custo de execução por requisição; o
+     * pipeline de deploy pode atualizar APP_VERSION sem qualquer alteração
+     * de código.
+     */
+    'platform_version' => env('APP_VERSION', '1.0.0'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment
