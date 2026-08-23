@@ -1,5 +1,7 @@
 "use client"
 
+import { Badge } from "@/components/ui/badge"
+
 import { useVersaoPlataforma } from "@/domains/admin/versao/hooks/useVersaoPlataforma"
 
 export function PlataformaVersaoLabel() {
@@ -8,8 +10,11 @@ export function PlataformaVersaoLabel() {
   if (!versao) return null
 
   return (
-    <p className="px-2 pb-1 text-[10px] text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
+    <Badge 
+      className="text-[10px] group-data-[collapsible=icon]:hidden font-bold"
+      variant="outline"
+    >
       v{versao}
-    </p>
+    </Badge>
   )
 }

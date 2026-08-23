@@ -25,18 +25,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { RELEASE_TIPO_OPTIONS } from "@/constants/release-tipo";
+
 import { releaseSchemaCadastro, ReleaseFormData } from "../schemas/release.schema";
+
 
 const OPCOES_CONTEXTO = [
   { value: "admin", label: "Admin" },
   { value: "private", label: "Private" },
-] as const;
-
-const OPCOES_TIPO = [
-  { value: "feature", label: "Novidade" },
-  { value: "improvement", label: "Melhoria" },
-  { value: "fix", label: "Correção" },
-  { value: "change", label: "Alteração" },
 ] as const;
 
 interface Props {
@@ -137,7 +133,7 @@ export function ReleaseForm({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {OPCOES_TIPO.map((opcao) => (
+                      {RELEASE_TIPO_OPTIONS.map((opcao) => (
                         <SelectItem key={opcao.value} value={opcao.value}>
                           {opcao.label}
                         </SelectItem>

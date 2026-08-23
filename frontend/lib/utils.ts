@@ -5,14 +5,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatDate(date?: string | null): string {
+export function formatDate(date?: string | null, includeTime: boolean = true): string {
   if (!date) return "---";
 
   const d = new Date(date);
 
   if (isNaN(d.getTime())) return "---";
 
-  return `${d.toLocaleDateString("pt-BR")} • ${d.toLocaleTimeString(
+  const dataFormatada = d.toLocaleDateString("pt-BR");
+
+  if (!includeTime) return dataFormatada;
+
+  return `${dataFormatada} • ${d.toLocaleTimeString(
     "pt-BR",
     {
       hour: "2-digit",

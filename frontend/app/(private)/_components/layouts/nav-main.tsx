@@ -45,6 +45,26 @@ export function NavMain({ items }: { items: Item[] }) {
 
   const [openMenus, setOpenMenus] = React.useState<string[]>([])
 
+  /**
+   * Mesma correção do Admin (ver app/admin/_components/layouts/nav-main.tsx)
+   * — entre todas as URLs de submenu, escolhe a correspondência mais
+   * específica (mais longa) para o pathname atual, em vez de marcar
+   * qualquer prefixo como ativo isoladamente.
+   */
+  const activeUrl = React.useMemo(() => {
+    const urls = items.flatMap((item) => item.items?.map((s) => s.url) ?? [])
+
+    const correspondentes = urls.filter(
+      (url) => url !== "#" && (pathname === url || pathname.startsWith(url + "/"))
+    )
+
+    if (correspondentes.length === 0) return null
+
+    return correspondentes.reduce((maisEspecifica, url) =>
+      url.length > maisEspecifica.length ? url : maisEspecifica
+    )
+  }, [items, pathname])
+
   // Abre automaticamente o menu que contém a rota ativa
   React.useEffect(() => {
     const activeParents = items
@@ -110,9 +130,7 @@ export function NavMain({ items }: { items: Item[] }) {
                   <SidebarMenuSub>
                     {visibleSubItems.map((subItem) => {
 
-                      const isActive =
-                        subItem.url !== "#" &&
-                        pathname.startsWith(subItem.url)
+                      const isActive = subItem.url === activeUrl
 
                       return (
                         <SidebarMenuSubItem key={subItem.title}>

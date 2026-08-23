@@ -2,13 +2,25 @@
 
 import Link from "next/link";
 
-import { Eye, Loader2, Pencil, Send } from "lucide-react";
+import {
+  Eye,
+  Loader2,
+  MoreHorizontal,
+  Pencil,
+  Send,
+} from "lucide-react";
 
 import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -18,16 +30,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import {
+  getReleaseTipoBadge,
+  getReleaseTipoIcon,
+  getReleaseTipoLabel,
+} from "@/constants/release-tipo";
 import { Release } from "@/domains/admin/release/types/release.model";
-
-function formatarData(data: string | null): string {
-  if (!data) return "—";
-  return new Date(data).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
+import { formatDate } from "@/lib/utils";
 
 interface Props {
   releases: Release[];
@@ -40,17 +49,25 @@ interface Props {
  * gerenciar/cadastrar e /[id]/editar) — a coluna de ações só navega para
  * elas, sem callback de abrir modal.
  */
-export function ReleasesGerenciarTable({ releases, onPublicar, publicandoId }: Props) {
+export function ReleasesGerenciarTable({
+  releases,
+  onPublicar,
+  publicandoId,
+}: Props) {
   if (releases.length === 0) {
     return (
-      <Card className="overflow-hidden p-4">
-        <p className="text-sm text-muted-foreground">Nenhuma release encontrada.</p>
+      <Card className="overflow-hidden p-0">
+        <div className="flex flex-col items-center justify-center gap-2 rounded-xl py-16 text-center">
+          <p className="text-sm text-muted-foreground">
+            Nenhuma release encontrada.
+          </p>
+        </div>
       </Card>
     );
   }
 
   return (
-    <Card className="overflow-hidden p-4">
+    <Card className="overflow-hidden p-0">
       <Table>
         <TableHeader>
           <TableRow>
@@ -63,58 +80,114 @@ export function ReleasesGerenciarTable({ releases, onPublicar, publicandoId }: P
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody className="text-sm text-muted-foreground">
-          {releases.map((release) => (
-            <TableRow key={release.id}>
-              <TableCell className="max-w-[280px] truncate font-medium">{release.titulo}</TableCell>
-              <TableCell className="capitalize">{release.contexto ?? "—"}</TableCell>
-              <TableCell>{release.tipoLabel}</TableCell>
-              <TableCell>v{release.versao}</TableCell>
-              <TableCell>
-                <Badge variant={release.status === "published" ? "default" : "secondary"}>
-                  {release.status === "published" ? "Publicada" : "Rascunho"}
-                </Badge>
-              </TableCell>
-              <TableCell>{formatarData(release.publicadoEm)}</TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link href={`/admin/releases/${release.id}`}>
-                      <Eye className="size-4" />
-                    </Link>
-                  </Button>
 
-                  <AdminPermissionGuard permission="admin.release.editar">
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link href={`/admin/releases/gerenciar/${release.id}/editar`}>
-                        <Pencil className="size-4" />
-                      </Link>
-                    </Button>
-                  </AdminPermissionGuard>
+        <TableBody>
+          {releases.map((release) => {
+            const Icon = getReleaseTipoIcon(release.tipo);
 
-                  {release.status === "draft" && (
-                    <AdminPermissionGuard permission="admin.release.publicar">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        disabled={publicandoId === release.id}
-                        onClick={() => onPublicar(release)}
-                      >
-                        {publicandoId === release.id ? (
-                          <Loader2 className="size-4 animate-spin" />
-                        ) : (
-                          <Send className="size-4" />
-                        )}
+            return (
+              <TableRow key={release.id}>
+                <TableCell className="max-w-[280px] truncate font-medium">
+                  {release.titulo}
+                </TableCell>
+
+                <TableCell className="capitalize">
+                  {release.contexto ?? "—"}
+                </TableCell>
+
+                <TableCell>
+                  <Badge
+                    className={`gap-1.5 font-normal ${getReleaseTipoBadge(
+                      release.tipo
+                    )}`}
+                  >
+                    <Icon className="size-3.5" strokeWidth={2.5} />
+                    {getReleaseTipoLabel(release.tipo)}
+                  </Badge>
+                </TableCell>
+
+                <TableCell>
+                  <Badge variant="outline">v{release.versao}</Badge>
+                </TableCell>
+
+                <TableCell>
+                  <Badge
+                    variant={
+                      release.status === "published"
+                        ? "default"
+                        : "secondary"
+                    }
+                  >
+                    {release.status === "published"
+                      ? "Publicada"
+                      : "Rascunho"}
+                  </Badge>
+                </TableCell>
+
+                <TableCell>
+                  {formatDate(release.publicadoEm, false)}
+                </TableCell>
+
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Ações</span>
                       </Button>
-                    </AdminPermissionGuard>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent align="end">
+                      {/* Visualizar */}
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href={`/admin/releases/${release.id}`}
+                          className="flex cursor-pointer items-center"
+                        >
+                          <Eye className="h-4 w-4" />
+                          Visualizar
+                        </Link>
+                      </DropdownMenuItem>
+
+                      {/* Editar */}
+                      <AdminPermissionGuard permission="admin.release.editar">
+                        <DropdownMenuItem asChild>
+                          <Link
+                            href={`/admin/releases/gerenciar/${release.id}/editar`}
+                            className="flex cursor-pointer items-center"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            Editar
+                          </Link>
+                        </DropdownMenuItem>
+                      </AdminPermissionGuard>
+
+                      {/* Publicar */}
+                      {release.status === "draft" && (
+                        <AdminPermissionGuard permission="admin.release.publicar">
+                          <DropdownMenuItem
+                            disabled={publicandoId === release.id}
+                            onClick={() => onPublicar(release)}
+                            className="cursor-pointer"
+                          >
+                            {publicandoId === release.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Send className="h-4 w-4" />
+                            )}
+
+                            Publicar
+                          </DropdownMenuItem>
+                        </AdminPermissionGuard>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </Card>
   );
 }
-

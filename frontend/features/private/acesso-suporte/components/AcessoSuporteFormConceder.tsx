@@ -107,10 +107,10 @@ export function AcessoSuporteFormConceder({
   return (
   <>
     <div className="w-full px-2 py-3 sm:px-3 lg:px-4">
-      <Card className="w-full overflow-hidden rounded-2xl border bg-white shadow-sm">
+      <Card className="w-full overflow-hidden rounded-2xl border shadow-sm">
         <div className="grid lg:grid-cols-[0.75fr_1.25fr]">
           {/* Lado informativo */}
-          <div className="border-b bg-white p-6 sm:p-7 lg:border-b-0 lg:border-r lg:p-8 xl:p-10">
+          <div className="border-b p-6 sm:p-7 lg:border-b-0 lg:border-r lg:p-8 xl:p-10">
             <div className="flex h-full flex-col">
               <div className="flex items-center gap-3">
                 <div className="flex size-10 items-center justify-center rounded-xl bg-primary  shadow-sm">
@@ -199,7 +199,7 @@ export function AcessoSuporteFormConceder({
               </div>
 
               <div className="mt-6 lg:mt-auto lg:pt-8">
-                <div className="rounded-xl border bg-white p-3.5">
+                <div className="rounded-xl border p-3.5">
                   <div className="flex gap-3">
                     <ShieldAlert className="mt-0.5 size-5 shrink-0 text-amber-600" />
 
@@ -220,7 +220,7 @@ export function AcessoSuporteFormConceder({
           </div>
 
           {/* Lado do formulário */}
-          <div className="bg-white p-6 sm:p-7 lg:p-8 xl:p-10">
+          <div className="p-6 sm:p-7 lg:p-8 xl:p-10">
             <form
               onSubmit={handleSubmit(() => setConfirmando(true))}
               className="w-full"
@@ -264,7 +264,7 @@ export function AcessoSuporteFormConceder({
                             value={buscaAdmin}
                             onChange={(e) => setBuscaAdmin(e.target.value)}
                             placeholder="Buscar por nome ou e-mail..."
-                            className="w-full rounded-md border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                            className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                             onKeyDown={(e) => e.stopPropagation()}
                           />
                         </div>
