@@ -30,6 +30,7 @@ use App\Http\Controllers\Admin\ {
     UsuarioGrupoEmpresaController,
     AutenticacaoDoisFatoresController,
     ReleaseController,
+    ChamadoController,
 };
 
 use App\Http\Controllers\Private\ {
@@ -43,7 +44,8 @@ use App\Http\Controllers\Private\ {
     EmpresaEnderecoController as PrivateEmpresaEnderecoController,
     AcessoSuporteController as PrivateAcessoSuporteController,
     AutenticacaoDoisFatoresController as PrivateAutenticacaoDoisFatoresController,
-    ReleaseController as PrivateReleaseController
+    ReleaseController as PrivateReleaseController,
+    ChamadoController as PrivateChamadoController
 };
 
 // #region Admin
@@ -192,6 +194,14 @@ Route::middleware(['jwt', 'suporte.contexto'])->group(function () {
             Route::post('/', [ReleaseController::class, 'cadastrar']);
         });
 
+        Route::prefix('chamados')->group(function () {
+            Route::patch('/{id}/status', [ChamadoController::class, 'atualizarStatus']);
+            Route::patch('/{id}/responsavel', [ChamadoController::class, 'atribuirResponsavel']);
+            Route::post('/{id}/mensagens', [ChamadoController::class, 'responder']);
+            Route::get('/{id}', [ChamadoController::class, 'visualizar']);
+            Route::get('/', [ChamadoController::class, 'listar']);
+        });
+
         Route::prefix('usuarios')->group(function () {
             Route::patch('/{id}/ativar', [UsuarioController::class, 'ativar']);
             Route::put('/{id}', [UsuarioController::class, 'atualizar']);
@@ -267,6 +277,13 @@ Route::middleware(['jwt', 'suporte.contexto'])->group(function () {
     Route::prefix('releases')->group(function () {
         Route::get('/{id}', [PrivateReleaseController::class, 'visualizar']);
         Route::get('/', [PrivateReleaseController::class, 'listar']);
+    });
+
+    Route::prefix('chamados')->group(function () {
+        Route::post('/{id}/mensagens', [PrivateChamadoController::class, 'responder']);
+        Route::get('/{id}', [PrivateChamadoController::class, 'visualizar']);
+        Route::get('/', [PrivateChamadoController::class, 'listar']);
+        Route::post('/', [PrivateChamadoController::class, 'abrir']);
     });
 
     Route::prefix('usuarios')->group(function () {

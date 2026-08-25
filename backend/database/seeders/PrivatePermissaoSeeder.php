@@ -185,6 +185,37 @@ class PrivatePermissaoSeeder extends Seeder
                 ],
             //---
 
+            // chamado
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "private.chamado.menu",
+                    "descricao" => "Permite visualizar o menu de Chamados",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "private.chamado.listar",
+                    "descricao" => "Permite listar e visualizar os próprios chamados",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "private.chamado.abrir",
+                    "descricao" => "Permite abrir um novo chamado",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "private.chamado.responder",
+                    "descricao" => "Permite responder um chamado próprio",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+            //---
+
             // grupo
                 [
                     "id" => Str::uuid(),

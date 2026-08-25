@@ -306,6 +306,44 @@ class AdminPermissaoSeeder extends Seeder
                 ],
             //---
 
+            // chamado
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.chamado.menu",
+                    "descricao" => "Permite visualizar o menu de Chamados",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.chamado.listar",
+                    "descricao" => "Permite listar e visualizar chamados",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.chamado.atender",
+                    "descricao" => "Permite ser notificado sobre novos chamados e responder chamados",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.chamado.responder",
+                    "descricao" => "Permite responder um chamado",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.chamado.gerenciar",
+                    "descricao" => "Permite alterar status e responsável de um chamado",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+            //---
+
             // grupo
                 [
                     "id" => Str::uuid(),

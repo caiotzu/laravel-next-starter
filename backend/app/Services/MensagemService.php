@@ -66,6 +66,7 @@ class MensagemService {
                 'entidade_tipo_id' => $entidadeTipoId,
                 'grupo_empresa_id' => $dto->direcionamento->grupo_empresa_id,
                 'usuario_id' => $dto->direcionamento->usuario_id,
+                'permissao_id' => $dto->direcionamento->permissao_id,
             ]);
 
             /**
@@ -82,6 +83,7 @@ class MensagemService {
                 $entidadeTipoId,
                 $dto->direcionamento->grupo_empresa_id,
                 $dto->direcionamento->usuario_id,
+                $dto->direcionamento->permissao_id,
             ));
 
             return $mensagem;

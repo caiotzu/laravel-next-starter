@@ -76,6 +76,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           url: "/admin/acessos-suporte",
           permission: "admin.acesso_suporte.menu"
         },
+        {
+          title: "Chamados",
+          url: "/admin/chamados",
+          permission: "admin.chamado.menu"
+        },
       ],
     },
     {

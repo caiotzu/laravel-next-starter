@@ -37,6 +37,7 @@ class PopularDestinatariosMensagemJob implements ShouldQueue
         public readonly ?string $entidadeTipoId = null,
         public readonly ?string $grupoEmpresaId = null,
         public readonly ?string $usuarioId = null,
+        public readonly ?string $permissaoId = null,
     ) {}
 
     public function handle(): void
@@ -46,6 +47,7 @@ class PopularDestinatariosMensagemJob implements ShouldQueue
             MensagemDirecionamentoTipo::GERAL => $this->processarGeral(),
             MensagemDirecionamentoTipo::ENTIDADE => $this->processarEntidade(),
             MensagemDirecionamentoTipo::GRUPO_EMPRESA => $this->processarGrupoEmpresa(),
+            MensagemDirecionamentoTipo::PERMISSAO => $this->processarPermissao(),
         };
     }
 
@@ -97,6 +99,30 @@ class PopularDestinatariosMensagemJob implements ShouldQueue
 
         Usuario::query()
             ->whereIn('grupo_id', $grupoEmpresa->grupos()->select('id'))
+            ->select('id')
+            ->orderBy('id')
+            ->chunkById(self::TAMANHO_LOTE, function ($usuarios) {
+                $this->inserirDestinatarios($usuarios->pluck('id')->all());
+            });
+    }
+
+    /**
+     * PERMISSAO: todos os usuários cujo grupo possui a permissão
+     * informada (mesmo relacionamento grupo->permissoes já usado por
+     * Usuario::temPermissao()) — usado pelo módulo de Chamados para
+     * notificar automaticamente todo ADMIN habilitado a atender, sem
+     * depender de uma lista fixa de usuários.
+     */
+    private function processarPermissao(): void
+    {
+        if (! $this->permissaoId) {
+            return;
+        }
+
+        Usuario::query()
+            ->whereIn('grupo_id', Grupo::whereHas('permissoes', function ($query) {
+                $query->where('permissoes.id', $this->permissaoId);
+            })->select('id'))
             ->select('id')
             ->orderBy('id')
             ->chunkById(self::TAMANHO_LOTE, function ($usuarios) {

@@ -12,6 +12,7 @@ final class MensagemDirecionamentoDTO
         public readonly ?EntidadeTipo $entidade_tipo = null,
         public readonly ?string $grupo_empresa_id = null,
         public readonly ?string $usuario_id = null,
+        public readonly ?string $permissao_id = null,
     ) {}
 
     public static function criarParaCadastro(array $dados): self
@@ -21,6 +22,7 @@ final class MensagemDirecionamentoDTO
             entidade_tipo: isset($dados['entidade_tipo']) ? EntidadeTipo::from($dados['entidade_tipo']) : null,
             grupo_empresa_id: $dados['grupo_empresa_id'] ?? null,
             usuario_id: $dados['usuario_id'] ?? null,
+            permissao_id: $dados['permissao_id'] ?? null,
         );
     }
 }

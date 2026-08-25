@@ -13,6 +13,7 @@ enum MensagemDirecionamentoTipo: string
     case ENTIDADE = 'entidade';           // Todos os usuários de uma entidade (ex: ADMIN, PRIVATE)
     case GRUPO_EMPRESA = 'grupo_empresa'; // Todos os usuários das empresas de um grupo de empresa
     case USUARIO = 'usuario';             // Um único usuário
+    case PERMISSAO = 'permissao';         // Todos os usuários cujo grupo possui uma permissão específica
 
     public function label(): string
     {
@@ -21,6 +22,7 @@ enum MensagemDirecionamentoTipo: string
             self::ENTIDADE => 'Entidade',
             self::GRUPO_EMPRESA => 'Grupo de empresa',
             self::USUARIO => 'Usuário',
+            self::PERMISSAO => 'Permissão',
         };
     }
 }

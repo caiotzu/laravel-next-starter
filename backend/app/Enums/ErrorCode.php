@@ -48,4 +48,9 @@ enum ErrorCode: int
     case ACESSO_SUPORTE_NOT_FOUND = 40410;
     case ACESSO_SUPORTE_UNAUTHORIZED = 40110;
     case ACESSO_SUPORTE_REQUIRED = 42210;
+
+    // Chamado (model) -> 11
+    case CHAMADO_NOT_FOUND = 40411;
+    case CHAMADO_ENCERRADO = 42211;
+    case CHAMADO_ANEXO_INVALIDO = 42212;
 }

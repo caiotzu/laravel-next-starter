@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 use App\Enums\MensagemDirecionamentoTipo;
 
+use App\Models\Permissao;
+
 class MensagemDirecionamento extends Model
 {
     use HasUuids;
@@ -21,6 +23,7 @@ class MensagemDirecionamento extends Model
         'entidade_tipo_id',
         'grupo_empresa_id',
         'usuario_id',
+        'permissao_id',
     ];
 
     protected $casts = [
@@ -47,5 +50,10 @@ class MensagemDirecionamento extends Model
     public function usuario(): BelongsTo
     {
         return $this->belongsTo(Usuario::class, 'usuario_id', 'id');
+    }
+
+    public function permissao(): BelongsTo
+    {
+        return $this->belongsTo(Permissao::class, 'permissao_id', 'id');
     }
 }

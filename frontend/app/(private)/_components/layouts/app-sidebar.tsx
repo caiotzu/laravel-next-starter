@@ -45,18 +45,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
       ],
     },
-    ...(!acessoSuporteAtivo ? [{
+    {
       title: "Suporte",
       url: "#",
       icon: Headset,
       items: [
-        {
+        ...(!acessoSuporteAtivo ? [{
           title: "Acesso de Suporte",
           url: "/acesso-suporte",
           permission: "private.acesso_suporte.menu"
+        }] : []),
+        {
+          title: "Meus Chamados",
+          url: "/chamados",
+          permission: "private.chamado.menu"
         },
       ],
-    }] : []),
+    },
     {
       title: "Releases",
       url: "#",
