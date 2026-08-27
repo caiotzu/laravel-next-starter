@@ -29,3 +29,13 @@ export interface ConsultarCepResponse {
   data: ConsultarCepData;
 }
 
+export interface AdministradorLookupItem {
+  id: string;
+  nome: string;
+  email: string;
+}
+
+export interface ListarAdministradoresResponse {
+  data: AdministradorLookupItem[];
+}
+

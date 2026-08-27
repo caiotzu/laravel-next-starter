@@ -2,8 +2,6 @@
 
 import { use } from "react";
 
-import { ArrowLeft } from "lucide-react";
-
 import { PrivatePermissionGuard } from "@/app/(private)/_components/guard/PrivatePermissionGuard";
 import { AppSidebar } from "@/app/(private)/_components/layouts/app-sidebar";
 import { PageHeader } from "@/app/(private)/_components/layouts/page-header";
@@ -43,8 +41,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                 {
                   label: "Voltar",
                   href: "/chamados",
-                  icon: <ArrowLeft className="size-4" />,
-                  variant: "outline",
+                  variant: "default",
                 },
               ]}
             />

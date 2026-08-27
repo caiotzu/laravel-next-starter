@@ -1,3 +1,4 @@
+import { ChamadoPrioridade } from "@/constants/chamado-prioridade";
 import { ChamadoStatus } from "@/constants/chamado-status";
 import { ChamadoTipo } from "@/constants/chamado-tipo";
 
@@ -20,6 +21,10 @@ export interface ResponderChamadoRequest {
 
 export interface AtualizarStatusRequest {
   status: ChamadoStatus;
+}
+
+export interface AtualizarPrioridadeRequest {
+  prioridade: ChamadoPrioridade;
 }
 
 export interface AtribuirResponsavelRequest {

@@ -119,7 +119,6 @@ export function AnexosUploader({
         disabled={disabled || value.length >= maxArquivos}
         onClick={() => inputRef.current?.click()}
       >
-        <Paperclip className="size-3.5" />
         Anexar arquivo
       </Button>
 

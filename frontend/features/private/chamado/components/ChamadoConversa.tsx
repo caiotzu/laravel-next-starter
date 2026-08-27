@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { toast } from "sonner";
 
+import { PrivatePermissionGuard } from "@/app/(private)/_components/guard/PrivatePermissionGuard";
+
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -112,31 +114,31 @@ export function ChamadoConversa({ chamado }: Props) {
             Este chamado não aceita novas mensagens no status atual.
           </p>
         ) : (
-          <div className="flex flex-col gap-3">
-            <RichTextEditor
-              value={resposta}
-              onChange={setResposta}
-              placeholder="Digite sua mensagem..."
-              minHeightClassName="min-h-[100px]"
-            />
-
-            <div className="flex items-center justify-between gap-3">
-              <AnexosUploader
-                value={anexos}
-                onChange={setAnexos}
-                maxArquivos={CHAMADO_ANEXOS_MAXIMO_POR_MENSAGEM}
-                tamanhoMaximoKb={CHAMADO_ANEXO_TAMANHO_MAXIMO_KB}
-                mimesPermitidos={CHAMADO_ANEXO_MIMES}
-                extensoesPermitidas={CHAMADO_ANEXO_EXTENSOES}
-                disabled={isPending}
+          <PrivatePermissionGuard permission="private.chamado.responder" disableFallback={true}>
+            <div className="flex flex-col gap-3">
+              <RichTextEditor
+                value={resposta}
+                onChange={setResposta}
+                placeholder="Digite sua mensagem..."
+                minHeightClassName="min-h-[100px]"
               />
+              <div className="flex items-center justify-between gap-3">
+                <AnexosUploader
+                  value={anexos}
+                  onChange={setAnexos}
+                  maxArquivos={CHAMADO_ANEXOS_MAXIMO_POR_MENSAGEM}
+                  tamanhoMaximoKb={CHAMADO_ANEXO_TAMANHO_MAXIMO_KB}
+                  mimesPermitidos={CHAMADO_ANEXO_MIMES}
+                  extensoesPermitidas={CHAMADO_ANEXO_EXTENSOES}
+                  disabled={isPending}
+                />
 
-              <Button onClick={handleEnviar} disabled={isPending} className="gap-2">
-                <Send className="size-4" />
-                Enviar
-              </Button>
+                <Button onClick={handleEnviar} disabled={isPending} className="gap-2">
+                  Enviar
+                </Button>
+              </div>
             </div>
-          </div>
+          </PrivatePermissionGuard>
         )}
       </CardContent>
     </Card>

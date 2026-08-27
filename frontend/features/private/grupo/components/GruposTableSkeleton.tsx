@@ -16,7 +16,7 @@ export function GruposTableSkeleton() {
     <Card className="w-full rounded-2xl border shadow-sm p-0 overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="bg-primary hover:bg-primary border-b border-white/10">
+          <TableRow>
             <TableHead>
               <Skeleton className="h-4 w-32 bg-primary-foreground/20" />
             </TableHead>

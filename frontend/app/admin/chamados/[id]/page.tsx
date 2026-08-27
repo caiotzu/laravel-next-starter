@@ -43,8 +43,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                 {
                   label: "Voltar",
                   href: "/admin/chamados",
-                  icon: <ArrowLeft className="size-4" />,
-                  variant: "outline",
+                  variant: "default",
                 },
               ]}
             />

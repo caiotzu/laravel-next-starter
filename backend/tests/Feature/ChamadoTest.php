@@ -349,6 +349,87 @@ test('chamado resolvido também bloqueia novas mensagens, mas não registra fech
         ->assertStatus(400);
 });
 
+test('admin consegue definir e alterar a prioridade do chamado', function () {
+    $cenario = criarCenarioChamado();
+
+    $tokenCliente = autenticarUsuarioChamado($cenario['clienteA']['usuario']);
+    $chamado = $this->withHeader('Authorization', "Bearer {$tokenCliente}")
+        ->postJson('/api/chamados', [
+            'tipo' => 'duvida',
+            'assunto' => 'Chamado de teste de prioridade',
+            'mensagem' => '<p>Mensagem inicial.</p>',
+        ])->json('data');
+
+    concederPermissaoChamado($cenario['grupoAdmin'], 'admin.chamado.gerenciar');
+    concederPermissaoChamado($cenario['grupoAdmin'], 'admin.chamado.listar');
+    $tokenAdmin = autenticarUsuarioChamado($cenario['admin']);
+
+    $this->withHeader('Authorization', "Bearer {$tokenAdmin}")
+        ->patchJson("/api/admin/chamados/{$chamado['id']}/prioridade", ['prioridade' => 'urgente'])
+        ->assertStatus(200)
+        ->assertJsonPath('data.prioridade', 'urgente');
+
+    expect(Chamado::find($chamado['id'])->prioridade)->toBe(\App\Enums\ChamadoPrioridade::URGENTE);
+
+    // Persiste corretamente ao recarregar/visualizar novamente.
+    $this->withHeader('Authorization', "Bearer {$tokenAdmin}")
+        ->getJson("/api/admin/chamados/{$chamado['id']}")
+        ->assertJsonPath('data.prioridade', 'urgente');
+});
+
+test('usuário sem permissão de gerenciar não consegue alterar prioridade nem responsável', function () {
+    $cenario = criarCenarioChamado();
+
+    $tokenCliente = autenticarUsuarioChamado($cenario['clienteA']['usuario']);
+    $chamado = $this->withHeader('Authorization', "Bearer {$tokenCliente}")
+        ->postJson('/api/chamados', [
+            'tipo' => 'duvida',
+            'assunto' => 'Chamado sem permissão de gerenciar',
+            'mensagem' => '<p>Mensagem inicial.</p>',
+        ])->json('data');
+
+    // Admin SEM admin.chamado.gerenciar concedida.
+    $tokenAdmin = autenticarUsuarioChamado($cenario['admin']);
+
+    $this->withHeader('Authorization', "Bearer {$tokenAdmin}")
+        ->patchJson("/api/admin/chamados/{$chamado['id']}/prioridade", ['prioridade' => 'alta'])
+        ->assertStatus(403);
+
+    $this->withHeader('Authorization', "Bearer {$tokenAdmin}")
+        ->patchJson("/api/admin/chamados/{$chamado['id']}/responsavel", ['responsavel_id' => $cenario['admin']->id])
+        ->assertStatus(403);
+});
+
+test('admin consegue definir e alterar o responsável do chamado', function () {
+    $cenario = criarCenarioChamado();
+
+    $tokenCliente = autenticarUsuarioChamado($cenario['clienteA']['usuario']);
+    $chamado = $this->withHeader('Authorization', "Bearer {$tokenCliente}")
+        ->postJson('/api/chamados', [
+            'tipo' => 'duvida',
+            'assunto' => 'Chamado de teste de responsável',
+            'mensagem' => '<p>Mensagem inicial.</p>',
+        ])->json('data');
+
+    concederPermissaoChamado($cenario['grupoAdmin'], 'admin.chamado.gerenciar');
+    $tokenAdmin = autenticarUsuarioChamado($cenario['admin']);
+
+    $this->withHeader('Authorization', "Bearer {$tokenAdmin}")
+        ->patchJson("/api/admin/chamados/{$chamado['id']}/responsavel", ['responsavel_id' => $cenario['admin']->id])
+        ->assertStatus(200)
+        ->assertJsonPath('data.responsavel.id', $cenario['admin']->id);
+
+    expect(Chamado::find($chamado['id'])->responsavel_id)->toBe($cenario['admin']->id);
+
+    // Remove o responsável (null é uma transição válida).
+    $this->withHeader('Authorization', "Bearer {$tokenAdmin}")
+        ->patchJson("/api/admin/chamados/{$chamado['id']}/responsavel", ['responsavel_id' => null])
+        ->assertStatus(200)
+        ->assertJsonPath('data.responsavel', null);
+
+    expect(Chamado::find($chamado['id'])->responsavel_id)->toBeNull();
+});
+
 test('listagem de chamados é paginada, tanto no Private quanto no Admin', function () {
     $cenario = criarCenarioChamado();
     concederPermissaoChamado($cenario['grupoAdmin'], 'admin.chamado.listar');

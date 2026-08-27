@@ -5,6 +5,7 @@ import { proxyAdminRequest } from "@/lib/proxy-admin";
 import { toChamado } from "../mappers/chamado.mapper";
 import {
   AtribuirResponsavelRequest,
+  AtualizarPrioridadeRequest,
   AtualizarStatusRequest,
   ListarChamadosRequest,
   ResponderChamadoRequest,
@@ -51,6 +52,16 @@ export async function responderChamado(id: string, payload: ResponderChamadoRequ
 export async function atualizarStatusChamado(id: string, payload: AtualizarStatusRequest) {
   const response = await proxyAdminRequest<{ data: ChamadoDataResponse }>({
     url: `/admin/chamados/${id}/status`,
+    method: "PATCH",
+    data: payload,
+  });
+
+  return toChamado(response.data.data);
+}
+
+export async function atualizarPrioridadeChamado(id: string, payload: AtualizarPrioridadeRequest) {
+  const response = await proxyAdminRequest<{ data: ChamadoDataResponse }>({
+    url: `/admin/chamados/${id}/prioridade`,
     method: "PATCH",
     data: payload,
   });

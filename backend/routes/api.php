@@ -196,6 +196,7 @@ Route::middleware(['jwt', 'suporte.contexto'])->group(function () {
 
         Route::prefix('chamados')->group(function () {
             Route::patch('/{id}/status', [ChamadoController::class, 'atualizarStatus']);
+            Route::patch('/{id}/prioridade', [ChamadoController::class, 'atualizarPrioridade']);
             Route::patch('/{id}/responsavel', [ChamadoController::class, 'atribuirResponsavel']);
             Route::post('/{id}/mensagens', [ChamadoController::class, 'responder']);
             Route::get('/{id}', [ChamadoController::class, 'visualizar']);

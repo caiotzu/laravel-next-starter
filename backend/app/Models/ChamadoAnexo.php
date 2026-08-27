@@ -3,9 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Storage;
 
 class ChamadoAnexo extends Model
 {
@@ -33,8 +34,11 @@ class ChamadoAnexo extends Model
         return $this->belongsTo(ChamadoMensagem::class, 'chamado_mensagem_id', 'id');
     }
 
-    public function url(): string
+    protected function caminho(): Attribute
     {
-        return Storage::disk('public')->url($this->caminho);
+        return Attribute::make(
+            get: fn ($value) =>
+                $value ? url(Storage::url($value)) : null
+        );
     }
 }

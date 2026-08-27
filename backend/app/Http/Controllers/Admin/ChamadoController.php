@@ -12,6 +12,7 @@ use App\Services\ChamadoService;
 use App\Http\Requests\Admin\Chamado\ListarRequest;
 use App\Http\Requests\Admin\Chamado\ResponderRequest;
 use App\Http\Requests\Admin\Chamado\AtualizarStatusRequest;
+use App\Http\Requests\Admin\Chamado\AtualizarPrioridadeRequest;
 use App\Http\Requests\Admin\Chamado\AtribuirResponsavelRequest;
 
 use App\DTO\Chamado\ChamadoFiltroDTO;
@@ -131,6 +132,34 @@ class ChamadoController extends Controller
         $chamado = $this->chamadoService->atualizarStatus(
             $id,
             \App\Enums\ChamadoStatus::from($request->validated('status'))
+        );
+
+        return ChamadoResource::make($chamado)->response()->setStatusCode(200);
+    }
+
+    #[OA\Patch(
+        path: '/admin/chamados/{id}/prioridade',
+        summary: 'Admin — Atualizar prioridade do chamado',
+        security: [['bearerAuth' => []]],
+        tags: ['Admin'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Prioridade atualizada.'),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+        ]
+    )]
+    public function atualizarPrioridade(string $id, AtualizarPrioridadeRequest $request): JsonResponse
+    {
+        $this->authorize('admin.chamado.gerenciar');
+
+        $chamado = $this->chamadoService->atualizarPrioridade(
+            $id,
+            \App\Enums\ChamadoPrioridade::from($request->validated('prioridade'))
         );
 
         return ChamadoResource::make($chamado)->response()->setStatusCode(200);

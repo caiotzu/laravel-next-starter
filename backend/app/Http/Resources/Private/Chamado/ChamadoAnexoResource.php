@@ -12,7 +12,7 @@ class ChamadoAnexoResource extends JsonResource
         return [
             'id' => $this->id,
             'nome_original' => $this->nome_original,
-            'url' => $this->url(),
+            'url' => $this->caminho,
             'mime_type' => $this->mime_type,
             'tamanho' => $this->tamanho,
         ];

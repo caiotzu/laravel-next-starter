@@ -2,11 +2,17 @@
 
 import Link from "next/link";
 
-import { Eye } from "lucide-react";
+import { Eye, MoreHorizontal } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -105,11 +111,25 @@ export function MensagensTable({ data }: Props) {
               </TableCell>
 
               <TableCell className="text-right">
-                <Button variant="ghost" size="icon" asChild>
-                  <Link href={`/admin/mensagens/${mensagem.id}`}>
-                    <Eye className="h-4 w-4" />
-                  </Link>
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link href={`/admin/mensagens/${mensagem.id}`}>
+                        <Eye className="h-4 w-4" />
+                        Visualizar
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </TableCell>
             </TableRow>
           ))}

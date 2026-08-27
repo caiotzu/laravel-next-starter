@@ -2,8 +2,8 @@ import qs from "qs";
 
 import { proxyAdminRequest } from "@/lib/proxy-admin";
 
-import { ListarMunicipiosRequest } from "../types/lookup.requests";
-import { ConsultarCepResponse, ListarMunicipiosResponse } from "../types/lookup.responses";
+import { ListarMunicipiosRequest, ListarAdministradoresRequest } from "../types/lookup.requests";
+import { ConsultarCepResponse, ListarMunicipiosResponse, ListarAdministradoresResponse } from "../types/lookup.responses";
 
 function uniqueMunicipiosById(items: ListarMunicipiosResponse["data"]) {
   return items.filter(
@@ -26,5 +26,16 @@ export async function consultarCep(cep: string) {
     url: `/lookup/ceps/${cep}`,
     method: "GET",
   });
+  return response.data.data;
+}
+
+export async function listarAdministradores(params: ListarAdministradoresRequest) {
+  const query = qs.stringify(params, { skipNulls: true });
+
+  const response = await proxyAdminRequest<ListarAdministradoresResponse>({
+    url: `/lookup/administradores?${query}`,
+    method: "GET",
+  });
+
   return response.data.data;
 }

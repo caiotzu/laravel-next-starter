@@ -14,6 +14,10 @@ export const CHAMADO_PRIORIDADE_BADGE: Record<ChamadoPrioridade, string> = {
   urgente: "bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400",
 };
 
+export const CHAMADO_PRIORIDADE_OPTIONS = Object.entries(CHAMADO_PRIORIDADE).map(
+  ([value, label]) => ({ value: value as ChamadoPrioridade, label })
+);
+
 export function getChamadoPrioridadeLabel(prioridade: string): string {
   return CHAMADO_PRIORIDADE[prioridade as ChamadoPrioridade] ?? prioridade;
 }

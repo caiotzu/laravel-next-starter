@@ -8,6 +8,7 @@ import {
   Copy,
   Eye,
   Headset,
+  MoreHorizontal
 } from "lucide-react";
 
 import { Info } from "@/components/common/Info";
@@ -21,6 +22,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -225,13 +232,26 @@ export function AuditoriasTable({ data }: Props) {
               </TableCell>
 
               <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => abrirAuditoria(auditoria)}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => abrirAuditoria(auditoria)}
+                      className="flex items-center cursor-pointer"
+                    >
+                      <Eye className="h-4 w-4" />
+                      Visualizar
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </TableCell>
             </TableRow>
           ))}

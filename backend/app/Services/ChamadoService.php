@@ -20,6 +20,7 @@ use App\DTO\Mensagem\MensagemCadastroDTO;
 use App\DTO\Mensagem\MensagemDirecionamentoDTO;
 
 use App\Enums\ChamadoStatus;
+use App\Enums\ChamadoPrioridade;
 use App\Enums\ErrorCode;
 use App\Enums\MensagemDirecionamentoTipo;
 use App\Enums\MensagemOrigem;
@@ -112,6 +113,14 @@ class ChamadoService
         }
 
         $chamado->update($dados);
+
+        return $chamado->fresh();
+    }
+
+    public function atualizarPrioridade(string $chamadoId, ChamadoPrioridade $prioridade): Chamado
+    {
+        $chamado = Chamado::findOrFail($chamadoId);
+        $chamado->update(['prioridade' => $prioridade]);
 
         return $chamado->fresh();
     }

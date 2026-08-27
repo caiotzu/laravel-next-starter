@@ -100,7 +100,7 @@ export function ChamadoAbrirForm({
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="tipo">Tipo</Label>
+              <Label htmlFor="tipo">Tipo <span className="text-red-600">*</span></Label>
               <Controller
                 name="tipo"
                 control={control}
@@ -125,7 +125,7 @@ export function ChamadoAbrirForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="assunto">Assunto</Label>
+              <Label htmlFor="assunto">Assunto <span className="text-red-600">*</span></Label>
               <Input
                 id="assunto"
                 placeholder="Ex: Não consigo acessar um relatório"
@@ -156,7 +156,6 @@ export function ChamadoAbrirForm({
           </div>
 
           <div className="space-y-2">
-            <Label>Anexos</Label>
             <AnexosUploader
               value={anexos}
               onChange={setAnexos}
