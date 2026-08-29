@@ -5,6 +5,8 @@ import { ChamadoTipo } from "@/constants/chamado-tipo";
 export interface ListarChamadosRequest {
   status?: ChamadoStatus;
   tipo?: ChamadoTipo;
+  prioridade?: ChamadoPrioridade;
+  responsavel_id?: string;
   page?: number;
   por_pagina?: number;
 }

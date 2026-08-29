@@ -459,3 +459,52 @@ test('listagem de chamados é paginada, tanto no Private quanto no Admin', funct
         ->assertJsonPath('meta.total', 3)
         ->assertJsonCount(2, 'data');
 });
+
+test('admin consegue filtrar chamados por prioridade e por responsável', function () {
+    $cenario = criarCenarioChamado();
+    concederPermissaoChamado($cenario['grupoAdmin'], 'admin.chamado.listar');
+    concederPermissaoChamado($cenario['grupoAdmin'], 'admin.chamado.gerenciar');
+
+    $tokenCliente = autenticarUsuarioChamado($cenario['clienteA']['usuario']);
+    $tokenAdmin = autenticarUsuarioChamado($cenario['admin']);
+
+    $chamadoUrgente = $this->withHeader('Authorization', "Bearer {$tokenCliente}")
+        ->postJson('/api/chamados', [
+            'tipo' => 'duvida',
+            'assunto' => 'Chamado urgente',
+            'mensagem' => '<p>Mensagem</p>',
+        ])->json('data');
+
+    $this->withHeader('Authorization', "Bearer {$tokenCliente}")
+        ->postJson('/api/chamados', [
+            'tipo' => 'duvida',
+            'assunto' => 'Chamado normal',
+            'mensagem' => '<p>Mensagem</p>',
+        ])->assertStatus(201);
+
+    $this->withHeader('Authorization', "Bearer {$tokenAdmin}")
+        ->patchJson("/api/admin/chamados/{$chamadoUrgente['id']}/prioridade", ['prioridade' => 'urgente'])
+        ->assertStatus(200);
+
+    $this->withHeader('Authorization', "Bearer {$tokenAdmin}")
+        ->patchJson("/api/admin/chamados/{$chamadoUrgente['id']}/responsavel", ['responsavel_id' => $cenario['admin']->id])
+        ->assertStatus(200);
+
+    $this->withHeader('Authorization', "Bearer {$tokenAdmin}")
+        ->getJson('/api/admin/chamados?prioridade=urgente')
+        ->assertStatus(200)
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $chamadoUrgente['id']);
+
+    $this->withHeader('Authorization', "Bearer {$tokenAdmin}")
+        ->getJson("/api/admin/chamados?responsavel_id={$cenario['admin']->id}")
+        ->assertStatus(200)
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $chamadoUrgente['id']);
+
+    // Sem filtro, os dois aparecem.
+    $this->withHeader('Authorization', "Bearer {$tokenAdmin}")
+        ->getJson('/api/admin/chamados')
+        ->assertStatus(200)
+        ->assertJsonCount(2, 'data');
+});

@@ -186,6 +186,20 @@ class ChamadoService
         if ($filtro->tipo) {
             $query->where('tipo', $filtro->tipo);
         }
+
+        // Prioridade e responsável só têm sentido na listagem Admin (não
+        // são expostos ao Private — ver Http\Resources\Private\Chamado\
+        // ChamadoResource), mas aplicar aqui incondicionalmente não muda
+        // nada em listarPrivate(): o filtro simplesmente nunca vem
+        // preenchido nesse caso, pois Private\Chamado\ListarRequest não
+        // valida esses campos.
+        if ($filtro->prioridade) {
+            $query->where('prioridade', $filtro->prioridade);
+        }
+
+        if ($filtro->responsavel_id) {
+            $query->where('responsavel_id', $filtro->responsavel_id);
+        }
     }
 
     /**

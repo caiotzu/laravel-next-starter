@@ -19,17 +19,29 @@ import {
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 
+
+import { CHAMADO_PRIORIDADE_OPTIONS } from "@/constants/chamado-prioridade";
 import { CHAMADO_STATUS_OPTIONS } from "@/constants/chamado-status";
 import { CHAMADO_TIPO_OPTIONS } from "@/constants/chamado-tipo";
 import { useChamados } from "@/domains/admin/chamado/hooks/useChamados";
 import { ListarChamadosRequest } from "@/domains/admin/chamado/types/chamado.requests";
+import { useAdministradores } from "@/domains/admin/lookup/hooks/useAdministradores";
+import { useDebouncedValue } from "@/hooks/use-debounce";
 
 import { ChamadosTable } from "@/features/admin/chamado/components/ChamadosTable";
 
+const TODOS_RESPONSAVEIS = "todos";
+
 export default function Page() {
   const [filtros, setFiltros] = useState<ListarChamadosRequest>({ page: 1 });
+  const [buscaResponsavel, setBuscaResponsavel] = useState("");
+
+  const buscaDebounced = useDebouncedValue(buscaResponsavel, 300);
 
   const { data, isLoading } = useChamados(filtros);
+  const { data: administradores, isLoading: carregandoAdmins } = useAdministradores({
+    busca: buscaDebounced,
+  });
 
   return (
     <SidebarProvider
@@ -105,6 +117,73 @@ export default function Page() {
                         {CHAMADO_TIPO_OPTIONS.map((opcao) => (
                           <SelectItem key={opcao.value} value={opcao.value}>
                             {opcao.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium">Prioridade</label>
+                    <Select
+                      value={filtros.prioridade ?? "todos"}
+                      onValueChange={(value) =>
+                        setFiltros((f) => ({
+                          ...f,
+                          page: 1,
+                          prioridade: value === "todos" ? undefined : (value as ListarChamadosRequest["prioridade"]),
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Prioridade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todos">Todas as prioridades</SelectItem>
+                        {CHAMADO_PRIORIDADE_OPTIONS.map((opcao) => (
+                          <SelectItem key={opcao.value} value={opcao.value}>
+                            {opcao.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium">Responsável</label>
+                    <Select
+                      value={filtros.responsavel_id ?? TODOS_RESPONSAVEIS}
+                      onValueChange={(value) =>
+                        setFiltros((f) => ({
+                          ...f,
+                          page: 1,
+                          responsavel_id: value === TODOS_RESPONSAVEIS ? undefined : value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="w-56">
+                        <SelectValue placeholder="Responsável" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className="px-2 pb-2">
+                          <input
+                            value={buscaResponsavel}
+                            onChange={(e) => setBuscaResponsavel(e.target.value)}
+                            placeholder="Buscar por nome ou e-mail..."
+                            className="w-full rounded-md border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring dark:bg-input/30"
+                            onKeyDown={(e) => e.stopPropagation()}
+                          />
+                        </div>
+
+                        <SelectItem value={TODOS_RESPONSAVEIS}>Todos os responsáveis</SelectItem>
+
+                        {carregandoAdmins && (
+                          <div className="px-2 py-2 text-sm text-muted-foreground">Buscando...</div>
+                        )}
+
+                        {administradores?.map((admin) => (
+                          <SelectItem key={admin.id} value={admin.id}>
+                            {admin.nome} — {admin.email}
                           </SelectItem>
                         ))}
                       </SelectContent>

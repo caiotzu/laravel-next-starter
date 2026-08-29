@@ -7,6 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 use App\Enums\ChamadoStatus;
 use App\Enums\ChamadoTipo;
+use App\Enums\ChamadoPrioridade;
 
 class ListarRequest extends FormRequest
 {
@@ -20,6 +21,8 @@ class ListarRequest extends FormRequest
         return [
             'status' => ['nullable', Rule::enum(ChamadoStatus::class)],
             'tipo' => ['nullable', Rule::enum(ChamadoTipo::class)],
+            'prioridade' => ['nullable', Rule::enum(ChamadoPrioridade::class)],
+            'responsavel_id' => ['nullable', 'uuid', 'exists:usuarios,id'],
             'por_pagina' => ['nullable', 'integer', 'min:1', 'max:100'],
         ];
     }
