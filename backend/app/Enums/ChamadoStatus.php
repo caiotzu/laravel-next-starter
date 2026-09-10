@@ -45,4 +45,28 @@ enum ChamadoStatus: string
     {
         return in_array($this, [self::RESOLVIDO, self::FECHADO, self::CANCELADO], true);
     }
+
+    /**
+     * Cases considerados encerrados, derivados de estaEncerrado() — único
+     * ponto de verdade. Usado por quem precisa da lista completa (ex.:
+     * DashboardService), em vez de duplicar [FECHADO, CANCELADO] em outro
+     * lugar.
+     *
+     * @return self[]
+     */
+    public static function encerrados(): array
+    {
+        return array_filter(self::cases(), fn (self $status) => $status->estaEncerrado());
+    }
+
+    /**
+     * Mesma lista de encerrados(), já como valores string — formato
+     * pronto para uso em whereIn()/whereNotIn().
+     *
+     * @return string[]
+     */
+    public static function encerradosValues(): array
+    {
+        return array_map(fn (self $status) => $status->value, self::encerrados());
+    }
 }

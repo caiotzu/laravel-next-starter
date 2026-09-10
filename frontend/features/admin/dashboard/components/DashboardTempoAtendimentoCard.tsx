@@ -26,7 +26,7 @@ export function DashboardTempoAtendimentoCard({ tempo }: Props) {
     <Card className="@container/card">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Timer className="size-4" />
+          <Timer className="size-6 text-amber-500 dark:text-amber-400" />
           Tempo de atendimento
         </CardTitle>
         <CardDescription>

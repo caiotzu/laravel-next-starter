@@ -257,6 +257,39 @@
                 ]
             }
         },
+        "/version": {
+            "get": {
+                "tags": [
+                    "Global"
+                ],
+                "summary": "Global — Versão atual da plataforma",
+                "description": "Retorna a versão de build da plataforma. Não requer autenticação, para poder ser exibida também em telas de login.",
+                "operationId": "3053cda9bcc070152d30eecb8cafa91b",
+                "responses": {
+                    "200": {
+                        "description": "Versão atual.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "version": {
+                                                    "type": "string",
+                                                    "example": "1.0.0"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/lookup/administradores": {
             "get": {
                 "tags": [
@@ -663,15 +696,56 @@
                 ],
                 "summary": "Private — Listar acessos de suporte concedidos",
                 "operationId": "2df2ce08ecb75aadd79e69a79c9a182f",
+                "parameters": [
+                    {
+                        "name": "por_pagina",
+                        "in": "query",
+                        "description": "Itens por página (1 a 100).",
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número da página.",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Lista de acessos de suporte concedidos pela organização."
+                        "description": "Lista paginada de acessos de suporte concedidos pela organização.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "links": {
+                                            "$ref": "#/components/schemas/PaginationLinks"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthorized"
                     },
                     "403": {
                         "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
                     }
                 },
                 "security": [
@@ -1373,6 +1447,172 @@
                     }
                 },
                 "security": []
+            }
+        },
+        "/chamados": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Listar meus chamados",
+                "operationId": "36fab877818089c3867bc32a825507ee",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "tipo",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "por_pagina",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista paginada dos chamados abertos pelo usuário autenticado."
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Abrir chamado",
+                "operationId": "aaa51dac894df534d5b2ea78ac280c79",
+                "responses": {
+                    "201": {
+                        "description": "Chamado aberto, com o ticket gerado."
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/chamados/{id}": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Visualizar chamado",
+                "description": "404 caso o chamado não exista ou não pertença ao usuário autenticado.",
+                "operationId": "61f15dbf5286737f6e2d37a1b6f9c2f3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Chamado com a conversa completa."
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/chamados/{id}/mensagens": {
+            "post": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Responder chamado",
+                "description": "404 caso o chamado não pertença ao usuário autenticado. 422 caso o chamado já esteja encerrado (fechado/cancelado).",
+                "operationId": "5fa046575bd5759a7461065844a3106c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Mensagem registrada na conversa."
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/empresas/{empresaId}/contatos": {
@@ -3274,6 +3514,125 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/releases": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Listar releases publicadas",
+                "description": "Lista as novidades/melhorias/correções publicadas para o contexto Private. Nunca retorna releases em rascunho nem de outros contextos.",
+                "operationId": "7b3b8c12560920b9828a4594aed92430",
+                "parameters": [
+                    {
+                        "name": "por_pagina",
+                        "in": "query",
+                        "description": "Itens por página (1 a 100).",
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número da página.",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista paginada de releases publicadas.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "links": {
+                                            "$ref": "#/components/schemas/PaginationLinks"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/releases/{id}": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Visualizar release",
+                "description": "Retorna uma release publicada do contexto Private. 404 se não existir, estiver em rascunho ou pertencer a outro contexto.",
+                "operationId": "fc92fc723a3e2bc292c84c7f628924b2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Release encontrada.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
                     }
                 },
                 "security": [

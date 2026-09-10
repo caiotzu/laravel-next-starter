@@ -1,5 +1,6 @@
 "use client";
 
+import { IconTrendingUp } from "@tabler/icons-react";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 
 import {
@@ -21,7 +22,7 @@ import { DashboardEvolucaoEmpresasPonto } from "@/domains/admin/dashboard/types/
 const chartConfig = {
   novas: {
     label: "Novas empresas",
-    color: "var(--primary)",
+    color: "#10b981",
   },
 } satisfies ChartConfig;
 
@@ -38,7 +39,10 @@ export function DashboardEvolucaoEmpresasChart({ dados }: Props) {
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardTitle>Evolução de empresas cadastradas</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <IconTrendingUp className="size-6 text-emerald-500 dark:text-emerald-400" />
+          Evolução de empresas cadastradas
+        </CardTitle>
         <CardDescription>Novas empresas por dia no período selecionado</CardDescription>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">

@@ -23,6 +23,11 @@ use App\Http\Resources\Admin\Chamado\ChamadoMensagemResource;
 
 use OpenApi\Attributes as OA;
 
+use App\Enums\ChamadoStatus;
+use App\Enums\ChamadoPrioridade;
+
+
+
 class ChamadoController extends Controller
 {
     public function __construct(
@@ -131,7 +136,7 @@ class ChamadoController extends Controller
 
         $chamado = $this->chamadoService->atualizarStatus(
             $id,
-            \App\Enums\ChamadoStatus::from($request->validated('status'))
+            ChamadoStatus::from($request->validated('status'))
         );
 
         return ChamadoResource::make($chamado)->response()->setStatusCode(200);
@@ -159,7 +164,7 @@ class ChamadoController extends Controller
 
         $chamado = $this->chamadoService->atualizarPrioridade(
             $id,
-            \App\Enums\ChamadoPrioridade::from($request->validated('prioridade'))
+           ChamadoPrioridade::from($request->validated('prioridade'))
         );
 
         return ChamadoResource::make($chamado)->response()->setStatusCode(200);

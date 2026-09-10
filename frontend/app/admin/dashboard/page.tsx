@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { IconAdjustmentsHorizontal, IconChartDonut } from "@tabler/icons-react";
+
 import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";
 import { SiteHeader } from "@/app/admin/_components/layouts/site-header";
@@ -10,6 +12,9 @@ import { PageHeader } from "@/components/layouts/page-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 
+
+import { useDashboard } from "@/domains/admin/dashboard/hooks/useDashboard";
+import { VisualizarDashboardRequest } from "@/domains/admin/dashboard/types/dashboard.requests";
 
 import { DashboardAtencao } from "@/features/admin/dashboard/components/DashboardAtencao";
 import { DashboardDistribuicaoChamados } from "@/features/admin/dashboard/components/DashboardDistribuicaoChamados";
@@ -20,8 +25,6 @@ import { DashboardKpiCards } from "@/features/admin/dashboard/components/Dashboa
 import { DashboardRankingResponsaveis } from "@/features/admin/dashboard/components/DashboardRankingResponsaveis";
 import { DashboardTempoAtendimentoCard } from "@/features/admin/dashboard/components/DashboardTempoAtendimentoCard";
 
-import { useDashboard } from "@/domains/admin/dashboard/hooks/useDashboard";
-import { VisualizarDashboardRequest } from "@/domains/admin/dashboard/types/dashboard.requests";
 
 export default function Page() {
   const [filtro, setFiltro] = useState<VisualizarDashboardRequest>({
@@ -92,12 +95,14 @@ export default function Page() {
                         descricao="No período selecionado"
                         dados={data.chamados_por_status}
                         dimensao="status"
+                        icone={<IconAdjustmentsHorizontal className="size-5 text-violet-500 dark:text-violet-400" />}
                       />
                       <DashboardDistribuicaoChamados
                         titulo="Chamados por prioridade"
                         descricao="No período selecionado"
                         dados={data.chamados_por_prioridade}
                         dimensao="prioridade"
+                        icone={<IconChartDonut className="size-5 text-violet-500 dark:text-violet-400" />}
                       />
                     </div>
                   </div>

@@ -23,7 +23,10 @@ export function DashboardRankingResponsaveis({ ranking }: Props) {
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardTitle>Ranking de atendimento</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Trophy className="size-6 text-amber-500 dark:text-amber-400" />
+          Ranking de atendimento
+        </CardTitle>
         <CardDescription>Quem mais encerrou chamados no período</CardDescription>
       </CardHeader>
       <CardContent>

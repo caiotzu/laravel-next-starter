@@ -73,7 +73,7 @@ export function DashboardAtencao({ semResponsavel, maisAntigos }: Props) {
       <Card className="@container/card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <UserX className="size-4 text-amber-500" />
+            <UserX className="size-6 text-amber-500 dark:text-amber-400" />
             Chamados sem responsável
           </CardTitle>
           <CardDescription>
@@ -91,7 +91,7 @@ export function DashboardAtencao({ semResponsavel, maisAntigos }: Props) {
       <Card className="@container/card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="size-4 text-amber-500" />
+            <AlertTriangle className="size-6 text-amber-500 dark:text-amber-400" />
             Chamados mais antigos em aberto
           </CardTitle>
           <CardDescription>Independente do período selecionado</CardDescription>

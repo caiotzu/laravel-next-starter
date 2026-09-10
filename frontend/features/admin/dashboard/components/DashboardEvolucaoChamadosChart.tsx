@@ -1,5 +1,6 @@
 "use client";
 
+import { IconTicket } from "@tabler/icons-react";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 
 import {
@@ -21,11 +22,11 @@ import { DashboardEvolucaoChamadosPonto } from "@/domains/admin/dashboard/types/
 const chartConfig = {
   abertos: {
     label: "Abertos",
-    color: "var(--primary)",
+    color: "#f59e0b",
   },
   fechados: {
     label: "Fechados",
-    color: "var(--chart-2)",
+    color: "#10b981",
   },
 } satisfies ChartConfig;
 
@@ -42,7 +43,10 @@ export function DashboardEvolucaoChamadosChart({ dados }: Props) {
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardTitle>Chamados abertos x fechados</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <IconTicket className="size-6 text-amber-500 dark:text-amber-400" />
+          Chamados abertos x fechados
+        </CardTitle>
         <CardDescription>Evolução diária no período selecionado</CardDescription>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">

@@ -16,35 +16,37 @@ use App\Enums\ChamadoStatus;
  * sistema (Chamado->usuario->grupo aponta para um GrupoEmpresa, que pode
  * ter várias Empresas) — por isso as métricas usam "cliente" (o usuário
  * que abriu o chamado), não "empresa".
+ *
+ * A lista de status considerados "encerrados" não é mantida aqui: ela
+ * vive em ChamadoStatus::encerradosValues(), que deriva do próprio
+ * estaEncerrado() de cada case do enum — único ponto de verdade.
  */
 class DashboardService
 {
-    private const ENCERRADOS = [ChamadoStatus::FECHADO, ChamadoStatus::CANCELADO];
-
     public function kpis(DashboardFiltroDTO $filtro): array
     {
         $totalEmpresas = Empresa::count();
         $empresasNoPeriodo = Empresa::whereBetween('created_at', [$filtro->inicio, $filtro->fim])->count();
         $empresasPeriodoAnterior = Empresa::whereBetween('created_at', [$filtro->inicioAnterior, $filtro->fimAnterior])->count();
 
-        $chamadosAbertos = Chamado::whereNotIn('status', self::encerradosValues())->count();
+        $chamadosAbertos = Chamado::whereNotIn('status', ChamadoStatus::encerradosValues())->count();
 
         $chamadosNoPeriodo = Chamado::whereBetween('aberto_em', [$filtro->inicio, $filtro->fim])->count();
         $chamadosPeriodoAnterior = Chamado::whereBetween('aberto_em', [$filtro->inicioAnterior, $filtro->fimAnterior])->count();
 
-        $chamadosFechadosNoPeriodo = Chamado::whereIn('status', self::encerradosValues())
+        $chamadosFechadosNoPeriodo = Chamado::whereIn('status', ChamadoStatus::encerradosValues())
             ->whereBetween('fechado_em', [$filtro->inicio, $filtro->fim])
             ->count();
-        $chamadosFechadosPeriodoAnterior = Chamado::whereIn('status', self::encerradosValues())
+        $chamadosFechadosPeriodoAnterior = Chamado::whereIn('status', ChamadoStatus::encerradosValues())
             ->whereBetween('fechado_em', [$filtro->inicioAnterior, $filtro->fimAnterior])
             ->count();
 
-        $tempoMedioResolucaoSegundos = Chamado::whereIn('status', self::encerradosValues())
+        $tempoMedioResolucaoSegundos = Chamado::whereIn('status', ChamadoStatus::encerradosValues())
             ->whereBetween('fechado_em', [$filtro->inicio, $filtro->fim])
             ->selectRaw('AVG(EXTRACT(EPOCH FROM (fechado_em - aberto_em))) as media')
             ->value('media');
 
-        $tempoMedioResolucaoAnteriorSegundos = Chamado::whereIn('status', self::encerradosValues())
+        $tempoMedioResolucaoAnteriorSegundos = Chamado::whereIn('status', ChamadoStatus::encerradosValues())
             ->whereBetween('fechado_em', [$filtro->inicioAnterior, $filtro->fimAnterior])
             ->selectRaw('AVG(EXTRACT(EPOCH FROM (fechado_em - aberto_em))) as media')
             ->value('media');
@@ -82,7 +84,7 @@ class DashboardService
             ->groupBy('dia')
             ->pluck('total', 'dia');
 
-        $fechadosPorDia = Chamado::whereIn('status', self::encerradosValues())
+        $fechadosPorDia = Chamado::whereIn('status', ChamadoStatus::encerradosValues())
             ->whereBetween('fechado_em', [$filtro->inicio, $filtro->fim])
             ->selectRaw("to_char(date_trunc('day', fechado_em), 'YYYY-MM-DD') as dia, COUNT(*) as total")
             ->groupBy('dia')
@@ -147,7 +149,7 @@ class DashboardService
     {
         return Chamado::query()
             ->join('usuarios', 'usuarios.id', '=', 'chamados.responsavel_id')
-            ->whereIn('chamados.status', self::encerradosValues())
+            ->whereIn('chamados.status', ChamadoStatus::encerradosValues())
             ->whereBetween('chamados.fechado_em', [$filtro->inicio, $filtro->fim])
             ->selectRaw('
                 usuarios.id as responsavel_id,
@@ -174,12 +176,12 @@ class DashboardService
      */
     public function chamadosSemResponsavel(int $limite = 5): array
     {
-        $total = Chamado::whereNotIn('status', self::encerradosValues())
+        $total = Chamado::whereNotIn('status', ChamadoStatus::encerradosValues())
             ->whereNull('responsavel_id')
             ->count();
 
         $lista = Chamado::with('usuario')
-            ->whereNotIn('status', self::encerradosValues())
+            ->whereNotIn('status', ChamadoStatus::encerradosValues())
             ->whereNull('responsavel_id')
             ->orderBy('aberto_em')
             ->limit($limite)
@@ -201,7 +203,7 @@ class DashboardService
     public function chamadosMaisAntigos(int $limite = 5): array
     {
         return Chamado::with('usuario')
-            ->whereNotIn('status', self::encerradosValues())
+            ->whereNotIn('status', ChamadoStatus::encerradosValues())
             ->orderBy('aberto_em')
             ->limit($limite)
             ->get(['id', 'ticket', 'assunto', 'status', 'aberto_em', 'usuario_id'])
@@ -224,7 +226,7 @@ class DashboardService
      */
     public function tempoAtendimento(DashboardFiltroDTO $filtro): array
     {
-        $resolucao = Chamado::whereIn('status', self::encerradosValues())
+        $resolucao = Chamado::whereIn('status', ChamadoStatus::encerradosValues())
             ->whereBetween('fechado_em', [$filtro->inicio, $filtro->fim])
             ->selectRaw('
                 AVG(EXTRACT(EPOCH FROM (fechado_em - aberto_em))) as media_segundos,
@@ -292,10 +294,5 @@ class DashboardService
         // para que o frontend sempre trate "+ é bom" de forma consistente
         // no componente de badge de tendência.
         return $menorEhMelhor ? round(-$variacao, 1) : round($variacao, 1);
-    }
-
-    private static function encerradosValues(): array
-    {
-        return array_map(fn ($status) => $status->value, self::ENCERRADOS);
     }
 }

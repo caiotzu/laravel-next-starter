@@ -49,6 +49,8 @@ class DashboardController extends Controller
                 'periodo' => [
                     'inicio' => $filtro->inicio->toDateString(),
                     'fim' => $filtro->fim->toDateString(),
+                    'inicio_anterior' => $filtro->inicioAnterior->toDateString(),
+                    'fim_anterior' => $filtro->fimAnterior->toDateString(),
                 ],
                 'kpis' => $this->dashboardService->kpis($filtro),
                 'evolucao_chamados' => $this->dashboardService->evolucaoChamados($filtro),

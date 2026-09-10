@@ -1,5 +1,7 @@
 "use client";
 
+import { ReactNode } from "react";
+
 import {
   Card,
   CardContent,
@@ -19,6 +21,7 @@ interface Props {
   descricao: string;
   dados: Record<string, number>;
   dimensao: Dimensao;
+  icone?: ReactNode;
 }
 
 function getLabel(dimensao: Dimensao, chave: string): string {
@@ -38,14 +41,17 @@ function getBadgeClass(dimensao: Dimensao, chave: string): string {
  * (ver constants/chamado-*.ts) — nenhuma cor/label nova foi inventada
  * aqui, é a mesma configuração usada nas telas de Chamados.
  */
-export function DashboardDistribuicaoChamados({ titulo, descricao, dados, dimensao }: Props) {
+export function DashboardDistribuicaoChamados({ titulo, descricao, dados, dimensao, icone }: Props) {
   const entradas = Object.entries(dados).sort(([, a], [, b]) => b - a);
   const total = entradas.reduce((soma, [, valor]) => soma + valor, 0);
 
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardTitle>{titulo}</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          {icone}
+          {titulo}
+        </CardTitle>
         <CardDescription>{descricao}</CardDescription>
       </CardHeader>
       <CardContent>
