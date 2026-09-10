@@ -344,6 +344,23 @@ class AdminPermissaoSeeder extends Seeder
                 ],
             //---
 
+            // dashboard
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.dashboard.menu",
+                    "descricao" => "Permite visualizar o menu do Dashboard",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.dashboard.visualizar",
+                    "descricao" => "Permite visualizar os indicadores do Dashboard administrativo",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+            //---
+
             // grupo
                 [
                     "id" => Str::uuid(),

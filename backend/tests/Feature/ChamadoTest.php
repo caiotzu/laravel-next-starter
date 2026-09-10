@@ -189,7 +189,7 @@ test('anexo válido é aceito e fica vinculado à mensagem', function () {
 
     $chamado = Chamado::first();
     Storage::disk('public')->assertExists(
-        $chamado->mensagens()->first()->anexos()->first()->caminho
+        $chamado->mensagens()->first()->anexos()->first()->getRawOriginal('caminho')
     );
 });
 

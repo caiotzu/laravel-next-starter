@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 
-import { FileText, Image as ImageIcon, Paperclip, X } from "lucide-react";
+import { FileText, Image as ImageIcon, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";

@@ -9,6 +9,7 @@ import {
   Monitor,
   Headset,
   Rocket,
+  LayoutDashboard,
 } from "lucide-react"
 
 import { NavMain } from "@/app/admin/_components/layouts/nav-main"
@@ -32,6 +33,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: userAdmin } = useUserAdmin();
   
   const navMain = [
+    {
+      title: "Dashboard",
+      url: "#",
+      icon: LayoutDashboard,
+      items: [
+        {
+          title: "Visão Geral",
+          url: "/admin/dashboard",
+          permission: "admin.dashboard.menu"
+        },
+      ],
+    },
     {
       title: "Monitoramento",
       url: "#",

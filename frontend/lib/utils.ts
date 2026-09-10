@@ -25,6 +25,25 @@ export function formatDate(date?: string | null, includeTime: boolean = true): s
   )}`;
 }
 
+/**
+ * Formata uma duração em segundos como "2d 4h", "5h 30min" ou "12min" —
+ * usado pelas métricas de tempo de atendimento do Dashboard (tempo médio
+ * de resolução, tempo até primeira resposta). Centralizado aqui para não
+ * ficar reimplementado dentro dos componentes que exibem essas métricas.
+ */
+export function formatDuration(seconds?: number | null): string {
+  if (seconds === null || seconds === undefined || isNaN(seconds)) return "---";
+  if (seconds < 60) return "< 1min";
+
+  const dias = Math.floor(seconds / 86400);
+  const horas = Math.floor((seconds % 86400) / 3600);
+  const minutos = Math.floor((seconds % 3600) / 60);
+
+  if (dias > 0) return `${dias}d ${horas}h`;
+  if (horas > 0) return `${horas}h ${minutos}min`;
+  return `${minutos}min`;
+}
+
 export function maskCNPJ(value: string | null | undefined = "") {
   const cleaned = String(value ?? "")
     .replace(/\D/g, "") // apenas números

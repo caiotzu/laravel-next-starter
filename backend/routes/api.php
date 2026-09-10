@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\ {
     AutenticacaoDoisFatoresController,
     ReleaseController,
     ChamadoController,
+    DashboardController,
 };
 
 use App\Http\Controllers\Private\ {
@@ -113,6 +114,8 @@ Route::middleware(['jwt', 'suporte.contexto'])->group(function () {
             Route::get('/sessoes', [PerfilController::class, 'sessoes']);
             Route::patch('/', [PerfilController::class, 'atualizar']);
         });
+
+        Route::get('/dashboard', [DashboardController::class, 'visualizar']);
 
         Route::prefix('auditorias')->group(function () {
             Route::get('/entidades', [AuditoriaController::class, 'listarEntidadesAuditaveis']);
