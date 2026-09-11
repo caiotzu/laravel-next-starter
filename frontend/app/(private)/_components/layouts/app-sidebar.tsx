@@ -2,12 +2,15 @@
 
 import * as React from "react"
 
+import Link from "next/link";
+
 import {
   FolderKanban,
   Command,
   Settings2,
   Headset,
   Rocket,
+  Home,
 } from "lucide-react"
 
 import { NavMain } from "@/app/(private)/_components/layouts/nav-main"
@@ -33,6 +36,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { acessoSuporteAtivo } = useAcessoSuporte();
 
   const navMain = [
+    {
+      title: "Início",
+      url: "#",
+      icon: Home,
+      items: [
+        {
+          title: "Home",
+          url: "/home",
+        },
+      ],
+    },
     {
       title: "Cadastros",
       url: "#",
@@ -105,7 +119,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+              <Link href="/home" className="gap-2">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                   <Command className="size-4" />
                 </div>
@@ -113,7 +127,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <span className="truncate font-medium">Caio</span>
                   <span className="truncate text-xs">Enterprise</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -20,6 +20,7 @@ export const protectedRoutes: RoutePermission[] = [
     { path: "/admin/redefinir-senha", protected: false, isLoginRoute: true, cookieName: "admin_access_token" },
     { path: "/admin", protected: false, isLoginRoute: true, cookieName: "admin_access_token" },
 
+    { path: "/admin/home", protected: true, cookieName: "admin_access_token" },
     { path: "/admin/dashboard", protected: true, cookieName: "admin_access_token" },
     { path: "/admin/perfil", protected: true, cookieName: "admin_access_token" },
 
@@ -54,6 +55,7 @@ export const protectedRoutes: RoutePermission[] = [
     { path: "/", protected: false, isLoginRoute: true, cookieName: "private_access_token" },
 
     { path: "/", protected: false, isLoginRoute: true, cookieName: "private_access_token" },
+    { path: "/home", protected: true, cookieName: "private_access_token" },
     { path: "/dashboard", protected: true, cookieName: "private_access_token" },
 
     { path: "/empresas/:id/visualizar", protected: true, cookieName: "private_access_token" },

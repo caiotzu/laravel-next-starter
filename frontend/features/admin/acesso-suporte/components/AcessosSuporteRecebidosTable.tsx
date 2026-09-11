@@ -46,7 +46,9 @@ export function AcessosSuporteRecebidosTable({ data }: { data: AcessoSuporte[] }
   }
 
   function handleEntrar(acesso: AcessoSuporte) {
-    const url = `/dashboard?acesso_suporte_id=${encodeURIComponent(acesso.id)}`;
+    // const url = `/dashboard?acesso_suporte_id=${encodeURIComponent(acesso.id)}`;
+    const url = `/home?acesso_suporte_id=${encodeURIComponent(acesso.id)}`;
+
     window.open(url, "_blank", "noopener,noreferrer");
   }
 

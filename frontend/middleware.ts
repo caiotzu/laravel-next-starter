@@ -23,13 +23,13 @@ export function middleware(req: NextRequest) {
     const token = route.cookieName ? req.cookies.get(route.cookieName)?.value : null;
 
     if (token && isTokenValid(token)) {
-      let redirectPath = "/dashboard";
+      let redirectPath = "/home";
       switch (route.cookieName) {
         case "admin_access_token":
-          redirectPath = "/admin/dashboard";
+          redirectPath = "/admin/home";
           break;
         case "private_access_token":
-          redirectPath = "/dashboard";
+          redirectPath = "/home";
           break;
       }
 

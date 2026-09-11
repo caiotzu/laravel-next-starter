@@ -12,6 +12,8 @@ use App\Http\Requests\Admin\Dashboard\VisualizarRequest;
 
 use App\DTO\Dashboard\DashboardFiltroDTO;
 
+use App\Http\Resources\Admin\Dashboard\DashboardResource;
+
 use OpenApi\Attributes as OA;
 
 class DashboardController extends Controller
@@ -44,26 +46,24 @@ class DashboardController extends Controller
 
         $filtro = DashboardFiltroDTO::criarParaFiltro($request->validated());
 
-        return response()->json([
-            'data' => [
-                'periodo' => [
-                    'inicio' => $filtro->inicio->toDateString(),
-                    'fim' => $filtro->fim->toDateString(),
-                    'inicio_anterior' => $filtro->inicioAnterior->toDateString(),
-                    'fim_anterior' => $filtro->fimAnterior->toDateString(),
-                ],
-                'kpis' => $this->dashboardService->kpis($filtro),
-                'evolucao_chamados' => $this->dashboardService->evolucaoChamados($filtro),
-                'evolucao_empresas' => $this->dashboardService->evolucaoEmpresas($filtro),
-                'empresas_por_status' => $this->dashboardService->empresasPorStatus(),
-                'chamados_por_status' => $this->dashboardService->chamadosPorStatus($filtro),
-                'chamados_por_prioridade' => $this->dashboardService->chamadosPorPrioridade($filtro),
-                'chamados_por_tipo' => $this->dashboardService->chamadosPorTipo($filtro),
-                'ranking_responsaveis' => $this->dashboardService->rankingResponsaveis($filtro),
-                'chamados_sem_responsavel' => $this->dashboardService->chamadosSemResponsavel(),
-                'chamados_mais_antigos' => $this->dashboardService->chamadosMaisAntigos(),
-                'tempo_atendimento' => $this->dashboardService->tempoAtendimento($filtro),
+        return DashboardResource::make([
+            'periodo' => [
+                'inicio' => $filtro->inicio->toDateString(),
+                'fim' => $filtro->fim->toDateString(),
+                'inicio_anterior' => $filtro->inicioAnterior->toDateString(),
+                'fim_anterior' => $filtro->fimAnterior->toDateString(),
             ],
-        ]);
+            'kpis' => $this->dashboardService->kpis($filtro),
+            'evolucao_chamados' => $this->dashboardService->evolucaoChamados($filtro),
+            'evolucao_empresas' => $this->dashboardService->evolucaoEmpresas($filtro),
+            'empresas_por_status' => $this->dashboardService->empresasPorStatus(),
+            'chamados_por_status' => $this->dashboardService->chamadosPorStatus($filtro),
+            'chamados_por_prioridade' => $this->dashboardService->chamadosPorPrioridade($filtro),
+            'chamados_por_tipo' => $this->dashboardService->chamadosPorTipo($filtro),
+            'ranking_responsaveis' => $this->dashboardService->rankingResponsaveis($filtro),
+            'chamados_sem_responsavel' => $this->dashboardService->chamadosSemResponsavel(),
+            'chamados_mais_antigos' => $this->dashboardService->chamadosMaisAntigos(),
+            'tempo_atendimento' => $this->dashboardService->tempoAtendimento($filtro),
+        ])->response()->setStatusCode(200);
     }
 }

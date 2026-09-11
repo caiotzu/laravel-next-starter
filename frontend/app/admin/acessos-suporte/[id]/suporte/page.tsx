@@ -7,5 +7,5 @@ export default async function Page({
 }) {
   const { id } = await params;
 
-  redirect(`/dashboard?acesso_suporte_id=${encodeURIComponent(id)}`);
+  redirect(`/home?acesso_suporte_id=${encodeURIComponent(id)}`);
 }

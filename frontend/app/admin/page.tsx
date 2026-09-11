@@ -94,7 +94,7 @@ export default function LoginPage() {
       }
 
       // Se não tem 2FA, login já foi feito e cookie já foi setado
-      router.push("/admin/dashboard")
+      router.push("/admin/home")
 
     } catch (err: unknown) {
       if (axios.isAxiosError<BackendErrorResponse>(err)) {
@@ -126,7 +126,7 @@ export default function LoginPage() {
       )
 
       // Se chegou aqui, proxy já setou cookie
-      router.push("/admin/dashboard")
+      router.push("/admin/home")
 
     } catch (err: unknown) {
       if (axios.isAxiosError<BackendErrorResponse>(err)) {

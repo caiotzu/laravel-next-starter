@@ -33,7 +33,7 @@ const AcessoSuporteContext = createContext<AcessoSuporteContextType>({
  * entidade em que estava (Private, Despachante, ou qualquer futura
  * entidade que reutilize este mesmo contexto).
  */
-const ROTA_DASHBOARD_ADMIN = "/admin/dashboard"
+const ROTA_DASHBOARD_ADMIN = "/admin/home" // "/admin/dashboard"
 
 /**
  * Disponibiliza, para toda a área Admin (e para qualquer entidade que
