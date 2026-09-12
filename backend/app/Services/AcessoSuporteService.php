@@ -281,17 +281,35 @@ class AcessoSuporteService
 
     public function listarConcedidos(Usuario $concedente, PaginationDTO $paginacao): LengthAwarePaginator
     {
-        return AcessoSuporte::with(['admin', 'entidadeTipo'])
-            ->where('usuario_concedente_id', $concedente->id)
-            ->latest('created_at')
-            ->paginate($paginacao->por_pagina);
+        $query = AcessoSuporte::with(['admin', 'entidadeTipo'])
+            ->where('usuario_concedente_id', $concedente->id);
+
+        $this->ordenarAtivosPrimeiro($query);
+
+        return $query->paginate($paginacao->por_pagina);
     }
 
     public function listarRecebidos(Usuario $admin, PaginationDTO $paginacao): LengthAwarePaginator
     {
-        return AcessoSuporte::with(['concedente', 'entidadeTipo'])
-            ->where('usuario_admin_id', $admin->id)
-            ->latest('created_at')
-            ->paginate($paginacao->por_pagina);
+        $query = AcessoSuporte::with(['concedente', 'entidadeTipo'])
+            ->where('usuario_admin_id', $admin->id);
+
+        $this->ordenarAtivosPrimeiro($query);
+
+        return $query->paginate($paginacao->por_pagina);
+    }
+
+    /**
+     * Acessos de suporte "abertos" (status ATIVO) sempre aparecem primeiro
+     * nas listagens Admin e Private — mesma ideia aplicada aos chamados
+     * (ver ChamadoService::ordenarAbertosPrimeiro). Nenhum acesso é
+     * removido da listagem; apenas a ordem muda. Dentro de cada grupo,
+     * mantém a mesma ordenação já existente (mais recente primeiro).
+     */
+    private function ordenarAtivosPrimeiro($query): void
+    {
+        $query
+            ->orderByRaw('CASE WHEN status = ? THEN 0 ELSE 1 END ASC', [AcessoSuporteStatus::ATIVO->value])
+            ->orderBy('created_at', 'desc');
     }
 }

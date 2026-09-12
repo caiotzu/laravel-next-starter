@@ -23,6 +23,7 @@ class ListarRequest extends FormRequest
             'tipo' => ['nullable', Rule::enum(ChamadoTipo::class)],
             'prioridade' => ['nullable', Rule::enum(ChamadoPrioridade::class)],
             'responsavel_id' => ['nullable', 'uuid', 'exists:usuarios,id'],
+            'ticket' => ['nullable', 'string', 'max:50'],
             'por_pagina' => ['nullable', 'integer', 'min:1', 'max:100'],
         ];
     }

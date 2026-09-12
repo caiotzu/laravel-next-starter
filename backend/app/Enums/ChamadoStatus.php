@@ -69,4 +69,22 @@ enum ChamadoStatus: string
     {
         return array_map(fn (self $status) => $status->value, self::encerrados());
     }
+
+    /**
+     * Cases que bloqueiam mensagens (ver bloqueiaMensagens()), já como
+     * valores string — mesmo critério usado para: (1) ordenar chamados
+     * "abertos" antes dos demais nas listagens (ver
+     * ChamadoService::listarAdmin/listarPrivate) e (2) impedir alteração
+     * de prioridade/responsável de um chamado encerrado (ver
+     * ChamadoService::atualizarPrioridade/atribuirResponsavel).
+     *
+     * @return string[]
+     */
+    public static function bloqueiaMensagensValues(): array
+    {
+        return array_map(
+            fn (self $status) => $status->value,
+            array_filter(self::cases(), fn (self $status) => $status->bloqueiaMensagens())
+        );
+    }
 }

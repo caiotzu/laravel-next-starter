@@ -7,6 +7,7 @@ export interface ListarChamadosRequest {
   tipo?: ChamadoTipo;
   prioridade?: ChamadoPrioridade;
   responsavel_id?: string;
+  ticket?: string;
   page?: number;
   por_pagina?: number;
 }

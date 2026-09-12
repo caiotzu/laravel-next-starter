@@ -120,6 +120,9 @@ class ChamadoService
     public function atualizarPrioridade(string $chamadoId, ChamadoPrioridade $prioridade): Chamado
     {
         $chamado = Chamado::findOrFail($chamadoId);
+
+        $this->garantirEdicaoDePrioridadeOuResponsavelPermitida($chamado, 'a prioridade');
+
         $chamado->update(['prioridade' => $prioridade]);
 
         return $chamado->fresh();
@@ -128,15 +131,36 @@ class ChamadoService
     public function atribuirResponsavel(string $chamadoId, ?string $responsavelId): Chamado
     {
         $chamado = Chamado::findOrFail($chamadoId);
+
+        $this->garantirEdicaoDePrioridadeOuResponsavelPermitida($chamado, 'o responsável');
+
         $chamado->update(['responsavel_id' => $responsavelId]);
 
         return $chamado->fresh(['responsavel']);
     }
 
+    /**
+     * Prioridade e responsável deixam de poder ser alterados assim que o
+     * chamado é encerrado — mesmo critério de "encerrado" já usado para
+     * bloquear novas mensagens (ver ChamadoStatus::bloqueiaMensagens()):
+     * resolvido, fechado ou cancelado. As demais formas de edição do
+     * chamado não são afetadas por esta checagem.
+     */
+    private function garantirEdicaoDePrioridadeOuResponsavelPermitida(Chamado $chamado, string $campo): void
+    {
+        if ($chamado->status->bloqueiaMensagens()) {
+            throw new BusinessException(
+                "Não é possível alterar {$campo} de um chamado encerrado.",
+                ErrorCode::CHAMADO_ENCERRADO->value
+            );
+        }
+    }
+
     public function listarPrivate(string $usuarioId, ChamadoFiltroDTO $filtro): LengthAwarePaginator
     {
-        $query = Chamado::where('usuario_id', $usuarioId)
-            ->latest('ultima_interacao_em');
+        $query = Chamado::where('usuario_id', $usuarioId);
+
+        $this->ordenarAbertosPrimeiro($query);
 
         $this->aplicarFiltros($query, $filtro);
 
@@ -145,12 +169,31 @@ class ChamadoService
 
     public function listarAdmin(ChamadoFiltroDTO $filtro): LengthAwarePaginator
     {
-        $query = Chamado::with(['usuario', 'responsavel'])
-            ->latest('ultima_interacao_em');
+        $query = Chamado::with(['usuario', 'responsavel']);
+
+        $this->ordenarAbertosPrimeiro($query);
 
         $this->aplicarFiltros($query, $filtro);
 
         return $query->paginate($filtro->paginacao->por_pagina);
+    }
+
+    /**
+     * Chamados "abertos" (que ainda pedem atenção — todo status exceto
+     * resolvido/fechado/cancelado, mesmo critério de
+     * ChamadoStatus::bloqueiaMensagens()) sempre aparecem primeiro nas
+     * listagens Admin e Private. Nenhum chamado é removido da listagem;
+     * apenas a ordem muda. Dentro de cada grupo, mantém a mesma ordenação
+     * já existente (mais recente interação primeiro).
+     */
+    private function ordenarAbertosPrimeiro($query): void
+    {
+        $statusQueBloqueiam = ChamadoStatus::bloqueiaMensagensValues();
+        $placeholders = implode(',', array_fill(0, count($statusQueBloqueiam), '?'));
+
+        $query
+            ->orderByRaw("CASE WHEN status IN ({$placeholders}) THEN 1 ELSE 0 END ASC", $statusQueBloqueiam)
+            ->orderBy('ultima_interacao_em', 'desc');
     }
 
     public function visualizarPrivate(string $id, string $usuarioId): Chamado
@@ -199,6 +242,13 @@ class ChamadoService
 
         if ($filtro->responsavel_id) {
             $query->where('responsavel_id', $filtro->responsavel_id);
+        }
+
+        // Pesquisa pelo número do ticket (ex.: "SUP-2026-000123"), tanto
+        // no Admin quanto no Private — combinável com os demais filtros
+        // acima, sem alterar nenhum deles.
+        if ($filtro->ticket) {
+            $query->where('ticket', 'like', '%' . $filtro->ticket . '%');
         }
     }
 

@@ -20,6 +20,7 @@ class ListarRequest extends FormRequest
         return [
             'status' => ['nullable', Rule::enum(ChamadoStatus::class)],
             'tipo' => ['nullable', Rule::enum(ChamadoTipo::class)],
+            'ticket' => ['nullable', 'string', 'max:50'],
             'por_pagina' => ['nullable', 'integer', 'min:1', 'max:100'],
         ];
     }

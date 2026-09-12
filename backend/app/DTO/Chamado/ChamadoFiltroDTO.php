@@ -16,6 +16,7 @@ final class ChamadoFiltroDTO
         public readonly ?ChamadoTipo $tipo = null,
         public readonly ?ChamadoPrioridade $prioridade = null,
         public readonly ?string $responsavel_id = null,
+        public readonly ?string $ticket = null,
     ) {}
 
     public static function criarParaFiltro(array $dados): self
@@ -26,6 +27,7 @@ final class ChamadoFiltroDTO
             tipo: isset($dados['tipo']) ? ChamadoTipo::from($dados['tipo']) : null,
             prioridade: isset($dados['prioridade']) ? ChamadoPrioridade::from($dados['prioridade']) : null,
             responsavel_id: $dados['responsavel_id'] ?? null,
+            ticket: $dados['ticket'] ?? null,
         );
     }
 }

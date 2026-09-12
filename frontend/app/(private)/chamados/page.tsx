@@ -12,13 +12,15 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { useChamados } from "@/domains/private/chamado/hooks/useChamados";
+import { ListarChamadosRequest } from "@/domains/private/chamado/types/chamado.requests";
 
+import { ChamadosFilters } from "@/features/private/chamado/components/ChamadosFilters";
 import { ChamadosTable } from "@/features/private/chamado/components/ChamadosTable";
 
 export default function Page() {
-  const [page, setPage] = useState(1);
+  const [filtros, setFiltros] = useState<ListarChamadosRequest>({ page: 1 });
 
-  const { data, isLoading } = useChamados({ page });
+  const { data, isLoading } = useChamados(filtros);
 
   return (
     <SidebarProvider
@@ -51,6 +53,8 @@ export default function Page() {
             />
 
             <PrivatePermissionGuard permission="private.chamado.listar">
+              <ChamadosFilters filtros={filtros} setFiltros={setFiltros} />
+
               {isLoading ? (
                 <Skeleton className="h-64 w-full" />
               ) : (
@@ -64,7 +68,7 @@ export default function Page() {
                   total={data.meta.total}
                   from={data.meta.from ?? 0}
                   to={data.meta.to ?? 0}
-                  onPageChange={setPage}
+                  onPageChange={(page) => setFiltros((f) => ({ ...f, page }))}
                 />
               )}
             </PrivatePermissionGuard>

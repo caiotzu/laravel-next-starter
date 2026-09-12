@@ -183,22 +183,31 @@ export function ChamadoConversa({ chamado }: Props) {
                 </Badge>
               }
             >
-              <Select
-                value={chamado.prioridade}
-                onValueChange={handleAlterarPrioridade}
-                disabled={atualizandoPrioridade}
-              >
-                <SelectTrigger className="h-8 w-36">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CHAMADO_PRIORIDADE_OPTIONS.map((opcao) => (
-                    <SelectItem key={opcao.value} value={opcao.value}>
-                      {opcao.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {encerrado ? (
+                // Chamado encerrado (resolvido/fechado/cancelado): prioridade
+                // não pode mais ser alterada — mesma regra aplicada no backend
+                // (ver ChamadoService::atualizarPrioridade).
+                <Badge className={`w-fit font-normal ${getChamadoPrioridadeBadge(chamado.prioridade)}`}>
+                  {getChamadoPrioridadeLabel(chamado.prioridade)}
+                </Badge>
+              ) : (
+                <Select
+                  value={chamado.prioridade}
+                  onValueChange={handleAlterarPrioridade}
+                  disabled={atualizandoPrioridade}
+                >
+                  <SelectTrigger className="h-8 w-36">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CHAMADO_PRIORIDADE_OPTIONS.map((opcao) => (
+                      <SelectItem key={opcao.value} value={opcao.value}>
+                        {opcao.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </AdminPermissionGuard>
           </div>
 
@@ -212,38 +221,47 @@ export function ChamadoConversa({ chamado }: Props) {
                 </span>
               }
             >
-              <Select
-                value={chamado.responsavel?.id ?? SEM_RESPONSAVEL}
-                onValueChange={handleAlterarResponsavel}
-                disabled={atribuindoResponsavel}
-              >
-                <SelectTrigger className="h-8 w-56">
-                  <SelectValue placeholder="Nenhum responsável" />
-                </SelectTrigger>
-                <SelectContent>
-                  <div className="px-2 pb-2">
-                    <input
-                      value={buscaResponsavel}
-                      onChange={(e) => setBuscaResponsavel(e.target.value)}
-                      placeholder="Buscar por nome ou e-mail..."
-                      className="w-full rounded-md border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring dark:bg-input/30"
-                      onKeyDown={(e) => e.stopPropagation()}
-                    />
-                  </div>
+              {encerrado ? (
+                // Chamado encerrado (resolvido/fechado/cancelado): responsável
+                // não pode mais ser alterado — mesma regra aplicada no backend
+                // (ver ChamadoService::atribuirResponsavel).
+                <span className="text-sm">
+                  {chamado.responsavel?.nome ?? "Nenhum responsável definido"}
+                </span>
+              ) : (
+                <Select
+                  value={chamado.responsavel?.id ?? SEM_RESPONSAVEL}
+                  onValueChange={handleAlterarResponsavel}
+                  disabled={atribuindoResponsavel}
+                >
+                  <SelectTrigger className="h-8 w-56">
+                    <SelectValue placeholder="Nenhum responsável" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div className="px-2 pb-2">
+                      <input
+                        value={buscaResponsavel}
+                        onChange={(e) => setBuscaResponsavel(e.target.value)}
+                        placeholder="Buscar por nome ou e-mail..."
+                        className="w-full rounded-md border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring dark:bg-input/30"
+                        onKeyDown={(e) => e.stopPropagation()}
+                      />
+                    </div>
 
-                  <SelectItem value={SEM_RESPONSAVEL}>Nenhum responsável</SelectItem>
+                    <SelectItem value={SEM_RESPONSAVEL}>Nenhum responsável</SelectItem>
 
-                  {carregandoAdmins && (
-                    <div className="px-2 py-2 text-sm text-muted-foreground">Buscando...</div>
-                  )}
+                    {carregandoAdmins && (
+                      <div className="px-2 py-2 text-sm text-muted-foreground">Buscando...</div>
+                    )}
 
-                  {administradores?.map((admin) => (
-                    <SelectItem key={admin.id} value={admin.id}>
-                      {admin.nome} — {admin.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    {administradores?.map((admin) => (
+                      <SelectItem key={admin.id} value={admin.id}>
+                        {admin.nome} — {admin.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </AdminPermissionGuard>
           </div>
         </div>
