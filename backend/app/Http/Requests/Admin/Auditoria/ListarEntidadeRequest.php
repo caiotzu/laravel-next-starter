@@ -25,4 +25,16 @@ class ListarEntidadeRequest extends FormRequest
             'por_pagina' => ['nullable', 'integer', 'min:1', 'max:100'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'busca.string' => 'O termo de busca deve ser um texto',
+            'busca.max' => 'O termo de busca deve ter no máximo 255 caracteres',
+
+            'por_pagina.integer' => 'A quantidade por página deve ser um número inteiro',
+            'por_pagina.min' => 'A quantidade por página deve ser no mínimo 1',
+            'por_pagina.max' => 'A quantidade por página deve ser no máximo 100',
+        ];
+    }
 }

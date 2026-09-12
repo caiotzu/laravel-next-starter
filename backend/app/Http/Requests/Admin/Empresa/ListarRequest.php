@@ -122,6 +122,11 @@ class ListarRequest extends FormRequest
             'razao_social.string' => 'A razão social da empresa deve ser um texto',
             'razao_social.max'    => 'A razão social da empresa deve ter no máximo 60 caracteres',
 
+            'inscricao_estadual.string' => 'A inscrição estadual deve ser um texto',
+
+            'inscricao_municipal.string' => 'A inscrição municipal deve ser um texto',
+
+            'uf.string' => 'A UF deve ser um texto',
             'uf.size' => 'A UF deve conter exatamente 2 caracteres.',
             'uf.in' => 'A UF informada é inválida',
 

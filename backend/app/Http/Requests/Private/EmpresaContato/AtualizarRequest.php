@@ -49,6 +49,7 @@ class AtualizarRequest extends FormRequest
             'tipo.in' => 'O tipo do contato deve ser ('. implode(', ', array_column(EmpresaContatoTipo::cases(), 'value')).')',
 
             'valor.required' => 'O valor do contato é obrigatório.',
+            'valor.string' => 'O valor do contato deve ser um texto.',
             'valor.max' => 'O valor do contato pode ter no máximo 100 caracteres.',
 
             'principal.required' => 'É necessário informar se o contato é principal.',

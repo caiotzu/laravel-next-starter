@@ -21,6 +21,14 @@ class AtualizarAvatarBase64Request extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'avatar.required' => 'A foto de perfil é obrigatória.',
+            'avatar.string' => 'A foto de perfil deve ser enviada em um formato válido.',
+        ];
+    }
+
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {

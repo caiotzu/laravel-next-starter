@@ -93,14 +93,18 @@ class AtualizarRequest extends FormRequest
             'cep.digits' => 'O CEP deve conter exatamente 8 números.',
 
             'logradouro.required' => 'O logradouro é obrigatório.',
+            'logradouro.string' => 'O logradouro deve ser um texto.',
             'logradouro.max' => 'O logradouro pode ter no máximo 100 caracteres.',
 
             'numero.required' => 'O número é obrigatório.',
+            'numero.string' => 'O número deve ser um texto.',
             'numero.max' => 'O número pode ter no máximo 5 caracteres.',
 
             'bairro.required' => 'O bairro é obrigatório.',
+            'bairro.string' => 'O bairro deve ser um texto.',
             'bairro.max' => 'O bairro pode ter no máximo 100 caracteres.',
 
+            'complemento.string' => 'O complemento deve ser um texto.',
             'complemento.max' => 'O complemento pode ter no máximo 50 caracteres.',
         ];
     }

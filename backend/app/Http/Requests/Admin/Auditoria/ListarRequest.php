@@ -102,6 +102,7 @@ class ListarRequest extends FormRequest
             'incluir_dependentes.boolean'  => 'O filtro incluir_dependentes deve ser do tipo boolean',
             'incluir_dependentes.prohibits' => 'incluir_dependentes não pode ser usado junto com agrupador_tabela/agrupador_id',
 
+            'acao.string' => 'A ação informada deve ser um texto',
             'acao.in' => 'A ação informada é inválida',
 
             'usuario_id.uuid'   => 'O identificador do usuário informado não é um UUID válido',

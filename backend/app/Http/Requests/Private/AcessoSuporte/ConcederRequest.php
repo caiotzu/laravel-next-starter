@@ -49,13 +49,17 @@ class ConcederRequest extends FormRequest
     {
         return [
             'usuario_admin_id.required' => 'É necessário selecionar o administrador que receberá o acesso.',
+            'usuario_admin_id.uuid' => 'O administrador selecionado é inválido.',
             'usuario_admin_id.exists' => 'O administrador selecionado não foi encontrado.',
 
+            'empresa_id.uuid' => 'A empresa selecionada é inválida.',
             'empresa_id.exists' => 'A empresa selecionada não foi encontrada.',
 
+            'motivo.string' => 'O motivo deve ser um texto.',
             'motivo.max' => 'O motivo pode ter no máximo 500 caracteres.',
 
             'duracao_minutos.required' => 'É necessário informar por quanto tempo o acesso ficará disponível.',
+            'duracao_minutos.integer' => 'A duração do acesso deve ser um número inteiro de minutos.',
             'duracao_minutos.min' => 'O acesso deve durar pelo menos ' . AcessoSuporteService::DURACAO_MINIMA_MINUTOS . ' minutos.',
             'duracao_minutos.max' => 'O acesso não pode durar mais que ' . AcessoSuporteService::DURACAO_MAXIMA_MINUTOS . ' minutos.',
         ];

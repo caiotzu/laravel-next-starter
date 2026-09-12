@@ -40,14 +40,17 @@ class PrimeiroAcessoRequest extends FormRequest
     {
         return [
             'token.required' => 'Token inválido.',
+            'token.string' => 'Token inválido.',
 
             'senha.required' => 'A senha é obrigatória.',
+            'senha.string' => 'A senha deve ser um texto.',
             'senha.min' => 'A senha deve ter pelo menos 8 caracteres.',
             'senha.mixed' => 'A senha deve conter pelo menos uma letra maiúscula e uma minúscula.',
             'senha.letters' => 'A senha deve conter pelo menos uma letra.',
             'senha.numbers' => 'A senha deve conter pelo menos um número.',
             'senha.symbols' => 'A senha deve conter pelo menos um caractere especial.',
             'senha_confirma.required' => 'A confirmação da senha é obrigatória.',
+            'senha_confirma.string' => 'A confirmação da senha deve ser um texto.',
             'senha_confirma.same' => 'Senha de confirmação não confere.',
         ];
     }

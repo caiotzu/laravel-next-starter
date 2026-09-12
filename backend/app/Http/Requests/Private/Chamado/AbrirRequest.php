@@ -68,7 +68,11 @@ class AbrirRequest extends FormRequest
             'anexos.max'   => "É permitido no máximo {$maximoAnexos} anexos por mensagem",
 
             'anexos.*.nome.required_with' => 'O nome do anexo é obrigatório',
+            'anexos.*.nome.string' => 'O nome do anexo deve ser um texto',
+            'anexos.*.nome.max' => 'O nome do anexo deve ter no máximo 255 caracteres',
+
             'anexos.*.conteudo.required_with' => 'O conteúdo do anexo é obrigatório',
+            'anexos.*.conteudo.string' => 'O conteúdo do anexo deve ser um texto',
         ];
     }
 

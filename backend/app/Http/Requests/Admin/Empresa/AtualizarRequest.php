@@ -76,22 +76,28 @@ class AtualizarRequest extends FormRequest
             'matriz_id.exists' => 'A empresa informada como matriz não existe.',
 
             'cnpj.required' => 'O CNPJ é obrigatório.',
+            'cnpj.string' => 'O CNPJ deve ser um texto.',
             'cnpj.size' => 'O CNPJ deve conter 14 caracteres.',
             'cnpj.unique' => 'Já existe uma empresa cadastrada com este CNPJ.',
 
             'nome_fantasia.required' => 'O nome fantasia é obrigatório.',
+            'nome_fantasia.string' => 'O nome fantasia deve ser um texto.',
             'nome_fantasia.max' => 'O nome fantasia deve ter no máximo 60 caracteres.',
 
             'razao_social.required' => 'A razão social é obrigatória.',
+            'razao_social.string' => 'A razão social deve ser um texto.',
             'razao_social.max' => 'A razão social deve ter no máximo 60 caracteres.',
 
+            'inscricao_estadual.string' => 'A inscrição estadual deve ser um texto.',
             'inscricao_estadual.max' => 'A inscrição estadual deve ter no máximo 255 caracteres.',
 
+            'inscricao_municipal.string' => 'A inscrição municipal deve ser um texto.',
             'inscricao_municipal.max' => 'A inscrição municipal deve ter no máximo 255 caracteres.',
 
             'status.in' => 'O status/situação deve ser ('.EmpresaStatus::ATIVO->value.','.EmpresaStatus::INATIVO->value.','.EmpresaStatus::BLOQUEADO->value.')',
 
             'uf.required' => 'A UF é obrigatória.',
+            'uf.string' => 'A UF deve ser um texto.',
             'uf.in' => 'A UF informada é inválida.'
         ];
     }
