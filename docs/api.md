@@ -28,8 +28,8 @@ Organização por prefixo/contexto (`backend/routes/api.php`):
 
 | Contexto | Prefixo | Descrição |
 |---|---|---|
-| Admin | `/admin/*` | Gestão de empresas, usuários, grupos, permissões, auditoria, mensagens |
-| Private | sem prefixo (ex.: `/empresas`, `/usuarios`, `/grupos`) | Mesmas funcionalidades, escopadas ao usuário/empresa autenticado |
+| Admin | `/admin/*` | Gestão de empresas, usuários, grupos, permissões, auditoria, mensagens, banners |
+| Private | sem prefixo (ex.: `/empresas`, `/usuarios`, `/grupos`, `/banners/disponiveis`) | Mesmas funcionalidades, escopadas ao usuário/empresa autenticado |
 | Global | `/mensagens/*` (contador, marcar como lida) | Compartilhado entre Admin e Private |
 | Lookup | `/lookup/*` | Consultas auxiliares (CEP, municípios, tipos) |
 
@@ -40,6 +40,7 @@ Todas exigem o middleware `jwt`, exceto login, primeiro acesso e recuperação d
 - **Empresas:** `GET /empresas`, `GET|PUT /empresas/{id}` (Private e Admin); `POST /empresas`, `DELETE /empresas/{id}` e `PATCH /empresas/{id}/ativar` só em `/admin/empresas`. Ambos os contextos têm `/{empresaId}/contatos` e `/{empresaId}/enderecos` com CRUD completo;
 - **Grupos-empresas** *(somente Admin)*: `/admin/grupos-empresas`, incluindo `PATCH /{grupoId}/usuarios/{usuarioId}/status` e `/redefinir-senha`;
 - **Mensagens:** `GET|POST /mensagens`, `GET /mensagens/{id}`; contador e marcação de lida em `/mensagens/nao-lidas/contador` e `/mensagens/{id}/marcar-lida`;
+- **Banners:** `GET|POST /admin/banners`, `GET|PUT /admin/banners/{id}`, `DELETE /admin/banners/{id}`, `PATCH /admin/banners/{id}/ativar` e `/desativar` (gestão, somente Admin); `GET /banners/disponiveis` (Private) retorna somente os banners ativos, dentro do período e elegíveis para o direcionamento do usuário autenticado;
 - **Auditoria** *(somente Admin)*: `GET /admin/auditorias`, `/admin/auditorias/entidades`, `/admin/auditorias/entidades/{entidade}`.
 
 Rotas completas e atualizadas: `backend/routes/api.php`. Para parâmetros e schemas de request/response, use o Swagger.

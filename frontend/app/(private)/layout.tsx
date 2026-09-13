@@ -9,6 +9,7 @@ import { ReactQueryProvider } from "@/components/providers/react-query-provider"
 import { ThemeProvider } from "@/components/providers/theme-provider";
 
 import { AcessoSuporteBootstrap } from "./providers/acesso-suporte-bootstrap";
+import { BannerProvider } from "./providers/banner-provider";
 import { MensagemContadorProvider } from "./providers/mensagem-contador-provider";
 import { PrivatePermissionProvider } from "./providers/private-permission-provider";
 
@@ -50,7 +51,9 @@ export default function RootLayout({
               <AcessoSuporteBootstrap>
                 <PrivatePermissionProvider>
                   <MensagemContadorProvider>
-                    {children}
+                    <BannerProvider>
+                      {children}
+                    </BannerProvider>
                   </MensagemContadorProvider>
                 </PrivatePermissionProvider>
               </AcessoSuporteBootstrap>

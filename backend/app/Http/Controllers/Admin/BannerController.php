@@ -1,0 +1,222 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+
+use Illuminate\Http\JsonResponse;
+
+use App\Services\BannerService;
+
+use App\Http\Requests\Admin\Banner\ListarRequest;
+use App\Http\Requests\Admin\Banner\CadastrarRequest;
+use App\Http\Requests\Admin\Banner\AtualizarRequest;
+
+use App\DTO\Banner\BannerFiltroDTO;
+use App\DTO\Banner\BannerCadastroDTO;
+use App\DTO\Banner\BannerAtualizacaoDTO;
+
+use App\Http\Resources\Admin\Banner\BannerResource;
+
+use OpenApi\Attributes as OA;
+
+#[OA\Schema(
+    schema: 'AdminBanner',
+    properties: [
+        new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+        new OA\Property(property: 'titulo', type: 'string', maxLength: 120),
+        new OA\Property(property: 'conteudo', type: 'string', nullable: true),
+        new OA\Property(property: 'status', type: 'string', enum: ['ativo', 'inativo']),
+        new OA\Property(property: 'direcionamento', properties: [
+            new OA\Property(property: 'tipo', type: 'string', enum: ['geral', 'entidade']),
+            new OA\Property(property: 'entidade_tipo', type: 'string', enum: ['admin', 'private'], nullable: true),
+        ], type: 'object'),
+        new OA\Property(property: 'inicio_em', type: 'string', format: 'date-time'),
+        new OA\Property(property: 'fim_em', type: 'string', format: 'date-time', nullable: true),
+        new OA\Property(property: 'imagens', type: 'array', items: new OA\Items(properties: [
+            new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+            new OA\Property(property: 'url', type: 'string'),
+            new OA\Property(property: 'ordem', type: 'integer'),
+        ], type: 'object')),
+        new OA\Property(property: 'links', type: 'array', items: new OA\Items(properties: [
+            new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+            new OA\Property(property: 'nome', type: 'string'),
+            new OA\Property(property: 'url', type: 'string'),
+            new OA\Property(property: 'ordem', type: 'integer'),
+        ], type: 'object')),
+        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+        new OA\Property(property: 'deleted_at', type: 'string', format: 'date-time', nullable: true),
+    ],
+    type: 'object'
+)]
+class BannerController extends Controller
+{
+    public function __construct(
+        protected BannerService $bannerService,
+    ) {}
+
+    #[OA\Get(
+        path: '/admin/banners',
+        summary: 'Admin — Listar banners',
+        security: [['bearerAuth' => []]],
+        tags: ['Admin'],
+        parameters: [
+            new OA\Parameter(name: 'titulo', in: 'query', schema: new OA\Schema(type: 'string', maxLength: 120)),
+            new OA\Parameter(name: 'status', in: 'query', schema: new OA\Schema(type: 'string', enum: ['ativo', 'inativo'])),
+            new OA\Parameter(name: 'por_pagina', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 15)),
+            new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', minimum: 1, default: 1)),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Lista paginada de banners.', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/AdminBanner')),
+                new OA\Property(property: 'links', ref: '#/components/schemas/PaginationLinks', type: 'object'),
+                new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta', type: 'object'),
+            ], type: 'object')),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+        ]
+    )]
+    public function listar(ListarRequest $request): JsonResponse
+    {
+        $this->authorize('admin.banner.listar');
+
+        $banners = $this->bannerService->listar(BannerFiltroDTO::criarParaFiltro($request->validated()));
+
+        return BannerResource::collection($banners)->response()->setStatusCode(200);
+    }
+
+    #[OA\Get(
+        path: '/admin/banners/{id}',
+        summary: 'Admin — Visualizar banner',
+        security: [['bearerAuth' => []]],
+        tags: ['Admin'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Banner encontrado.', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/AdminBanner', type: 'object')], type: 'object')),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+        ]
+    )]
+    public function visualizar(string $id): JsonResponse
+    {
+        $this->authorize('admin.banner.visualizar');
+
+        $banner = $this->bannerService->visualizar($id);
+
+        return BannerResource::make($banner)->response()->setStatusCode(200);
+    }
+
+    #[OA\Post(
+        path: '/admin/banners',
+        summary: 'Admin — Cadastrar banner',
+        description: 'Cria uma campanha de banner. Requer ao menos uma imagem, período de campanha e direcionamento (todos ou por entidade).',
+        security: [['bearerAuth' => []]],
+        tags: ['Admin'],
+        responses: [
+            new OA\Response(response: 201, description: 'Banner cadastrado.', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/AdminBanner', type: 'object')], type: 'object')),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+        ]
+    )]
+    public function cadastrar(CadastrarRequest $request): JsonResponse
+    {
+        $this->authorize('admin.banner.cadastrar');
+
+        $banner = $this->bannerService->cadastrar(BannerCadastroDTO::criarParaCadastro($request->validated()));
+
+        return BannerResource::make($banner)->response()->setStatusCode(201);
+    }
+
+    #[OA\Put(
+        path: '/admin/banners/{id}',
+        summary: 'Admin — Atualizar banner',
+        security: [['bearerAuth' => []]],
+        tags: ['Admin'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Banner atualizado.', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/AdminBanner', type: 'object')], type: 'object')),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+            new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
+        ]
+    )]
+    public function atualizar(AtualizarRequest $request, string $id): JsonResponse
+    {
+        $this->authorize('admin.banner.atualizar');
+
+        $banner = $this->bannerService->atualizar(BannerAtualizacaoDTO::criarParaAtualizacao($id, $request->validated()));
+
+        return BannerResource::make($banner)->response()->setStatusCode(200);
+    }
+
+    #[OA\Patch(
+        path: '/admin/banners/{id}/ativar',
+        summary: 'Admin — Ativar banner',
+        security: [['bearerAuth' => []]],
+        tags: ['Admin'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Banner ativado.', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/AdminBanner', type: 'object')], type: 'object')),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+        ]
+    )]
+    public function ativar(string $id): JsonResponse
+    {
+        $this->authorize('admin.banner.atualizar');
+
+        $banner = $this->bannerService->ativar($id);
+
+        return BannerResource::make($banner)->response()->setStatusCode(200);
+    }
+
+    #[OA\Patch(
+        path: '/admin/banners/{id}/desativar',
+        summary: 'Admin — Desativar banner',
+        security: [['bearerAuth' => []]],
+        tags: ['Admin'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Banner desativado.', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/AdminBanner', type: 'object')], type: 'object')),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+        ]
+    )]
+    public function desativar(string $id): JsonResponse
+    {
+        $this->authorize('admin.banner.atualizar');
+
+        $banner = $this->bannerService->desativar($id);
+
+        return BannerResource::make($banner)->response()->setStatusCode(200);
+    }
+
+    #[OA\Delete(
+        path: '/admin/banners/{id}',
+        summary: 'Admin — Excluir banner',
+        security: [['bearerAuth' => []]],
+        tags: ['Admin'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))],
+        responses: [
+            new OA\Response(response: 204, ref: '#/components/responses/NoContent'),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+        ]
+    )]
+    public function excluir(string $id): JsonResponse
+    {
+        $this->authorize('admin.banner.excluir');
+
+        $this->bannerService->excluir($id);
+
+        return response()->json(null, 204);
+    }
+}

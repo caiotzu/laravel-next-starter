@@ -502,6 +502,51 @@ class AdminPermissaoSeeder extends Seeder
                     "updated_at" => date("Y-m-d H:i:s")
                 ],
             //---
+
+            // banner
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.banner.menu",
+                    "descricao" => "Permite visualizar o menu de Banners",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.banner.listar",
+                    "descricao" => "Permite listar e visualizar banners",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.banner.visualizar",
+                    "descricao" => "Permite visualizar os detalhes de um banner",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.banner.cadastrar",
+                    "descricao" => "Permite cadastrar um novo banner",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.banner.atualizar",
+                    "descricao" => "Permite atualizar, ativar e desativar um banner",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.banner.excluir",
+                    "descricao" => "Permite excluir um banner",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
+            //---
         ];
 
         $chavesExistentes = DB::table("permissoes")

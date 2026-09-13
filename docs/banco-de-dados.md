@@ -1,7 +1,7 @@
 # Banco de dados
 
 - **SGBD:** PostgreSQL 17, provisionado pelo `docker-compose.yml` do Sail (serviço `pgsql`).
-- **Migrations:** `backend/database/migrations`, cobrindo autenticação/sessões, grupos e permissões, empresas (com endereços e contatos), municípios, mensagens (com destinatários e direcionamentos) e auditoria.
+- **Migrations:** `backend/database/migrations`, cobrindo autenticação/sessões, grupos e permissões, empresas (com endereços e contatos), municípios, mensagens (com destinatários e direcionamentos), banners (com imagens e links) e auditoria.
 - **Seeders:** `backend/database/seeders`, organizados por contexto `Admin*` e `Private*`, populando tipos de entidade, permissões, grupos e dados de exemplo.
 
 ```bash
@@ -20,6 +20,7 @@
 | `Empresa`, `EmpresaEndereco`, `EmpresaContato` | Dados da empresa e seus relacionamentos |
 | `GrupoEmpresa` | Vínculo entre grupo e empresa (contexto Private) |
 | `Mensagem`, `MensagemDestinatario`, `MensagemDirecionamento` | Sistema de mensagens internas |
+| `Banner`, `BannerImagem`, `BannerLink` | Campanhas de banner exibidas no Private, com período, direcionamento (todos/entidade), múltiplas imagens e links |
 | `Auditoria` | Trilha de alterações (gravada de forma assíncrona) |
 | `UsuarioSessao` | Sessões ativas, usadas pelo `JwtMiddleware` para revogação |
 | `TokenResetSenha` | Tokens de redefinição de senha / primeiro acesso |

@@ -53,4 +53,9 @@ enum ErrorCode: int
     case CHAMADO_NOT_FOUND = 40411;
     case CHAMADO_ENCERRADO = 42211;
     case CHAMADO_ANEXO_INVALIDO = 42212;
+
+    // Banner (model) -> 12
+    case BANNER_NOT_FOUND = 40412;
+    case BANNER_IMAGEM_INVALIDA = 42214;
+    case BANNER_DIRECIONAMENTO_INVALIDO = 42215;
 }

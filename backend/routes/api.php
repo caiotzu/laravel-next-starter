@@ -32,6 +32,7 @@ use App\Http\Controllers\Admin\ {
     ReleaseController,
     ChamadoController,
     DashboardController,
+    BannerController,
 };
 
 use App\Http\Controllers\Private\ {
@@ -46,7 +47,8 @@ use App\Http\Controllers\Private\ {
     AcessoSuporteController as PrivateAcessoSuporteController,
     AutenticacaoDoisFatoresController as PrivateAutenticacaoDoisFatoresController,
     ReleaseController as PrivateReleaseController,
-    ChamadoController as PrivateChamadoController
+    ChamadoController as PrivateChamadoController,
+    BannerController as PrivateBannerController
 };
 
 // #region Admin
@@ -172,6 +174,16 @@ Route::middleware(['jwt', 'suporte.contexto'])->group(function () {
             Route::post('/', [MensagemController::class, 'cadastrar']);
         });
 
+        Route::prefix('banners')->group(function () {
+            Route::patch('/{id}/ativar', [BannerController::class, 'ativar']);
+            Route::patch('/{id}/desativar', [BannerController::class, 'desativar']);
+            Route::put('/{id}', [BannerController::class, 'atualizar']);
+            Route::delete('/{id}', [BannerController::class, 'excluir']);
+            Route::get('/{id}', [BannerController::class, 'visualizar']);
+            Route::get('/', [BannerController::class, 'listar']);
+            Route::post('/', [BannerController::class, 'cadastrar']);
+        });
+
         Route::prefix('grupos')->group(function () {
             Route::patch('/{id}/permissoes', [GrupoController::class, 'sincronizarPermissoes']);
             Route::patch('/{id}/ativar', [GrupoController::class, 'ativar']);
@@ -281,6 +293,10 @@ Route::middleware(['jwt', 'suporte.contexto'])->group(function () {
     Route::prefix('releases')->group(function () {
         Route::get('/{id}', [PrivateReleaseController::class, 'visualizar']);
         Route::get('/', [PrivateReleaseController::class, 'listar']);
+    });
+
+    Route::prefix('banners')->group(function () {
+        Route::get('/disponiveis', [PrivateBannerController::class, 'disponiveis']);
     });
 
     Route::prefix('chamados')->group(function () {

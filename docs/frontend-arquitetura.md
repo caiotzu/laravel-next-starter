@@ -2,7 +2,7 @@
 
 ## `domains/` + `features/`
 
-O padrão `domains/{contexto}/{recurso}` + `features/{contexto}/{recurso}` se repete para cada recurso de negócio (usuário, empresa, grupo, grupo-empresa, permissão, mensagem, auditoria, perfil, lookup), tanto em `admin` quanto em `private`:
+O padrão `domains/{contexto}/{recurso}` + `features/{contexto}/{recurso}` se repete para cada recurso de negócio (usuário, empresa, grupo, grupo-empresa, permissão, mensagem, banner, auditoria, perfil, lookup), tanto em `admin` quanto em `private`:
 
 ```text
 domains/{contexto}/{recurso}/
@@ -36,7 +36,7 @@ Aliases configurados em `components.json`/`tsconfig.json`: `@/components`, `@/li
 
 App Router com dois agrupamentos:
 
-- `app/admin/**` — área administrativa (`/admin`, `/admin/dashboard`, `/admin/usuarios`, `/admin/grupos`, `/admin/grupos-empresas`, `/admin/empresas`, `/admin/mensagens`, `/admin/auditorias`, `/admin/perfil`, `/admin/(auth)/**`);
+- `app/admin/**` — área administrativa (`/admin`, `/admin/dashboard`, `/admin/usuarios`, `/admin/grupos`, `/admin/grupos-empresas`, `/admin/empresas`, `/admin/mensagens`, `/admin/banners`, `/admin/auditorias`, `/admin/perfil`, `/admin/(auth)/**`);
 - `app/(private)/**` — área privada, usando um *route group* (`(private)`) para não afetar a URL — páginas ficam acessíveis a partir da raiz (`/`, `/dashboard`, `/usuarios`, `/grupos`, `/empresas`, `/perfil`, `/(auth)/**`).
 
 Cada grupo tem seu próprio `layout.tsx` e pasta `providers/`. Rotas protegidas e mapeamento de cookie por rota ficam em `routes/routes.ts`, ordenado da mais específica para a mais genérica — consumido por `middleware.ts` (veja [`autenticacao-e-autorizacao.md`](./autenticacao-e-autorizacao.md#frontend)).
