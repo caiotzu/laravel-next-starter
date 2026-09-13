@@ -286,6 +286,42 @@ test('admin consegue excluir um banner (soft delete)', function () {
 // Private — consulta de disponibilidade
 // ---------------------------------------------------------------------
 
+test('admin consegue atualizar um banner mantendo a imagem existente e adicionando uma nova, sem informar nome da imagem existente', function () {
+    // Regressão: o payload de edição envia imagens existentes só com
+    // `id` (sem `nome`) — ver BannerFormEdit.tsx. Isso não pode mais
+    // disparar "imagens.0.nome é obrigatório" (ver AtualizarRequest).
+    $cenario = criarCenarioBanner();
+    concederPermissaoBanner($cenario['grupoAdmin'], 'admin.banner.atualizar');
+
+    $banner = criarBanner();
+    $imagemExistente = \App\Models\BannerImagem::create([
+        'banner_id' => $banner->id,
+        'caminho' => 'banners/' . $banner->id . '/existente.png',
+        'mime_type' => 'image/png',
+        'tamanho' => 100,
+        'ordem' => 0,
+    ]);
+
+    $token = autenticarUsuarioBanner($cenario['admin']);
+
+    $resposta = $this->withHeader('Authorization', "Bearer {$token}")
+        ->putJson("/api/admin/banners/{$banner->id}", [
+            'titulo' => $banner->titulo,
+            'inicio_em' => $banner->inicio_em->toDateTimeString(),
+            'direcionamento' => ['tipo' => 'geral'],
+            'imagens' => [
+                // Imagem existente mantida — só com `id`, sem `nome`.
+                ['id' => $imagemExistente->id],
+                // Imagem nova adicionada durante a edição.
+                ['nome' => 'nova.png', 'conteudo' => BANNER_IMAGEM_BASE64],
+            ],
+            'links' => [],
+        ]);
+
+    $resposta->assertStatus(200)
+        ->assertJsonCount(2, 'data.imagens');
+});
+
 test('private não vê nenhum banner quando não há campanhas elegíveis', function () {
     $cenario = criarCenarioBanner();
     $token = autenticarUsuarioBanner($cenario['private']);

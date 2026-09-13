@@ -60,7 +60,12 @@ class AtualizarRequest extends FormRequest
                 Rule::exists('banner_imagens', 'id'),
             ],
             'imagens.*.nome' => [
-                Rule::requiredIf(fn () => true),
+                // O nome é só um rótulo informativo (usado em mensagens de
+                // erro) — nunca a origem de verdade da imagem, então não
+                // pode ser obrigatório: uma imagem já existente (enviada só
+                // com `id`) legitimamente não tem `nome` no payload. Quando
+                // ausente, o Service gera um rótulo padrão automaticamente
+                // (ver BannerService::armazenarImagem).
                 'nullable',
                 'string',
                 'max:255',

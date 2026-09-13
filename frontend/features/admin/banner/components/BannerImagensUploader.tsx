@@ -4,7 +4,7 @@ import { useRef } from "react";
 
 import Image from "next/image";
 
-import { ArrowDown, ArrowUp, ImagePlus, X } from "lucide-react";
+import { ArrowDown, ArrowUp, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -117,11 +117,10 @@ export function BannerImagensUploader({
         type="button"
         variant="outline"
         size="sm"
-        className="w-fit gap-2"
+        className="w-fit"
         disabled={disabled || value.length >= maxImagens}
         onClick={() => inputRef.current?.click()}
       >
-        <ImagePlus className="h-4 w-4" />
         Adicionar imagem
       </Button>
 

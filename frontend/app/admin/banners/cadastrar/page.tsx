@@ -91,6 +91,13 @@ export default function Page() {
             <PageHeader
               title="Banners"
               description="Cadastro de uma nova campanha de banner"
+              actions={[
+                {
+                  label: "Voltar",
+                  href: "/admin/banners",
+                  variant: "default",
+                },
+              ]}
             />
 
             <AdminPermissionGuard permission="admin.banner.cadastrar">

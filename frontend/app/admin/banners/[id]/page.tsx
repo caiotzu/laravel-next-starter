@@ -108,7 +108,17 @@ export default function Page() {
 
         <div className="flex flex-1 flex-col">
           <div className="flex flex-col gap-6 py-6 px-4 lg:px-6">
-            <PageHeader title="Banners" description="Edição de campanha de banner" />
+            <PageHeader
+              title="Banners"
+              description="Edição de campanha de banner"
+              actions={[
+                {
+                  label: "Voltar",
+                  href: "/admin/banners",
+                  variant: "default",
+                },
+              ]}
+            />
 
             <AdminPermissionGuard permission="admin.banner.atualizar">
               {isLoading || !data ? (

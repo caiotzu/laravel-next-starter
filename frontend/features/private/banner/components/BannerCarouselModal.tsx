@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import Image from "next/image";
 
@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 import { Banner } from "@/domains/private/banner/types/banner.model";
+import { cn } from "@/lib/utils";
+
 
 interface Props {
   banners: Banner[];
@@ -18,17 +20,28 @@ interface Props {
 }
 
 /**
- * Exibição dos banners no Private — um "carousel/modal" profissional (ver
- * item 9 do pedido), construído em cima do Dialog já existente no projeto
- * (sem adicionar nenhuma dependência de carousel nova).
+ * Exibição dos banners no Private: um banner/carousel de campanha, no
+ * estilo do que se vê em sites e sistemas comerciais — não uma imagem
+ * dentro de um modal administrativo. Construído em cima do Dialog já
+ * existente no projeto, sem nenhuma dependência de carousel nova.
  *
- * Dois níveis de navegação, nunca misturados no mesmo controle (ver item
- * 15): as setas laterais grandes trocam de BANNER (campanha); os pontinhos
- * pequenos abaixo da imagem trocam de IMAGEM dentro do banner atual.
+ * A hierarquia CAMPANHA → IMAGENS é representada com dois controles
+ * visualmente distintos, nunca misturados (ver item 10 do pedido):
+ *  - as ABAS no topo trocam de CAMPANHA (só aparecem quando há mais de
+ *    uma) e mostram quantas campanhas existem;
+ *  - as setas sobre a imagem e os pontinhos abaixo dela trocam de IMAGEM
+ *    dentro da campanha atual.
  */
 export function BannerCarouselModal({ banners, open, onClose }: Props) {
   const [bannerIndex, setBannerIndex] = useState(0);
   const [imagemIndex, setImagemIndex] = useState(0);
+
+  // Sempre que o conjunto de banners elegíveis mudar (ex.: novo login),
+  // volta para o início em vez de manter um índice de uma sessão anterior.
+  useEffect(() => {
+    setBannerIndex(0);
+    setImagemIndex(0);
+  }, [banners]);
 
   const banner = banners[bannerIndex];
   const imagem = banner?.imagens[imagemIndex];
@@ -36,9 +49,8 @@ export function BannerCarouselModal({ banners, open, onClose }: Props) {
   const temMultiplosBanners = banners.length > 1;
   const temMultiplasImagens = (banner?.imagens.length ?? 0) > 1;
 
-  function irParaBanner(indice: number) {
-    const total = banners.length;
-    setBannerIndex(((indice % total) + total) % total);
+  function selecionarBanner(indice: number) {
+    setBannerIndex(indice);
     setImagemIndex(0);
   }
 
@@ -47,15 +59,13 @@ export function BannerCarouselModal({ banners, open, onClose }: Props) {
     setImagemIndex(((indice % total) + total) % total);
   }
 
-  const podeVoltar = useMemo(() => temMultiplosBanners, [temMultiplosBanners]);
-
   if (!banner || !imagem) return null;
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="max-w-2xl gap-0 overflow-hidden p-0 sm:rounded-xl"
+        className="gap-0 overflow-hidden p-0 sm:max-w-3xl lg:max-w-4xl sm:rounded-2xl border-none shadow-2xl"
       >
         <DialogTitle className="sr-only">{banner.titulo}</DialogTitle>
 
@@ -63,14 +73,38 @@ export function BannerCarouselModal({ banners, open, onClose }: Props) {
         <button
           type="button"
           onClick={onClose}
-          aria-label="Fechar banner"
-          className="absolute right-3 top-3 z-20 rounded-full bg-black/40 p-1.5 text-white transition hover:bg-black/60"
+          aria-label="Fechar"
+          className="absolute right-3 top-3 z-30 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition hover:bg-black/70"
         >
           <X className="h-4 w-4" />
         </button>
 
-        {/* Imagem */}
-        <div className="relative aspect-[16/9] w-full bg-muted">
+        {/* Abas de campanha — só quando há mais de uma (item 10) */}
+        {temMultiplosBanners && (
+          <div className="flex items-center gap-2 overflow-x-auto border-b bg-muted/40 px-4 py-2.5">
+            <span className="shrink-0 text-xs font-medium text-muted-foreground">
+              {banners.length} campanhas:
+            </span>
+            {banners.map((b, index) => (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => selecionarBanner(index)}
+                className={cn(
+                  "shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                  index === bannerIndex
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background text-muted-foreground hover:bg-accent hover:text-foreground"
+                )}
+              >
+                {b.titulo}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Área de destaque da campanha */}
+        <div className="relative aspect-[16/10] w-full bg-muted sm:aspect-[16/9]">
           <Image
             key={imagem.id}
             src={imagem.url}
@@ -81,62 +115,62 @@ export function BannerCarouselModal({ banners, open, onClose }: Props) {
             className="object-cover"
           />
 
-          {podeVoltar && (
+          {/* Gradiente para dar leitura ao contador/título sobre a imagem */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
+
+          {temMultiplasImagens && (
             <>
               <button
                 type="button"
-                onClick={() => irParaBanner(bannerIndex - 1)}
-                aria-label="Banner anterior"
-                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white transition hover:bg-black/60"
+                onClick={() => irParaImagem(imagemIndex - 1)}
+                aria-label="Imagem anterior"
+                className="absolute left-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/60"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <button
                 type="button"
-                onClick={() => irParaBanner(bannerIndex + 1)}
-                aria-label="Próximo banner"
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white transition hover:bg-black/60"
+                onClick={() => irParaImagem(imagemIndex + 1)}
+                aria-label="Próxima imagem"
+                className="absolute right-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/60"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
+
+              <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">
+                {banner.imagens.map((img, index) => (
+                  <button
+                    key={img.id}
+                    type="button"
+                    onClick={() => irParaImagem(index)}
+                    aria-label={`Ir para imagem ${index + 1}`}
+                    className={cn(
+                      "h-1.5 rounded-full transition-all",
+                      index === imagemIndex ? "w-6 bg-white" : "w-1.5 bg-white/50 hover:bg-white/80"
+                    )}
+                  />
+                ))}
+              </div>
+
+              <div className="absolute right-3 top-3 z-20 rounded-full bg-black/50 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                {imagemIndex + 1} / {banner.imagens.length}
+              </div>
             </>
-          )}
-
-          {temMultiplasImagens && (
-            <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
-              {banner.imagens.map((img, index) => (
-                <button
-                  key={img.id}
-                  type="button"
-                  onClick={() => irParaImagem(index)}
-                  aria-label={`Ir para imagem ${index + 1}`}
-                  className={`h-1.5 rounded-full transition-all ${
-                    index === imagemIndex ? "w-5 bg-white" : "w-1.5 bg-white/50"
-                  }`}
-                />
-              ))}
-            </div>
-          )}
-
-          {temMultiplosBanners && (
-            <div className="absolute right-3 bottom-3 rounded-full bg-black/40 px-2 py-0.5 text-xs text-white">
-              {bannerIndex + 1} / {banners.length}
-            </div>
           )}
         </div>
 
-        {/* Conteúdo */}
-        <div className="space-y-3 p-5">
-          <h2 className="text-lg font-semibold">{banner.titulo}</h2>
+        {/* Conteúdo da campanha */}
+        <div className="space-y-3 p-5 sm:p-6">
+          <h2 className="text-xl font-semibold tracking-tight">{banner.titulo}</h2>
 
           {banner.conteudo && (
-            <p className="text-sm text-muted-foreground whitespace-pre-line">{banner.conteudo}</p>
+            <p className="whitespace-pre-line text-sm text-muted-foreground">{banner.conteudo}</p>
           )}
 
           {banner.links.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-1">
-              {banner.links.map((link) => (
-                <Button key={link.id} asChild size="sm">
+            <div className="flex flex-wrap gap-2 pt-2">
+              {banner.links.map((link, index) => (
+                <Button key={link.id} asChild variant={index === 0 ? "default" : "outline"}>
                   <a href={link.url} target="_blank" rel="noreferrer">
                     {link.nome}
                   </a>

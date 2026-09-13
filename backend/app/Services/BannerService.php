@@ -245,8 +245,17 @@ class BannerService
         }
     }
 
-    private function armazenarImagem(Banner $banner, string $nomeOriginal, string $conteudoBase64, int $ordem): BannerImagem
+    private function armazenarImagem(Banner $banner, ?string $nomeOriginal, string $conteudoBase64, int $ordem): BannerImagem
     {
+        // Nome é só um rótulo para mensagens de erro — se o cliente não
+        // enviar (ex.: imagem nova cujo File não trouxe nome, ou qualquer
+        // outro caso além do fluxo normal do formulário), o sistema gera
+        // um rótulo padrão em vez de falhar por causa de um dado que não é
+        // a origem de verdade da imagem.
+        $nomeOriginal = $nomeOriginal !== null && $nomeOriginal !== ''
+            ? $nomeOriginal
+            : 'Imagem ' . ($ordem + 1);
+
         $decodificado = base64_decode($conteudoBase64, true);
 
         if ($decodificado === false || $decodificado === '') {
@@ -329,7 +338,7 @@ class BannerService
 
         foreach ($imagens as $imagem) {
             if ($imagem->ehNova()) {
-                $this->armazenarImagem($banner, $imagem->nome ?? 'imagem', $imagem->conteudo ?? '', $imagem->ordem);
+                $this->armazenarImagem($banner, $imagem->nome, $imagem->conteudo ?? '', $imagem->ordem);
                 continue;
             }
 

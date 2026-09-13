@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, X } from "lucide-react";
+import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,11 +106,10 @@ export function BannerLinksField({
         type="button"
         variant="outline"
         size="sm"
-        className="w-fit gap-2"
+        className="w-fit"
         onClick={adicionar}
         disabled={disabled || value.length >= maxLinks}
       >
-        <Plus className="h-4 w-4" />
         Adicionar link
       </Button>
     </div>

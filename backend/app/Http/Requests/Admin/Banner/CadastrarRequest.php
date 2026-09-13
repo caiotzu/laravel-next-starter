@@ -54,7 +54,7 @@ class CadastrarRequest extends FormRequest
                 'max:10',
             ],
             'imagens.*.nome' => [
-                'required',
+                'nullable',
                 'string',
                 'max:255',
             ],
@@ -108,7 +108,6 @@ class CadastrarRequest extends FormRequest
             'imagens.min'      => 'É obrigatório enviar ao menos uma imagem',
             'imagens.max'      => 'O banner permite no máximo 10 imagens',
 
-            'imagens.*.nome.required'     => 'O nome de cada imagem é obrigatório',
             'imagens.*.conteudo.required' => 'O conteúdo de cada imagem é obrigatório',
 
             'links.array' => 'Os links informados são inválidos',

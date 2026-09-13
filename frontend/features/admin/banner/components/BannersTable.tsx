@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,34 +76,36 @@ export function BannersTable({ data: banners }: Props) {
     },
   });
 
+  if (banners.length === 0) {
+    return (
+      <Card className="rounded-2xl border shadow-sm p-8 text-center text-muted-foreground">
+        Nenhum banner encontrado
+      </Card>
+    );
+  }
+
   return (
-    <div className="space-y-4">
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Título</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Direcionamento</TableHead>
-              <TableHead>Início</TableHead>
-              <TableHead>Término</TableHead>
-              <TableHead>Imagens</TableHead>
-              <TableHead className="w-10" />
-            </TableRow>
-          </TableHeader>
+    <Card className="overflow-hidden p-4">
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            <TableHead>Título</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Direcionamento</TableHead>
+            <TableHead>Início</TableHead>
+            <TableHead>Término</TableHead>
+            <TableHead>Imagens</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
+          </TableRow>
+        </TableHeader>
 
-          <TableBody>
-            {banners.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                  Nenhum banner encontrado.
-                </TableCell>
-              </TableRow>
-            )}
-
-            {banners.map((banner) => (
-                <TableRow key={banner.id}>
-                  <TableCell className="font-medium">{banner.titulo}</TableCell>
+        <TableBody className="text-sm text-muted-foreground">
+          {banners.map((banner) => (
+                <TableRow
+                  key={banner.id}
+                  className="border-b last:border-0 hover:bg-muted/40 even:bg-muted/20 transition-colors"
+                >
+                  <TableCell className="font-medium text-foreground">{banner.titulo}</TableCell>
                   <TableCell>
                     <Badge variant={banner.status === "ativo" ? "default" : "secondary"}>
                       {banner.statusLabel}
@@ -164,7 +167,6 @@ export function BannersTable({ data: banners }: Props) {
                             <AlertDialogTrigger asChild>
                               <DropdownMenuItem
                                 onSelect={(e) => e.preventDefault()}
-                                className="text-destructive focus:text-destructive"
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Excluir
@@ -192,9 +194,8 @@ export function BannersTable({ data: banners }: Props) {
                   </TableCell>
                 </TableRow>
               ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+        </TableBody>
+      </Table>
+    </Card>
   );
 }

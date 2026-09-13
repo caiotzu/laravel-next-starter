@@ -59,10 +59,8 @@ export default function Page() {
               description="Detalhes da campanha de banner"
               actions={[
                 {
-                  label: "Editar",
-                  href: `/admin/banners/${id}`,
-                  icon: null,
-                  permission: "admin.banner.atualizar",
+                  label: "Voltar",
+                  href: "/admin/banners",
                   variant: "default",
                 },
               ]}

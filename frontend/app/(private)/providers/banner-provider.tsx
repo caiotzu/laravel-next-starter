@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { usePathname } from "next/navigation";
 
@@ -10,14 +10,12 @@ import { protectedRoutes } from "@/routes/routes";
 import { BannerCarouselModal } from "@/features/private/banner/components/BannerCarouselModal";
 
 
-const CHAVE_SESSAO_BANNERS_FECHADOS = "banners-fechados-sessao";
-
 /**
  * Mesmo cuidado do MensagemContadorProvider/PrivatePermissionProvider: só
  * habilita a busca em rotas realmente protegidas do Private, para nunca
  * disparar a consulta de banners disponíveis em telas públicas (login,
- * recuperação de senha etc) — ver item 10 do pedido (nenhuma requisição
- * desnecessária).
+ * recuperação de senha etc) — ver item 10 do pedido original (nenhuma
+ * requisição desnecessária).
  */
 function exigePermissoesPrivate(pathname: string): boolean {
   return protectedRoutes.some(
@@ -28,26 +26,25 @@ function exigePermissoesPrivate(pathname: string): boolean {
   );
 }
 
-function jaFechouNestaSessao(): boolean {
-  if (typeof window === "undefined") return false;
-  return sessionStorage.getItem(CHAVE_SESSAO_BANNERS_FECHADOS) === "1";
-}
-
-function marcarComoFechadoNestaSessao(): void {
-  if (typeof window === "undefined") return;
-  sessionStorage.setItem(CHAVE_SESSAO_BANNERS_FECHADOS, "1");
-}
-
 /**
  * Monta a consulta de banners disponíveis UMA ÚNICA VEZ por sessão de
  * navegação no layout persistente do Private (mesmo padrão do
- * MensagemContadorProvider — ver o comentário lá para o problema que essa
- * estratégia evita) e exibe o carousel/modal quando há algo para mostrar.
+ * MensagemContadorProvider) e exibe o carousel/modal quando há algo para
+ * mostrar.
  *
- * Fechar o modal não persiste no banco (ver item 14 do pedido) — só marca
- * `sessionStorage`, para não reabrir sozinho a cada navegação de tela
- * dentro da mesma aba, mas sem impedir que o banner volte a aparecer numa
- * sessão nova.
+ * Fechar o modal não persiste em banco nem em localStorage/sessionStorage
+ * (ver item 14 do pedido original) — fica só em memória (estado React),
+ * para não reabrir sozinho a cada navegação de tela dentro da MESMA
+ * sessão autenticada.
+ *
+ * IMPORTANTE: `app/(private)/layout.tsx` é o layout raiz de todo o app
+ * (`<html>`/`<body>`), inclusive da tela de login — ele nunca desmonta
+ * entre um logout e um login seguinte na mesma aba. Por isso o estado de
+ * "fechado" não pode ficar preso para sempre: ele é resetado sempre que a
+ * navegação SAI de uma rota protegida (login/logout) e volta a ENTRAR
+ * numa rota protegida (login concluído) — ou seja, exatamente a fronteira
+ * de uma nova sessão. Isso implementa a regra do item 14: cada novo login
+ * reavalia as campanhas elegíveis, sem exigir nenhuma persistência nova.
  */
 export function BannerProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -55,17 +52,36 @@ export function BannerProvider({ children }: { children: React.ReactNode }) {
 
   const { data: banners = [] } = useBannersDisponiveis({ enabled: habilitado });
 
+  const [fechadoNestaSessao, setFechadoNestaSessao] = useState(false);
   const [visivel, setVisivel] = useState(false);
 
+  const eraProtegidaAnteriormente = useRef(habilitado);
+
   useEffect(() => {
-    if (banners.length > 0 && !jaFechouNestaSessao()) {
+    const entrouAgoraEmRotaProtegida = habilitado && !eraProtegidaAnteriormente.current;
+
+    if (entrouAgoraEmRotaProtegida) {
+      // Fronteira de uma nova sessão (login concluído): esquece que o
+      // usuário fechou o banner numa sessão anterior.
+      setFechadoNestaSessao(false);
+    }
+
+    eraProtegidaAnteriormente.current = habilitado;
+  }, [habilitado]);
+
+  useEffect(() => {
+    if (banners.length > 0 && !fechadoNestaSessao) {
       setVisivel(true);
     }
-  }, [banners]);
+
+    if (banners.length === 0) {
+      setVisivel(false);
+    }
+  }, [banners, fechadoNestaSessao]);
 
   function fechar() {
     setVisivel(false);
-    marcarComoFechadoNestaSessao();
+    setFechadoNestaSessao(true);
   }
 
   return (
