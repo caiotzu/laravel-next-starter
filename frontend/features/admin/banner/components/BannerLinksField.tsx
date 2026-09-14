@@ -59,7 +59,9 @@ export function BannerLinksField({
           className="flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-start"
         >
           <div className="flex-1 space-y-1.5">
-            <Label htmlFor={`link-nome-${index}`}>Nome do botão</Label>
+            <Label htmlFor={`link-nome-${index}`}>
+              Nome do botão <span className="text-red-600">*</span>
+            </Label>
             <Input
               id={`link-nome-${index}`}
               placeholder="Ex: Conheça a campanha"
@@ -74,7 +76,9 @@ export function BannerLinksField({
           </div>
 
           <div className="flex-1 space-y-1.5">
-            <Label htmlFor={`link-url-${index}`}>URL de destino</Label>
+            <Label htmlFor={`link-url-${index}`}>
+              URL de destino <span className="text-red-600">*</span>
+            </Label>
             <Input
               id={`link-url-${index}`}
               placeholder="https://..."

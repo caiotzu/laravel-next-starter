@@ -9,7 +9,7 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
-import { Banner } from "@/domains/private/banner/types/banner.model";
+import { BannerDisponivel as Banner } from "@/domains/admin/banner/types/banner.disponivel";
 import { cn } from "@/lib/utils";
 
 
@@ -20,10 +20,15 @@ interface Props {
 }
 
 /**
- * Exibição dos banners no Private: um banner/carousel de campanha, no
- * estilo do que se vê em sites e sistemas comerciais — não uma imagem
- * dentro de um modal administrativo. Construído em cima do Dialog já
- * existente no projeto, sem nenhuma dependência de carousel nova.
+ * Exibição dos banners no Admin (ver item 8 do pedido) — cópia fiel de
+ * `features/private/banner/components/BannerCarouselModal.tsx`, apenas
+ * apontando para o tipo `Banner` do domínio admin. Mantido como uma
+ * cópia (e não um componente compartilhado) porque é assim que TODO o
+ * projeto já separa admin/private, inclusive dentro deste mesmo domínio
+ * de banner (features/admin vs features/private, domains/admin vs
+ * domains/private) — criar aqui a primeira exceção dessa convenção seria
+ * uma mudança de arquitetura maior do que o pedido, não uma correção de
+ * bug.
  *
  * A hierarquia CAMPANHA → IMAGENS é representada com dois controles
  * visualmente distintos, nunca misturados (ver item 10 do pedido):

@@ -37,6 +37,7 @@ interface Props {
   onImagensChange: (imagens: BannerImagemValue[]) => void;
   links: BannerLinkValue[];
   onLinksChange: (links: BannerLinkValue[]) => void;
+  linkErrors?: Record<number, { nome?: string; url?: string }>;
   onSubmit: (
     data: BannerFormData,
     setError: UseFormSetError<BannerFormData>
@@ -54,6 +55,7 @@ export function BannerForm({
   onImagensChange,
   links,
   onLinksChange,
+  linkErrors,
   onSubmit,
   isLoading = false,
   backendErrors = null,
@@ -223,7 +225,12 @@ export function BannerForm({
           {/* Links */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-muted-foreground">Links</h3>
-            <BannerLinksField value={links} onChange={onLinksChange} disabled={isLoading} />
+            <BannerLinksField
+              value={links}
+              onChange={onLinksChange}
+              disabled={isLoading}
+              errors={linkErrors}
+            />
           </div>
         </CardContent>
 

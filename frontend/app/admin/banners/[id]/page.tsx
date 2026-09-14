@@ -26,6 +26,7 @@ import { AtualizarBannerRequest } from "@/domains/admin/banner/types/banner.requ
 import { BannerFormEdit } from "@/features/admin/banner/components/BannerFormEdit";
 import { BannerFormEditSkeleton } from "@/features/admin/banner/components/BannerFormEditSkeleton";
 import { BannerFormData } from "@/features/admin/banner/schemas/banner.schema";
+import { mapBannerApiErrors } from "@/features/admin/banner/utils/mapBannerApiErrors";
 
 export default function Page() {
   const router = useRouter();
@@ -74,14 +75,11 @@ export default function Page() {
         return;
       }
 
-      Object.entries(apiErrors).forEach(([field, messages]) => {
-        if (!Array.isArray(messages)) return;
+      const mensagensNaoMapeadas = mapBannerApiErrors(apiErrors, variables.setError);
 
-        variables.setError(field as keyof BannerFormData, {
-          type: "server",
-          message: messages[0],
-        });
-      });
+      if (mensagensNaoMapeadas.length > 0) {
+        setBackendErrors(mensagensNaoMapeadas);
+      }
     },
   });
 

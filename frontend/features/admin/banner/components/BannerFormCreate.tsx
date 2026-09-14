@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { CadastrarBannerRequest } from "@/domains/admin/banner/types/banner.requests";
 
 import { BannerFormData } from "../schemas/banner.schema";
+import { BannerLinkErrors, validarBannerLinks } from "../schemas/bannerLink.schema";
 
 import { BannerForm } from "./BannerForm";
 import { BannerImagemValue } from "./BannerImagensUploader";
@@ -31,6 +32,16 @@ export function BannerFormCreate({
 }: Props) {
   const [imagens, setImagens] = useState<BannerImagemValue[]>([]);
   const [links, setLinks] = useState<BannerLinkValue[]>([]);
+  const [linkErrors, setLinkErrors] = useState<BannerLinkErrors>({});
+
+  function handleLinksChange(novosLinks: BannerLinkValue[]) {
+    setLinks(novosLinks);
+    // Os erros ficam desatualizados assim que o usuário edita qualquer
+    // botão — a próxima tentativa de envio revalida e os repõe se ainda
+    // fizer sentido, então não há por que manter um erro antigo visível
+    // sobre um valor que já mudou.
+    setLinkErrors({});
+  }
 
   async function handleSubmit(
     data: BannerFormData,
@@ -40,6 +51,21 @@ export function BannerFormCreate({
       toast.error("Adicione ao menos uma imagem para o banner.");
       return;
     }
+
+    // Ver item 2.1 do pedido: o formulário deve impedir o envio de um
+    // botão incompleto — nome e URL são obrigatórios em TODOS os botões,
+    // não só no primeiro. Isso não substitui a validação do backend
+    // (mantida em CadastrarRequest), só evita uma viagem ao servidor
+    // para um erro que já é detectável no cliente.
+    const errosDosBotoes = validarBannerLinks(links);
+
+    if (Object.keys(errosDosBotoes).length > 0) {
+      setLinkErrors(errosDosBotoes);
+      toast.error("Corrija os campos obrigatórios dos botões do banner.");
+      return;
+    }
+
+    setLinkErrors({});
 
     const payload: CadastrarBannerRequest = {
       titulo: data.titulo,
@@ -66,7 +92,8 @@ export function BannerFormCreate({
       imagens={imagens}
       onImagensChange={setImagens}
       links={links}
-      onLinksChange={setLinks}
+      onLinksChange={handleLinksChange}
+      linkErrors={linkErrors}
       onSubmit={handleSubmit}
       isLoading={isLoading}
       backendErrors={backendErrors}
@@ -74,3 +101,4 @@ export function BannerFormCreate({
     />
   );
 }
+

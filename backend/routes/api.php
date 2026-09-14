@@ -175,6 +175,9 @@ Route::middleware(['jwt', 'suporte.contexto'])->group(function () {
         });
 
         Route::prefix('banners')->group(function () {
+            // Precisa vir ANTES de '/{id}': senão "disponiveis" seria
+            // capturado como um :id pela rota de visualização abaixo.
+            Route::get('/disponiveis', [BannerController::class, 'disponiveis']);
             Route::patch('/{id}/ativar', [BannerController::class, 'ativar']);
             Route::patch('/{id}/desativar', [BannerController::class, 'desativar']);
             Route::put('/{id}', [BannerController::class, 'atualizar']);

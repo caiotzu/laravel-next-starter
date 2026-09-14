@@ -439,3 +439,81 @@ test('consulta de disponibilidade retorna somente banners elegíveis, mesmo have
 
     expect($resposta->json('data.0.id'))->toBe($elegivel->id);
 });
+
+// ---------------------------------------------------------------------
+// Admin — consulta de disponibilidade (item 8 do pedido: banner não
+// aparecia para o Admin mesmo quando direcionado ao público admin, pois
+// não existia endpoint equivalente ao `/banners/disponiveis` do Private)
+// ---------------------------------------------------------------------
+
+test('admin vê um banner direcionado à sua própria entidade', function () {
+    $cenario = criarCenarioBanner();
+    $banner = criarBanner([
+        'direcionamento_tipo' => BannerDirecionamentoTipo::ENTIDADE->value,
+        'entidade_tipo_id' => $cenario['entidadeTipoAdmin']->id,
+    ]);
+
+    $token = autenticarUsuarioBanner($cenario['admin']);
+
+    $resposta = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/admin/banners/disponiveis')
+        ->assertStatus(200)
+        ->assertJsonCount(1, 'data');
+
+    expect($resposta->json('data.0.id'))->toBe($banner->id);
+});
+
+test('admin vê um banner direcionado a todos', function () {
+    $cenario = criarCenarioBanner();
+    $banner = criarBanner();
+
+    $token = autenticarUsuarioBanner($cenario['admin']);
+
+    $resposta = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/admin/banners/disponiveis')
+        ->assertStatus(200)
+        ->assertJsonCount(1, 'data');
+
+    expect($resposta->json('data.0.id'))->toBe($banner->id);
+});
+
+test('admin não vê um banner direcionado exclusivamente à entidade private', function () {
+    $cenario = criarCenarioBanner();
+    criarBanner([
+        'direcionamento_tipo' => BannerDirecionamentoTipo::ENTIDADE->value,
+        'entidade_tipo_id' => $cenario['entidadeTipoPrivate']->id,
+    ]);
+
+    $token = autenticarUsuarioBanner($cenario['admin']);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/admin/banners/disponiveis')
+        ->assertStatus(200)
+        ->assertJsonCount(0, 'data');
+});
+
+test('admin não vê um banner inativo nem um banner fora do período', function () {
+    $cenario = criarCenarioBanner();
+    criarBanner(['status' => BannerStatus::INATIVO->value]);
+    criarBanner(['inicio_em' => now()->addDays(2), 'fim_em' => now()->addDays(10)]);
+
+    $token = autenticarUsuarioBanner($cenario['admin']);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/admin/banners/disponiveis')
+        ->assertStatus(200)
+        ->assertJsonCount(0, 'data');
+});
+
+test('endpoint de disponibilidade do admin não exige nenhuma permissão administrativa específica', function () {
+    // Mesmo espírito do Private: é uma exibição, não uma ação de gestão —
+    // por isso nenhuma permissão é concedida ao grupo aqui de propósito.
+    $cenario = criarCenarioBanner();
+    criarBanner();
+
+    $token = autenticarUsuarioBanner($cenario['admin']);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/admin/banners/disponiveis')
+        ->assertStatus(200);
+});

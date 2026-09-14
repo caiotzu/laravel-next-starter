@@ -16,7 +16,10 @@ use App\DTO\Banner\BannerFiltroDTO;
 use App\DTO\Banner\BannerCadastroDTO;
 use App\DTO\Banner\BannerAtualizacaoDTO;
 
+use App\Enums\EntidadeTipo as EntidadeTipoChave;
+
 use App\Http\Resources\Admin\Banner\BannerResource;
+use App\Http\Resources\Admin\Banner\BannerDisponivelResource;
 
 use OpenApi\Attributes as OA;
 
@@ -85,6 +88,44 @@ class BannerController extends Controller
         $banners = $this->bannerService->listar(BannerFiltroDTO::criarParaFiltro($request->validated()));
 
         return BannerResource::collection($banners)->response()->setStatusCode(200);
+    }
+
+    #[OA\Get(
+        path: '/admin/banners/disponiveis',
+        summary: 'Admin — Listar banners disponíveis',
+        description: 'Mesmo conceito do endpoint equivalente do Private (ver PrivateBannerController::disponiveis): retorna somente os banners elegíveis para o usuário Admin autenticado NESTE momento — ativos, dentro do período da campanha e com direcionamento compatível (todos ou entidade Admin). Não requer nenhuma permissão administrativa específica, pelo mesmo motivo do Private: é a exibição de uma campanha, não uma ação de gestão.',
+        security: [['bearerAuth' => []]],
+        tags: ['Admin'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Lista de banners disponíveis (pode ser vazia).',
+                content: new OA\JsonContent(properties: [
+                    new OA\Property(property: 'data', type: 'array', items: new OA\Items(properties: [
+                        new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+                        new OA\Property(property: 'titulo', type: 'string'),
+                        new OA\Property(property: 'conteudo', type: 'string', nullable: true),
+                        new OA\Property(property: 'imagens', type: 'array', items: new OA\Items(properties: [
+                            new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+                            new OA\Property(property: 'url', type: 'string'),
+                            new OA\Property(property: 'ordem', type: 'integer'),
+                        ], type: 'object')),
+                        new OA\Property(property: 'links', type: 'array', items: new OA\Items(properties: [
+                            new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+                            new OA\Property(property: 'nome', type: 'string'),
+                            new OA\Property(property: 'url', type: 'string'),
+                        ], type: 'object')),
+                    ], type: 'object')),
+                ], type: 'object')
+            ),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
+        ]
+    )]
+    public function disponiveis(): JsonResponse
+    {
+        $banners = $this->bannerService->disponiveisPara(EntidadeTipoChave::ADMIN);
+
+        return BannerDisponivelResource::collection($banners)->response()->setStatusCode(200);
     }
 
     #[OA\Get(

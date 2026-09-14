@@ -2,7 +2,9 @@ import qs from "qs";
 
 import { proxyAdminRequest } from "@/lib/proxy-admin";
 
+import { toBannerDisponivel } from "../mappers/banner.disponivel.mapper";
 import { toBanner } from "../mappers/banner.mapper";
+import { ListarBannersDisponiveisResponse } from "../types/banner.disponivel.responses";
 import {
   AtualizarBannerRequest,
   CadastrarBannerRequest,
@@ -90,4 +92,21 @@ export async function excluirBanner(id: string) {
     url: `/admin/banners/${id}`,
     method: "DELETE",
   });
+}
+
+/**
+ * Equivalente ao `listarBannersDisponiveis` do domínio private (ver
+ * `domains/private/banner/services/bannerService.ts`), só que para o
+ * público Admin — usa o endpoint `/admin/banners/disponiveis`, que antes
+ * não existia (ver item 8 do pedido: por isso o banner nunca aparecia
+ * para o Admin, mesmo direcionado a ele). O backend já resolve
+ * status + período + direcionamento; aqui é só buscar e mapear.
+ */
+export async function listarBannersDisponiveis() {
+  const response = await proxyAdminRequest<ListarBannersDisponiveisResponse>({
+    url: "/admin/banners/disponiveis",
+    method: "GET",
+  });
+
+  return response.data.data.map(toBannerDisponivel);
 }

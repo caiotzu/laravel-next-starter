@@ -9,6 +9,7 @@ import { Banner } from "@/domains/admin/banner/types/banner.model";
 import { AtualizarBannerRequest } from "@/domains/admin/banner/types/banner.requests";
 
 import { BannerFormData } from "../schemas/banner.schema";
+import { BannerLinkErrors, validarBannerLinks } from "../schemas/bannerLink.schema";
 
 import { BannerForm } from "./BannerForm";
 import { BannerImagemValue } from "./BannerImagensUploader";
@@ -53,6 +54,12 @@ export function BannerFormEdit({
   const [links, setLinks] = useState<BannerLinkValue[]>(
     banner.links.map((link) => ({ id: link.id, nome: link.nome, url: link.url }))
   );
+  const [linkErrors, setLinkErrors] = useState<BannerLinkErrors>({});
+
+  function handleLinksChange(novosLinks: BannerLinkValue[]) {
+    setLinks(novosLinks);
+    setLinkErrors({});
+  }
 
   async function handleSubmit(
     data: BannerFormData,
@@ -62,6 +69,20 @@ export function BannerFormEdit({
       toast.error("É obrigatório manter ao menos uma imagem no banner.");
       return;
     }
+
+    // Mesma validação aplicada no cadastro (ver item 2 do pedido): a
+    // regra de nome/URL obrigatórios nos botões não pode valer só para
+    // quem está criando um banner — edição segue exatamente a mesma
+    // regra, senão o mesmo problema reaparece aqui.
+    const errosDosBotoes = validarBannerLinks(links);
+
+    if (Object.keys(errosDosBotoes).length > 0) {
+      setLinkErrors(errosDosBotoes);
+      toast.error("Corrija os campos obrigatórios dos botões do banner.");
+      return;
+    }
+
+    setLinkErrors({});
 
     const payload: AtualizarBannerRequest = {
       titulo: data.titulo,
@@ -98,7 +119,8 @@ export function BannerFormEdit({
       imagens={imagens}
       onImagensChange={setImagens}
       links={links}
-      onLinksChange={setLinks}
+      onLinksChange={handleLinksChange}
+      linkErrors={linkErrors}
       onSubmit={handleSubmit}
       isLoading={isLoading}
       backendErrors={backendErrors}
