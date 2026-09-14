@@ -5,10 +5,13 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
 import { useBannersDisponiveis } from "@/domains/private/banner/hooks/useBannersDisponiveis";
+import { bannerFoiFechadoNestaSessao, marcarBannerFechadoNestaSessao } from "@/lib/banner/banner-sessao-storage";
 import { protectedRoutes } from "@/routes/routes";
 
 import { BannerCarouselModal } from "@/features/private/banner/components/BannerCarouselModal";
 
+// Ver banner-sessao-storage.ts e app/(private)/page.tsx (marcarNovoLogin).
+const PREFIXO_SESSAO = "private";
 
 /**
  * Mesmo cuidado do MensagemContadorProvider/PrivatePermissionProvider: só
@@ -32,19 +35,19 @@ function exigePermissoesPrivate(pathname: string): boolean {
  * MensagemContadorProvider) e exibe o carousel/modal quando há algo para
  * mostrar.
  *
- * Fechar o modal não persiste em banco nem em localStorage/sessionStorage
- * (ver item 14 do pedido original) — fica só em memória (estado React),
- * para não reabrir sozinho a cada navegação de tela dentro da MESMA
- * sessão autenticada.
+ * "Fechado" é resolvido a partir de `banner-sessao-storage.ts` (não de
+ * um estado solto em memória) — é o que garante que reload, remontagem,
+ * navegação e re-render NUNCA façam o Banner reaparecer, e que só um
+ * login novo o faça (ver item 1 do pedido original).
  *
  * IMPORTANTE: `app/(private)/layout.tsx` é o layout raiz de todo o app
  * (`<html>`/`<body>`), inclusive da tela de login — ele nunca desmonta
- * entre um logout e um login seguinte na mesma aba. Por isso o estado de
- * "fechado" não pode ficar preso para sempre: ele é resetado sempre que a
- * navegação SAI de uma rota protegida (login/logout) e volta a ENTRAR
- * numa rota protegida (login concluído) — ou seja, exatamente a fronteira
- * de uma nova sessão. Isso implementa a regra do item 14: cada novo login
- * reavalia as campanhas elegíveis, sem exigir nenhuma persistência nova.
+ * entre um logout e um login seguinte na mesma aba. Por isso o efeito
+ * abaixo REAVALIA (não apenas "esquece") o estado de fechado sempre que
+ * a navegação SAI de uma rota protegida (login/logout) e volta a ENTRAR
+ * numa rota protegida (login concluído) — a fronteira de uma nova
+ * sessão é exatamente onde a tela de login já terá chamado
+ * `marcarNovoLogin` (ver banner-sessao-storage.ts).
  */
 export function BannerProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -52,7 +55,9 @@ export function BannerProvider({ children }: { children: React.ReactNode }) {
 
   const { data: banners = [] } = useBannersDisponiveis({ enabled: habilitado });
 
-  const [fechadoNestaSessao, setFechadoNestaSessao] = useState(false);
+  const [fechado, setFechado] = useState(() =>
+    bannerFoiFechadoNestaSessao(PREFIXO_SESSAO)
+  );
   const [visivel, setVisivel] = useState(false);
 
   const eraProtegidaAnteriormente = useRef(habilitado);
@@ -61,27 +66,28 @@ export function BannerProvider({ children }: { children: React.ReactNode }) {
     const entrouAgoraEmRotaProtegida = habilitado && !eraProtegidaAnteriormente.current;
 
     if (entrouAgoraEmRotaProtegida) {
-      // Fronteira de uma nova sessão (login concluído): esquece que o
-      // usuário fechou o banner numa sessão anterior.
-      setFechadoNestaSessao(false);
+      // Fronteira de uma possível nova sessão (login concluído) —
+      // reavalia contra o marcador atual em vez de assumir que mudou.
+      setFechado(bannerFoiFechadoNestaSessao(PREFIXO_SESSAO));
     }
 
     eraProtegidaAnteriormente.current = habilitado;
   }, [habilitado]);
 
   useEffect(() => {
-    if (banners.length > 0 && !fechadoNestaSessao) {
+    if (banners.length > 0 && !fechado) {
       setVisivel(true);
     }
 
     if (banners.length === 0) {
       setVisivel(false);
     }
-  }, [banners, fechadoNestaSessao]);
+  }, [banners, fechado]);
 
   function fechar() {
     setVisivel(false);
-    setFechadoNestaSessao(true);
+    marcarBannerFechadoNestaSessao(PREFIXO_SESSAO);
+    setFechado(true);
   }
 
   return (

@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
+
 import Link from "next/link";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Eye, MoreHorizontal, Pencil, Power, PowerOff, Trash2 } from "lucide-react";
+import { Eye, Monitor, MoreHorizontal, Pencil, Power, PowerOff, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
@@ -46,12 +48,21 @@ import {
 import { Banner } from "@/domains/admin/banner/types/banner.model";
 import { formatDate } from "@/lib/utils";
 
+import { bannerPreviewDoBannerSalvo } from "../utils/bannerPreview";
+
+import { BannerPreviewModal } from "./BannerPreviewModal";
+
 interface Props {
   data: Banner[];
 }
 
 export function BannersTable({ data: banners }: Props) {
   const queryClient = useQueryClient();
+
+  // Ver item 4 do pedido: Preview a partir dos dados já salvos deste
+  // banner — mesmo componente compartilhado usado no cadastro/edição
+  // (ver BannerForm.tsx).
+  const [bannerEmPreview, setBannerEmPreview] = useState<Banner | null>(null);
 
   const { mutateAsync: mutarStatus } = useMutation({
     mutationFn: ({ id, ativar }: { id: string; ativar: boolean }) =>
@@ -133,6 +144,11 @@ export function BannersTable({ data: banners }: Props) {
                               Visualizar
                             </Link>
                           </DropdownMenuItem>
+
+                          <DropdownMenuItem onClick={() => setBannerEmPreview(banner)}>
+                            <Monitor className="mr-2 h-4 w-4" />
+                            Preview
+                          </DropdownMenuItem>
                         </AdminPermissionGuard>
 
                         <AdminPermissionGuard permission="admin.banner.atualizar" disableFallback>
@@ -196,6 +212,12 @@ export function BannersTable({ data: banners }: Props) {
               ))}
         </TableBody>
       </Table>
+
+      <BannerPreviewModal
+        banner={bannerEmPreview ? bannerPreviewDoBannerSalvo(bannerEmPreview) : null}
+        open={bannerEmPreview !== null}
+        onClose={() => setBannerEmPreview(null)}
+      />
     </Card>
   );
 }

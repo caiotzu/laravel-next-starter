@@ -79,27 +79,37 @@ export function BannerCarouselModal({ banners, open, onClose }: Props) {
           <X className="h-4 w-4" />
         </button>
 
-        {/* Abas de campanha — só quando há mais de uma (item 10) */}
         {temMultiplosBanners && (
-          <div className="flex items-center gap-2 overflow-x-auto border-b bg-muted/40 px-4 py-2.5">
-            <span className="shrink-0 text-xs font-medium text-muted-foreground">
-              {banners.length} campanhas:
-            </span>
-            {banners.map((b, index) => (
-              <button
-                key={b.id}
-                type="button"
-                onClick={() => selecionarBanner(index)}
-                className={cn(
-                  "shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
-                  index === bannerIndex
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-background text-muted-foreground hover:bg-accent hover:text-foreground"
-                )}
-              >
-                {b.titulo}
-              </button>
-            ))}
+          <div className="border-b bg-muted/40 px-4 py-2.5">
+            <div className="flex items-center gap-3 overflow-x-auto">
+              <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                {banners.length} campanhas: 
+              </span>
+
+              <div className="flex shrink-0 items-center gap-2">
+                {banners.map((banner, index) => {
+                  const selecionado = index === bannerIndex
+
+                  return (
+                    <button
+                      key={banner.id}
+                      type="button"
+                      onClick={() => selecionarBanner(index)}
+                      aria-current={selecionado ? "true" : undefined}
+                      className={cn(
+                        "min-h-9 shrink-0 cursor-pointer rounded-full px-4 py-2 text-sm font-medium",
+                        "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                        selecionado
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-background text-muted-foreground hover:bg-accent hover:text-foreground"
+                      )}
+                    >
+                      {banner.titulo}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
           </div>
         )}
 

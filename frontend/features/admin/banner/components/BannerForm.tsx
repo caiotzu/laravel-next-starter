@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useForm, UseFormSetError } from "react-hook-form";
+import { toast } from "sonner";
 
 import { AppAlert } from "@/components/feedback/AppAlert";
 import { Button } from "@/components/ui/button";
@@ -24,10 +27,14 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
+import { BannerDisponivel } from "@/domains/admin/banner/types/banner.disponivel";
+
 import { BannerFormData, bannerSchema } from "../schemas/banner.schema";
+import { bannerPreviewDoFormulario } from "../utils/bannerPreview";
 
 import { BannerImagensUploader, BannerImagemValue } from "./BannerImagensUploader";
 import { BannerLinksField, BannerLinkValue } from "./BannerLinksField";
+import { BannerPreviewModal } from "./BannerPreviewModal";
 
 interface Props {
   title: string;
@@ -66,6 +73,7 @@ export function BannerForm({
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { errors },
     setError,
   } = useForm<BannerFormData>({
@@ -78,11 +86,38 @@ export function BannerForm({
 
   const direcionamentoTipo = watch("direcionamento_tipo");
 
+  const [preview, setPreview] = useState<BannerDisponivel | null>(null);
+
   async function handleFormSubmit(data: BannerFormData) {
     await onSubmit(data, setError);
   }
 
+  // Ver itens 2 e 3 do pedido: o Preview usa os dados ATUAIS do
+  // formulário (título/conteúdo lidos agora via getValues — não o que
+  // veio salvo no banco), mais as imagens/links que já vivem no
+  // componente pai (BannerFormCreate/Edit). Funciona mesmo sem o banner
+  // ter sido salvo (sem id), porque `bannerPreviewDoFormulario` não
+  // depende de nada persistido.
+  function abrirPreview() {
+    if (imagens.length === 0) {
+      toast.error("Adicione ao menos uma imagem para visualizar o preview.");
+      return;
+    }
+
+    const valoresAtuais = getValues();
+
+    setPreview(
+      bannerPreviewDoFormulario({
+        titulo: valoresAtuais.titulo,
+        conteudo: valoresAtuais.conteudo,
+        imagens,
+        links,
+      })
+    );
+  }
+
   return (
+    <>
     <Card className="w-full">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
@@ -235,6 +270,9 @@ export function BannerForm({
         </CardContent>
 
         <CardFooter className="justify-end gap-2">
+          <Button type="button" variant="outline" onClick={abrirPreview} disabled={isLoading}>
+            Preview
+          </Button>
           <Button type="submit" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {submitLabel}
@@ -242,5 +280,13 @@ export function BannerForm({
         </CardFooter>
       </form>
     </Card>
+
+    <BannerPreviewModal
+      banner={preview}
+      open={preview !== null}
+      onClose={() => setPreview(null)}
+    />
+    </>
+
   );
 }

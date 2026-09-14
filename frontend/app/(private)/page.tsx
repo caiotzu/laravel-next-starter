@@ -20,6 +20,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp"
 
+import { marcarNovoLogin } from "@/lib/banner/banner-sessao-storage"
 import { type LoginData } from "@/lib/validations/auth/login-schema"
 
 type BackendErrorResponse = {
@@ -93,7 +94,11 @@ export default function LoginPage() {
         return
       }
 
-      // Se não tem 2FA, login já foi feito e cookie já foi setado
+      // Se não tem 2FA, login já foi feito e cookie já foi setado.
+      // Marca o exato momento do login (ver item 1 do pedido): é isso
+      // que permite ao Banner (ver banner-provider.tsx) diferenciar um
+      // login novo de um simples reload/remontagem/navegação.
+      marcarNovoLogin("private")
       router.push("/home")
 
     } catch (err: unknown) {
@@ -125,7 +130,9 @@ export default function LoginPage() {
         }
       )
 
-      // Se chegou aqui, proxy já setou cookie
+      // Se chegou aqui, proxy já setou cookie. Mesmo carimbo do login
+      // sem 2FA — o login só se completa de fato aqui.
+      marcarNovoLogin("private")
       router.push("/home")
 
     } catch (err: unknown) {
