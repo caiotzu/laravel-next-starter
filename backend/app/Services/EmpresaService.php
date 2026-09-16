@@ -65,8 +65,22 @@ class EmpresaService {
             $this->aplicarEscopoEntidade($query, $entidadeTipo);
 
             $empresa = $query->find($dto->empresa_id);
-            if(!$empresa)
+            if (!$empresa)
                 throw new BusinessException('Empresa não encontrada.', ErrorCode::EMPRESA_NOT_FOUND->value);
+
+            if ($dto->matriz_id) {
+                $matrizQuery = Empresa::query();
+                $this->aplicarEscopoEntidade($matrizQuery, $entidadeTipo);
+
+                $matrizValida = $matrizQuery
+                    ->where('id', $dto->matriz_id)
+                    ->where('id', '!=', $empresa->id)
+                    ->exists();
+
+                if (! $matrizValida) {
+                    throw new BusinessException('Matriz informada é inválida.', ErrorCode::EMPRESA_MATRIZ_INVALIDA->value);
+                }
+            }
 
             $empresa->update($dto->paraPersistencia($entidadeTipo));
 

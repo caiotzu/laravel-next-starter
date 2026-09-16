@@ -3,7 +3,10 @@
 namespace App\Http\Requests\Private\Empresa;
 
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Http\FormRequest;
+
+use App\AcessoSuporte\AcessoSuporteContexto;
 
 use App\Enums\UF;
 
@@ -56,7 +59,11 @@ class ListarRequest extends FormRequest
             'matriz_id' => [
                 'nullable',
                 'uuid',
-                Rule::exists('empresas', 'id')
+                // Rule::exists('empresas', 'id')
+                Rule::exists('empresas', 'id')->where(function ($query) {
+                    $contexto = app(AcessoSuporteContexto::class);
+                    $query->where('grupo_empresa_id', $contexto->entidadeId(Auth::user()));
+                }),
             ],
             'cnpj' => [
                 'nullable',
