@@ -41,7 +41,15 @@ class ChamadoController extends Controller
             new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1)),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Lista paginada dos chamados abertos pelo usuário autenticado.'),
+            new OA\Response(
+                response: 200,
+                description: 'Lista paginada dos chamados abertos pelo usuário autenticado.',
+                content: new OA\JsonContent(properties: [
+                    new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/PrivateChamado')),
+                    new OA\Property(property: 'links', ref: '#/components/schemas/PaginationLinks', type: 'object'),
+                    new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta', type: 'object'),
+                ], type: 'object')
+            ),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
             new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
         ]
@@ -68,7 +76,7 @@ class ChamadoController extends Controller
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Chamado com a conversa completa.'),
+            new OA\Response(response: 200, description: 'Chamado com a conversa completa.', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/PrivateChamado', type: 'object')], type: 'object')),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
             new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
             new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
@@ -88,8 +96,27 @@ class ChamadoController extends Controller
         summary: 'Private — Abrir chamado',
         security: [['bearerAuth' => []]],
         tags: ['Private'],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
+            required: ['tipo', 'assunto', 'mensagem'],
+            properties: [
+                new OA\Property(property: 'tipo', type: 'string', enum: ['financeiro', 'plataforma', 'acesso', 'duvida', 'documentacao', 'operacional', 'outros']),
+                new OA\Property(property: 'assunto', type: 'string', maxLength: 150),
+                new OA\Property(property: 'mensagem', type: 'string'),
+                new OA\Property(
+                    property: 'anexos',
+                    description: 'Opcional. Limite de quantidade e tamanho configurados em config(\'api.chamados\'). Cada anexo deve ser PDF, JPG, JPEG ou PNG.',
+                    type: 'array',
+                    nullable: true,
+                    items: new OA\Items(required: ['nome', 'conteudo'], properties: [
+                        new OA\Property(property: 'nome', type: 'string', maxLength: 255),
+                        new OA\Property(property: 'conteudo', type: 'string', format: 'byte', description: 'Conteúdo do arquivo em base64.'),
+                    ], type: 'object')
+                ),
+            ],
+            type: 'object'
+        )),
         responses: [
-            new OA\Response(response: 201, description: 'Chamado aberto, com o ticket gerado.'),
+            new OA\Response(response: 201, description: 'Chamado aberto, com o ticket gerado.', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/PrivateChamado', type: 'object')], type: 'object')),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
             new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
             new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
@@ -115,8 +142,25 @@ class ChamadoController extends Controller
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
         ],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
+            required: ['mensagem'],
+            properties: [
+                new OA\Property(property: 'mensagem', type: 'string'),
+                new OA\Property(
+                    property: 'anexos',
+                    description: 'Opcional. Limite de quantidade e tamanho configurados em config(\'api.chamados\'). Cada anexo deve ser PDF, JPG, JPEG ou PNG.',
+                    type: 'array',
+                    nullable: true,
+                    items: new OA\Items(required: ['nome', 'conteudo'], properties: [
+                        new OA\Property(property: 'nome', type: 'string', maxLength: 255),
+                        new OA\Property(property: 'conteudo', type: 'string', format: 'byte', description: 'Conteúdo do arquivo em base64.'),
+                    ], type: 'object')
+                ),
+            ],
+            type: 'object'
+        )),
         responses: [
-            new OA\Response(response: 201, description: 'Mensagem registrada na conversa.'),
+            new OA\Response(response: 201, description: 'Mensagem registrada na conversa.', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/ChamadoMensagem', type: 'object')], type: 'object')),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
             new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
             new OA\Response(response: 404, ref: '#/components/responses/NotFound'),

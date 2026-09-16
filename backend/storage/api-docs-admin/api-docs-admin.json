@@ -53,6 +53,12 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AdminAcessoSuporte"
+                                            }
+                                        },
                                         "links": {
                                             "$ref": "#/components/schemas/PaginationLinks"
                                         },
@@ -1068,6 +1074,678 @@
                 "security": []
             }
         },
+        "/admin/banners": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Admin — Listar banners",
+                "operationId": "046d9518f06fd3b0a8e08d3108eeb406",
+                "parameters": [
+                    {
+                        "name": "titulo",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 120
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "ativo",
+                                "inativo"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "por_pagina",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista paginada de banners.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AdminBanner"
+                                            }
+                                        },
+                                        "links": {
+                                            "$ref": "#/components/schemas/PaginationLinks"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Admin — Cadastrar banner",
+                "description": "Cria uma campanha de banner. Requer ao menos uma imagem, período de campanha e direcionamento (todos ou por entidade).",
+                "operationId": "d78ec49490af9f434d5cb8fe7ce226c3",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "titulo",
+                                    "inicio_em",
+                                    "direcionamento",
+                                    "imagens"
+                                ],
+                                "properties": {
+                                    "titulo": {
+                                        "type": "string",
+                                        "maxLength": 120
+                                    },
+                                    "conteudo": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "inicio_em": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "fim_em": {
+                                        "description": "Deve ser posterior a inicio_em.",
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
+                                    },
+                                    "direcionamento": {
+                                        "required": [
+                                            "tipo"
+                                        ],
+                                        "properties": {
+                                            "tipo": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "geral",
+                                                    "entidade"
+                                                ]
+                                            },
+                                            "entidade_tipo": {
+                                                "description": "Obrigatório quando tipo = 'entidade'.",
+                                                "type": "string",
+                                                "enum": [
+                                                    "admin",
+                                                    "private"
+                                                ],
+                                                "nullable": true
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "imagens": {
+                                        "description": "Ao menos 1 e no máximo 10 imagens.",
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "conteudo"
+                                            ],
+                                            "properties": {
+                                                "nome": {
+                                                    "type": "string",
+                                                    "maxLength": 255,
+                                                    "nullable": true
+                                                },
+                                                "conteudo": {
+                                                    "description": "Conteúdo da imagem em base64.",
+                                                    "type": "string",
+                                                    "format": "byte"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "links": {
+                                        "description": "Opcional, no máximo 10 links.",
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "nome",
+                                                "url"
+                                            ],
+                                            "properties": {
+                                                "nome": {
+                                                    "type": "string",
+                                                    "maxLength": 60
+                                                },
+                                                "url": {
+                                                    "type": "string",
+                                                    "format": "uri",
+                                                    "maxLength": 2048
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Banner cadastrado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminBanner"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/banners/disponiveis": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Admin — Listar banners disponíveis",
+                "description": "Mesmo conceito do endpoint equivalente do Private (ver PrivateBannerController::disponiveis): retorna somente os banners elegíveis para o usuário Admin autenticado NESTE momento — ativos, dentro do período da campanha e com direcionamento compatível (todos ou entidade Admin). Não requer nenhuma permissão administrativa específica, pelo mesmo motivo do Private: é a exibição de uma campanha, não uma ação de gestão.",
+                "operationId": "a7feee525d0259acefa66bcd9f7c9091",
+                "responses": {
+                    "200": {
+                        "description": "Lista de banners disponíveis (pode ser vazia).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "titulo": {
+                                                        "type": "string"
+                                                    },
+                                                    "conteudo": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "imagens": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "string",
+                                                                    "format": "uuid"
+                                                                },
+                                                                "url": {
+                                                                    "type": "string"
+                                                                },
+                                                                "ordem": {
+                                                                    "type": "integer"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "links": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "string",
+                                                                    "format": "uuid"
+                                                                },
+                                                                "nome": {
+                                                                    "type": "string"
+                                                                },
+                                                                "url": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/banners/{id}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Admin — Visualizar banner",
+                "operationId": "7664f774bf23f24ebd52a9ef4836d998",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Banner encontrado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminBanner"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Admin — Atualizar banner",
+                "description": "Cada item de \"imagens\" deve trazer OU um id (imagem existente mantida) OU nome+conteudo (imagem nova). Toda imagem ausente do array é removida.",
+                "operationId": "9020dd949d427d3b85406145e3672b31",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "titulo",
+                                    "inicio_em",
+                                    "direcionamento",
+                                    "imagens"
+                                ],
+                                "properties": {
+                                    "titulo": {
+                                        "type": "string",
+                                        "maxLength": 120
+                                    },
+                                    "conteudo": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "inicio_em": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "fim_em": {
+                                        "description": "Deve ser posterior a inicio_em.",
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
+                                    },
+                                    "direcionamento": {
+                                        "required": [
+                                            "tipo"
+                                        ],
+                                        "properties": {
+                                            "tipo": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "geral",
+                                                    "entidade"
+                                                ]
+                                            },
+                                            "entidade_tipo": {
+                                                "description": "Obrigatório quando tipo = 'entidade'.",
+                                                "type": "string",
+                                                "enum": [
+                                                    "admin",
+                                                    "private"
+                                                ],
+                                                "nullable": true
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "imagens": {
+                                        "description": "Ao menos 1 e no máximo 10 imagens.",
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "id": {
+                                                    "description": "Preenchido para manter uma imagem já existente.",
+                                                    "type": "string",
+                                                    "format": "uuid",
+                                                    "nullable": true
+                                                },
+                                                "nome": {
+                                                    "type": "string",
+                                                    "maxLength": 255,
+                                                    "nullable": true
+                                                },
+                                                "conteudo": {
+                                                    "description": "Obrigatório (base64) quando a imagem é nova, ou seja, sem id.",
+                                                    "type": "string",
+                                                    "format": "byte",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "links": {
+                                        "description": "Opcional, no máximo 10 links.",
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "nome",
+                                                "url"
+                                            ],
+                                            "properties": {
+                                                "nome": {
+                                                    "type": "string",
+                                                    "maxLength": 60
+                                                },
+                                                "url": {
+                                                    "type": "string",
+                                                    "format": "uri",
+                                                    "maxLength": 2048
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Banner atualizado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminBanner"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Admin — Excluir banner",
+                "operationId": "6e07a2353821238865bd4eebdd8f01bc",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "$ref": "#/components/responses/NoContent"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/banners/{id}/ativar": {
+            "patch": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Admin — Ativar banner",
+                "operationId": "99494472432ec96e9091ffee21224328",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Banner ativado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminBanner"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/banners/{id}/desativar": {
+            "patch": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Admin — Desativar banner",
+                "operationId": "d26757970dd078ec808ae6c2b51f3a9a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Banner desativado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminBanner"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/admin/chamados": {
             "get": {
                 "tags": [
@@ -1109,7 +1787,28 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Lista paginada de todos os chamados."
+                        "description": "Lista paginada de todos os chamados.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AdminChamado"
+                                            }
+                                        },
+                                        "links": {
+                                            "$ref": "#/components/schemas/PaginationLinks"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthorized"
@@ -1145,7 +1844,19 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Chamado com a conversa completa."
+                        "description": "Chamado com a conversa completa.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminChamado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthorized"
@@ -1182,9 +1893,62 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "mensagem"
+                                ],
+                                "properties": {
+                                    "mensagem": {
+                                        "type": "string"
+                                    },
+                                    "anexos": {
+                                        "description": "Opcional. Limite de quantidade e tamanho configurados em config('api.chamados'). Cada anexo deve ser PDF, JPG, JPEG ou PNG.",
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "nome",
+                                                "conteudo"
+                                            ],
+                                            "properties": {
+                                                "nome": {
+                                                    "type": "string",
+                                                    "maxLength": 255
+                                                },
+                                                "conteudo": {
+                                                    "description": "Conteúdo do arquivo em base64.",
+                                                    "type": "string",
+                                                    "format": "byte"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "201": {
-                        "description": "Mensagem registrada na conversa."
+                        "description": "Mensagem registrada na conversa.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ChamadoMensagem"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthorized"
@@ -1224,9 +1988,48 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "aberto",
+                                            "em_atendimento",
+                                            "aguardando_cliente",
+                                            "aguardando_suporte",
+                                            "resolvido",
+                                            "fechado",
+                                            "cancelado"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Status atualizado."
+                        "description": "Status atualizado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminChamado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthorized"
@@ -1266,9 +2069,45 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "prioridade"
+                                ],
+                                "properties": {
+                                    "prioridade": {
+                                        "type": "string",
+                                        "enum": [
+                                            "baixa",
+                                            "normal",
+                                            "alta",
+                                            "urgente"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Prioridade atualizada."
+                        "description": "Prioridade atualizada.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminChamado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthorized"
@@ -1308,9 +2147,39 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "responsavel_id": {
+                                        "description": "Envie null para remover o responsável atual.",
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Responsável atualizado."
+                        "description": "Responsável atualizado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminChamado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthorized"
@@ -1376,7 +2245,19 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Dados agregados do dashboard."
+                        "description": "Dados agregados do dashboard.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Dashboard"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthorized"
@@ -4257,6 +5138,12 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AdminRelease"
+                                            }
+                                        },
                                         "links": {
                                             "$ref": "#/components/schemas/PaginationLinks"
                                         },
@@ -4292,9 +5179,68 @@
                 "summary": "Admin — Cadastrar release",
                 "description": "Cria uma release em rascunho (DRAFT). Use o endpoint de publicação para torná-la visível aos usuários finais.",
                 "operationId": "cc356be07af5b2129482a15ba40b7e55",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "contexto",
+                                    "titulo",
+                                    "conteudo",
+                                    "tipo",
+                                    "versao"
+                                ],
+                                "properties": {
+                                    "contexto": {
+                                        "type": "string",
+                                        "enum": [
+                                            "admin",
+                                            "private"
+                                        ]
+                                    },
+                                    "titulo": {
+                                        "type": "string",
+                                        "maxLength": 150
+                                    },
+                                    "conteudo": {
+                                        "type": "string"
+                                    },
+                                    "tipo": {
+                                        "type": "string",
+                                        "enum": [
+                                            "feature",
+                                            "improvement",
+                                            "fix",
+                                            "change"
+                                        ]
+                                    },
+                                    "versao": {
+                                        "type": "string",
+                                        "maxLength": 30,
+                                        "example": "1.4.0"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "201": {
-                        "description": "Release criada."
+                        "description": "Release criada.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminRelease"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthorized"
@@ -4333,7 +5279,19 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Release encontrada."
+                        "description": "Release encontrada.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminRelease"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthorized"
@@ -4356,6 +5314,7 @@
                     "Admin"
                 ],
                 "summary": "Admin — Atualizar release",
+                "description": "Todos os campos são opcionais — só os enviados são alterados.",
                 "operationId": "5dc259ebceca6dd9722ac25c49eeb3b8",
                 "parameters": [
                     {
@@ -4368,9 +5327,66 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "contexto": {
+                                        "type": "string",
+                                        "enum": [
+                                            "admin",
+                                            "private"
+                                        ],
+                                        "nullable": true
+                                    },
+                                    "titulo": {
+                                        "type": "string",
+                                        "maxLength": 150,
+                                        "nullable": true
+                                    },
+                                    "conteudo": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "tipo": {
+                                        "type": "string",
+                                        "enum": [
+                                            "feature",
+                                            "improvement",
+                                            "fix",
+                                            "change"
+                                        ],
+                                        "nullable": true
+                                    },
+                                    "versao": {
+                                        "type": "string",
+                                        "maxLength": 30,
+                                        "example": "1.4.1",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Release atualizada."
+                        "description": "Release atualizada.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminRelease"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthorized"
@@ -4413,7 +5429,19 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Release publicada."
+                        "description": "Release publicada.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminRelease"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthorized"
@@ -5096,6 +6124,111 @@
                 },
                 "type": "object"
             },
+            "AdminBanner": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "titulo": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "conteudo": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "ativo",
+                            "inativo"
+                        ]
+                    },
+                    "direcionamento": {
+                        "properties": {
+                            "tipo": {
+                                "type": "string",
+                                "enum": [
+                                    "geral",
+                                    "entidade"
+                                ]
+                            },
+                            "entidade_tipo": {
+                                "type": "string",
+                                "enum": [
+                                    "admin",
+                                    "private"
+                                ],
+                                "nullable": true
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "inicio_em": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "fim_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "imagens": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                },
+                                "url": {
+                                    "type": "string"
+                                },
+                                "ordem": {
+                                    "type": "integer"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "links": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                },
+                                "nome": {
+                                    "type": "string"
+                                },
+                                "url": {
+                                    "type": "string"
+                                },
+                                "ordem": {
+                                    "type": "integer"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "deleted_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "AdminMensagem": {
                 "properties": {
                     "id": {
@@ -5189,6 +6322,180 @@
                         "type": "string",
                         "format": "date-time",
                         "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "AdminAcessoSuporte": {
+                "properties": {
+                    "id": {
+                        "description": "Schemas de domínio do Acesso de Suporte. Admin (lado que recebe o\nacesso) enxerga a entidade concedente e quem concedeu; Private (lado\nque concede) enxerga o admin que recebeu (ver AcessoSuporteResource de\ncada área).",
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "ativo",
+                            "expirado",
+                            "revogado",
+                            "encerrado"
+                        ]
+                    },
+                    "entidade": {
+                        "properties": {
+                            "tipo": {
+                                "type": "string",
+                                "enum": [
+                                    "admin",
+                                    "private"
+                                ]
+                            },
+                            "id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "nome": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "concedido_por": {
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "nome": {
+                                "type": "string"
+                            },
+                            "email": {
+                                "type": "string",
+                                "format": "email"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "motivo": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "iniciado_em": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "expira_em": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "encerrado_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "encerrado_por": {
+                        "type": "string",
+                        "enum": [
+                            "cliente",
+                            "admin",
+                            "expiracao",
+                            "sistema"
+                        ],
+                        "nullable": true
+                    },
+                    "ativo": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "PrivateAcessoSuporte": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "ativo",
+                            "expirado",
+                            "revogado",
+                            "encerrado"
+                        ]
+                    },
+                    "admin": {
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "nome": {
+                                "type": "string"
+                            },
+                            "email": {
+                                "type": "string",
+                                "format": "email"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "motivo": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "iniciado_em": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "expira_em": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "encerrado_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "encerrado_por": {
+                        "type": "string",
+                        "enum": [
+                            "cliente",
+                            "admin",
+                            "expiracao",
+                            "sistema"
+                        ],
+                        "nullable": true
+                    },
+                    "ativo": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "Administrador": {
+                "properties": {
+                    "id": {
+                        "description": "Item retornado por Lookup\\AdministradorController::listar (ver\nAdministradorResource) — usado nos seletores de concessão de Acesso de\nSuporte.",
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "nome": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
                     }
                 },
                 "type": "object"
@@ -5444,6 +6751,244 @@
                 },
                 "type": "object"
             },
+            "ChamadoAnexo": {
+                "properties": {
+                    "id": {
+                        "description": "Schemas de domínio do Chamado (Suporte). Documentados aqui pois faltava\nschema de resposta para os endpoints de listagem/visualização/resposta\n(ver ChamadoResource de cada área) — Admin e Private têm campos\ndiferentes (Admin expõe prioridade/cliente/responsavel), por isso não\nsão o mesmo schema.",
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "nome_original": {
+                        "type": "string"
+                    },
+                    "url": {
+                        "type": "string"
+                    },
+                    "mime_type": {
+                        "type": "string",
+                        "example": "application/pdf"
+                    },
+                    "tamanho": {
+                        "description": "Tamanho do arquivo em bytes.",
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "ChamadoMensagem": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "mensagem": {
+                        "type": "string"
+                    },
+                    "usuario": {
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "nome": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "anexos": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ChamadoAnexo"
+                        }
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "AdminChamado": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "ticket": {
+                        "type": "string"
+                    },
+                    "assunto": {
+                        "type": "string"
+                    },
+                    "tipo": {
+                        "type": "string",
+                        "enum": [
+                            "financeiro",
+                            "plataforma",
+                            "acesso",
+                            "duvida",
+                            "documentacao",
+                            "operacional",
+                            "outros"
+                        ]
+                    },
+                    "tipo_label": {
+                        "type": "string",
+                        "example": "Financeiro"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "aberto",
+                            "em_atendimento",
+                            "aguardando_cliente",
+                            "aguardando_suporte",
+                            "resolvido",
+                            "fechado",
+                            "cancelado"
+                        ]
+                    },
+                    "status_label": {
+                        "type": "string",
+                        "example": "Aberto"
+                    },
+                    "prioridade": {
+                        "type": "string",
+                        "enum": [
+                            "baixa",
+                            "normal",
+                            "alta",
+                            "urgente"
+                        ]
+                    },
+                    "prioridade_label": {
+                        "type": "string",
+                        "example": "Normal"
+                    },
+                    "cliente": {
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "nome": {
+                                "type": "string"
+                            },
+                            "email": {
+                                "type": "string",
+                                "format": "email"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "responsavel": {
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "nome": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "aberto_em": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "fechado_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "primeira_resposta_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "ultima_interacao_em": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "mensagens": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ChamadoMensagem"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "PrivateChamado": {
+                "description": "Mesma entidade do AdminChamado, mas sem os campos de gestão interna (prioridade, cliente, responsável).",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "ticket": {
+                        "type": "string"
+                    },
+                    "assunto": {
+                        "type": "string"
+                    },
+                    "tipo": {
+                        "type": "string",
+                        "enum": [
+                            "financeiro",
+                            "plataforma",
+                            "acesso",
+                            "duvida",
+                            "documentacao",
+                            "operacional",
+                            "outros"
+                        ]
+                    },
+                    "tipo_label": {
+                        "type": "string",
+                        "example": "Financeiro"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "aberto",
+                            "em_atendimento",
+                            "aguardando_cliente",
+                            "aguardando_suporte",
+                            "resolvido",
+                            "fechado",
+                            "cancelado"
+                        ]
+                    },
+                    "status_label": {
+                        "type": "string",
+                        "example": "Aberto"
+                    },
+                    "aberto_em": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "fechado_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "ultima_interacao_em": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "mensagens": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ChamadoMensagem"
+                        }
+                    }
+                },
+                "type": "object"
+            },
             "PaginationLinks": {
                 "properties": {
                     "first": {
@@ -5542,6 +7087,291 @@
                                 "example": [
                                     "Descrição do erro de negócio."
                                 ]
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "Dashboard": {
+                "properties": {
+                    "periodo": {
+                        "properties": {
+                            "inicio": {
+                                "description": "Resposta de Admin\\DashboardController::visualizar (ver DashboardResource\ne DashboardService — cada propriedade abaixo corresponde a um método de\nDashboardService com o mesmo nome).",
+                                "type": "string",
+                                "format": "date"
+                            },
+                            "fim": {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            "inicio_anterior": {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            "fim_anterior": {
+                                "type": "string",
+                                "format": "date"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "kpis": {
+                        "properties": {
+                            "total_empresas": {
+                                "type": "integer"
+                            },
+                            "empresas_no_periodo": {
+                                "type": "integer"
+                            },
+                            "empresas_variacao_percentual": {
+                                "type": "number",
+                                "format": "float",
+                                "nullable": true
+                            },
+                            "chamados_abertos": {
+                                "type": "integer"
+                            },
+                            "chamados_no_periodo": {
+                                "type": "integer"
+                            },
+                            "chamados_variacao_percentual": {
+                                "type": "number",
+                                "format": "float",
+                                "nullable": true
+                            },
+                            "chamados_fechados_no_periodo": {
+                                "type": "integer"
+                            },
+                            "chamados_fechados_variacao_percentual": {
+                                "type": "number",
+                                "format": "float",
+                                "nullable": true
+                            },
+                            "tempo_medio_resolucao_segundos": {
+                                "type": "number",
+                                "format": "float",
+                                "nullable": true
+                            },
+                            "tempo_medio_resolucao_variacao_percentual": {
+                                "description": "Sinal invertido: uma redução no tempo é sempre reportada como variação positiva.",
+                                "type": "number",
+                                "format": "float",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "evolucao_chamados": {
+                        "description": "Série diária no intervalo do período filtrado.",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "data": {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                "abertos": {
+                                    "type": "integer"
+                                },
+                                "fechados": {
+                                    "type": "integer"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "evolucao_empresas": {
+                        "description": "Série diária no intervalo do período filtrado.",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "data": {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                "novas": {
+                                    "type": "integer"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "empresas_por_status": {
+                        "description": "Total de empresas (independente do período) agrupado por status. Chaves dinâmicas (ex.: \"ativo\", \"inativo\", \"pendente\", \"bloqueado\").",
+                        "type": "object",
+                        "example": {
+                            "ativo": 42,
+                            "pendente": 3
+                        },
+                        "additionalProperties": {
+                            "type": "integer"
+                        }
+                    },
+                    "chamados_por_status": {
+                        "description": "Chamados abertos no período agrupados por status. Chaves dinâmicas (ex.: \"aberto\", \"em_atendimento\", \"resolvido\", \"fechado\").",
+                        "type": "object",
+                        "example": {
+                            "aberto": 12,
+                            "resolvido": 8
+                        },
+                        "additionalProperties": {
+                            "type": "integer"
+                        }
+                    },
+                    "chamados_por_prioridade": {
+                        "description": "Chamados abertos no período agrupados por prioridade. Chaves dinâmicas (ex.: \"baixa\", \"normal\", \"alta\", \"urgente\").",
+                        "type": "object",
+                        "example": {
+                            "normal": 15,
+                            "urgente": 2
+                        },
+                        "additionalProperties": {
+                            "type": "integer"
+                        }
+                    },
+                    "chamados_por_tipo": {
+                        "description": "Chamados abertos no período agrupados por tipo. Chaves dinâmicas (ex.: \"financeiro\", \"plataforma\", \"duvida\").",
+                        "type": "object",
+                        "example": {
+                            "duvida": 9,
+                            "plataforma": 4
+                        },
+                        "additionalProperties": {
+                            "type": "integer"
+                        }
+                    },
+                    "ranking_responsaveis": {
+                        "description": "Top responsáveis por chamados encerrados no período, ordenado do maior para o menor total.",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "responsavel_id": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                },
+                                "responsavel_nome": {
+                                    "type": "string"
+                                },
+                                "total_encerrados": {
+                                    "type": "integer"
+                                },
+                                "tempo_medio_segundos": {
+                                    "type": "number",
+                                    "format": "float"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "chamados_sem_responsavel": {
+                        "properties": {
+                            "total": {
+                                "description": "Total de chamados ativos sem responsável (não limitado pela amostra abaixo).",
+                                "type": "integer"
+                            },
+                            "chamados": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "ticket": {
+                                            "type": "string"
+                                        },
+                                        "assunto": {
+                                            "type": "string"
+                                        },
+                                        "aberto_em": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "cliente_nome": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "chamados_mais_antigos": {
+                        "description": "Chamados ainda em aberto há mais tempo (não limitado ao período filtrado).",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                },
+                                "ticket": {
+                                    "type": "string"
+                                },
+                                "assunto": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string",
+                                    "enum": [
+                                        "aberto",
+                                        "em_atendimento",
+                                        "aguardando_cliente",
+                                        "aguardando_suporte",
+                                        "resolvido",
+                                        "fechado",
+                                        "cancelado"
+                                    ]
+                                },
+                                "aberto_em": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                "cliente_nome": {
+                                    "type": "string",
+                                    "nullable": true
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "tempo_atendimento": {
+                        "properties": {
+                            "resolucao": {
+                                "properties": {
+                                    "media_segundos": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "nullable": true
+                                    },
+                                    "mediana_segundos": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "nullable": true
+                                    },
+                                    "amostras": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "primeira_resposta": {
+                                "properties": {
+                                    "media_segundos": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "nullable": true
+                                    },
+                                    "amostras": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
                             }
                         },
                         "type": "object"
@@ -6137,6 +7967,105 @@
                     "otpauth_url": {
                         "type": "string",
                         "example": "otpauth://totp/LaravelNextStarter:usuario@empresa.com?secret=JBSWY3DPEHPK3PXP&issuer=LaravelNextStarter"
+                    }
+                },
+                "type": "object"
+            },
+            "AdminRelease": {
+                "properties": {
+                    "id": {
+                        "description": "Schemas de domínio do Release (novidades). Admin enxerga todos os\ncampos de gestão (contexto/status/timestamps); Private só o que já foi\npublicado para o seu próprio contexto (ver ReleaseResource de cada\nárea).",
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "contexto": {
+                        "type": "string",
+                        "enum": [
+                            "admin",
+                            "private"
+                        ]
+                    },
+                    "titulo": {
+                        "type": "string",
+                        "maxLength": 150
+                    },
+                    "conteudo": {
+                        "type": "string"
+                    },
+                    "tipo": {
+                        "type": "string",
+                        "enum": [
+                            "feature",
+                            "improvement",
+                            "fix",
+                            "change"
+                        ]
+                    },
+                    "tipo_label": {
+                        "type": "string",
+                        "example": "Novidade"
+                    },
+                    "versao": {
+                        "type": "string",
+                        "maxLength": 30
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "draft",
+                            "published"
+                        ]
+                    },
+                    "publicado_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "PrivateRelease": {
+                "description": "Sempre publicada (status/contexto omitidos, pois só existe um contexto e um status possível neste endpoint).",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "titulo": {
+                        "type": "string",
+                        "maxLength": 150
+                    },
+                    "conteudo": {
+                        "type": "string"
+                    },
+                    "tipo": {
+                        "type": "string",
+                        "enum": [
+                            "feature",
+                            "improvement",
+                            "fix",
+                            "change"
+                        ]
+                    },
+                    "tipo_label": {
+                        "type": "string",
+                        "example": "Novidade"
+                    },
+                    "versao": {
+                        "type": "string",
+                        "maxLength": 30
+                    },
+                    "publicado_em": {
+                        "type": "string",
+                        "format": "date-time"
                     }
                 },
                 "type": "object"

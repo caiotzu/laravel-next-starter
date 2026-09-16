@@ -53,6 +53,7 @@ class ReleaseController extends Controller
                 response: 200,
                 description: 'Lista paginada de releases.',
                 content: new OA\JsonContent(properties: [
+                    new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/AdminRelease')),
                     new OA\Property(property: 'links', ref: '#/components/schemas/PaginationLinks', type: 'object'),
                     new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta', type: 'object'),
                 ], type: 'object')
@@ -82,7 +83,7 @@ class ReleaseController extends Controller
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Release encontrada.'),
+            new OA\Response(response: 200, description: 'Release encontrada.', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/AdminRelease', type: 'object')], type: 'object')),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
             new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
             new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
@@ -103,8 +104,19 @@ class ReleaseController extends Controller
         description: 'Cria uma release em rascunho (DRAFT). Use o endpoint de publicação para torná-la visível aos usuários finais.',
         security: [['bearerAuth' => []]],
         tags: ['Admin'],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
+            required: ['contexto', 'titulo', 'conteudo', 'tipo', 'versao'],
+            properties: [
+                new OA\Property(property: 'contexto', type: 'string', enum: ['admin', 'private']),
+                new OA\Property(property: 'titulo', type: 'string', maxLength: 150),
+                new OA\Property(property: 'conteudo', type: 'string'),
+                new OA\Property(property: 'tipo', type: 'string', enum: ['feature', 'improvement', 'fix', 'change']),
+                new OA\Property(property: 'versao', type: 'string', maxLength: 30, example: '1.4.0'),
+            ],
+            type: 'object'
+        )),
         responses: [
-            new OA\Response(response: 201, description: 'Release criada.'),
+            new OA\Response(response: 201, description: 'Release criada.', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/AdminRelease', type: 'object')], type: 'object')),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
             new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
             new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
@@ -124,13 +136,24 @@ class ReleaseController extends Controller
     #[OA\Put(
         path: '/admin/releases/{id}',
         summary: 'Admin — Atualizar release',
+        description: 'Todos os campos são opcionais — só os enviados são alterados.',
         security: [['bearerAuth' => []]],
         tags: ['Admin'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
         ],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'contexto', type: 'string', enum: ['admin', 'private'], nullable: true),
+                new OA\Property(property: 'titulo', type: 'string', maxLength: 150, nullable: true),
+                new OA\Property(property: 'conteudo', type: 'string', nullable: true),
+                new OA\Property(property: 'tipo', type: 'string', enum: ['feature', 'improvement', 'fix', 'change'], nullable: true),
+                new OA\Property(property: 'versao', type: 'string', maxLength: 30, nullable: true, example: '1.4.1'),
+            ],
+            type: 'object'
+        )),
         responses: [
-            new OA\Response(response: 200, description: 'Release atualizada.'),
+            new OA\Response(response: 200, description: 'Release atualizada.', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/AdminRelease', type: 'object')], type: 'object')),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
             new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
             new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
@@ -159,7 +182,7 @@ class ReleaseController extends Controller
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Release publicada.'),
+            new OA\Response(response: 200, description: 'Release publicada.', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/AdminRelease', type: 'object')], type: 'object')),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
             new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
             new OA\Response(response: 404, ref: '#/components/responses/NotFound'),

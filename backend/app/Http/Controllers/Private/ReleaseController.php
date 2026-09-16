@@ -39,6 +39,7 @@ class ReleaseController extends Controller
                 response: 200,
                 description: 'Lista paginada de releases publicadas.',
                 content: new OA\JsonContent(properties: [
+                    new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/PrivateRelease')),
                     new OA\Property(property: 'links', ref: '#/components/schemas/PaginationLinks', type: 'object'),
                     new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta', type: 'object'),
                 ], type: 'object')
@@ -74,7 +75,7 @@ class ReleaseController extends Controller
                 response: 200,
                 description: 'Release encontrada.',
                 content: new OA\JsonContent(properties: [
-                    new OA\Property(property: 'data', type: 'object'),
+                    new OA\Property(property: 'data', ref: '#/components/schemas/PrivateRelease', type: 'object'),
                 ], type: 'object')
             ),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),

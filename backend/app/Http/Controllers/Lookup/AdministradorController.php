@@ -39,7 +39,7 @@ class AdministradorController extends Controller
             new OA\Parameter(name: 'busca', description: 'Filtro por nome ou e-mail (busca parcial, case-insensitive).', in: 'query', schema: new OA\Schema(type: 'string', maxLength: 255)),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Lista de administradores.'),
+            new OA\Response(response: 200, description: 'Lista de administradores.', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Administrador'))], type: 'object')),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
         ]
     )]

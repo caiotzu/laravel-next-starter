@@ -156,6 +156,39 @@ class BannerController extends Controller
         description: 'Cria uma campanha de banner. Requer ao menos uma imagem, período de campanha e direcionamento (todos ou por entidade).',
         security: [['bearerAuth' => []]],
         tags: ['Admin'],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
+            required: ['titulo', 'inicio_em', 'direcionamento', 'imagens'],
+            properties: [
+                new OA\Property(property: 'titulo', type: 'string', maxLength: 120),
+                new OA\Property(property: 'conteudo', type: 'string', nullable: true),
+                new OA\Property(property: 'inicio_em', type: 'string', format: 'date-time'),
+                new OA\Property(property: 'fim_em', type: 'string', format: 'date-time', nullable: true, description: 'Deve ser posterior a inicio_em.'),
+                new OA\Property(property: 'direcionamento', required: ['tipo'], properties: [
+                    new OA\Property(property: 'tipo', type: 'string', enum: ['geral', 'entidade']),
+                    new OA\Property(property: 'entidade_tipo', type: 'string', enum: ['admin', 'private'], nullable: true, description: "Obrigatório quando tipo = 'entidade'."),
+                ], type: 'object'),
+                new OA\Property(
+                    property: 'imagens',
+                    description: 'Ao menos 1 e no máximo 10 imagens.',
+                    type: 'array',
+                    items: new OA\Items(required: ['conteudo'], properties: [
+                        new OA\Property(property: 'nome', type: 'string', maxLength: 255, nullable: true),
+                        new OA\Property(property: 'conteudo', type: 'string', format: 'byte', description: 'Conteúdo da imagem em base64.'),
+                    ], type: 'object')
+                ),
+                new OA\Property(
+                    property: 'links',
+                    description: 'Opcional, no máximo 10 links.',
+                    type: 'array',
+                    nullable: true,
+                    items: new OA\Items(required: ['nome', 'url'], properties: [
+                        new OA\Property(property: 'nome', type: 'string', maxLength: 60),
+                        new OA\Property(property: 'url', type: 'string', maxLength: 2048, format: 'uri'),
+                    ], type: 'object')
+                ),
+            ],
+            type: 'object'
+        )),
         responses: [
             new OA\Response(response: 201, description: 'Banner cadastrado.', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/AdminBanner', type: 'object')], type: 'object')),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
@@ -175,9 +208,44 @@ class BannerController extends Controller
     #[OA\Put(
         path: '/admin/banners/{id}',
         summary: 'Admin — Atualizar banner',
+        description: 'Cada item de "imagens" deve trazer OU um id (imagem existente mantida) OU nome+conteudo (imagem nova). Toda imagem ausente do array é removida.',
         security: [['bearerAuth' => []]],
         tags: ['Admin'],
         parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
+            required: ['titulo', 'inicio_em', 'direcionamento', 'imagens'],
+            properties: [
+                new OA\Property(property: 'titulo', type: 'string', maxLength: 120),
+                new OA\Property(property: 'conteudo', type: 'string', nullable: true),
+                new OA\Property(property: 'inicio_em', type: 'string', format: 'date-time'),
+                new OA\Property(property: 'fim_em', type: 'string', format: 'date-time', nullable: true, description: 'Deve ser posterior a inicio_em.'),
+                new OA\Property(property: 'direcionamento', required: ['tipo'], properties: [
+                    new OA\Property(property: 'tipo', type: 'string', enum: ['geral', 'entidade']),
+                    new OA\Property(property: 'entidade_tipo', type: 'string', enum: ['admin', 'private'], nullable: true, description: "Obrigatório quando tipo = 'entidade'."),
+                ], type: 'object'),
+                new OA\Property(
+                    property: 'imagens',
+                    description: 'Ao menos 1 e no máximo 10 imagens.',
+                    type: 'array',
+                    items: new OA\Items(properties: [
+                        new OA\Property(property: 'id', type: 'string', format: 'uuid', nullable: true, description: 'Preenchido para manter uma imagem já existente.'),
+                        new OA\Property(property: 'nome', type: 'string', maxLength: 255, nullable: true),
+                        new OA\Property(property: 'conteudo', type: 'string', format: 'byte', nullable: true, description: 'Obrigatório (base64) quando a imagem é nova, ou seja, sem id.'),
+                    ], type: 'object')
+                ),
+                new OA\Property(
+                    property: 'links',
+                    description: 'Opcional, no máximo 10 links.',
+                    type: 'array',
+                    nullable: true,
+                    items: new OA\Items(required: ['nome', 'url'], properties: [
+                        new OA\Property(property: 'nome', type: 'string', maxLength: 60),
+                        new OA\Property(property: 'url', type: 'string', maxLength: 2048, format: 'uri'),
+                    ], type: 'object')
+                ),
+            ],
+            type: 'object'
+        )),
         responses: [
             new OA\Response(response: 200, description: 'Banner atualizado.', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/AdminBanner', type: 'object')], type: 'object')),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),

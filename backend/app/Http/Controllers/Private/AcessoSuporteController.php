@@ -42,7 +42,7 @@ class AcessoSuporteController extends Controller
             type: 'object'
         )),
         responses: [
-            new OA\Response(response: 201, description: 'Acesso de suporte concedido.'),
+            new OA\Response(response: 201, description: 'Acesso de suporte concedido.', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/PrivateAcessoSuporte', type: 'object')], type: 'object')),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
             new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
             new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
@@ -80,6 +80,7 @@ class AcessoSuporteController extends Controller
                 response: 200,
                 description: 'Lista paginada de acessos de suporte concedidos pela organização.',
                 content: new OA\JsonContent(properties: [
+                    new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/PrivateAcessoSuporte')),
                     new OA\Property(property: 'links', ref: '#/components/schemas/PaginationLinks', type: 'object'),
                     new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta', type: 'object'),
                 ], type: 'object')

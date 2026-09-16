@@ -38,6 +38,7 @@ class AcessoSuporteController extends Controller
                 response: 200,
                 description: 'Lista paginada de acessos de suporte recebidos.',
                 content: new OA\JsonContent(properties: [
+                    new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/AdminAcessoSuporte')),
                     new OA\Property(property: 'links', ref: '#/components/schemas/PaginationLinks', type: 'object'),
                     new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta', type: 'object'),
                 ], type: 'object')

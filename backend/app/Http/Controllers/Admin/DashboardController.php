@@ -34,7 +34,7 @@ class DashboardController extends Controller
             new OA\Parameter(name: 'data_fim', in: 'query', schema: new OA\Schema(type: 'string', format: 'date')),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Dados agregados do dashboard.'),
+            new OA\Response(response: 200, description: 'Dados agregados do dashboard.', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/Dashboard', type: 'object')], type: 'object')),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
             new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
             new OA\Response(response: 422, ref: '#/components/responses/ValidationError'),
