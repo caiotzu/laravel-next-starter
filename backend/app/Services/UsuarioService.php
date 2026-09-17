@@ -79,7 +79,12 @@ class UsuarioService {
             if(!$grupo)
                 throw new BusinessException('O grupo selecionado não é válido para este cadastro.', ErrorCode::GRUPO_REQUIRED->value);
 
-            $usuario = Usuario::find($dto->id);
+            $usuario = Usuario::query()
+                ->whereHas('grupo', function (Builder $query) use ($user) {
+                    return $query->where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
+                        ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user));
+                })
+                ->find($dto->id);
             if(!$usuario)
                 throw new BusinessException('Usuário não encontrado.', ErrorCode::USUARIO_NOT_FOUND->value);
 

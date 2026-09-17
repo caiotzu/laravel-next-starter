@@ -1,5 +1,8 @@
+import { NextResponse } from "next/server";
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -144,4 +147,21 @@ export function removeEmptyValues<T extends Record<string, unknown>>(obj: T) {
              value !== "";
     })
   );
+}
+
+/**
+ * Verifica a origem da chamada, garantindo apenas que o próprio
+ * frontend faça chamadas para ele mesmo.
+ */
+export function validarOrigem(req: Request): NextResponse | null {
+  const origin = req.headers.get("origin");
+  const allowedOrigin = process.env.FRONTEND_URL;
+
+  if (origin && origin !== allowedOrigin) {
+    return NextResponse.json(
+      { errors: { business: ["Origem não permitida."] } },
+      { status: 403 }
+    );
+  }
+  return null;
 }

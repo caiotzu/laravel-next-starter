@@ -3,8 +3,13 @@ import { NextResponse } from "next/server";
 
 import axios from "axios";
 
+import { validarOrigem } from "@/lib/utils";
+
 export async function POST(req: Request) {
   try {
+    const erroOrigem = validarOrigem(req);
+    if (erroOrigem) return erroOrigem;
+
     const body = await req.json();
 
     // Captura headers originais do navegador

@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 
 import axios, { Method } from "axios";
 
+import { validarOrigem } from "@/lib/utils";
+
 interface ProxyRequestBody<T = unknown> {
   url: string;
   method?: Method;
@@ -12,6 +14,9 @@ interface ProxyRequestBody<T = unknown> {
 
 export async function POST(req: Request): Promise<NextResponse> {
   try {
+    const erroOrigem = validarOrigem(req);
+    if (erroOrigem) return erroOrigem;
+    
     const body: ProxyRequestBody = await req.json();
 
     if (!body.url) {
@@ -91,16 +96,9 @@ export async function POST(req: Request): Promise<NextResponse> {
         "",
         {
           httpOnly: true,
-          secure:
-            process.env.NODE_ENV ===
-            "production",
-
-          sameSite:
-            process.env.NODE_ENV ===
-            "production"
-              ? "none"
-              : "lax",
-
+          secure: process.env.NODE_ENV === "production",
+        //   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          sameSite: "lax", // Só utilizar none em produção se front e back estiverem em domínios diferentes
           path: "/",
           maxAge: 0,
         }

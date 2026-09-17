@@ -2,8 +2,13 @@ import { NextResponse } from "next/server";
 
 import axios from "axios";
 
+import { validarOrigem } from "@/lib/utils";
+
 export async function GET(req: Request) {
   try {
+    const erroOrigem = validarOrigem(req);
+    if (erroOrigem) return erroOrigem;
+
     const url = new URL(req.url);
     const token = url.searchParams.get("token");
 

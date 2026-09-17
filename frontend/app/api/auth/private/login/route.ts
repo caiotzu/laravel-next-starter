@@ -3,8 +3,13 @@ import { NextResponse } from "next/server";
 
 import axios from "axios";
 
+import { validarOrigem } from "@/lib/utils";
+
 export async function POST(req: Request) {
   try {
+    const erroOrigem = validarOrigem(req);
+    if (erroOrigem) return erroOrigem;
+    
     const body = await req.json();
 
     // Captura headers originais do navegador
@@ -42,7 +47,8 @@ export async function POST(req: Request) {
     cookieStore.set("private_access_token", data.token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    //   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      sameSite: "lax", // Só utilizar none em produção se front e back estiverem em domínios diferentes
       path: "/",
       maxAge: 60 * 60,
     });
