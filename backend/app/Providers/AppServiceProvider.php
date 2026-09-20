@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
 
 use App\Services\CepService;
 use App\Services\External\Cep\ViaCepService;
@@ -49,6 +52,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Limite padrão para toda a API autenticada
+        RateLimiter::for('api-autenticada', function (Request $request) {
+            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Limite mais restritivo para os endpoints públicos sensíveis
+        // (esqueceu-senha, primeiro-acesso, redefinir-senha)
+        RateLimiter::for('api-publica', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip());
+        });
     }
 }

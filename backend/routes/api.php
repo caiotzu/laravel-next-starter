@@ -52,31 +52,38 @@ use App\Http\Controllers\Private\ {
 };
 
 // #region Admin
-Route::prefix('admin')->group(function() {
-    Route::get('/primeiro-acesso/validar', [AuthController::class, 'primeiroAcessoValidar']);
-    Route::post('/primeiro-acesso', [AuthController::class, 'primeiroAcesso']);
-    Route::post('/esqueceu-senha', [AuthController::class, 'esqueceuSenha']);
-    Route::get('/redefinir-senha/validar', [AuthController::class, 'redefinirSenhaValidar']);
-    Route::post('/redefinir-senha', [AuthController::class, 'redefinirSenha']);
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/2fa/verificar', [AuthController::class, 'verificar2fa']);
+Route::middleware('throttle:api-publica')->group(function () {
+    Route::prefix('admin')->group(function() {
+        Route::get('/primeiro-acesso/validar', [AuthController::class, 'primeiroAcessoValidar']);
+        Route::post('/primeiro-acesso', [AuthController::class, 'primeiroAcesso']);
+        Route::post('/esqueceu-senha', [AuthController::class, 'esqueceuSenha']);
+        Route::get('/redefinir-senha/validar', [AuthController::class, 'redefinirSenhaValidar']);
+        Route::post('/redefinir-senha', [AuthController::class, 'redefinirSenha']);
+        Route::post('/login', [AuthController::class, 'login']);
+        Route::post('/2fa/verificar', [AuthController::class, 'verificar2fa']);
+    });
 });
 // #endregion Admin
 
 // #region Private
-Route::get('primeiro-acesso/validar', [PrivateAuthController::class, 'primeiroAcessoValidar']);
-Route::post('primeiro-acesso', [PrivateAuthController::class, 'primeiroAcesso']);
-Route::post('esqueceu-senha', [PrivateAuthController::class, 'esqueceuSenha']);
-Route::get('redefinir-senha/validar', [PrivateAuthController::class, 'redefinirSenhaValidar']);
-Route::post('redefinir-senha', [PrivateAuthController::class, 'redefinirSenha']);
-Route::post('login', [PrivateAuthController::class, 'login']);
-Route::post('2fa/verificar', [PrivateAuthController::class, 'verificar2fa']);
+Route::middleware('throttle:api-publica')->group(function () {
+    Route::get('primeiro-acesso/validar', [PrivateAuthController::class, 'primeiroAcessoValidar']);
+    Route::post('primeiro-acesso', [PrivateAuthController::class, 'primeiroAcesso']);
+    Route::post('esqueceu-senha', [PrivateAuthController::class, 'esqueceuSenha']);
+    Route::get('redefinir-senha/validar', [PrivateAuthController::class, 'redefinirSenhaValidar']);
+    Route::post('redefinir-senha', [PrivateAuthController::class, 'redefinirSenha']);
+    Route::post('login', [PrivateAuthController::class, 'login']);
+    Route::post('2fa/verificar', [PrivateAuthController::class, 'verificar2fa']);
+});
 // #endregion Private
 
-// Sem autenticação — pode ser exibida inclusive nas telas de login.
-Route::get('version', [VersionController::class, 'obter']);
+// #region Global - Sem autenticação
+Route::middleware('throttle:api-publica')->group(function () {
+    Route::get('version', [VersionController::class, 'obter']);
+});
+// #endregion Global
 
-Route::middleware(['jwt', 'suporte.contexto'])->group(function () {
+Route::middleware(['throttle:api-autenticada', 'jwt', 'suporte.contexto'])->group(function () {
     // #region Lookup
     Route::prefix('lookup')->group(function() {
         Route::get('/ceps/{cep}', [CepController::class, 'consultar']);
