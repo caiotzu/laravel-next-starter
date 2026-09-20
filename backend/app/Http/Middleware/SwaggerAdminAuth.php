@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
  * Credenciais definidas via .env (nunca hardcoded):
  *   SWAGGER_ADMIN_USERNAME
  *   SWAGGER_ADMIN_PASSWORD_HASH  (hash gerado com `php artisan swagger:admin-hash`,
- *                                 ou com `Hash::make('sua-senha')` no tinker)
+ *                                 ou com `base64_encode(Hash::make('sua-senha'))` no tinker)
  *
  * Se as credenciais não estiverem configuradas, o acesso é bloqueado por
  * padrão (fail-closed) — a documentação Admin nunca fica publicamente
@@ -40,7 +40,7 @@ class SwaggerAdminAuth
             $usuarioInformado === null
             || $senhaInformada === null
             || ! hash_equals($usuarioConfigurado, $usuarioInformado)
-            || ! password_verify($senhaInformada, $senhaHashConfigurada)
+            || ! password_verify($senhaInformada, base64_decode($senhaHashConfigurada))
         ) {
             return $this->naoAutorizado('Credenciais inválidas.');
         }

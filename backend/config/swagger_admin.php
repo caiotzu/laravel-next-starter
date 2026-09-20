@@ -6,7 +6,7 @@
  * IMPORTANTE: nunca hardcode usuário/senha aqui. Configure via .env:
  *
  *   SWAGGER_ADMIN_USERNAME=algum-usuario
- *   SWAGGER_ADMIN_PASSWORD_HASH="$2y$10$..."   (gerado com Hash::make('sua-senha'))
+ *   SWAGGER_ADMIN_PASSWORD_HASH="$2y$10$..."   (gerado com base64_encode(Hash::make('sua-senha')))
  *
  * Enquanto essas variáveis não forem definidas, o middleware
  * App\Http\Middleware\SwaggerAdminAuth bloqueia o acesso por padrão.

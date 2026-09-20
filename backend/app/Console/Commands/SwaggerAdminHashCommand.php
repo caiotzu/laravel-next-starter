@@ -30,7 +30,7 @@ class SwaggerAdminHashCommand extends Command
         $this->line('Adicione ao seu .env:');
         $this->newLine();
         $this->line('SWAGGER_ADMIN_USERNAME=admin');
-        $this->line('SWAGGER_ADMIN_PASSWORD_HASH="'.Hash::make($senha).'"');
+        $this->line('SWAGGER_ADMIN_PASSWORD_HASH="'.base64_encode(Hash::make($senha)).'"');
         $this->newLine();
 
         return self::SUCCESS;

@@ -62,6 +62,8 @@ Ambiente gerenciado via **Laravel Sail** (`docker-compose.yml`): serviço `larav
 ./vendor/bin/sail down
 ```
 
+> ⚠️ **Este `docker-compose.yml` é exclusivo para desenvolvimento local.** Ele expõe a porta do PostgreSQL diretamente no host (`FORWARD_DB_PORT`) e usa `secret` como senha padrão caso `DB_PASSWORD` não seja definida no `.env`. **Não reutilize este arquivo como base de deploy em staging/produção** sem antes: remover a exposição da porta do banco, garantir uma senha forte via variável de ambiente/secret manager (sem fallback), e revisar demais serviços expostos. Para produção, use uma infraestrutura dedicada (ECS, Kubernetes, VM com orquestração própria, etc.), não o Sail.
+
 ## Saiba mais
 
 - [Arquitetura em camadas](../docs/arquitetura.md#backend)
