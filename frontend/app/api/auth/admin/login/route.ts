@@ -5,6 +5,8 @@ import axios from "axios";
 
 import { validarOrigem } from "@/lib/utils";
 
+import { ipsEncaminhados } from "@/lib/client-ip";
+
 export async function POST(req: Request) {
   try {
     const erroOrigem = validarOrigem(req);
@@ -14,8 +16,7 @@ export async function POST(req: Request) {
 
     // Captura headers originais do navegador
     const userAgent = req.headers.get("user-agent") || "";
-    const forwardedFor = req.headers.get("x-forwarded-for") || "";
-    const realIp = req.headers.get("x-real-ip") || "";
+    const { forwardedFor, realIp } = ipsEncaminhados(req); // IP validado (lib/client-ip.ts)
 
     const response = await axios.post(
       `${process.env.BACKEND_URL}/admin/login`,

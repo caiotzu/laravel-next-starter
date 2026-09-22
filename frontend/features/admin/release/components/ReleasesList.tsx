@@ -14,9 +14,13 @@ import { formatDate } from "@/lib/utils";
 /** Prévia em texto puro do conteúdo HTML, para a linha de resumo na listagem. */
 function textoPreview(html: string): string {
   if (typeof window === "undefined") return "";
-  const div = document.createElement("div");
-  div.innerHTML = html;
-  return div.textContent?.trim() ?? "";
+
+  // DOMParser cria um documento INERTE: nada é carregado nem executado. Usar
+  // document.createElement("div").innerHTML = html num elemento do documento vivo dispara
+  // <img onerror=...> mesmo sem anexar ao DOM (XSS). Nunca usar innerHTML com conteúdo da API.
+  const doc = new DOMParser().parseFromString(html, "text/html");
+
+  return doc.body.textContent?.trim() ?? "";
 }
 
 interface Props {

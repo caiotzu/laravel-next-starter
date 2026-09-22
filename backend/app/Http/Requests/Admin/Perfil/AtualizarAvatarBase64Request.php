@@ -39,6 +39,12 @@ class AtualizarAvatarBase64Request extends FormRequest
                 return;
             }
 
+            // Limite de 2MB no conteúdo decodificado (o avatar é exibido em tamanho pequeno).
+            if (strlen((string) base64_decode($base64)) > 2 * 1024 * 1024) {
+                $validator->errors()->add('avatar', 'A foto de perfil deve ter no máximo 2MB.');
+                return;
+            }
+
             $mime = $this->detectMimeTypeFromBase64($base64);
 
             if (! in_array($mime, ['image/png', 'image/jpeg'])) {

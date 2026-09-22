@@ -133,8 +133,21 @@ trait Auditavel
 
         $dados = array_diff_key($dados, array_flip($ocultos));
 
-        foreach (($model->auditavelSensivel ?? []) as $campo) {
-            if (array_key_exists($campo, $dados)) {
+        /**
+         * Campos sensíveis nunca vão para o log de auditoria: os declarados em
+         * $auditavelSensivel e também tudo que o Model já esconde em $hidden (senha,
+         * remember_token...). Registra apenas que o campo mudou ('***'), sem o valor.
+         *
+         * Atenção: getOriginal() aplica os casts (ex.: 'encrypted'), então sem esse
+         * mascaramento um segredo cifrado no banco seria gravado em texto puro aqui.
+         */
+        $sensiveis = array_unique(array_merge(
+            $model->auditavelSensivel ?? [],
+            $model->getHidden()
+        ));
+
+        foreach ($sensiveis as $campo) {
+            if (array_key_exists($campo, $dados) && $dados[$campo] !== null) {
                 $dados[$campo] = '***';
             }
         }

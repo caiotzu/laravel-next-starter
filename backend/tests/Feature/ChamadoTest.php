@@ -121,7 +121,7 @@ test('assunto e mensagem são obrigatórios para abrir um chamado', function () 
 });
 
 test('anexo com extensão não permitida é rejeitado', function () {
-    Storage::fake('public');
+    Storage::fake('local');
 
     $cenario = criarCenarioChamado();
     $token = autenticarUsuarioChamado($cenario['clienteA']['usuario']);
@@ -141,7 +141,7 @@ test('anexo com extensão não permitida é rejeitado', function () {
 });
 
 test('anexo acima do limite de tamanho é rejeitado', function () {
-    Storage::fake('public');
+    Storage::fake('local');
     config(['api.chamados.anexo_tamanho_maximo_kb' => 1]); // 1KB
 
     $cenario = criarCenarioChamado();
@@ -164,7 +164,7 @@ test('anexo acima do limite de tamanho é rejeitado', function () {
 });
 
 test('anexo válido é aceito e fica vinculado à mensagem', function () {
-    Storage::fake('public');
+    Storage::fake('local');
 
     $cenario = criarCenarioChamado();
     $token = autenticarUsuarioChamado($cenario['clienteA']['usuario']);
@@ -188,7 +188,7 @@ test('anexo válido é aceito e fica vinculado à mensagem', function () {
     expect($anexos[0]['nome_original'])->toBe('documento.pdf');
 
     $chamado = Chamado::first();
-    Storage::disk('public')->assertExists(
+    Storage::disk('local')->assertExists(
         $chamado->mensagens()->first()->anexos()->first()->getRawOriginal('caminho')
     );
 });

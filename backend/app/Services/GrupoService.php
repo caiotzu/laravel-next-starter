@@ -26,8 +26,27 @@ class GrupoService {
     public function cadastrar(GrupoCadastroDTO $dto): Grupo
     {
         return DB::transaction(function () use ($dto) {
-            $grupo = Grupo::create(['descricao' => $dto->descricao]);
 
+            $user = Auth::user();
+
+            $contexto = app(\App\AcessoSuporte\AcessoSuporteContexto::class);
+
+            $entidadeTipoId = $contexto->entidadeTipoId($user);
+            $entidadeId = $contexto->entidadeId($user);
+
+            $grupoExiste = Grupo::where('entidade_tipo_id', $entidadeTipoId)
+                ->where('entidade_id', $entidadeId)
+                ->where('descricao', $dto->descricao)
+                ->exists();
+
+            if ($grupoExiste) {
+                throw new BusinessException(
+                    'Já existe um grupo com essa descrição.',
+                    ErrorCode::GRUPO_ALREADY_EXISTS->value
+                );
+            }
+
+            $grupo = Grupo::create(['descricao' => $dto->descricao]);
             return $grupo;
         });
     }
@@ -36,19 +55,53 @@ class GrupoService {
     {
         return DB::transaction(function () use ($dto) {
             /**
-             * Para atualizar o grupo precisa ser do mesmo tipo de entidade. Ex: admin, private
-             * e também deve pertencer ao mesmo identificador da entidade. Ex: null (admin), grupo_empresas.
+             * Para atualizar o grupo precisa ser do mesmo tipo de entidade.
+             * Ex: admin, private
+             *
+             * E também deve pertencer ao mesmo identificador da entidade.
+             * Ex: null (admin), grupo_empresas.
              */
             $user = Auth::user();
 
-            $grupo = Grupo::where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
-                ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
-                ->find($dto->id);
-            if(!$grupo)
-                throw new BusinessException('Grupo não encontrado.', ErrorCode::GRUPO_NOT_FOUND->value);
+            $contexto = app(\App\AcessoSuporte\AcessoSuporteContexto::class);
 
-            if (! $dto->temAlteracoes())
-                throw new BusinessException('Nenhum dado informado para atualização.', ErrorCode::GRUPO_REQUIRED->value);
+            $entidadeTipoId = $contexto->entidadeTipoId($user);
+            $entidadeId = $contexto->entidadeId($user);
+
+            $grupo = Grupo::where('entidade_tipo_id', $entidadeTipoId)
+                ->where('entidade_id', $entidadeId)
+                ->find($dto->id);
+
+            if (!$grupo) {
+                throw new BusinessException(
+                    'Grupo não encontrado.',
+                    ErrorCode::GRUPO_NOT_FOUND->value
+                );
+            }
+
+            if (!$dto->temAlteracoes()) {
+                throw new BusinessException(
+                    'Nenhum dado informado para atualização.',
+                    ErrorCode::GRUPO_REQUIRED->value
+                );
+            }
+
+            // Verifica duplicidade somente se a descrição estiver sendo alterada
+            if ($dto->descricao !== null) {
+
+                $grupoExiste = Grupo::where('entidade_tipo_id', $entidadeTipoId)
+                    ->where('entidade_id', $entidadeId)
+                    ->where('descricao', $dto->descricao)
+                    ->where('id', '!=', $grupo->id)
+                    ->exists();
+
+                if ($grupoExiste) {
+                    throw new BusinessException(
+                        'Já existe um grupo com essa descrição.',
+                        ErrorCode::GRUPO_ALREADY_EXISTS->value
+                    );
+                }
+            }
 
             $grupo->update($dto->paraPersistencia());
 

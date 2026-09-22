@@ -7,6 +7,8 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use App\Models\Release;
 use App\Models\EntidadeTipo;
 
+use App\Support\HtmlSanitizer;
+
 use App\DTO\Common\PaginationDTO;
 use App\DTO\Release\ReleaseFiltroDTO;
 use App\DTO\Release\ReleaseCadastroDTO;
@@ -105,7 +107,9 @@ class ReleaseService
         return Release::create([
             'entidade_tipo_id' => $entidadeTipo->id,
             'titulo' => $dto->titulo,
-            'conteudo' => $dto->conteudo,
+            // Conteúdo é HTML exibido a todos os clientes: sanitiza no servidor (allowlist) para
+            // que HTML salvo direto pela API não chegue ao navegador com scripts/handlers.
+            'conteudo' => HtmlSanitizer::sanitizar($dto->conteudo),
             'tipo' => $dto->tipo,
             'versao' => $dto->versao,
             'status' => ReleaseStatus::DRAFT,
@@ -118,7 +122,7 @@ class ReleaseService
 
         $dados = array_filter([
             'titulo' => $dto->titulo,
-            'conteudo' => $dto->conteudo,
+            'conteudo' => $dto->conteudo !== null ? HtmlSanitizer::sanitizar($dto->conteudo) : null,
             'tipo' => $dto->tipo,
             'versao' => $dto->versao,
         ], fn ($valor) => $valor !== null);

@@ -28,7 +28,7 @@ class LoginRequest extends FormRequest
         return [
             'email.required' => 'O e-mail é obrigatório',
             'email.email' => 'O e-mail está com formato inválido',
-            'email.exists' => 'O e-mail não foi encontrado',
+            'email.exists' => 'Credenciais informadas são inválidas',
 
             'senha.required' => 'A senha é obrigatória',
         ];

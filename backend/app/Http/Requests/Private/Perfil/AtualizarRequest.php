@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Private\Perfil;
 
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Foundation\Http\FormRequest;
 
 class AtualizarRequest extends FormRequest
@@ -26,7 +28,45 @@ class AtualizarRequest extends FormRequest
                 Rule::unique('usuarios', 'email')
                     ->ignore($user->id)
             ],
+            // Só é exigida (e validada em withValidator) quando o e-mail está sendo alterado.
+            'senha_atual' => [
+                'sometimes',
+                'nullable',
+                'string',
+            ],
         ];
+    }
+
+    /**
+     * Trocar o e-mail é a etapa que transforma uma sessão comprometida em tomada de conta
+     * permanente (basta pedir "esqueci a senha" para o novo e-mail). Por isso exige
+     * reautenticação com a senha atual, mesma regra usada para trocar a senha.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            /** @var \App\Models\Usuario|null $user */
+            $user = Auth::user();
+
+            if (! $user || ! $this->filled('email')) {
+                return;
+            }
+
+            if (Str::lower((string) $this->input('email')) === Str::lower((string) $user->email)) {
+                return;
+            }
+
+            $senhaAtual = $this->input('senha_atual');
+
+            if (! is_string($senhaAtual) || $senhaAtual === '') {
+                $validator->errors()->add('senha_atual', 'Informe a senha atual para alterar o e-mail.');
+                return;
+            }
+
+            if (! Hash::check($senhaAtual, (string) $user->senha)) {
+                $validator->errors()->add('senha_atual', 'A senha atual está incorreta.');
+            }
+        });
     }
 
     public function messages(): array

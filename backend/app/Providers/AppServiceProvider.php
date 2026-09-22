@@ -57,6 +57,16 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
+        // Download de anexos por link assinado (uma tela pode carregar várias imagens).
+        RateLimiter::for('download-anexo', function (Request $request) {
+            return Limit::perMinute(120)->by($request->ip());
+        });
+
+        // Documentação Admin (Basic Auth): limita tentativas de adivinhar a senha.
+        RateLimiter::for('swagger-admin', function (Request $request) {
+            return Limit::perMinute(20)->by($request->ip());
+        });
+
         // Limite mais restritivo para os endpoints públicos sensíveis
         // (esqueceu-senha, primeiro-acesso, redefinir-senha)
         RateLimiter::for('api-publica', function (Request $request) {

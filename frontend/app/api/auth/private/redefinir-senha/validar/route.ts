@@ -4,6 +4,8 @@ import axios from "axios";
 
 import { validarOrigem } from "@/lib/utils";
 
+import { ipsEncaminhados } from "@/lib/client-ip";
+
 export async function GET(req: Request) {
   try {
     const erroOrigem = validarOrigem(req);
@@ -30,8 +32,8 @@ export async function GET(req: Request) {
         headers: {
           "Content-Type": "application/json",
           "User-Agent": req.headers.get("user-agent") || "",
-          "X-Forwarded-For": req.headers.get("x-forwarded-for") || "",
-          "X-Real-IP": req.headers.get("x-real-ip") || "",
+          "X-Forwarded-For": ipsEncaminhados(req).forwardedFor, // IP validado (lib/client-ip.ts)
+          "X-Real-IP": ipsEncaminhados(req).realIp,
         },
         timeout: 10000,
         validateStatus: () => true,

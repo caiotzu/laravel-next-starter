@@ -68,8 +68,8 @@ return [
                 'oauth2_callback' => 'api/documentation/admin/oauth2-callback',
                 // Restringe o acesso à UI e ao JSON desta documentação.
                 'middleware' => [
-                    'api' => ['swagger.admin.auth'],
-                    'docs' => ['swagger.admin.auth'],
+                    'api' => ['throttle:swagger-admin', 'swagger.admin.auth'],
+                    'docs' => ['throttle:swagger-admin', 'swagger.admin.auth'],
                 ],
             ],
 

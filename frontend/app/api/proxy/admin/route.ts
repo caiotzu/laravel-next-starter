@@ -3,6 +3,13 @@ import { NextResponse } from "next/server";
 
 import axios, { Method } from "axios";
 
+
+import { ipsEncaminhados } from "@/lib/client-ip";
+import {
+  filtrarHeadersCliente,
+  metodoPermitido,
+  resolverUrlBackend,
+} from "@/lib/proxy-guard";
 import { validarOrigem } from "@/lib/utils";
 
 interface ProxyRequestBody<T = unknown> {
@@ -32,10 +39,31 @@ export async function POST(req: Request): Promise<NextResponse> {
 
     const {
       url,
-      method = "GET",
+      method: metodoInformado = "GET",
       data,
-      headers: clientHeaders,
     } = body;
+
+    // O destino, o método e os headers vêm do navegador: nada disso é confiável.
+    const urlBackend = resolverUrlBackend(url);
+
+    if (!urlBackend) {
+      return NextResponse.json(
+        { errors: { business: ["URL inválida."] } },
+        { status: 400 }
+      );
+    }
+
+    const method = metodoPermitido(metodoInformado);
+
+    if (!method) {
+      return NextResponse.json(
+        { errors: { business: ["Método não permitido."] } },
+        { status: 405 }
+      );
+    }
+
+    // Só headers da allowlist (hoje apenas X-Acesso-Suporte-Id, com formato validado).
+    const clientHeaders = filtrarHeadersCliente(body.headers);
 
     const cookieStore = await cookies();
 
@@ -46,17 +74,18 @@ export async function POST(req: Request): Promise<NextResponse> {
     const userAgent =
       req.headers.get("user-agent") || "";
 
-    const forwardedFor =
-      req.headers.get("x-forwarded-for") || "";
-
-    const realIp =
-      req.headers.get("x-real-ip") || "";
+    // IP do usuário final, validado (ver lib/client-ip.ts). Nunca repassa a cadeia do cliente.
+    const { forwardedFor, realIp } = ipsEncaminhados(req);
 
     const backendResponse = await axios.request({
-      url: `${process.env.BACKEND_URL}${url}`,
+      url: urlBackend,
       method,
 
       headers: {
+        // Headers permitidos do cliente entram PRIMEIRO: os fixos abaixo (Authorization, IP,
+        // User-Agent) sempre prevalecem e o cliente nunca consegue sobrescrevê-los.
+        ...clientHeaders,
+
         "Content-Type": "application/json",
 
         "User-Agent": userAgent,
@@ -68,8 +97,6 @@ export async function POST(req: Request): Promise<NextResponse> {
               Authorization: `Bearer ${token}`,
             }
           : {}),
-
-        ...(clientHeaders || {}),
       },
 
       data: ["GET", "HEAD"].includes(

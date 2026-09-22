@@ -5,6 +5,8 @@ export interface AtualizarAvatarRequest {
 export interface AtualizarRequest {
   nome: string;
   email: string;
+  /** Obrigatória pelo backend quando o e-mail é alterado (reautenticação). */
+  senha_atual?: string;
 }
 
 export interface AtualizarSenhaRequest {

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Global\ {
     MensagemController as GlobalMensagemController,
     VersionController,
+    ChamadoAnexoController,
 };
 use App\Http\Controllers\Lookup\ {
     CepController,
@@ -83,6 +84,14 @@ Route::middleware('throttle:api-publica')->group(function () {
 });
 // #endregion Global
 
+// #region Global - Download de anexos de chamado (link assinado e temporário, sem JWT)
+// O link é aberto direto pelo navegador (<img>/<a>), que não envia o token. A autorização é a
+// própria assinatura (gerada só para quem já teve acesso ao chamado) + expiração.
+Route::get('chamados/anexos/{anexo}', [ChamadoAnexoController::class, 'baixar'])
+    ->middleware(['throttle:download-anexo', 'signed:relative'])
+    ->name('chamados.anexos.baixar');
+// #endregion Global
+
 Route::middleware(['throttle:api-autenticada', 'jwt', 'suporte.contexto'])->group(function () {
     // #region Lookup
     Route::prefix('lookup')->group(function() {
@@ -105,7 +114,8 @@ Route::middleware(['throttle:api-autenticada', 'jwt', 'suporte.contexto'])->grou
     // #endregion Global
 
     // #region Admin
-    Route::prefix('admin')->group(function() {
+    // 'audiencia:admin': apenas usuários cujo grupo é do tipo Admin (ver AudienciaMiddleware).
+    Route::prefix('admin')->middleware('audiencia:admin')->group(function() {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/refresh', [AuthController::class, 'refresh']);

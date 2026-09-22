@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 
 use PragmaRX\Google2FA\Google2FA;
 
@@ -106,10 +107,29 @@ class AutenticacaoDoisFatoresService
 
     public function verificar(string $secret, string $code): bool
     {
-        return $this->google2fa->verifyKey(
+        /**
+         * Anti-replay: um código TOTP só pode ser aceito uma vez. Guardamos o último passo
+         * de tempo (30s) aceito para este segredo e exigimos que o próximo seja mais novo.
+         *
+         * Com $oldTimestamp = null a biblioteca devolve apenas `true` (sem o passo), por isso
+         * começamos em 0: assim o retorno é sempre o passo aceito (int) ou false.
+         */
+        $chave = 'auth:2fa:ultimo_passo:' . hash('sha256', $secret);
+        $ultimoPasso = (int) Cache::get($chave, 0);
+
+        $passo = $this->google2fa->verifyKeyNewer(
             $secret,
             $code,
+            $ultimoPasso,
             1 // janela de tolerância (30s antes/depois)
         );
+
+        if ($passo === false) {
+            return false;
+        }
+
+        Cache::put($chave, $passo, now()->addMinutes(5));
+
+        return true;
     }
 }

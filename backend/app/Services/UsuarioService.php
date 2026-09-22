@@ -105,9 +105,17 @@ class UsuarioService {
              * Faz atualização apenas do status. Essa função deve ser chamada apenas por usuários administrativos,
              * caso precise atualizar o usuário normalmente, utilizar a função atualizar padrão.
              */
-            $usuario = Usuario::where('grupo_id', $dto->grupoId)->find($dto->usuarioId);
+            $usuario = $this->usuarioPrivateDoGrupo($dto->usuarioId, $dto->grupoId);
             if(!$usuario)
                 throw new BusinessException('Usuário não encontrado.', ErrorCode::USUARIO_NOT_FOUND->value);
+
+            /**
+             * Usuários convidados (ainda sem senha) ou com senha expirada não podem ter o
+             * status alterado por aqui. A UI já esconde essa opção, mas a regra precisa
+             * valer também no backend.
+             */
+            if (in_array($usuario->status, [UsuarioStatus::CONVIDADO, UsuarioStatus::EXPIRADO], true))
+                throw new BusinessException('O status deste usuário não pode ser alterado.', ErrorCode::USUARIO_REQUIRED->value);
 
             if (! $dto->temAlteracoes())
                 throw new BusinessException('Nenhum dado informado para atualização.', ErrorCode::USUARIO_REQUIRED->value);
@@ -117,6 +125,24 @@ class UsuarioService {
 
             return $usuario;
         });
+    }
+
+    /**
+     * Busca um usuário pelo id garantindo que ele pertence ao grupo informado E que esse
+     * grupo é de uma entidade do tipo Private (cliente). Sem essa restrição, o
+     * {grupoId} vindo da URL permitia que um admin com a permissão de gestão de usuários
+     * de cliente alterasse/redefinisse usuários do próprio tipo Admin.
+     */
+    private function usuarioPrivateDoGrupo(string $usuarioId, string $grupoId, bool $somenteAtivos = false): ?Usuario
+    {
+        return Usuario::where('grupo_id', $grupoId)
+            ->whereHas('grupo.entidadeTipo', fn (Builder $query) =>
+                $query->where('chave', EntidadeTipo::PRIVATE->value)
+            )
+            ->when($somenteAtivos, fn (Builder $query) =>
+                $query->where('status', UsuarioStatus::ATIVO->value)
+            )
+            ->find($usuarioId);
     }
 
     public function visualizar(string $id): Usuario
@@ -290,9 +316,30 @@ class UsuarioService {
                 'usado_em' => now(),
             ]);
 
+            /**
+             * Quem redefine a senha (normalmente por suspeita de comprometimento) espera
+             * que qualquer sessão aberta anteriormente deixe de funcionar.
+             */
+            $this->encerrarSessoesDoUsuario($usuario);
+
             $token = $this->tokenResetSenhaService->gerarToken($usuario);
             event(new SenhaUsuarioAlterada($usuario, $token));
         });
+    }
+
+    /**
+     * Encerra as sessões ativas do usuário. Se $exceptoSessaoId for informado, essa sessão
+     * é preservada (ex.: o usuário trocou a própria senha e continua logado neste aparelho).
+     */
+    public function encerrarSessoesDoUsuario(Usuario $usuario, ?string $exceptoSessaoId = null): void
+    {
+        $usuario->usuarioSessoes()
+            ->where('ativo', true)
+            ->when($exceptoSessaoId, fn ($q) => $q->where('id', '!=', $exceptoSessaoId))
+            ->update([
+                'ativo' => false,
+                'logout_em' => now(),
+            ]);
     }
 
     public function registrarLogin(Usuario $usuario, ?string $ip): void
@@ -347,9 +394,7 @@ class UsuarioService {
          * Esse método é utilizado pelo administrativo para forçar um envio de e-mail para o usuário.
          * Para reset de senha normal pela tela de login utilizar o fluxo padrão de esqueceu a senha
          */
-        $usuario = Usuario::where('status', UsuarioStatus::ATIVO->value)
-            ->where('grupo_id', $grupoId)
-            ->find($id);
+        $usuario = $this->usuarioPrivateDoGrupo($id, $grupoId, somenteAtivos: true);
         if (! $usuario) {
             return;
         }

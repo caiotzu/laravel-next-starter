@@ -29,7 +29,9 @@ services:
     pgsql:
         image: 'postgres:17-alpine'
         ports:
-            - '${FORWARD_DB_PORT:-5432}:5432'
+            # Só na máquina local (127.0.0.1): com a senha padrão do .env.example, publicar em
+            # 0.0.0.0 deixaria o banco acessível a qualquer um na mesma rede (ex.: Wi-Fi público).
+            - '127.0.0.1:${FORWARD_DB_PORT:-5432}:5432'
         environment:
             PGPASSWORD: '${DB_PASSWORD}'
             POSTGRES_DB: '${DB_DATABASE}'

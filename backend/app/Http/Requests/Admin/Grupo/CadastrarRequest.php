@@ -17,8 +17,7 @@ class CadastrarRequest extends FormRequest
             'descricao' => [
                 'required',
                 'string',
-                'max:255',
-                'unique:grupos,descricao',
+                'max:255'
             ]
         ];
     }
@@ -28,7 +27,6 @@ class CadastrarRequest extends FormRequest
             'descricao.required' => 'A descrição do grupo é obrigatória',
             'descricao.string'   => 'A descrição do grupo deve ser um texto',
             'descricao.max'      => 'A descrição do grupo deve ter no máximo 255 caracteres',
-            'descricao.unique'   => 'A descrição do grupo já está cadastrado para outro grupo',
         ];
     }
 }

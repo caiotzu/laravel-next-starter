@@ -150,18 +150,37 @@ export function removeEmptyValues<T extends Record<string, unknown>>(obj: T) {
 }
 
 /**
- * Verifica a origem da chamada, garantindo apenas que o próprio
- * frontend faça chamadas para ele mesmo.
+ * Verifica a origem da chamada, garantindo apenas que o próprio frontend faça chamadas para
+ * ele mesmo (proteção CSRF das rotas do BFF, que usam cookie de sessão).
+ *
+ * Regras:
+ *  - Com header Origin: precisa ser exatamente a origem de FRONTEND_URL.
+ *  - Sem Origin: só aceita se o navegador declarar Sec-Fetch-Site: same-origin. Antes, a
+ *    ausência do header liberava a requisição ("fail-open").
+ *
+ * Observação: chamadas manuais (curl/Postman) precisam enviar `Origin: <FRONTEND_URL>`.
  */
 export function validarOrigem(req: Request): NextResponse | null {
   const origin = req.headers.get("origin");
-  const allowedOrigin = process.env.FRONTEND_URL;
 
-  if (origin && origin !== allowedOrigin) {
+  let origemPermitida: string | null = null;
+
+  try {
+    origemPermitida = process.env.FRONTEND_URL ? new URL(process.env.FRONTEND_URL).origin : null;
+  } catch {
+    origemPermitida = null;
+  }
+
+  const permitido = origin
+    ? origemPermitida !== null && origin === origemPermitida
+    : req.headers.get("sec-fetch-site") === "same-origin";
+
+  if (!permitido) {
     return NextResponse.json(
       { errors: { business: ["Origem não permitida."] } },
       { status: 403 }
     );
   }
+
   return null;
 }

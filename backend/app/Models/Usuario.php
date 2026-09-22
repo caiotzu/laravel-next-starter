@@ -62,6 +62,17 @@ class Usuario extends Authenticatable implements JWTSubject
         'ultimo_ip'
     ];
 
+    /**
+     * Nunca gravar o valor no log de auditoria (aparece só como '***'). O hash da senha e o
+     * segredo do 2FA em texto puro na auditoria permitiriam quebra offline / clonagem do 2FA
+     * por quem tem permissão de listar auditorias.
+     */
+    protected array $auditavelSensivel = [
+        'senha',
+        'google2fa_secret',
+        'remember_token',
+    ];
+
     protected function avatar(): Attribute
     {
         return Attribute::make(

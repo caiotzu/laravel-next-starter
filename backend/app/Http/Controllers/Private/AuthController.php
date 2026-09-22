@@ -90,7 +90,7 @@ class AuthController extends Controller
          * Verifica o RateLimit, impossibilitando o usuário
          * de realizar múltiplas tentativas
          */
-        $keyRateLimiter = 'login:'.$request->ip().':'.$request->email;
+        $keyRateLimiter = 'login:'.$request->ip().':'.Str::lower($request->email);
 
         try {
             if (RateLimiter::tooManyAttempts($keyRateLimiter, 5)) {
@@ -100,6 +100,12 @@ class AuthController extends Controller
             }
 
             $usuario = $this->usuarioService->obterUsuarioAtivoPorEmail($request->email, EntidadeTipo::PRIVATE);
+
+            // Usuário inexistente: executa um hash de custo equivalente para que o tempo de
+            // resposta não revele se o e-mail está cadastrado.
+            if (!$usuario) {
+                Hash::make($request->senha);
+            }
 
             if (!$usuario || !Hash::check($request->senha, $usuario->senha)) {
                 throw new BusinessException('Credenciais informadas são inválidas.');
@@ -182,8 +188,11 @@ class AuthController extends Controller
                 $request->codigo
             );
 
-            if (!$valido)
+            if (!$valido) {
+                $this->registrarFalhaTokenTemporario2fa($request->temp_token);
+
                 throw new BusinessException('Código inválido.');
+            }
 
             Cache::forget("2fa_login:{$request->temp_token}");
 
@@ -196,6 +205,23 @@ class AuthController extends Controller
             return response()->json([
                 'errors' => ['business' => [$e->getMessage()]]
             ], 422);
+        }
+    }
+
+    /**
+     * O temp_token do 2FA vale 5 minutos, mas sem um teto por token um atacante que já tem
+     * a senha poderia tentar códigos até o rate limit por IP. Após 5 códigos errados o token
+     * é descartado e é preciso autenticar com e-mail e senha novamente.
+     */
+    private function registrarFalhaTokenTemporario2fa(string $tempToken): void
+    {
+        $chave = '2fa_tentativas:' . hash('sha256', $tempToken);
+
+        Cache::add($chave, 0, now()->addMinutes(5));
+
+        if ((int) Cache::increment($chave) >= 5) {
+            Cache::forget("2fa_login:{$tempToken}");
+            Cache::forget($chave);
         }
     }
 

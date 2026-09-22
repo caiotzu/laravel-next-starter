@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import axios from "axios";
 
+import { ipsEncaminhados } from "@/lib/client-ip";
 import { validarOrigem } from "@/lib/utils";
 
 export async function POST(req: Request) {
@@ -15,8 +16,7 @@ export async function POST(req: Request) {
 
     // Pega o user-agent original do navegador
     const userAgent = req.headers.get("user-agent") || "";
-    const forwardedFor = req.headers.get("x-forwarded-for") || "";
-    const realIp = req.headers.get("x-real-ip") || "";
+    const { forwardedFor, realIp } = ipsEncaminhados(req); // IP validado (lib/client-ip.ts)
 
     const response = await axios.post(
       `${process.env.BACKEND_URL}/logout`,
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     cookieStore.set("private_access_token", "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      sameSite: "lax", // cookie lido só pelo próprio BFF (mesmo origin): "none" não é necessário e desliga a proteção SameSite
       path: "/",
       maxAge: 0,
     });

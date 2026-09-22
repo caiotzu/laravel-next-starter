@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import axios from "axios";
 
+import { ipsEncaminhados } from "@/lib/client-ip";
 import { validarOrigem } from "@/lib/utils";
 
 export async function POST(req: Request) {
@@ -14,8 +15,7 @@ export async function POST(req: Request) {
 
     // Captura headers originais do navegador
     const userAgent = req.headers.get("user-agent") || "";
-    const forwardedFor = req.headers.get("x-forwarded-for") || "";
-    const realIp = req.headers.get("x-real-ip") || "";
+    const { forwardedFor, realIp } = ipsEncaminhados(req); // IP validado (lib/client-ip.ts)
 
     const response = await axios.post(
       `${process.env.BACKEND_URL}/login`,

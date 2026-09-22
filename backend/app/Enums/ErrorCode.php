@@ -45,6 +45,7 @@ enum ErrorCode: int
     // Grupo (model) -> 07
     case GRUPO_NOT_FOUND = 40407;
     case GRUPO_REQUIRED = 42207;
+    case GRUPO_ALREADY_EXISTS = 40907;
 
     // Mensagem (model) -> 08
     case MENSAGEM_NOT_FOUND = 40408;

@@ -11,6 +11,9 @@ export const usuarioPerfilSchema = z.object({
   email: z
     .email("Informe um e-mail válido")
     .max(150, "O e-mail deve ter no máximo 150 caracteres"),
+
+  // Exigida (no componente e no backend) somente quando o e-mail é alterado.
+  senha_atual: z.string().optional(),
 });
 
 export const atualizarSenhaSchema = z.object({

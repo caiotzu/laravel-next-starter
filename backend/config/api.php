@@ -17,5 +17,8 @@ return [
         'anexo_tamanho_maximo_kb' => env('CHAMADO_ANEXO_TAMANHO_MAXIMO_KB', 10240), // 10MB
         'anexo_mimes' => ['pdf', 'jpg', 'jpeg', 'png'],
         'anexos_maximo_por_mensagem' => env('CHAMADO_ANEXOS_MAXIMO_POR_MENSAGEM', 5),
+        // Validade (em minutos) das URLs assinadas de download de anexos. Os anexos ficam em
+        // disco privado e só são entregues por link assinado e temporário.
+        'anexo_url_expira_minutos' => env('CHAMADO_ANEXO_URL_EXPIRA_MINUTOS', 30),
     ],
 ];

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import axios from "axios";
 
+import { ipsEncaminhados } from "@/lib/client-ip";
 import { validarOrigem } from "@/lib/utils";
 
 export async function POST(req: Request) {
@@ -18,8 +19,8 @@ export async function POST(req: Request) {
         headers: {
           "Content-Type": "application/json",
           "User-Agent": req.headers.get("user-agent") || "",
-          "X-Forwarded-For": req.headers.get("x-forwarded-for") || "",
-          "X-Real-IP": req.headers.get("x-real-ip") || "",
+          "X-Forwarded-For": ipsEncaminhados(req).forwardedFor, // IP validado (lib/client-ip.ts)
+          "X-Real-IP": ipsEncaminhados(req).realIp,
         },
         timeout: 10000,
         validateStatus: () => true,

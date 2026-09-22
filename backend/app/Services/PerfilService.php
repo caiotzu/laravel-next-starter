@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
+use Tymon\JWTAuth\Facades\JWTAuth;
+
 use App\Events\SenhaUsuarioAlterada;
 
 use App\Models\Usuario;
@@ -22,8 +24,22 @@ use App\Exceptions\BusinessException;
 
 class PerfilService {
     public function __construct(
-        private TokenResetSenhaService $tokenResetSenhaService
+        private TokenResetSenhaService $tokenResetSenhaService,
+        private UsuarioService $usuarioService
     ) {}
+
+    /**
+     * Id da sessão (claim session_id do JWT) da requisição atual. Usado para preservar o
+     * aparelho de quem está alterando os próprios dados de acesso.
+     */
+    private function sessaoAtualId(): ?string
+    {
+        try {
+            return JWTAuth::parseToken()->getPayload()->get('session_id');
+        } catch (\Throwable) {
+            return null;
+        }
+    }
 
     public function atualizar(PerfilAtualizacaoDTO $dto): Usuario
     {
@@ -34,6 +50,11 @@ class PerfilService {
             }
 
             $usuario->update($dto->paraPersistencia());
+
+            // E-mail é credencial de recuperação de conta: ao mudar, encerra as demais sessões.
+            if ($usuario->wasChanged('email')) {
+                $this->usuarioService->encerrarSessoesDoUsuario($usuario, $this->sessaoAtualId());
+            }
 
             return $usuario;
         });
@@ -50,6 +71,9 @@ class PerfilService {
             $usuario->update([
                 'senha' => Hash::make($dto->senha_nova)
             ]);
+
+            // Mantém apenas a sessão atual; qualquer outro aparelho precisa autenticar de novo.
+            $this->usuarioService->encerrarSessoesDoUsuario($usuario, $this->sessaoAtualId());
 
             $token = $this->tokenResetSenhaService->gerarToken($usuario);
             event(new SenhaUsuarioAlterada($usuario, $token));

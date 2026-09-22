@@ -55,7 +55,7 @@ export default function Page({
                 {
                   label: "Voltar",
                   href: "/releases",
-                  variant: "outline",
+                  variant: "default",
                 },
               ]}
             />

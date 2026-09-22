@@ -276,7 +276,8 @@ class ChamadoService
 
             $caminho = 'chamados/' . $chamado->id . '/' . Str::uuid() . '.' . $extensao;
 
-            Storage::disk('public')->put($caminho, $decodificado);
+            // Disco privado: os anexos só saem por link assinado (Global\ChamadoAnexoController).
+            Storage::disk('local')->put($caminho, $decodificado);
 
             ChamadoAnexo::create([
                 'chamado_mensagem_id' => $chamadoMensagem->id,

@@ -33,11 +33,13 @@ export function PerfilTabContent({ user }: PerfilTabContentProps) {
     formState: { errors, isDirty },
     setError,
     reset,
+    watch,
   } = useForm<UsuarioPerfilFormData>({
     resolver: zodResolver(usuarioPerfilSchema),
     defaultValues: {
       nome: user.nome,
       email: user.email,
+      senha_atual: "",
     },
   });
 
@@ -50,17 +52,38 @@ export function PerfilTabContent({ user }: PerfilTabContentProps) {
     reset({
       nome: user.nome,
       email: user.email,
+      senha_atual: "",
     });
   }, [user, reset]);
+
+  // A senha atual só é pedida quando o e-mail está sendo alterado.
+  const emailAlterado = watch("email") !== user.email;
 
   function handleUpdatePerfil(data: UsuarioPerfilFormData) {
     setBackendErrors(null);
 
-    mutate(data, {
+    const alterouEmail = data.email !== user.email;
+
+    if (alterouEmail && !data.senha_atual) {
+      setError("senha_atual", {
+        type: "manual",
+        message: "Informe sua senha atual para alterar o e-mail.",
+      });
+      return;
+    }
+
+    mutate(
+      {
+        nome: data.nome,
+        email: data.email,
+        ...(alterouEmail ? { senha_atual: data.senha_atual } : {}),
+      },
+      {
       onSuccess: (response) => {
         reset({
           nome: response.nome,
           email: response.email,
+          senha_atual: "",
         });
 
         toast.success("Perfil atualizado com sucesso!");
@@ -89,7 +112,8 @@ export function PerfilTabContent({ user }: PerfilTabContentProps) {
           });
         });
       },
-    });
+      }
+    );
   }
 
   return (
@@ -155,6 +179,35 @@ export function PerfilTabContent({ user }: PerfilTabContentProps) {
                 </p>
               )}
             </div>
+
+            {/* Senha atual: reautenticação exigida para trocar o e-mail */}
+            {emailAlterado && (
+              <div className="col-span-12 md:col-span-6 space-y-2">
+                <Label htmlFor="senha_atual">
+                  Senha atual <span className="text-red-600">*</span>
+                </Label>
+
+                <Input
+                  id="senha_atual"
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="Confirme com sua senha atual"
+                  disabled={isPending}
+                  className={errors.senha_atual ? "border-red-700 focus-visible:ring-red-700" : ""}
+                  {...register("senha_atual")}
+                />
+
+                <p className="text-xs text-muted-foreground">
+                  Por segurança, a senha é exigida para alterar o e-mail.
+                </p>
+
+                {errors.senha_atual && (
+                  <p className="text-sm text-red-700">
+                    {errors.senha_atual.message}
+                  </p>
+                )}
+              </div>
+            )}
 
           </div>
         </CardContent>
