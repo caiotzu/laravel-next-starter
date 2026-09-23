@@ -71,7 +71,13 @@ export function ChamadoConversa({ chamado }: Props) {
           setResposta("");
           setAnexos([]);
         },
-        onError: () => toast.error("Não foi possível enviar sua mensagem."),
+        onError: (error) => {
+          const mensagens = error.response?.data?.errors?.business;
+
+          toast.error(
+            mensagens?.[0] ?? "Não foi possível enviar sua mensagem."
+          );
+        },
       }
     );
   }

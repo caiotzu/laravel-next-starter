@@ -7,6 +7,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
+import { UseFormSetError } from "react-hook-form";
 import { toast } from "sonner";
 
 import { ApiErrorResponse } from "@/types/errors";
@@ -20,6 +21,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 import { useGrupo } from "@/domains/admin/grupo/hooks/useGrupo";
 import { editarGrupo, sincronizarPermissoesGrupo } from "@/domains/admin/grupo/services/grupoService";
+import { Grupo } from "@/domains/admin/grupo/types/grupo.model";
 import { usePermissoes } from "@/domains/admin/permissao/hooks/usePermissoes";
 
 import { GrupoFormEdit } from "@/features/admin/grupo/components/GrupoFormEdit";
@@ -62,26 +64,81 @@ export default function Page() {
     router.push("/admin/grupos");
   }, [errorPermissoes, router]);
 
-	const atualizarGrupoMutation = useMutation({
-		mutationFn: (data: GrupoFormDataEdicao) =>
-		editarGrupo(id, data),
+	const atualizarGrupoMutation = useMutation<
+		Grupo,
+		AxiosError<ApiErrorResponse>,
+		{
+			data: GrupoFormDataEdicao;
+			setError: UseFormSetError<GrupoFormDataEdicao>;
+		}
+	>({
+		mutationFn: ({ data }) => editarGrupo(id, data),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["grupo", id],
 			});
 
+			setBackendErrors(null);
 			toast.success("Grupo atualizado com sucesso");
+		},
+		onError: (error, variables) => {
+			const apiErrors = error.response?.data?.errors;
+
+			if (!apiErrors) {
+				setBackendErrors(["Erro ao atualizar o grupo."]);
+				return;
+			}
+
+			if ("business" in apiErrors && Array.isArray(apiErrors.business)) {
+				setBackendErrors(apiErrors.business);
+				return;
+			}
+
+			Object.entries(apiErrors).forEach(([field, messages]) => {
+				if (!Array.isArray(messages)) return;
+
+				variables.setError(field as keyof GrupoFormDataEdicao, {
+					type: "server",
+					message: messages[0],
+				});
+			});
 		},
 	});
 
-	const sincronizarPermissoesMutation = useMutation({
+	const sincronizarPermissoesMutation = useMutation<
+		Grupo,
+		AxiosError<ApiErrorResponse>,
+		string[]
+	>({
 		mutationFn: (permissoes: string[]) => sincronizarPermissoesGrupo(id, {permissoes}),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["grupo", id],
 			});
 
+			setBackendErrors(null);
 			toast.success("Permissões atualizadas com sucesso");
+		},
+		onError: (error) => {
+			const apiErrors = error.response?.data?.errors;
+
+			if (!apiErrors) {
+				setBackendErrors(["Erro ao atualizar as permissões do grupo."]);
+				return;
+			}
+
+			if ("business" in apiErrors && Array.isArray(apiErrors.business)) {
+				setBackendErrors(apiErrors.business);
+				return;
+			}
+
+			// Sem formulário para vincular erro por campo (é uma lista de
+			// checkboxes) — mostra todas as mensagens de validação no alerta.
+			setBackendErrors(
+				Object.values(apiErrors)
+					.filter((messages): messages is string[] => Array.isArray(messages))
+					.flat()
+			);
 		},
 	});
 
@@ -126,8 +183,22 @@ export default function Page() {
 									permissoes={permissoes.data}
 									backendErrors={backendErrors}
 									clearBackendErrors={() => setBackendErrors(null)}
-									onSubmitGrupo={async (data) => { await atualizarGrupoMutation.mutateAsync(data); }}
-									onSubmitPermissoes={async (permissoes) => { await sincronizarPermissoesMutation.mutateAsync(permissoes); }}
+									onSubmitGrupo={async (data, setError) => {
+										setBackendErrors(null);
+										try {
+											await atualizarGrupoMutation.mutateAsync({ data, setError });
+										} catch {
+											// Erro já tratado e exibido em onError (backendErrors/setError acima).
+										}
+									}}
+									onSubmitPermissoes={async (permissoes) => {
+										setBackendErrors(null);
+										try {
+											await sincronizarPermissoesMutation.mutateAsync(permissoes);
+										} catch {
+											// Erro já tratado e exibido em onError (backendErrors acima).
+										}
+									}}
 									isLoadingGrupo={atualizarGrupoMutation.isPending}
 									isLoadingPermissoes={sincronizarPermissoesMutation.isPending}
 								/>

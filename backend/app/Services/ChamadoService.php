@@ -277,7 +277,18 @@ class ChamadoService
             $caminho = 'chamados/' . $chamado->id . '/' . Str::uuid() . '.' . $extensao;
 
             // Disco privado: os anexos só saem por link assinado (Global\ChamadoAnexoController).
-            Storage::disk('local')->put($caminho, $decodificado);
+            // O disco 'local' tem 'throw' => false (config/filesystems.php), então uma falha de
+            // gravação (permissão, disco cheio etc.) não lança exceção sozinha — o retorno de
+            // put() precisa ser checado, senão o registro do anexo é criado apontando para um
+            // arquivo que nunca existiu: ele aparece na conversa, mas o download sempre dá 404.
+            $gravado = Storage::disk('local')->put($caminho, $decodificado);
+
+            if (! $gravado) {
+                throw new BusinessException(
+                    'Não foi possível salvar o anexo. Tente novamente.',
+                    ErrorCode::CHAMADO_ANEXO_INVALIDO->value
+                );
+            }
 
             ChamadoAnexo::create([
                 'chamado_mensagem_id' => $chamadoMensagem->id,
