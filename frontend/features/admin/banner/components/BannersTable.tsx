@@ -5,7 +5,16 @@ import { useState } from "react";
 import Link from "next/link";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Eye, Monitor, MoreHorizontal, Pencil, Power, PowerOff, Trash2 } from "lucide-react";
+import {
+  Eye,
+  Monitor,
+  MoreHorizontal,
+  Pencil,
+  Power,
+  PowerOff,
+  RotateCcw,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
@@ -44,6 +53,7 @@ import {
   ativarBanner,
   desativarBanner,
   excluirBanner,
+  restaurarBanner,
 } from "@/domains/admin/banner/services/bannerService";
 import { Banner } from "@/domains/admin/banner/types/banner.model";
 import { formatDate } from "@/lib/utils";
@@ -87,6 +97,20 @@ export function BannersTable({ data: banners }: Props) {
     },
   });
 
+  // Distinto de mutarStatus (Ativar/Desativar acima, que altera o status
+  // ativo/inativo do banner): restaurar desfaz a exclusão — mesmo padrão
+  // de ativarGrupoEmpresa em GrupoEmpresasTable.
+  const { mutateAsync: restaurar } = useMutation({
+    mutationFn: restaurarBanner,
+    onSuccess: () => {
+      toast.success("Banner restaurado com sucesso.");
+      queryClient.invalidateQueries({ queryKey: ["banners"] });
+    },
+    onError: () => {
+      toast.error("Não foi possível restaurar o banner.");
+    },
+  });
+
   if (banners.length === 0) {
     return (
       <Card className="rounded-2xl border shadow-sm p-8 text-center text-muted-foreground">
@@ -118,9 +142,15 @@ export function BannersTable({ data: banners }: Props) {
                 >
                   <TableCell className="font-medium text-foreground">{banner.titulo}</TableCell>
                   <TableCell>
-                    <Badge variant={banner.status === "ativo" ? "default" : "secondary"}>
-                      {banner.statusLabel}
-                    </Badge>
+                    {banner.deletedAt ? (
+                      <Badge className="bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400">
+                        Excluído
+                      </Badge>
+                    ) : (
+                      <Badge variant={banner.status === "ativo" ? "default" : "secondary"}>
+                        {banner.statusLabel}
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell>
                     {banner.direcionamento.tipoLabel}
@@ -151,60 +181,78 @@ export function BannersTable({ data: banners }: Props) {
                           </DropdownMenuItem>
                         </AdminPermissionGuard>
 
-                        <AdminPermissionGuard permission="admin.banner.atualizar" disableFallback>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/admin/banners/${banner.id}`}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Editar
-                            </Link>
-                          </DropdownMenuItem>
+                        {!banner.deletedAt && (
+                          <AdminPermissionGuard permission="admin.banner.atualizar" disableFallback>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/admin/banners/${banner.id}`}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Editar
+                              </Link>
+                            </DropdownMenuItem>
 
-                          <DropdownMenuItem
-                            onClick={() =>
-                              mutarStatus({ id: banner.id, ativar: banner.status !== "ativo" })
-                            }
-                          >
-                            {banner.status === "ativo" ? (
-                              <>
-                                <PowerOff className="mr-2 h-4 w-4" />
-                                Desativar
-                              </>
-                            ) : (
-                              <>
-                                <Power className="mr-2 h-4 w-4" />
-                                Ativar
-                              </>
-                            )}
-                          </DropdownMenuItem>
-                        </AdminPermissionGuard>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                mutarStatus({ id: banner.id, ativar: banner.status !== "ativo" })
+                              }
+                            >
+                              {banner.status === "ativo" ? (
+                                <>
+                                  <PowerOff className="mr-2 h-4 w-4" />
+                                  Desativar
+                                </>
+                              ) : (
+                                <>
+                                  <Power className="mr-2 h-4 w-4" />
+                                  Ativar
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                          </AdminPermissionGuard>
+                        )}
 
-                        <AdminPermissionGuard permission="admin.banner.excluir" disableFallback>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem
-                                onSelect={(e) => e.preventDefault()}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Excluir
-                              </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Excluir banner</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Tem certeza que deseja excluir o banner &quot;{banner.titulo}
-                                  &quot;? Essa ação não poderá ser desfeita.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => excluir(banner.id)}>
+                        {!banner.deletedAt && (
+                          <AdminPermissionGuard permission="admin.banner.excluir" disableFallback>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem
+                                  onSelect={(e) => e.preventDefault()}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
                                   Excluir
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </AdminPermissionGuard>
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Excluir banner</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Tem certeza que deseja excluir o banner &quot;{banner.titulo}
+                                    &quot;? Você poderá restaurá-lo depois em
+                                    &quot;Excluídos&quot;.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => excluir(banner.id)}>
+                                    Excluir
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </AdminPermissionGuard>
+                        )}
+
+                        {/* Restaurar — distinto de Ativar/Desativar acima (ver
+                            comentário na mutation restaurar()): só aparece
+                            para um banner excluído, mesmo padrão do item
+                            "Ativar" em GrupoEmpresasTable. */}
+                        {banner.deletedAt && (
+                          <AdminPermissionGuard permission="admin.banner.restaurar" disableFallback>
+                            <DropdownMenuItem onClick={() => restaurar(banner.id)}>
+                              <RotateCcw className="mr-2 h-4 w-4" />
+                              Restaurar
+                            </DropdownMenuItem>
+                          </AdminPermissionGuard>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

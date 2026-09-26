@@ -197,6 +197,7 @@ Route::middleware(['throttle:api-autenticada', 'jwt', 'suporte.contexto'])->grou
             Route::get('/disponiveis', [BannerController::class, 'disponiveis']);
             Route::patch('/{id}/ativar', [BannerController::class, 'ativar']);
             Route::patch('/{id}/desativar', [BannerController::class, 'desativar']);
+            Route::patch('/{id}/restaurar', [BannerController::class, 'restaurar']);
             Route::put('/{id}', [BannerController::class, 'atualizar']);
             Route::delete('/{id}', [BannerController::class, 'excluir']);
             Route::get('/{id}', [BannerController::class, 'visualizar']);

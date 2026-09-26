@@ -87,6 +87,21 @@ export async function desativarBanner(id: string) {
   return toBanner(response.data.data);
 }
 
+/**
+ * Distinto de ativarBanner/desativarBanner (que alteram o status
+ * ativo/inativo de um banner existente): restaurarBanner desfaz a
+ * exclusão (soft delete) de um banner — mesmo padrão de
+ * ativarGrupoEmpresa (ver domains/admin/grupo-empresa/services).
+ */
+export async function restaurarBanner(id: string) {
+  const response = await proxyAdminRequest<AtualizarBannerResponse>({
+    url: `/admin/banners/${id}/restaurar`,
+    method: "PATCH",
+  });
+
+  return toBanner(response.data.data);
+}
+
 export async function excluirBanner(id: string) {
   await proxyAdminRequest<null>({
     url: `/admin/banners/${id}`,

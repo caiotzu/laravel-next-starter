@@ -11,6 +11,7 @@ final class BannerFiltroDTO
         public readonly ?string $titulo,
         public readonly ?BannerStatus $status,
         public readonly PaginationDTO $paginacao,
+        public readonly ?bool $excluido = null,
     ) {}
 
     public static function criarParaFiltro(array $dados): self
@@ -19,6 +20,7 @@ final class BannerFiltroDTO
             titulo: $dados['titulo'] ?? null,
             status: isset($dados['status']) ? BannerStatus::from($dados['status']) : null,
             paginacao: PaginationDTO::criarParaPaginar($dados),
+            excluido: $dados['excluido'] ?? null,
         );
     }
 }

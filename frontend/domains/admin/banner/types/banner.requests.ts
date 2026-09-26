@@ -50,6 +50,7 @@ export interface AtualizarBannerRequest {
 export interface ListarBannersRequest {
   titulo?: string;
   status?: BannerStatus;
+  excluido?: boolean;
   page?: number;
   por_pagina?: number;
 }

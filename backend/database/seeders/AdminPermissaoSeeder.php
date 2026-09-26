@@ -546,6 +546,13 @@ class AdminPermissaoSeeder extends Seeder
                     "created_at" => date("Y-m-d H:i:s"),
                     "updated_at" => date("Y-m-d H:i:s")
                 ],
+                [
+                    "id" => Str::uuid(),
+                    "chave" => "admin.banner.restaurar",
+                    "descricao" => "Permite restaurar um banner excluído",
+                    "created_at" => date("Y-m-d H:i:s"),
+                    "updated_at" => date("Y-m-d H:i:s")
+                ],
             //---
         ];
 

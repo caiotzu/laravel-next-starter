@@ -60,13 +60,20 @@ class BannerService
             ->withCount('imagens')
             ->when($filtro->titulo, fn ($q) => $q->where('titulo', 'ilike', "%{$filtro->titulo}%"))
             ->when($filtro->status, fn ($q) => $q->where('status', $filtro->status->value))
+            // Mesmo padrão de GrupoEmpresaService/EmpresaService/GrupoService/
+            // UsuarioService::listar(): excluido=true inclui também os
+            // registros com soft delete (withTrashed), não troca para "só
+            // os excluídos" — quem filtra por status visualmente é o
+            // Badge "Excluído"/"Ativo" já existente no front, a partir de
+            // deleted_at.
+            ->when($filtro->excluido, fn ($q) => $q->withTrashed())
             ->orderBy('created_at', 'DESC')
             ->paginate($filtro->paginacao->por_pagina);
     }
 
     public function visualizar(string $id): Banner
     {
-        $banner = Banner::with(['entidadeTipo', 'imagens', 'links'])->find($id);
+        $banner = Banner::with(['entidadeTipo', 'imagens', 'links'])->withTrashed()->find($id);
 
         if (! $banner) {
             throw new BusinessException('Banner não encontrado.', ErrorCode::BANNER_NOT_FOUND->value, 404);
@@ -159,6 +166,19 @@ class BannerService
         // Mensagem/GrupoEmpresa), preservando o histórico caso o banner
         // precise ser auditado depois.
         $banner->delete();
+    }
+
+    public function restaurar(string $id): Banner
+    {
+        $banner = Banner::onlyTrashed()->find($id);
+
+        if (! $banner) {
+            throw new BusinessException('Banner não encontrado para restauração.', ErrorCode::BANNER_NOT_FOUND->value, 404);
+        }
+
+        $banner->restore();
+
+        return $banner->fresh(['entidadeTipo', 'imagens', 'links']);
     }
 
     /**

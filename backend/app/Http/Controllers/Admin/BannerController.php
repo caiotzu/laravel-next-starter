@@ -307,6 +307,29 @@ class BannerController extends Controller
         return BannerResource::make($banner)->response()->setStatusCode(200);
     }
 
+    #[OA\Patch(
+        path: '/admin/banners/{id}/restaurar',
+        summary: 'Admin — Restaurar banner excluído',
+        description: 'Restaura (desfaz o soft delete de) um banner previamente excluído. Não deve ser confundido com "Ativar" (ver /ativar): aquele altera o campo status de um banner que já existe; este desfaz a exclusão. O banner volta com o mesmo status que tinha antes de ser excluído.',
+        security: [['bearerAuth' => []]],
+        tags: ['Admin'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Banner restaurado.', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/AdminBanner', type: 'object')], type: 'object')),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+        ]
+    )]
+    public function restaurar(string $id): JsonResponse
+    {
+        $this->authorize('admin.banner.restaurar');
+
+        $banner = $this->bannerService->restaurar($id);
+
+        return BannerResource::make($banner)->response()->setStatusCode(200);
+    }
+
     #[OA\Delete(
         path: '/admin/banners/{id}',
         summary: 'Admin — Excluir banner',

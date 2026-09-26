@@ -282,6 +282,104 @@ test('admin consegue excluir um banner (soft delete)', function () {
     expect(Banner::withTrashed()->find($banner->id))->not->toBeNull();
 });
 
+test('listagem sem o filtro excluido não retorna banners excluídos', function () {
+    $cenario = criarCenarioBanner();
+    concederPermissaoBanner($cenario['grupoAdmin'], 'admin.banner.listar');
+
+    criarBanner(['titulo' => 'Banner ativo']);
+    criarBanner(['titulo' => 'Banner excluído'])->delete();
+
+    $token = autenticarUsuarioBanner($cenario['admin']);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/admin/banners')
+        ->assertStatus(200)
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.titulo', 'Banner ativo');
+});
+
+test('listagem com excluido=true também retorna os banners excluídos', function () {
+    $cenario = criarCenarioBanner();
+    concederPermissaoBanner($cenario['grupoAdmin'], 'admin.banner.listar');
+
+    criarBanner(['titulo' => 'Banner ativo']);
+    criarBanner(['titulo' => 'Banner excluído'])->delete();
+
+    $token = autenticarUsuarioBanner($cenario['admin']);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/admin/banners?excluido=true')
+        ->assertStatus(200)
+        ->assertJsonCount(2, 'data');
+});
+
+test('admin consegue restaurar um banner excluído', function () {
+    $cenario = criarCenarioBanner();
+    concederPermissaoBanner($cenario['grupoAdmin'], 'admin.banner.restaurar');
+
+    $banner = criarBanner(['status' => BannerStatus::ATIVO->value]);
+    $banner->delete();
+
+    $token = autenticarUsuarioBanner($cenario['admin']);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->patchJson("/api/admin/banners/{$banner->id}/restaurar")
+        ->assertStatus(200)
+        ->assertJsonPath('data.id', $banner->id)
+        // Restaurar não mexe no status — volta exatamente como estava
+        // antes da exclusão (ver comentário em BannerService::restaurar()).
+        ->assertJsonPath('data.status', 'ativo');
+
+    expect(Banner::find($banner->id))->not->toBeNull();
+});
+
+test('restaurar um banner que não está excluído retorna erro de negócio', function () {
+    $cenario = criarCenarioBanner();
+    concederPermissaoBanner($cenario['grupoAdmin'], 'admin.banner.restaurar');
+
+    $banner = criarBanner();
+
+    $token = autenticarUsuarioBanner($cenario['admin']);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->patchJson("/api/admin/banners/{$banner->id}/restaurar")
+        ->assertStatus(400);
+});
+
+test('restaurar/ativar/desativar/excluir são ações distintas e independentes', function () {
+    // Regressão guarda-chuva do item 12 da análise: ativar()/desativar()
+    // (toggle de status) não devem ser afetados pela existência de
+    // restaurar(), e vice-versa.
+    $cenario = criarCenarioBanner();
+    concederPermissaoBanner($cenario['grupoAdmin'], 'admin.banner.atualizar');
+    concederPermissaoBanner($cenario['grupoAdmin'], 'admin.banner.restaurar');
+
+    $banner = criarBanner(['status' => BannerStatus::INATIVO->value]);
+
+    $token = autenticarUsuarioBanner($cenario['admin']);
+
+    // ativar() continua sendo só o toggle de status, não afeta deleted_at.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->patchJson("/api/admin/banners/{$banner->id}/ativar")
+        ->assertStatus(200)
+        ->assertJsonPath('data.status', 'ativo');
+
+    expect($banner->fresh()->deleted_at)->toBeNull();
+});
+
+test('usuário sem a permissão admin.banner.restaurar não consegue restaurar', function () {
+    $cenario = criarCenarioBanner();
+
+    $banner = criarBanner();
+    $banner->delete();
+
+    $token = autenticarUsuarioBanner($cenario['admin']);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->patchJson("/api/admin/banners/{$banner->id}/restaurar")
+        ->assertStatus(403);
+});
+
 // ---------------------------------------------------------------------
 // Private — consulta de disponibilidade
 // ---------------------------------------------------------------------

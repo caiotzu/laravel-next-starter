@@ -14,6 +14,24 @@ class ListarRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Query string sempre chega como texto ("true"/"false") — mesma
+     * conversão usada em Admin\GrupoEmpresa\ListarRequest para o mesmo
+     * filtro.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('excluido')) {
+            $this->merge([
+                'excluido' => filter_var(
+                    $this->excluido,
+                    FILTER_VALIDATE_BOOLEAN,
+                    FILTER_NULL_ON_FAILURE
+                ),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -32,6 +50,10 @@ class ListarRequest extends FormRequest
                 'min:1',
                 'max:100',
             ],
+            'excluido' => [
+                'nullable',
+                'boolean',
+            ],
         ];
     }
 
@@ -46,6 +68,8 @@ class ListarRequest extends FormRequest
             'por_pagina.integer' => 'A quantidade por página deve ser um número inteiro',
             'por_pagina.min'     => 'A quantidade por página deve ser no mínimo 1',
             'por_pagina.max'     => 'A quantidade por página deve ser no máximo 100',
+
+            'excluido.boolean' => 'O filtro excluído deve ser do tipo boolean',
         ];
     }
 }

@@ -26,6 +26,7 @@ export default function Page() {
   const [filters, setFilters] = useState<BannerFiltros>({
     titulo: "",
     status: "",
+    excluido: false,
     page: 1,
     por_pagina: 10,
   });
