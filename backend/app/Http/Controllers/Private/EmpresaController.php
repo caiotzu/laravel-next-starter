@@ -88,7 +88,7 @@ class EmpresaController extends Controller
     {
         $this->authorize('private.empresa.visualizar');
 
-        $empresa = $this->empresaService->visualizar($id, EntidadeTipo::PRIVATE);
+        $empresa = $this->empresaService->visualizar($id);
 
         return EmpresaVisualizarResource::make($empresa)->response()->setStatusCode(200);
     }
@@ -129,8 +129,7 @@ class EmpresaController extends Controller
         $this->authorize('private.empresa.listar');
 
         $empresas = $this->empresaService->listar(
-            EmpresaFiltroDTO::criarParaFiltro($request->validated()),
-            EntidadeTipo::PRIVATE
+            EmpresaFiltroDTO::criarParaFiltro($request->validated())
         );
 
         return EmpresaListarResource::collection($empresas)->response()->setStatusCode(200);

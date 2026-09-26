@@ -140,7 +140,7 @@ class UsuarioService {
                 $query->where('chave', EntidadeTipo::PRIVATE->value)
             )
             ->when($somenteAtivos, fn (Builder $query) =>
-                $query->where('status', UsuarioStatus::ATIVO->value)
+                $query->whereIn('status', [UsuarioStatus::ATIVO->value, UsuarioStatus::CONVIDADO->value])
             )
             ->find($usuarioId);
     }
@@ -290,7 +290,7 @@ class UsuarioService {
                 return $query->where('chave', $entidadeTipo->value);
             })
             ->where('email', $email)
-            ->where('status', UsuarioStatus::ATIVO->value)
+            ->whereIn('status', [UsuarioStatus::ATIVO->value, UsuarioStatus::CONVIDADO->value])
             ->first();
 
         if (! $usuario) {
@@ -309,7 +309,8 @@ class UsuarioService {
             $usuario = $tokenResetSenha->usuario;
 
             $usuario->update([
-                'senha' => Hash::make($dto->senha)
+                'senha' => Hash::make($dto->senha),
+                'status' => UsuarioStatus::ATIVO->value
             ]);
 
             $tokenResetSenha->update([

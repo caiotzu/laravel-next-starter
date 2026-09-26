@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 use App\Events\EmpresaDadosObrigatoriosAtualizados;
@@ -22,21 +20,28 @@ use App\Exceptions\BusinessException;
 
 class EmpresaService {
 
-    private function aplicarEscopoEntidade(Builder $query, EntidadeTipo $entidadeTipo): Builder
-    {
-        if ($entidadeTipo === EntidadeTipo::ADMIN) {
-            return $query;
-        }
+    public function __construct(
+        protected EscopoEntidadeService $escopoEntidade,
+    ) {}
 
-        return $query->where(
-            'grupo_empresa_id',
-            app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId(Auth::user())
-        );
-    }
-
+    /**
+     * Empresa hoje só é criada pela rota Admin (irrestrita), então esta
+     * validação nunca rejeita nada no comportamento atual — mas passa a
+     * proteger automaticamente o dia em que uma rota Private de cadastro
+     * existir, sem exigir nenhuma alteração aqui (ver item 18 da análise:
+     * impedir que um grupo_empresa_id de outro contexto seja enviado no
+     * payload).
+     */
     public function cadastrar(EmpresaCadastroDTO $dto): Empresa
     {
         return DB::transaction(function () use ($dto) {
+
+            $this->escopoEntidade->validarPertence(
+                $dto->grupo_empresa_id,
+                'Grupo empresa informado é inválido.',
+                ErrorCode::EMPRESA_REQUIRED->value
+            );
+
             $empresa = Empresa::create([
                 'grupo_empresa_id' => $dto->grupo_empresa_id,
                 'matriz_id' => $dto->matriz_id,
@@ -57,20 +62,27 @@ class EmpresaService {
         });
     }
 
+    /**
+     * $entidadeTipo aqui NÃO decide mais o escopo de dados (isso é feito
+     * internamente por EscopoEntidadeService, com base no contexto
+     * autenticado/AcessoSuporteContexto). Ele é usado somente para
+     * selecionar quais campos do payload são persistidos — ver
+     * EmpresaAtualizacaoDTO::paraPersistencia() — uma regra de negócio
+     * independente (quais campos cada área pode editar), já reforçada de
+     * forma redundante pelas FormRequests de Admin/Private, e que não faz
+     * parte da centralização de escopo pedida.
+     */
     public function atualizar(EmpresaAtualizacaoDTO $dto, EntidadeTipo $entidadeTipo): Empresa
     {
         return DB::transaction(function () use ($dto, $entidadeTipo) {
-            $query = Empresa::query();
-
-            $this->aplicarEscopoEntidade($query, $entidadeTipo);
+            $query = $this->escopoEntidade->aplicar(Empresa::query());
 
             $empresa = $query->find($dto->empresa_id);
             if (!$empresa)
                 throw new BusinessException('Empresa não encontrada.', ErrorCode::EMPRESA_NOT_FOUND->value);
 
             if ($dto->matriz_id) {
-                $matrizQuery = Empresa::query();
-                $this->aplicarEscopoEntidade($matrizQuery, $entidadeTipo);
+                $matrizQuery = $this->escopoEntidade->aplicar(Empresa::query());
 
                 $matrizValida = $matrizQuery
                     ->where('id', $dto->matriz_id)
@@ -93,16 +105,16 @@ class EmpresaService {
         });
     }
 
-    public function visualizar(string $id, EntidadeTipo $entidadeTipo): Empresa
+    public function visualizar(string $id): Empresa
     {
-        return DB::transaction(function () use ($id, $entidadeTipo) {
+        return DB::transaction(function () use ($id) {
             $query = Empresa::with([
                 'grupoEmpresa',
                 'contatos',
                 'enderecos.municipio'
             ])->withTrashed();
 
-            $this->aplicarEscopoEntidade($query, $entidadeTipo);
+            $query = $this->escopoEntidade->aplicar($query);
 
             $empresa = $query->find($id);
 
@@ -166,7 +178,7 @@ class EmpresaService {
         });
     }
 
-    public function listar(EmpresaFiltroDTO $filtro, EntidadeTipo $entidadeTipo): LengthAwarePaginator
+    public function listar(EmpresaFiltroDTO $filtro): LengthAwarePaginator
     {
         $query = Empresa::query()
             ->with([
@@ -174,7 +186,7 @@ class EmpresaService {
                 'matriz'
             ]);
 
-        $this->aplicarEscopoEntidade($query, $entidadeTipo);
+        $query = $this->escopoEntidade->aplicar($query);
 
         return $query->when($filtro->id, fn ($q) =>
                 $q->where('id', $filtro->id)

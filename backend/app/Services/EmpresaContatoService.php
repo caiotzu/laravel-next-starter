@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 use App\Events\EmpresaDadosObrigatoriosAtualizados;
@@ -17,29 +15,25 @@ use App\DTO\EmpresaContato\EmpresaContatoCadastroDTO;
 use App\DTO\EmpresaContato\EmpresaContatoAtualizacaoDTO;
 
 use App\Enums\ErrorCode;
-use App\Enums\EntidadeTipo;
 
 use App\Exceptions\BusinessException;
 
 class EmpresaContatoService {
 
-    private function aplicarEscopoEntidade(Builder $query, EntidadeTipo $entidadeTipo): Builder
+    public function __construct(
+        protected EscopoEntidadeService $escopoEntidade,
+    ) {}
+
+    /**
+     * O escopo de entidade não é decidido aqui: validarAcessoEmpresa()
+     * delega inteiramente para EscopoEntidadeService::aplicar(), que sabe
+     * se o contexto atual é irrestrito (Admin fora de suporte) ou
+     * restrito (Private, ou Admin em modo de suporte — respeitando a
+     * entidade impersonada).
+     */
+    private function validarAcessoEmpresa(string $empresaId): Empresa
     {
-        if ($entidadeTipo === EntidadeTipo::ADMIN) {
-            return $query;
-        }
-
-        return $query->where(
-            'grupo_empresa_id',
-            app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId(Auth::user())
-        );
-    }
-
-    private function validarAcessoEmpresa(string $empresaId, EntidadeTipo $entidadeTipo): Empresa
-    {
-        $query = Empresa::query();
-
-        $this->aplicarEscopoEntidade($query, $entidadeTipo);
+        $query = $this->escopoEntidade->aplicar(Empresa::query());
 
         $empresa = $query->find($empresaId);
 
@@ -53,11 +47,11 @@ class EmpresaContatoService {
         return $empresa;
     }
 
-    public function cadastrar(EmpresaContatoCadastroDTO $dto, EntidadeTipo $entidadeTipo): EmpresaContato
+    public function cadastrar(EmpresaContatoCadastroDTO $dto): EmpresaContato
     {
-        return DB::transaction(function () use ($dto, $entidadeTipo) {
+        return DB::transaction(function () use ($dto) {
 
-            $empresa = $this->validarAcessoEmpresa($dto->empresa_id, $entidadeTipo);
+            $empresa = $this->validarAcessoEmpresa($dto->empresa_id);
 
             $contato = EmpresaContato::create([
                 'empresa_id' => $dto->empresa_id,
@@ -76,11 +70,11 @@ class EmpresaContatoService {
         });
     }
 
-    public function atualizar(EmpresaContatoAtualizacaoDTO $dto, EntidadeTipo $entidadeTipo): EmpresaContato
+    public function atualizar(EmpresaContatoAtualizacaoDTO $dto): EmpresaContato
     {
-        return DB::transaction(function () use ($dto, $entidadeTipo) {
+        return DB::transaction(function () use ($dto) {
 
-            $empresa = $this->validarAcessoEmpresa($dto->empresa_id, $entidadeTipo);
+            $empresa = $this->validarAcessoEmpresa($dto->empresa_id);
 
             $contato = EmpresaContato::where('id', $dto->contato_id)
                 ->where('empresa_id', $dto->empresa_id)
@@ -104,11 +98,11 @@ class EmpresaContatoService {
         });
     }
 
-    public function visualizar(string $empresaId, string $contatoId, EntidadeTipo $entidadeTipo): EmpresaContato
+    public function visualizar(string $empresaId, string $contatoId): EmpresaContato
     {
-        return DB::transaction(function () use ($empresaId, $contatoId, $entidadeTipo) {
+        return DB::transaction(function () use ($empresaId, $contatoId) {
 
-            $this->validarAcessoEmpresa($empresaId, $entidadeTipo);
+            $this->validarAcessoEmpresa($empresaId);
 
             $contato = EmpresaContato::where('empresa_id', $empresaId)
                 ->find($contatoId);
@@ -124,11 +118,11 @@ class EmpresaContatoService {
         });
     }
 
-    public function excluir(string $empresaId, string $contatoId, EntidadeTipo $entidadeTipo): void
+    public function excluir(string $empresaId, string $contatoId): void
     {
-        DB::transaction(function () use ($empresaId, $contatoId, $entidadeTipo) {
+        DB::transaction(function () use ($empresaId, $contatoId) {
 
-            $empresa = $this->validarAcessoEmpresa($empresaId, $entidadeTipo);
+            $empresa = $this->validarAcessoEmpresa($empresaId);
 
             $contato = EmpresaContato::where('empresa_id', $empresaId)->find($contatoId);
 
@@ -149,11 +143,11 @@ class EmpresaContatoService {
         });
     }
 
-    public function ativar(string $empresaId, string $contatoId, EntidadeTipo $entidadeTipo): EmpresaContato
+    public function ativar(string $empresaId, string $contatoId): EmpresaContato
     {
-        return DB::transaction(function () use ($empresaId, $contatoId, $entidadeTipo) {
+        return DB::transaction(function () use ($empresaId, $contatoId) {
 
-            $empresa = $this->validarAcessoEmpresa($empresaId, $entidadeTipo);
+            $empresa = $this->validarAcessoEmpresa($empresaId);
 
             $contato = EmpresaContato::onlyTrashed()->where('empresa_id', $empresaId)->find($contatoId);
 
@@ -176,9 +170,9 @@ class EmpresaContatoService {
         });
     }
 
-    public function listar(EmpresaContatoFiltroDTO $filtro, EntidadeTipo $entidadeTipo): Collection
+    public function listar(EmpresaContatoFiltroDTO $filtro): Collection
     {
-        $this->validarAcessoEmpresa($filtro->empresa_id, $entidadeTipo);
+        $this->validarAcessoEmpresa($filtro->empresa_id);
 
         return EmpresaContato::query()
             ->when($filtro->empresa_id, fn ($q) =>

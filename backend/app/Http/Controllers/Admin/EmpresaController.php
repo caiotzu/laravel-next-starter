@@ -124,7 +124,7 @@ class EmpresaController extends Controller
     {
         $this->authorize('admin.empresa.visualizar');
 
-        $empresa = $this->empresaService->visualizar($id, EntidadeTipo::ADMIN);
+        $empresa = $this->empresaService->visualizar($id);
 
         return EmpresaVisualizarResource::make($empresa)->response()->setStatusCode(200);
     }
@@ -209,8 +209,7 @@ class EmpresaController extends Controller
         $this->authorize('admin.empresa.listar');
 
         $empresas = $this->empresaService->listar(
-            EmpresaFiltroDTO::criarParaFiltro($request->validated()),
-            EntidadeTipo::ADMIN
+            EmpresaFiltroDTO::criarParaFiltro($request->validated())
         );
 
         return EmpresaListarResource::collection($empresas)->response()->setStatusCode(200);

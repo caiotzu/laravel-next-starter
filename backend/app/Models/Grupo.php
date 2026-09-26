@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -11,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 use App\Auditoria\Auditavel;
+use App\Services\EscopoEntidadeService;
 
 class Grupo extends Model
 {
@@ -54,12 +54,33 @@ class Grupo extends Model
              * de repassar sempre no service.
              * Só realizar o cadastro automático caso não seja passado, pois pode
              * ser realizado o castro de um novo grupo a partir do admin para uma nova empresa.
+             *
+             * IMPORTANTE: a origem do contexto é sempre
+             * EscopoEntidadeService::contextoParaCriacaoAutomatica(), nunca
+             * Auth::user()->grupo diretamente. Isso corrige o cenário em
+             * que um Admin está em modo de suporte (impersonando uma
+             * entidade Private): o Grupo criado deve pertencer à entidade
+             * impersonada, não ao Admin real — ver
+             * App\AcessoSuporte\AcessoSuporteContexto, usado internamente
+             * pelo serviço central de escopo.
+             *
+             * Resolvido pelo container (não injetado no construtor) porque
+             * Grupo é um Model Eloquent, e EscopoEntidadeService só é
+             * necessário neste único ponto, dentro de um branch que só
+             * executa quando há usuário autenticado (ver guard acima e o
+             * retorno null de contextoParaCriacaoAutomatica() abaixo) —
+             * evitando qualquer resolução do serviço (e, por consequência,
+             * de Auth::user()) em migrations, seeders, jobs ou comandos que
+             * criem um Grupo já informando entidade_tipo_id/entidade_id
+             * explicitamente.
              */
             if(!$model->entidade_tipo_id && !$model->entidade_id) {
-                $user = Auth::user();
+                $contexto = app(EscopoEntidadeService::class)->contextoParaCriacaoAutomatica();
 
-                $model->entidade_tipo_id = $user->grupo->entidade_tipo_id;
-                $model->entidade_id = $user->grupo->entidade_id;
+                if ($contexto) {
+                    $model->entidade_tipo_id = $contexto['entidade_tipo_id'];
+                    $model->entidade_id = $contexto['entidade_id'];
+                }
             }
         });
 

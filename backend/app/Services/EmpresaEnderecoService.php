@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 use App\Events\EmpresaDadosObrigatoriosAtualizados;
@@ -17,29 +15,25 @@ use App\DTO\EmpresaEndereco\EmpresaEnderecoCadastroDTO;
 use App\DTO\EmpresaEndereco\EmpresaEnderecoAtualizacaoDTO;
 
 use App\Enums\ErrorCode;
-use App\Enums\EntidadeTipo;
 
 use App\Exceptions\BusinessException;
 
 class EmpresaEnderecoService {
 
-    private function aplicarEscopoEntidade(Builder $query, EntidadeTipo $entidadeTipo): Builder
+    public function __construct(
+        protected EscopoEntidadeService $escopoEntidade,
+    ) {}
+
+    /**
+     * O escopo de entidade não é decidido aqui: validarAcessoEmpresa()
+     * delega inteiramente para EscopoEntidadeService::aplicar(), que sabe
+     * se o contexto atual é irrestrito (Admin fora de suporte) ou
+     * restrito (Private, ou Admin em modo de suporte — respeitando a
+     * entidade impersonada).
+     */
+    private function validarAcessoEmpresa(string $empresaId): Empresa
     {
-        if ($entidadeTipo === EntidadeTipo::ADMIN) {
-            return $query;
-        }
-
-        return $query->where(
-            'grupo_empresa_id',
-            app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId(Auth::user())
-        );
-    }
-
-    private function validarAcessoEmpresa(string $empresaId, EntidadeTipo $entidadeTipo): Empresa
-    {
-        $query = Empresa::query();
-
-        $this->aplicarEscopoEntidade($query, $entidadeTipo);
+        $query = $this->escopoEntidade->aplicar(Empresa::query());
 
         $empresa = $query->find($empresaId);
 
@@ -53,10 +47,10 @@ class EmpresaEnderecoService {
         return $empresa;
     }
 
-    public function cadastrar(EmpresaEnderecoCadastroDTO $dto, EntidadeTipo $entidadeTipo): EmpresaEndereco
+    public function cadastrar(EmpresaEnderecoCadastroDTO $dto): EmpresaEndereco
     {
-        return DB::transaction(function () use ($dto, $entidadeTipo) {
-            $empresa = $this->validarAcessoEmpresa($dto->empresa_id, $entidadeTipo);
+        return DB::transaction(function () use ($dto) {
+            $empresa = $this->validarAcessoEmpresa($dto->empresa_id);
 
             $endereco = EmpresaEndereco::create([
                 'empresa_id' => $dto->empresa_id,
@@ -80,11 +74,11 @@ class EmpresaEnderecoService {
         });
     }
 
-    public function atualizar(EmpresaEnderecoAtualizacaoDTO $dto, EntidadeTipo $entidadeTipo): EmpresaEndereco
+    public function atualizar(EmpresaEnderecoAtualizacaoDTO $dto): EmpresaEndereco
     {
-        return DB::transaction(function () use ($dto, $entidadeTipo) {
+        return DB::transaction(function () use ($dto) {
 
-            $empresa = $this->validarAcessoEmpresa($dto->empresa_id, $entidadeTipo);
+            $empresa = $this->validarAcessoEmpresa($dto->empresa_id);
 
             $endereco = EmpresaEndereco::where('id', $dto->endereco_id)
                 ->where('empresa_id', $dto->empresa_id)
@@ -108,10 +102,10 @@ class EmpresaEnderecoService {
         });
     }
 
-    public function visualizar(string $empresaId, string $enderecoId, EntidadeTipo $entidadeTipo): EmpresaEndereco
+    public function visualizar(string $empresaId, string $enderecoId): EmpresaEndereco
     {
-        return DB::transaction(function () use ($empresaId, $enderecoId, $entidadeTipo) {
-            $this->validarAcessoEmpresa($empresaId, $entidadeTipo);
+        return DB::transaction(function () use ($empresaId, $enderecoId) {
+            $this->validarAcessoEmpresa($empresaId);
 
             $endereco = EmpresaEndereco::with('municipio')->where('empresa_id', $empresaId)
                 ->find($enderecoId);
@@ -127,11 +121,11 @@ class EmpresaEnderecoService {
         });
     }
 
-    public function excluir(string $empresaId, string $enderecoId, EntidadeTipo $entidadeTipo): void
+    public function excluir(string $empresaId, string $enderecoId): void
     {
-        DB::transaction(function () use ($empresaId, $enderecoId, $entidadeTipo) {
+        DB::transaction(function () use ($empresaId, $enderecoId) {
 
-            $empresa = $this->validarAcessoEmpresa($empresaId, $entidadeTipo);
+            $empresa = $this->validarAcessoEmpresa($empresaId);
 
             $endereco = EmpresaEndereco::where('empresa_id', $empresaId)->find($enderecoId);
 
@@ -152,11 +146,11 @@ class EmpresaEnderecoService {
         });
     }
 
-    public function ativar(string $empresaId, string $enderecoId, EntidadeTipo $entidadeTipo): EmpresaEndereco
+    public function ativar(string $empresaId, string $enderecoId): EmpresaEndereco
     {
-        return DB::transaction(function () use ($empresaId, $enderecoId, $entidadeTipo) {
+        return DB::transaction(function () use ($empresaId, $enderecoId) {
 
-            $empresa = $this->validarAcessoEmpresa($empresaId, $entidadeTipo);
+            $empresa = $this->validarAcessoEmpresa($empresaId);
 
             $endereco = EmpresaEndereco::onlyTrashed()->where('empresa_id', $empresaId)->find($enderecoId);
 
@@ -179,9 +173,9 @@ class EmpresaEnderecoService {
         });
     }
 
-    public function listar(EmpresaEnderecoFiltroDTO $filtro, EntidadeTipo $entidadeTipo): Collection
+    public function listar(EmpresaEnderecoFiltroDTO $filtro): Collection
     {
-        $this->validarAcessoEmpresa($filtro->empresa_id, $entidadeTipo);
+        $this->validarAcessoEmpresa($filtro->empresa_id);
 
         return EmpresaEndereco::query()
             ->with('municipio')

@@ -17,8 +17,6 @@ use App\DTO\EmpresaContato\EmpresaContatoAtualizacaoDTO;
 
 use App\Http\Resources\Private\EmpresaContato\EmpresaContatoResource;
 
-use App\Enums\EntidadeTipo;
-
 use OpenApi\Attributes as OA;
 
 class EmpresaContatoController extends Controller
@@ -59,8 +57,7 @@ class EmpresaContatoController extends Controller
             EmpresaContatoCadastroDTO::criarParaCadastro(
                 $empresaId,
                 dados: $request->validated()
-            ),
-            EntidadeTipo::PRIVATE
+            )
         );
 
         return EmpresaContatoResource::make($contato)->response()->setStatusCode(201);
@@ -102,8 +99,7 @@ class EmpresaContatoController extends Controller
                 $empresaId,
                 $contatoId,
                 $request->validated()
-            ),
-            EntidadeTipo::PRIVATE
+            )
         );
 
         return EmpresaContatoResource::make($contato)->response()->setStatusCode(200);
@@ -129,7 +125,7 @@ class EmpresaContatoController extends Controller
     {
         $this->authorize('private.empresa.contato.visualizar');
 
-        $contato = $this->empresaContatoService->visualizar($empresaId, $contatoId, EntidadeTipo::PRIVATE);
+        $contato = $this->empresaContatoService->visualizar($empresaId, $contatoId);
 
         return EmpresaContatoResource::make($contato)->response()->setStatusCode(200);
     }
@@ -154,7 +150,7 @@ class EmpresaContatoController extends Controller
     {
         $this->authorize('private.empresa.contato.excluir');
 
-        $this->empresaContatoService->excluir($empresaId, $contatoId, EntidadeTipo::PRIVATE);
+        $this->empresaContatoService->excluir($empresaId, $contatoId);
 
         return response()->json(null, 204);
     }
@@ -179,7 +175,7 @@ class EmpresaContatoController extends Controller
     {
         $this->authorize('private.empresa.contato.ativar');
 
-        $contato = $this->empresaContatoService->ativar($empresaId, $contatoId, EntidadeTipo::PRIVATE);
+        $contato = $this->empresaContatoService->ativar($empresaId, $contatoId);
 
         return EmpresaContatoResource::make($contato)->response()->setStatusCode(200);
     }
@@ -205,8 +201,7 @@ class EmpresaContatoController extends Controller
 
         $contatos = $this->empresaContatoService->listar(EmpresaContatoFiltroDTO::criarParaFiltro([
                 'empresa_id' => $empresaId
-            ]),
-            EntidadeTipo::PRIVATE
+            ])
         );
 
         return EmpresaContatoResource::collection($contatos)->response()->setStatusCode(200);
