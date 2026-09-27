@@ -5,14 +5,9 @@ namespace App\DTO\Empresa;
 use Illuminate\Support\Arr;
 
 use App\Enums\EmpresaStatus;
-use App\Enums\EntidadeTipo;
 
 final class EmpresaAtualizacaoDTO
 {
-    /**
-     * NECESSÁRIO VER COMO VOU FAZER PARA QUE NO ADMIN PASSE ALGUNS DADOS E NO PRIVATE
-     * PASSA MENOS DADOS, APENAS OS QUE PRECISAM SER ATUALIZADOS
-     */
     public function __construct(
         public readonly string $empresa_id,
         public readonly ?string $matriz_id,
@@ -43,7 +38,21 @@ final class EmpresaAtualizacaoDTO
         );
     }
 
-    public function paraPersistencia(EntidadeTipo $entidadeTipo): array
+    /**
+     * Quais campos do payload são de fato persistidos depende de o
+     * contexto atual ser irrestrito ou não — ver
+     * App\Services\EscopoEntidadeService::irrestrito() — e não mais de um
+     * EntidadeTipo decidido manualmente pelo Controller que chamou este
+     * método (ver EmpresaService::atualizar()).
+     *
+     * Irrestrito (Admin fora de modo de suporte): todos os campos,
+     * inclusive os administrativos (cnpj, status).
+     *
+     * Não irrestrito (Private, ou Admin em modo de suporte — contexto
+     * efetivo passa a ser o da entidade Private impersonada): apenas os
+     * campos cadastrais, sem cnpj/status.
+     */
+    public function paraPersistencia(bool $irrestrito): array
     {
         $dados = [
             'matriz_id' => $this->matriz_id,
@@ -61,17 +70,17 @@ final class EmpresaAtualizacaoDTO
             unset($dados['status']);
         }
 
-        return match ($entidadeTipo) {
-            EntidadeTipo::ADMIN => $dados,
+        if ($irrestrito) {
+            return $dados;
+        }
 
-            EntidadeTipo::PRIVATE => Arr::only($dados, [
-                'matriz_id',
-                'nome_fantasia',
-                'razao_social',
-                'inscricao_estadual',
-                'inscricao_municipal',
-                'uf'
-            ]),
-        };
+        return Arr::only($dados, [
+            'matriz_id',
+            'nome_fantasia',
+            'razao_social',
+            'inscricao_estadual',
+            'inscricao_municipal',
+            'uf'
+        ]);
     }
 }

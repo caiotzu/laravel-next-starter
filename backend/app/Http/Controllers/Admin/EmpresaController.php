@@ -20,7 +20,6 @@ use App\Http\Resources\Admin\Empresa\EmpresaResource;
 use App\Http\Resources\Admin\Empresa\EmpresaListarResource;
 use App\Http\Resources\Admin\Empresa\EmpresaVisualizarResource;
 
-use App\Enums\EntidadeTipo;
 
 use OpenApi\Attributes as OA;
 
@@ -99,8 +98,7 @@ class EmpresaController extends Controller
             EmpresaAtualizacaoDTO::criarParaAtualizacao(
                 $id,
                 $request->validated()
-            ),
-            EntidadeTipo::ADMIN
+            )
         );
 
         return EmpresaResource::make($empresa)->response()->setStatusCode(200);

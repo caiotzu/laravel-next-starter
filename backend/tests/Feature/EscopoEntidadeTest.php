@@ -361,6 +361,65 @@ test('admin em modo de suporte consegue atualizar apenas a empresa impersonada, 
         ->assertStatus(400);
 });
 
+test('admin em modo de suporte não consegue alterar campos administrativos (cnpj/status) da empresa impersonada', function () {
+    $cenario = criarCenarioEscopoEntidade();
+    concederPermissoesEscopo($cenario['grupoAdmin'], ['admin.empresa.atualizar']);
+
+    $acesso = criarAcessoAtivoEscopo($cenario);
+
+    $token = autenticarEscopo($cenario['admin']);
+
+    $cnpjOriginal = $cenario['clienteA']['empresa']->cnpj;
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->withHeader('X-Acesso-Suporte-Id', $acesso->id)
+        ->putJson("/api/admin/empresas/{$cenario['clienteA']['empresa']->id}", [
+            // cnpj é obrigatório na validação da rota Admin, mas não deve
+            // ser persistido fora de um contexto irrestrito — ver
+            // EmpresaAtualizacaoDTO::paraPersistencia() e
+            // EmpresaService::atualizar().
+            'cnpj' => '99999999000199',
+            'status' => 'inativo',
+            'nome_fantasia' => 'Empresa A via suporte (campos administrativos)',
+            'razao_social' => 'Empresa A via suporte LTDA',
+            'uf' => 'RJ',
+        ])
+        ->assertStatus(200);
+
+    $this->assertDatabaseHas('empresas', [
+        'id' => $cenario['clienteA']['empresa']->id,
+        // O campo cadastral enviado FOI persistido...
+        'nome_fantasia' => 'Empresa A via suporte (campos administrativos)',
+        // ...mas cnpj e status, que só um contexto irrestrito pode
+        // alterar, permaneceram como estavam.
+        'cnpj' => $cnpjOriginal,
+        'status' => 'pendente',
+    ]);
+});
+
+test('admin fora de modo de suporte consegue alterar campos administrativos (cnpj/status) — irrestrito', function () {
+    $cenario = criarCenarioEscopoEntidade();
+    concederPermissoesEscopo($cenario['grupoAdmin'], ['admin.empresa.atualizar']);
+
+    $token = autenticarEscopo($cenario['admin']);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->putJson("/api/admin/empresas/{$cenario['clienteA']['empresa']->id}", [
+            'cnpj' => '99999999000199',
+            'status' => 'inativo',
+            'nome_fantasia' => 'Empresa A pelo Admin real',
+            'razao_social' => 'Empresa A pelo Admin real LTDA',
+            'uf' => 'RJ',
+        ])
+        ->assertStatus(200);
+
+    $this->assertDatabaseHas('empresas', [
+        'id' => $cenario['clienteA']['empresa']->id,
+        'cnpj' => '99999999000199',
+        'status' => 'inativo',
+    ]);
+});
+
 // #endregion Admin em modo de suporte
 
 // #region Grupo::booted() — reprodução do bug relatado (item 11/12 da análise)

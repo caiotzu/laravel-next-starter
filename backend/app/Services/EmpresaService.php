@@ -14,7 +14,6 @@ use App\DTO\Empresa\EmpresaAtualizacaoDTO;
 use App\DTO\Empresa\EmpresaFiltroDTO;
 
 use App\Enums\ErrorCode;
-use App\Enums\EntidadeTipo;
 
 use App\Exceptions\BusinessException;
 
@@ -63,18 +62,24 @@ class EmpresaService {
     }
 
     /**
-     * $entidadeTipo aqui NÃO decide mais o escopo de dados (isso é feito
-     * internamente por EscopoEntidadeService, com base no contexto
-     * autenticado/AcessoSuporteContexto). Ele é usado somente para
-     * selecionar quais campos do payload são persistidos — ver
-     * EmpresaAtualizacaoDTO::paraPersistencia() — uma regra de negócio
-     * independente (quais campos cada área pode editar), já reforçada de
-     * forma redundante pelas FormRequests de Admin/Private, e que não faz
-     * parte da centralização de escopo pedida.
+     * Nem o escopo de dados (quais linhas) nem a seleção de campos
+     * persistidos (quais colunas) dependem mais de um EntidadeTipo
+     * decidido manualmente pelo Controller: ambos vêm de
+     * EscopoEntidadeService, com base no contexto autenticado atual
+     * (AcessoSuporteContexto) — ver EmpresaAtualizacaoDTO::paraPersistencia().
+     *
+     * Isso também corrige um caso que antes passava despercebido: um
+     * Admin em modo de suporte (impersonando uma entidade Private)
+     * conseguia editar campos administrativos (cnpj, status) da empresa
+     * impersonada, porque o Controller sempre informava
+     * EntidadeTipo::ADMIN independentemente do modo de suporte. Agora,
+     * como o contexto efetivo em modo de suporte é o da entidade
+     * impersonada (irrestrito() = false), apenas os campos cadastrais
+     * ficam disponíveis — o mesmo que já valia para um Private comum.
      */
-    public function atualizar(EmpresaAtualizacaoDTO $dto, EntidadeTipo $entidadeTipo): Empresa
+    public function atualizar(EmpresaAtualizacaoDTO $dto): Empresa
     {
-        return DB::transaction(function () use ($dto, $entidadeTipo) {
+        return DB::transaction(function () use ($dto) {
             $query = $this->escopoEntidade->aplicar(Empresa::query());
 
             $empresa = $query->find($dto->empresa_id);
@@ -94,7 +99,7 @@ class EmpresaService {
                 }
             }
 
-            $empresa->update($dto->paraPersistencia($entidadeTipo));
+            $empresa->update($dto->paraPersistencia($this->escopoEntidade->irrestrito()));
 
             /**
              * Dispara o evento para verificar se a empresa pode ser ativada
