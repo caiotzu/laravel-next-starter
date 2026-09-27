@@ -38,6 +38,13 @@ return [
                 'api' => 'api/documentation',
                 'docs' => 'api/documentation/docs',
                 'oauth2_callback' => 'api/documentation/oauth2-callback',
+                // Sem autenticação própria (ver descrição acima), mas com cabeçalhos de
+                // segurança (é HTML servido direto ao navegador) e rate limit contra
+                // scraping/DoS do JSON da spec.
+                'middleware' => [
+                    'api' => ['throttle:swagger-admin', 'security.headers'],
+                    'docs' => ['throttle:swagger-admin', 'security.headers'],
+                ],
             ],
 
             'paths' => [
@@ -68,8 +75,8 @@ return [
                 'oauth2_callback' => 'api/documentation/admin/oauth2-callback',
                 // Restringe o acesso à UI e ao JSON desta documentação.
                 'middleware' => [
-                    'api' => ['throttle:swagger-admin', 'swagger.admin.auth'],
-                    'docs' => ['throttle:swagger-admin', 'swagger.admin.auth'],
+                    'api' => ['throttle:swagger-admin', 'swagger.admin.auth', 'security.headers'],
+                    'docs' => ['throttle:swagger-admin', 'swagger.admin.auth', 'security.headers'],
                 ],
             ],
 

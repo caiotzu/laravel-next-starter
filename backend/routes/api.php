@@ -87,11 +87,13 @@ Route::middleware('throttle:api-publica')->group(function () {
 // #region Global - Download de anexos de chamado (link assinado e temporário, sem JWT)
 // O link é aberto direto pelo navegador (<img>/<a>), que não envia o token. A autorização é a
 // própria assinatura (gerada só para quem já teve acesso ao chamado) + expiração.
-Route::get('chamados/anexos/{anexo}', [ChamadoAnexoController::class, 'baixar'])
-    ->middleware(['throttle:download-anexo', 'signed:relative'])
-    ->name('chamados.anexos.baixar');
+Route::middleware(['throttle:download-anexo', 'signed:relative'])->group(function () {
+    Route::get('chamados/anexos/{anexo}', [ChamadoAnexoController::class, 'baixar'])->name('chamados.anexos.baixar');
+});
 // #endregion Global
 
+
+// #endregion Global - Autenticado
 Route::middleware(['throttle:api-autenticada', 'jwt', 'suporte.contexto'])->group(function () {
     // #region Lookup
     Route::prefix('lookup')->group(function() {
@@ -114,7 +116,6 @@ Route::middleware(['throttle:api-autenticada', 'jwt', 'suporte.contexto'])->grou
     // #endregion Global
 
     // #region Admin
-    // 'audiencia:admin': apenas usuários cujo grupo é do tipo Admin (ver AudienciaMiddleware).
     Route::prefix('admin')->middleware('audiencia:admin')->group(function() {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
@@ -192,8 +193,6 @@ Route::middleware(['throttle:api-autenticada', 'jwt', 'suporte.contexto'])->grou
         });
 
         Route::prefix('banners')->group(function () {
-            // Precisa vir ANTES de '/{id}': senão "disponiveis" seria
-            // capturado como um :id pela rota de visualização abaixo.
             Route::get('/disponiveis', [BannerController::class, 'disponiveis']);
             Route::patch('/{id}/ativar', [BannerController::class, 'ativar']);
             Route::patch('/{id}/desativar', [BannerController::class, 'desativar']);
@@ -251,89 +250,91 @@ Route::middleware(['throttle:api-autenticada', 'jwt', 'suporte.contexto'])->grou
     // #endregion Admin
 
     // #region Private
-    Route::get('/me', [PrivateAuthController::class, 'me']);
-    Route::post('/logout', [PrivateAuthController::class, 'logout']);
-    Route::post('/refresh', [PrivateAuthController::class, 'refresh']);
+    Route::middleware('audiencia:private')->group(function () {
+        Route::get('/me', [PrivateAuthController::class, 'me']);
+        Route::post('/logout', [PrivateAuthController::class, 'logout']);
+        Route::post('/refresh', [PrivateAuthController::class, 'refresh']);
 
-    Route::prefix('2fa')->group(function () {
-        Route::post('/habilitar', [PrivateAutenticacaoDoisFatoresController::class, 'habilitar']);
-        Route::post('/confirmar', [PrivateAutenticacaoDoisFatoresController::class, 'confirmar']);
-        Route::delete('/desabilitar', [PrivateAutenticacaoDoisFatoresController::class, 'desabilitar']);
-    });
-
-    Route::prefix('perfil')->group(function () {
-        Route::delete('/sessoes/{id}/encerrar', [PrivatePerfilController::class, 'encerrarSessao']);
-        Route::patch('/avatar', [PrivatePerfilController::class, 'atualizarAvatarBase64']);
-        Route::patch('/senha', [PrivatePerfilController::class, 'atualizarSenha']);
-        Route::get('/sessoes', [PrivatePerfilController::class, 'sessoes']);
-        Route::patch('/', [PrivatePerfilController::class, 'atualizar']);
-    });
-
-    Route::prefix('empresas')->group(function () {
-        Route::put('/{id}', [PrivateEmpresaController::class, 'atualizar']);
-        Route::get('/{id}', [PrivateEmpresaController::class, 'visualizar']);
-        Route::get('/', [PrivateEmpresaController::class, 'listar']);
-
-        Route::prefix('{empresaId}/contatos')->group(function () {
-            Route::patch('/{contatoId}/ativar', [PrivateEmpresaContatoController::class, 'ativar']);
-            Route::put('/{contatoId}', [PrivateEmpresaContatoController::class, 'atualizar']);
-            Route::get('/{contatoId}', [PrivateEmpresaContatoController::class, 'visualizar']);
-            Route::delete('/{contatoId}', [PrivateEmpresaContatoController::class, 'excluir']);
-            Route::get('/', [PrivateEmpresaContatoController::class, 'listar']);
-            Route::post('/', [PrivateEmpresaContatoController::class, 'cadastrar']);
+        Route::prefix('2fa')->group(function () {
+            Route::post('/habilitar', [PrivateAutenticacaoDoisFatoresController::class, 'habilitar']);
+            Route::post('/confirmar', [PrivateAutenticacaoDoisFatoresController::class, 'confirmar']);
+            Route::delete('/desabilitar', [PrivateAutenticacaoDoisFatoresController::class, 'desabilitar']);
         });
 
-        Route::prefix('{empresaId}/enderecos')->group(function () {
-            Route::patch('/{enderecoId}/ativar', [PrivateEmpresaEnderecoController::class, 'ativar']);
-            Route::put('/{enderecoId}', [PrivateEmpresaEnderecoController::class, 'atualizar']);
-            Route::get('/{enderecoId}', [PrivateEmpresaEnderecoController::class, 'visualizar']);
-            Route::delete('/{enderecoId}', [PrivateEmpresaEnderecoController::class, 'excluir']);
-            Route::get('/', [PrivateEmpresaEnderecoController::class, 'listar']);
-            Route::post('/', [PrivateEmpresaEnderecoController::class, 'cadastrar']);
+        Route::prefix('perfil')->group(function () {
+            Route::delete('/sessoes/{id}/encerrar', [PrivatePerfilController::class, 'encerrarSessao']);
+            Route::patch('/avatar', [PrivatePerfilController::class, 'atualizarAvatarBase64']);
+            Route::patch('/senha', [PrivatePerfilController::class, 'atualizarSenha']);
+            Route::get('/sessoes', [PrivatePerfilController::class, 'sessoes']);
+            Route::patch('/', [PrivatePerfilController::class, 'atualizar']);
         });
-    });
 
-    Route::prefix('grupos')->group(function () {
-        Route::patch('/{id}/permissoes', [PrivateGrupoController::class, 'sincronizarPermissoes']);
-        Route::patch('/{id}/ativar', [PrivateGrupoController::class, 'ativar']);
-        Route::put('/{id}', [PrivateGrupoController::class, 'atualizar']);
-        Route::delete('/{id}', [PrivateGrupoController::class, 'excluir']);
-        Route::get('/{id}', [PrivateGrupoController::class, 'visualizar']);
-        Route::get('/', [PrivateGrupoController::class, 'listar']);
-        Route::post('/', [PrivateGrupoController::class, 'cadastrar']);
-    });
+        Route::prefix('empresas')->group(function () {
+            Route::put('/{id}', [PrivateEmpresaController::class, 'atualizar']);
+            Route::get('/{id}', [PrivateEmpresaController::class, 'visualizar']);
+            Route::get('/', [PrivateEmpresaController::class, 'listar']);
 
-    Route::get('/permissoes', [PrivatePermissaoController::class, 'listar']);
+            Route::prefix('{empresaId}/contatos')->group(function () {
+                Route::patch('/{contatoId}/ativar', [PrivateEmpresaContatoController::class, 'ativar']);
+                Route::put('/{contatoId}', [PrivateEmpresaContatoController::class, 'atualizar']);
+                Route::get('/{contatoId}', [PrivateEmpresaContatoController::class, 'visualizar']);
+                Route::delete('/{contatoId}', [PrivateEmpresaContatoController::class, 'excluir']);
+                Route::get('/', [PrivateEmpresaContatoController::class, 'listar']);
+                Route::post('/', [PrivateEmpresaContatoController::class, 'cadastrar']);
+            });
 
-    Route::prefix('acessos-suporte')->group(function () {
-        Route::get('/', [PrivateAcessoSuporteController::class, 'listar']);
-        Route::post('/', [PrivateAcessoSuporteController::class, 'conceder']);
-        Route::delete('/{id}', [PrivateAcessoSuporteController::class, 'revogar']);
-    });
+            Route::prefix('{empresaId}/enderecos')->group(function () {
+                Route::patch('/{enderecoId}/ativar', [PrivateEmpresaEnderecoController::class, 'ativar']);
+                Route::put('/{enderecoId}', [PrivateEmpresaEnderecoController::class, 'atualizar']);
+                Route::get('/{enderecoId}', [PrivateEmpresaEnderecoController::class, 'visualizar']);
+                Route::delete('/{enderecoId}', [PrivateEmpresaEnderecoController::class, 'excluir']);
+                Route::get('/', [PrivateEmpresaEnderecoController::class, 'listar']);
+                Route::post('/', [PrivateEmpresaEnderecoController::class, 'cadastrar']);
+            });
+        });
 
-    Route::prefix('releases')->group(function () {
-        Route::get('/{id}', [PrivateReleaseController::class, 'visualizar']);
-        Route::get('/', [PrivateReleaseController::class, 'listar']);
-    });
+        Route::prefix('grupos')->group(function () {
+            Route::patch('/{id}/permissoes', [PrivateGrupoController::class, 'sincronizarPermissoes']);
+            Route::patch('/{id}/ativar', [PrivateGrupoController::class, 'ativar']);
+            Route::put('/{id}', [PrivateGrupoController::class, 'atualizar']);
+            Route::delete('/{id}', [PrivateGrupoController::class, 'excluir']);
+            Route::get('/{id}', [PrivateGrupoController::class, 'visualizar']);
+            Route::get('/', [PrivateGrupoController::class, 'listar']);
+            Route::post('/', [PrivateGrupoController::class, 'cadastrar']);
+        });
 
-    Route::prefix('banners')->group(function () {
-        Route::get('/disponiveis', [PrivateBannerController::class, 'disponiveis']);
-    });
+        Route::get('/permissoes', [PrivatePermissaoController::class, 'listar']);
 
-    Route::prefix('chamados')->group(function () {
-        Route::post('/{id}/mensagens', [PrivateChamadoController::class, 'responder']);
-        Route::get('/{id}', [PrivateChamadoController::class, 'visualizar']);
-        Route::get('/', [PrivateChamadoController::class, 'listar']);
-        Route::post('/', [PrivateChamadoController::class, 'abrir']);
-    });
+        Route::prefix('acessos-suporte')->group(function () {
+            Route::get('/', [PrivateAcessoSuporteController::class, 'listar']);
+            Route::post('/', [PrivateAcessoSuporteController::class, 'conceder']);
+            Route::delete('/{id}', [PrivateAcessoSuporteController::class, 'revogar']);
+        });
 
-    Route::prefix('usuarios')->group(function () {
-        Route::patch('/{id}/ativar', [PrivateUsuarioController::class, 'ativar']);
-        Route::put('/{id}', [PrivateUsuarioController::class, 'atualizar']);
-        Route::delete('/{id}', [PrivateUsuarioController::class, 'excluir']);
-        Route::get('/{id}', [PrivateUsuarioController::class, 'visualizar']);
-        Route::get('/', [PrivateUsuarioController::class, 'listar']);
-        Route::post('/', [PrivateUsuarioController::class, 'cadastrar']);
+        Route::prefix('releases')->group(function () {
+            Route::get('/{id}', [PrivateReleaseController::class, 'visualizar']);
+            Route::get('/', [PrivateReleaseController::class, 'listar']);
+        });
+
+        Route::prefix('banners')->group(function () {
+            Route::get('/disponiveis', [PrivateBannerController::class, 'disponiveis']);
+        });
+
+        Route::prefix('chamados')->group(function () {
+            Route::post('/{id}/mensagens', [PrivateChamadoController::class, 'responder']);
+            Route::get('/{id}', [PrivateChamadoController::class, 'visualizar']);
+            Route::get('/', [PrivateChamadoController::class, 'listar']);
+            Route::post('/', [PrivateChamadoController::class, 'abrir']);
+        });
+
+        Route::prefix('usuarios')->group(function () {
+            Route::patch('/{id}/ativar', [PrivateUsuarioController::class, 'ativar']);
+            Route::put('/{id}', [PrivateUsuarioController::class, 'atualizar']);
+            Route::delete('/{id}', [PrivateUsuarioController::class, 'excluir']);
+            Route::get('/{id}', [PrivateUsuarioController::class, 'visualizar']);
+            Route::get('/', [PrivateUsuarioController::class, 'listar']);
+            Route::post('/', [PrivateUsuarioController::class, 'cadastrar']);
+        });
     });
     // #endregion Private
 });

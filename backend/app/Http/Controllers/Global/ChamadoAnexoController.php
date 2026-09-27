@@ -24,8 +24,7 @@ class ChamadoAnexoController extends Controller
 
         // Anexos novos ficam no disco privado ('local'). Os antigos (anteriores à correção)
         // podem ainda estar no disco 'public' até rodar `php artisan chamados:mover-anexos-privados`.
-        $disco = collect(['local', 'public'])
-            ->first(fn (string $d) => $caminho && Storage::disk($d)->exists($caminho));
+        $disco = collect(['local', 'public'])->first(fn (string $d) => $caminho && Storage::disk($d)->exists($caminho));
 
         abort_unless($disco, 404);
 

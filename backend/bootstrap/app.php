@@ -15,6 +15,7 @@ use App\Http\Middleware\JwtMiddleware;
 use App\Http\Middleware\AudienciaMiddleware;
 use App\Http\Middleware\SwaggerAdminAuth;
 use App\Http\Middleware\AcessoSuporteMiddleware;
+use App\Http\Middleware\SecurityHeadersMiddleware;
 use Illuminate\Database\QueryException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -30,6 +31,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'audiencia' => AudienciaMiddleware::class,
             'swagger.admin.auth' => SwaggerAdminAuth::class,
             'suporte.contexto' => AcessoSuporteMiddleware::class,
+            'security.headers' => SecurityHeadersMiddleware::class,
+        ]);
+
+        $middleware->api(append: [
+            SecurityHeadersMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
