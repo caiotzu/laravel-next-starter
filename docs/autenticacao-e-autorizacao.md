@@ -47,6 +47,22 @@ Gate::before(function ($user, string $ability) {
 - Controllers chamam `$this->authorize('admin.usuario.cadastrar')` no início de cada ação — string no padrão `contexto.recurso.acao`;
 - O JWT carrega `grupo_id` e `grupo_versao` como claims customizados, usados para manter o cache de permissões consistente entre requisições.
 
+### Isolamento por audiência (Admin vs. Private)
+
+O `Gate::before` acima só bloqueia quem não tem a permissão correta — mas nem todo endpoint chama `$this->authorize()` (ex.: `GET /banners/disponiveis`, `GET /permissoes`, que são catálogos sem uma ação específica a autorizar). Sem outra camada, um JWT válido de qualquer audiência alcançaria esses endpoints, mesmo os de uma área diferente da sua.
+
+`App\Http\Middleware\AudienciaMiddleware` fecha essa lacuna: aplicado como `->middleware('audiencia:admin')` no grupo `/admin` e `->middleware('audiencia:private')` no grupo Private (`routes/api.php`), ele compara o tipo de entidade do grupo do usuário autenticado (`Usuario->grupo->entidadeTipo->chave`) com a audiência esperada pela rota, retornando `403` em caso de divergência. Deve rodar sempre depois de `jwt` (precisa do usuário autenticado) e de `suporte.contexto` (ver seção seguinte).
+
+### Acesso de Suporte (impersonação temporária e auditável)
+
+Um usuário Admin pode atuar, por tempo limitado, no escopo de uma entidade Private (e, no futuro, de outras entidades concedentes — o mecanismo não conhece "Private" especificamente, só o tipo de entidade genérico já usado por `Grupo::entidade()`). O fluxo:
+
+1. Um usuário da entidade concedente (hoje, Private) **concede** o acesso: `POST /acessos-suporte` (`App\Http\Controllers\Private\AcessoSuporteController::conceder`), gravando um registro em `acessos_suporte` (model `App\Models\AcessoSuporte`) com `expira_em`, `status = ativo` e o Admin autorizado;
+2. Para usar o acesso, o Admin envia o header `X-Acesso-Suporte-Id: <id>` em qualquer requisição às rotas autenticadas. `App\Http\Middleware\AcessoSuporteMiddleware` (alias `suporte.contexto`, aplicado a **todo** o grupo autenticado, antes de `audiencia`) valida dono/expiração/status via `AcessoSuporteService::validarAtiva()` e, se válido, ativa `App\AcessoSuporte\AcessoSuporteContexto` para o restante da requisição — sem alterar `Auth::user()`, que continua sendo sempre o Admin real;
+3. Com o contexto ativo, os Services que aplicam escopo por tenant (`EscopoEntidadeService`, ver [`banco-de-dados.md`](./banco-de-dados.md)) passam a enxergar a entidade concedente em vez da do Admin, e `AudienciaMiddleware` passa a considerar a audiência da entidade concedente (não a do Admin) ao decidir se a rota Private pode ser acessada;
+4. O acesso pode ser revogado a qualquer momento por quem concedeu (`DELETE /acessos-suporte/{id}`, Private) ou encerrado pela gestão (`DELETE /admin/acessos-suporte/{id}`), e expira sozinho após `expira_em`;
+5. Ações feitas durante um Acesso de Suporte carregam o `acesso_suporte_id` correspondente na auditoria (coluna adicionada em `auditorias`), permitindo reconstruir depois o que foi feito em nome de qual concessão.
+
 ## Frontend
 
 - Login, logout, refresh, 2FA, primeiro acesso e redefinição de senha são *route handlers* em `app/api/auth/{admin,private}/**`, que chamam o backend e gerenciam os cookies `httpOnly` (`admin_access_token` / `private_access_token`);

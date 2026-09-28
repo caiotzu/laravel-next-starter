@@ -45,7 +45,8 @@ app/
 ├── Exceptions/         # Ex.: BusinessException
 ├── Http/
 │   ├── Controllers/{Admin,Private,Global,Lookup}/
-│   ├── Middleware/     # JwtMiddleware, SwaggerAdminAuth
+│   ├── Middleware/     # JwtMiddleware, AudienciaMiddleware, AcessoSuporteMiddleware,
+│   │                   # SecurityHeadersMiddleware, SwaggerAdminAuth
 │   ├── Requests/
 │   └── Resources/
 ├── Jobs/

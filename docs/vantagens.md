@@ -18,7 +18,7 @@ Na prática: regra de negócio nunca fica presa a um controller específico, o q
 
 ### Domínios já modelados como referência
 
-Empresas, usuários, grupos/permissões, mensagens e auditoria já implementam o padrão completo (Controller → ... → Resource, DTOs, Requests, eventos). Um novo domínio pode ser criado copiando essa estrutura, em vez de decidir do zero como organizar cada peça.
+Empresas, usuários, grupos/permissões, mensagens, banners, chamados de suporte, releases e auditoria já implementam o padrão completo (Controller → ... → Resource, DTOs, Requests, eventos). Um novo domínio pode ser criado copiando essa estrutura, em vez de decidir do zero como organizar cada peça.
 
 ### Dois contextos de acesso (Admin/Private) sem gambiarra de permissão
 
@@ -46,9 +46,9 @@ O JWT é gravado em cookie `httpOnly` pelas rotas de autenticação do Next.js. 
 
 JWT por natureza é difícil de revogar antes de expirar. Este starter contorna isso guardando cada sessão em banco (`usuario_sessoes`) e validando-a a cada requisição, além do token — permitindo "encerrar sessão" de fato (ex.: a partir do perfil, ou automaticamente após 30 min de inatividade), algo que um JWT puro não oferece.
 
-### Autorização centralizada, difícil de esquecer
+### Autorização centralizada, difícil de esquecer a regra — mas não de esquecer o `authorize()`
 
-Como a checagem de permissão passa por um único `Gate::before`, não existe o risco de um novo endpoint "esquecer" de aplicar a regra de autorização por estar em um arquivo de Policy diferente — a lógica é uma só, e cada controller só precisa declarar a permissão exigida.
+Como a checagem de permissão passa por um único `Gate::before`, não existe o risco de um novo endpoint aplicar uma regra de autorização diferente por estar em um arquivo de Policy separado — a lógica é uma só, e cada controller só precisa declarar a permissão exigida via `$this->authorize('contexto.recurso.acao')`. Isso não dispensa, porém, o controller de efetivamente chamar `authorize()`: endpoints de catálogo sem uma ação específica (ex.: `GET /permissoes`, `GET /banners/disponiveis`) não chamam. Para esses casos, `AudienciaMiddleware` garante uma segunda camada — isolamento entre as audiências Admin e Private — independente de o controller ter ou não chamado `authorize()`. Ver [`seguranca.md`](./seguranca.md) e [`autenticacao-e-autorizacao.md`](./autenticacao-e-autorizacao.md#isolamento-por-audiência-admin-vs-private).
 
 ### Documentação Swagger da área Admin fail-closed
 

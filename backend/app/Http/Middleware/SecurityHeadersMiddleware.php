@@ -9,10 +9,9 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Cabeçalhos de segurança para as respostas da API e da documentação Swagger
  * (que, ao contrário das rotas 'api/*' puras, é HTML renderizado direto no
- * navegador — ver checklist de pentest, item 21 "Headers e configuração
- * HTTP"). O frontend Next.js já define o próprio conjunto de cabeçalhos em
- * next.config.ts; este middleware cobre o backend, que antes não definia
- * nenhum, deixando a decisão inteiramente a cargo de um proxy reverso que
+ * navegador). O frontend Next.js já define o próprio conjunto de cabeçalhos
+ * em next.config.ts; este middleware cobre o backend, que sem ele fica
+ * inteiramente dependente de um proxy reverso para essa proteção — algo que
  * pode não existir em todo ambiente (ex.: acesso direto em desenvolvimento
  * ou em um deploy sem Nginx na frente).
  *

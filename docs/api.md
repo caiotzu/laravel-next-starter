@@ -33,17 +33,22 @@ Organização por prefixo/contexto (`backend/routes/api.php`):
 | Global | `/mensagens/*` (contador, marcar como lida) | Compartilhado entre Admin e Private |
 | Lookup | `/lookup/*` | Consultas auxiliares (CEP, municípios, tipos) |
 
-Todas exigem o middleware `jwt`, exceto login, primeiro acesso e recuperação de senha.
+Todas as rotas autenticadas exigem o middleware `jwt`. Exceções: login, primeiro acesso e recuperação de senha (não autenticadas por natureza), `GET /version` e o download de anexos de chamado (`GET /chamados/anexos/{anexo}`), que troca `jwt` por um link assinado (`signed:relative`) — ver [`seguranca.md`](./seguranca.md#upload-e-download-de-arquivos). O grupo Admin ainda passa por `audiencia:admin` e o grupo Private por `audiencia:private`; ambos passam por `suporte.contexto` (Acesso de Suporte) — ver [`autenticacao-e-autorizacao.md`](./autenticacao-e-autorizacao.md).
 
 - **Usuários:** `GET|POST /usuarios`, `GET|PUT /usuarios/{id}`, `DELETE /usuarios/{id}`, `PATCH /usuarios/{id}/ativar` (e equivalentes em `/admin/usuarios`);
-- **Grupos:** `GET|POST /grupos`, `GET|PUT /grupos/{id}`, `PATCH /grupos/{id}/permissoes` (sincroniza permissões);
+- **Grupos:** `GET|POST /grupos`, `GET|PUT /grupos/{id}`, `DELETE /grupos/{id}`, `PATCH /grupos/{id}/ativar`, `PATCH /grupos/{id}/permissoes` (sincroniza permissões) — e equivalentes em `/admin/grupos`;
+- **Permissões:** `GET /permissoes` (e `/admin/permissoes`) — catálogo de chaves de permissão disponíveis;
 - **Empresas:** `GET /empresas`, `GET|PUT /empresas/{id}` (Private e Admin); `POST /empresas`, `DELETE /empresas/{id}` e `PATCH /empresas/{id}/ativar` só em `/admin/empresas`. Ambos os contextos têm `/{empresaId}/contatos` e `/{empresaId}/enderecos` com CRUD completo;
 - **Grupos-empresas** *(somente Admin)*: `/admin/grupos-empresas`, incluindo `PATCH /{grupoId}/usuarios/{usuarioId}/status` e `/redefinir-senha`;
-- **Mensagens:** `GET|POST /mensagens`, `GET /mensagens/{id}`; contador e marcação de lida em `/mensagens/nao-lidas/contador` e `/mensagens/{id}/marcar-lida`;
-- **Banners:** `GET|POST /admin/banners`, `GET|PUT /admin/banners/{id}`, `DELETE /admin/banners/{id}`, `PATCH /admin/banners/{id}/ativar` e `/desativar` (gestão, somente Admin); `GET /banners/disponiveis` (Private) retorna somente os banners ativos, dentro do período e elegíveis para o direcionamento do usuário autenticado;
-- **Auditoria** *(somente Admin)*: `GET /admin/auditorias`, `/admin/auditorias/entidades`, `/admin/auditorias/entidades/{entidade}`.
+- **Mensagens:** `GET /mensagens`, `GET /mensagens/{id}` (leitura, para Admin e Private); `POST /admin/mensagens` cria (somente Admin); contador em `/mensagens/nao-lidas/contador`, marcação de lida individual (`PATCH /mensagens/{id}/marcar-lida`) e em massa (`PATCH /mensagens/marcar-todas-lidas`); `GET /admin/mensagens/usuarios` busca destinatários ao compor uma mensagem (somente Admin), além de `GET /admin/mensagens` e `GET /admin/mensagens/{id}`;
+- **Banners:** `GET|POST /admin/banners`, `GET|PUT /admin/banners/{id}`, `DELETE /admin/banners/{id}`, `PATCH /admin/banners/{id}/ativar`, `/desativar` e `/restaurar` (gestão, somente Admin); `GET /banners/disponiveis` (Admin e Private) retorna somente os banners ativos, dentro do período e elegíveis para o direcionamento do usuário autenticado;
+- **Auditoria** *(somente Admin)*: `GET /admin/auditorias`, `/admin/auditorias/entidades`, `/admin/auditorias/entidades/{entidade}`, `/admin/auditorias/usuarios`;
+- **Dashboard** *(somente Admin)*: `GET /admin/dashboard` — KPIs calculados a partir de chamados e empresas;
+- **Releases (novidades da plataforma):** `GET /releases`, `GET /releases/{id}` (Private lista somente publicadas); `POST /admin/releases`, `GET|PUT /admin/releases/{id}`, `GET /admin/releases`, `PATCH /admin/releases/{id}/publicar` (gestão, somente Admin);
+- **Chamados (suporte):** `GET /chamados`, `GET /chamados/{id}` e `POST /chamados/{id}/mensagens` (responder) em ambos os contextos; `POST /chamados` (abrir) é exclusivo do Private; `PATCH /admin/chamados/{id}/status`, `/prioridade` e `/responsavel` são exclusivos do Admin. Download de anexo por link assinado em `GET /chamados/anexos/{anexo}` (fora do grupo `jwt`, ver acima);
+- **Acesso de Suporte:** `POST /acessos-suporte` (Private concede acesso temporário a um Admin), `GET /acessos-suporte` em ambos os contextos, `DELETE /acessos-suporte/{id}` (revogar, Private) e `DELETE /admin/acessos-suporte/{id}` (encerrar, Admin). Detalhes do fluxo em [`autenticacao-e-autorizacao.md`](./autenticacao-e-autorizacao.md#acesso-de-suporte-impersonação-temporária-e-auditável).
 
-Rotas completas e atualizadas: `backend/routes/api.php`. Para parâmetros e schemas de request/response, use o Swagger.
+Rotas completas e atualizadas: `backend/routes/api.php`. Para parâmetros e schemas de request/response, use o Swagger. Para rate limiting e cabeçalhos de segurança aplicados a estas rotas, ver [`seguranca.md`](./seguranca.md).
 
 ## Formato de erro
 
