@@ -18,7 +18,11 @@ Toda rota autenticada passa pelo middleware `jwt` (`App\Http\Middleware\JwtMiddl
 2. Extrai o `session_id` do payload;
 3. Confirma que a sessão em `usuario_sessoes` ainda está ativa (`UsuarioSessaoService::validarSessaoAtiva`) — permitindo revogar sessões mesmo com um JWT ainda válido (ex.: "encerrar sessão" no perfil).
 
-Sessões inativas há mais de 30 minutos são encerradas pelo comando agendado `usuario-sessao:limpar-expiradas` (a cada 10 min, `routes/console.php`).
+Sessões inativas há mais de 30 minutos são encerradas pelo comando agendado `usuario-sessao:limpar-expiradas` (a cada 10 min, `routes/console.php`); além disso, o próprio `validarSessaoAtiva` encerra a sessão na hora se o último acesso for anterior a 30 minutos e atualiza `ultimo_acesso_em` a cada requisição autenticada.
+
+Parâmetros do JWT (`backend/config/jwt.php`): algoritmo HS256 (`JWT_ALGO`), validade `JWT_TTL` (padrão 60 min), janela de refresh `JWT_REFRESH_TTL` (padrão 20160 min = 14 dias), *blacklist* habilitada (`JWT_BLACKLIST_ENABLED`) e `lock_subject`. O endpoint `POST /refresh` existe no backend, mas **o frontend não possui handler de refresh nem chamada a ele**: o cookie expira em 1 hora e o usuário precisa se autenticar novamente.
+
+**Login:** limite de 5 tentativas por `ip + e-mail` a cada 5 minutos; a segunda etapa do 2FA aceita 9 tentativas por IP e o `temp_token` (válido por 5 min, guardado em cache) é descartado após 5 códigos inválidos. Detalhes de política de senha e 2FA em [`seguranca.md`](./seguranca.md#política-de-senha-e-credenciais).
 
 ### 2FA
 
@@ -65,7 +69,8 @@ Um usuário Admin pode atuar, por tempo limitado, no escopo de uma entidade Priv
 
 ## Frontend
 
-- Login, logout, refresh, 2FA, primeiro acesso e redefinição de senha são *route handlers* em `app/api/auth/{admin,private}/**`, que chamam o backend e gerenciam os cookies `httpOnly` (`admin_access_token` / `private_access_token`);
-- Chamadas autenticadas a outros endpoints passam pelo proxy (`app/api/proxy/{admin,private}/route.ts`), que injeta `Authorization: Bearer <token>` a partir do cookie e repassa headers de origem (`User-Agent`, `X-Forwarded-For`, `X-Real-IP`) para o backend registrar na sessão;
+- Login, logout, 2FA, primeiro acesso, esqueceu/redefinição de senha (com as respectivas validações de token) são *route handlers* em `app/api/auth/{admin,private}/**` (16 handlers), que validam a origem da requisição, chamam o backend e gerenciam os cookies `httpOnly` (`admin_access_token` / `private_access_token`, 1 hora, `sameSite=lax`, `secure` em produção);
+- Chamadas autenticadas a outros endpoints passam pelo proxy (`app/api/proxy/{admin,private}/route.ts`), que injeta `Authorization: Bearer <token>` a partir do cookie e repassa `User-Agent` e um único IP de cliente validado (`X-Forwarded-For`/`X-Real-IP`, ver `lib/client-ip.ts` e `TRUSTED_PROXY_HOPS`) para o backend registrar na sessão; o destino, o método e os headers aceitos passam por `lib/proxy-guard.ts` (ver [`seguranca.md`](./seguranca.md#camada-bff-nextjs));
 - Quando o backend responde `401`, o proxy limpa o cookie correspondente, forçando novo login;
+- Em uma aba de suporte, o `middleware.ts` aceita o cookie Admin para navegar nas páginas Private (só a navegação visual): a autorização real continua no backend, que exige `X-Acesso-Suporte-Id` válido;
 - `middleware.ts` decodifica o JWT (sem validar assinatura — só checa expiração) para decidir redirecionamentos antes da página carregar, com base em `routes/routes.ts` (ordenado da rota mais específica para a mais genérica).

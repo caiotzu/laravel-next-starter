@@ -6,7 +6,7 @@ Para arquitetura, autenticação e organização de pastas em detalhe, veja [`do
 
 ## Stack
 
-Next.js `15.5.6` (Turbopack) · React `19.1` · TypeScript · Tailwind CSS `^4` · shadcn/ui + Radix UI · TanStack Query/Table · React Hook Form + Zod.
+Next.js `15.5.6` (Turbopack) · React `19.1` · TypeScript · Tailwind CSS `^4` · shadcn/ui + Radix UI · TanStack Query/Table · React Hook Form + Zod · Tiptap + DOMPurify · Recharts.
 
 ## Instalação
 
@@ -19,11 +19,14 @@ Certifique-se de que o [backend](../backend/README.md) já está rodando antes d
 
 ## Variáveis de ambiente
 
-<!-- TODO: não existe .env.local.example no repositório. Crie um .env.local com pelo menos: -->
+Copie o modelo: `cp .env.example .env` (o arquivo `.env.example` existe em `frontend/`).
 
 | Variável | Descrição |
 |---|---|
-| `BACKEND_URL` | URL da API Laravel, usada apenas no servidor (rotas `app/api/**`). Nunca exposta ao navegador. |
+| `BACKEND_URL` | URL da API Laravel (ex.: `http://localhost/api`), usada apenas no servidor (rotas `app/api/**`). Nunca exposta ao navegador. O proxy só aceita caminhos dentro dessa URL. |
+| `FRONTEND_URL` | Origem pública do frontend (ex.: `http://localhost:3000`). Usada por `validarOrigem()` para aceitar somente requisições da própria origem nas rotas `app/api/**` — **sem ela as rotas respondem 403 quando há `Origin`** |
+| `NODE_ENV` | Em `production`: cookies `secure` e cabeçalho HSTS |
+| `TRUSTED_PROXY_HOPS` | *(opcional, não consta no `.env.example`)* Quantos proxies reversos ficam na frente do Next e acrescentam ao `X-Forwarded-For`. Padrão `1`; `0` = Next exposto direto (nenhum IP é repassado ao backend) |
 
 ## Scripts
 
@@ -39,3 +42,4 @@ npm run lint     # eslint
 - [Arquitetura BFF (proxy + cookies httpOnly)](../docs/arquitetura.md#frontend-bff)
 - [Estrutura de pastas: `domains/`, `features/`, `components/`](../docs/frontend-arquitetura.md)
 - [Autenticação no frontend](../docs/autenticacao-e-autorizacao.md#frontend)
+- [Segurança da camada BFF](../docs/seguranca.md#camada-bff-nextjs)

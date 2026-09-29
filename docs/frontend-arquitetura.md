@@ -48,3 +48,21 @@ Estado de servidor é gerenciado com **TanStack Query**, via hooks em `domains/{
 ## Estilização
 
 Tailwind CSS 4, tema via variáveis CSS em `app/globals.css` (`baseColor: slate`, `cssVariables: true`). Tema claro/escuro via `next-themes` (`components/providers/theme-provider.tsx`).
+
+## Bibliotecas relevantes (confirmadas em `package.json`)
+
+| Necessidade | Biblioteca |
+|---|---|
+| Framework | Next.js 15.5.6 (App Router, Turbopack), React 19.1 |
+| Dados/cache de servidor | TanStack Query 5, TanStack Table 8 |
+| Formulários e validação | React Hook Form + Zod 4 (`@hookform/resolvers`) |
+| UI | Tailwind CSS 4, shadcn/ui (Radix UI, `@base-ui/react`), lucide-react, Tabler Icons, sonner, vaul |
+| Editor rich text | Tiptap 3 (starter-kit, link, placeholder) — conteúdo exibido é sanitizado com DOMPurify |
+| Gráficos | Recharts 2 (dashboard Admin) |
+| Tabelas com arrastar-e-soltar | dnd-kit (`components/data-table.tsx`) |
+| 2FA | `react-qr-code`, `input-otp` |
+| HTTP no BFF | axios; `jsonwebtoken` só para decodificar/verificar expiração no `middleware.ts` |
+
+## Tamanho do frontend
+
+65 páginas (`page.tsx`): 40 na área Admin e 25 na Private; 18 *route handlers* do BFF (16 de autenticação e 2 de proxy); ~50 mil linhas de TypeScript/TSX.

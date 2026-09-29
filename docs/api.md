@@ -24,7 +24,7 @@ Gera `storage/api-docs/api-docs.json` (default) e `storage/api-docs-admin/api-do
 
 ## Referência de rotas por recurso
 
-Organização por prefixo/contexto (`backend/routes/api.php`):
+Organização por prefixo/contexto (`backend/routes/api.php`, **158 rotas declaradas**: 64 GET, 35 POST, 13 PUT, 29 PATCH e 17 DELETE):
 
 | Contexto | Prefixo | Descrição |
 |---|---|---|
@@ -35,6 +35,9 @@ Organização por prefixo/contexto (`backend/routes/api.php`):
 
 Todas as rotas autenticadas exigem o middleware `jwt`. Exceções: login, primeiro acesso e recuperação de senha (não autenticadas por natureza), `GET /version` e o download de anexos de chamado (`GET /chamados/anexos/{anexo}`), que troca `jwt` por um link assinado (`signed:relative`) — ver [`seguranca.md`](./seguranca.md#upload-e-download-de-arquivos). O grupo Admin ainda passa por `audiencia:admin` e o grupo Private por `audiencia:private`; ambos passam por `suporte.contexto` (Acesso de Suporte) — ver [`autenticacao-e-autorizacao.md`](./autenticacao-e-autorizacao.md).
 
+- **Perfil** (Admin e Private): `PATCH /perfil` (nome/e-mail — trocar o e-mail exige a senha atual), `PATCH /perfil/senha`, `PATCH /perfil/avatar` (base64, MIME validado por conteúdo), `GET /perfil/sessoes` e `DELETE /perfil/sessoes/{id}/encerrar` (prefixo `/admin` na área Admin);
+- **Utilitários:** `GET /version` (pública, com rate limit `api-publica`) e o health check nativo do Laravel em `GET /up` (fora do prefixo `/api`);
+- **Lookup** (`/lookup/*`, autenticado): `ceps/{cep}` (ViaCEP com fallback para BrasilAPI, timeout de 3 s cada), `municipios`, `contatos-tipos`, `enderecos-tipos` e `administradores`;
 - **Usuários:** `GET|POST /usuarios`, `GET|PUT /usuarios/{id}`, `DELETE /usuarios/{id}`, `PATCH /usuarios/{id}/ativar` (e equivalentes em `/admin/usuarios`);
 - **Grupos:** `GET|POST /grupos`, `GET|PUT /grupos/{id}`, `DELETE /grupos/{id}`, `PATCH /grupos/{id}/ativar`, `PATCH /grupos/{id}/permissoes` (sincroniza permissões) — e equivalentes em `/admin/grupos`;
 - **Permissões:** `GET /permissoes` (e `/admin/permissoes`) — catálogo de chaves de permissão disponíveis;
@@ -50,6 +53,23 @@ Todas as rotas autenticadas exigem o middleware `jwt`. Exceções: login, primei
 
 Rotas completas e atualizadas: `backend/routes/api.php`. Para parâmetros e schemas de request/response, use o Swagger. Para rate limiting e cabeçalhos de segurança aplicados a estas rotas, ver [`seguranca.md`](./seguranca.md).
 
+## Paginação
+
+Listagens usam paginação do Laravel (`LengthAwarePaginator`) com o parâmetro `por_pagina` (padrão 10, mínimo 1, máximo 100 — valores fora da faixa são ajustados) (`backend/config/api.php`, chave `pagination`).
+
+## Códigos HTTP usados
+
+| Código | Quando |
+|---|---|
+| `200` / `201` | Sucesso |
+| `400` | Regra de negócio (`BusinessException`), `QueryException`, `RuntimeException`/`InvalidArgumentException` |
+| `401` | Token ausente/inválido/expirado, sessão encerrada ou expirada por inatividade, credenciais inválidas no login |
+| `403` | Sem permissão (`Gate`), audiência incorreta (`AudienciaMiddleware`), assinatura de URL inválida |
+| `404` | Registro não encontrado (`ModelNotFoundException`) |
+| `422` | Falha de validação de formulário |
+| `429` | Rate limit excedido (`throttle:*`) |
+| `500` | Erro inesperado (mensagem genérica em produção) |
+
 ## Formato de erro
 
 Erros seguem o formato:
@@ -64,7 +84,7 @@ ou, em validação de formulário:
 { "errors": { "campo": ["Mensagem de validação"] } }
 ```
 
-Centralizado em `backend/bootstrap/app.php` (`withExceptions`), que trata `ValidationException`, `AccessDeniedHttpException`, `ModelNotFoundException`, `BusinessException` e exceções genéricas de forma consistente — em produção, erros inesperados nunca vazam a mensagem original.
+Centralizado em `backend/bootstrap/app.php` (`withExceptions`), que trata `ValidationException`, `AccessDeniedHttpException`, `ModelNotFoundException`, `BusinessException`, `HttpException`, `QueryException` e exceções genéricas de forma consistente — em produção, erros inesperados retornam mensagem genérica (detalhes e ressalvas em [`seguranca.md`](./seguranca.md#tratamento-de-exceções-e-exposição-de-informação)). Observação: o middleware `jwt` responde `401` com `errors.business` como *string* (não lista), diferente do restante da API.
 
 ## Frontend
 

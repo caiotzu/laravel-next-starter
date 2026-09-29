@@ -1,6 +1,6 @@
 # Segurança
 
-Este documento reúne os mecanismos de segurança que atravessam vários módulos do backend — autenticação, autorização, JWT, 2FA e o isolamento entre audiências (Admin/Private) e Acesso de Suporte estão documentados em [`autenticacao-e-autorizacao.md`](./autenticacao-e-autorizacao.md). Tudo abaixo foi confirmado no código atual do repositório (`backend/`); nada aqui é aspiracional.
+Este documento reúne os mecanismos de segurança que atravessam vários módulos do backend — autenticação, autorização, JWT, 2FA e o isolamento entre audiências (Admin/Private) e Acesso de Suporte estão documentados em [`autenticacao-e-autorizacao.md`](./autenticacao-e-autorizacao.md). Tudo abaixo foi confirmado no código atual do repositório (`backend/` e `frontend/`); nada aqui é aspiracional. Para uma visão consolidada por camada, veja a [matriz de controles](#matriz-de-controles-por-camada); para o status de testes de intrusão, veja [Pentest](#pentest-teste-de-intrusão).
 
 ## Escopo multi-tenant (isolamento entre empresas)
 
@@ -29,7 +29,7 @@ Definidos em `App\Providers\AppServiceProvider::boot()` (`RateLimiter::for`) e a
 | `download-anexo` | 120 req/min | IP | `GET /chamados/anexos/{anexo}` (link assinado, uma tela pode carregar várias imagens) |
 | `swagger-admin` | 20 req/min | IP | UI/JSON das documentações Swagger `default` e `admin` |
 
-Além do rate limit por IP, o login (Admin e Private) tem um limite específico por tentativa, implementado diretamente em `AuthController::login()` com `RateLimiter::tooManyAttempts()`/`hit()` — chave `login:<ip>:<email>`, 5 tentativas por 5 minutos (300s de bloqueio ao estourar), e a verificação de 2FA tem seu próprio limite por IP (`2fa:<ip>`, 9 tentativas / 5 minutos). Não há hoje um limite de tentativas de login por conta isolado do IP — um ataque distribuído por muitos IPs contra uma única conta não é bloqueado só por esse mecanismo.
+Além do rate limit por IP, o login (Admin e Private) tem um limite específico por tentativa, implementado diretamente em `AuthController::login()` com `RateLimiter::tooManyAttempts()`/`hit()` — chave `login:<ip>:<email>`, 5 tentativas por 5 minutos (300s de bloqueio ao estourar), e a verificação de 2FA tem seu próprio limite por IP (`2fa:<ip>`, 9 tentativas / 5 minutos). Todos os limites por IP dependem de o Laravel enxergar o IP real do usuário final: como quem chama a API é o servidor Next.js (BFF), é necessário configurar `TRUSTED_PROXIES` no backend (`config/trustedproxy.php`, vazio por padrão = não confia em nenhum proxy) e `TRUSTED_PROXY_HOPS` no frontend (ver [BFF](#camada-bff-nextjs)). Sem isso, todos os usuários compartilham o mesmo IP aos olhos do rate limit. Não há hoje um limite de tentativas de login por conta isolado do IP — um ataque distribuído por muitos IPs contra uma única conta não é bloqueado só por esse mecanismo.
 
 ## Cabeçalhos de segurança HTTP
 
@@ -62,7 +62,7 @@ O frontend Next.js define seu próprio conjunto de cabeçalhos, incluindo CSP, s
 
 ## Tratamento de exceções e exposição de informação
 
-Centralizado em `backend/bootstrap/app.php` (`withExceptions`): `ValidationException`, `AccessDeniedHttpException`, `ModelNotFoundException`, `BusinessException`, `QueryException` e exceções genéricas são tratadas de forma consistente. Em produção (`app()->isProduction()`), erros inesperados e mensagens de `QueryException` nunca vazam a mensagem/stack trace original — retornam uma mensagem genérica. Fora de produção, a mensagem real é retornada para facilitar o desenvolvimento.
+Centralizado em `backend/bootstrap/app.php` (`withExceptions`): `ValidationException`, `AccessDeniedHttpException`, `ModelNotFoundException`, `BusinessException`, `QueryException` e exceções genéricas são tratadas de forma consistente. Erros inesperados (fallback genérico) retornam `Erro interno do servidor.` quando `app()->isProduction()`; `QueryException` retorna mensagem genérica quando `APP_DEBUG` é falso (`config('app.debug')`). Fora desses casos a mensagem real é retornada para facilitar o desenvolvimento. **Ponto de atenção:** exceções do tipo `RuntimeException`/`InvalidArgumentException` e `HttpException` devolvem `getMessage()` em qualquer ambiente — evite lançar essas exceções com texto interno sensível.
 
 ## Mass assignment
 
@@ -71,6 +71,54 @@ Os models expõem `$fillable` (ex.: `Usuario::$fillable` inclui `status` e `grup
 ## Auditoria
 
 A trait `App\Auditoria\Auditavel` (models como `Usuario`) registra alterações automaticamente, gravadas de forma assíncrona via `GravarAuditoriaJob` (ver [`filas-e-eventos.md`](./filas-e-eventos.md)). Registros feitos durante um Acesso de Suporte carregam o `acesso_suporte_id` correspondente, permitindo auditar especificamente o que foi feito por um Admin em nome de uma entidade concedente.
+
+## Política de senha e credenciais
+
+- Senhas (primeiro acesso, redefinição e troca no perfil) exigem no mínimo 8 caracteres com maiúsculas e minúsculas, letras, números e símbolos (`Password::min(8)->mixedCase()->letters()->numbers()->symbols()` nos Form Requests) e confirmação idêntica;
+- O hash de senha é feito com `Hash::make` (bcrypt, `BCRYPT_ROUNDS=12` no `.env.example`);
+- No login, se o e-mail não existe o sistema executa um hash de custo equivalente e devolve a mesma mensagem de credenciais inválidas — reduz enumeração de usuários por tempo de resposta e por texto de erro (coberto por `SegurancaTest`);
+- O segredo TOTP do 2FA é armazenado criptografado (`google2fa_secret` com cast `encrypted` em `Usuario`); o código TOTP só é aceito uma vez (anti-replay, `verifyKeyNewer`); o `temp_token` da etapa de 2FA vive 5 minutos no cache e é descartado após tentativas inválidas;
+- Trocar a senha encerra as demais sessões do usuário; tokens de primeiro acesso/redefinição têm expiração e não podem ser reutilizados.
+
+## Sanitização de conteúdo HTML e validação de imagens
+
+- **Releases:** o conteúdo rich text (Tiptap) é sanitizado no servidor por `App\Support\HtmlSanitizer`, um sanitizador por *allowlist* (tags de formatação básica; scripts, iframes, SVG, formulários etc. são descartados; nenhum atributo é mantido exceto `href`/`target`/`rel` em links, com esquema `http`, `https`, `mailto` ou `tel`). O frontend também sanitiza com DOMPurify ao exibir — defesa em profundidade;
+- **Banners:** as imagens (JPEG, PNG ou WebP, até 5 MB cada, máximo de 10 imagens e 10 links por banner) têm o tipo verificado pelos bytes reais via `finfo_buffer` em `BannerService`, como nos demais uploads.
+
+## Camada BFF (Next.js)
+
+Como o navegador só fala com o Next.js, o BFF também aplica controles próprios:
+
+- **Cookies de sessão:** `admin_access_token` / `private_access_token` são gravados com `httpOnly`, `secure` (em produção), `sameSite=lax`, `path=/` e `maxAge` de 1 hora;
+- **Validação de origem (mitigação de CSRF):** rotas `app/api/auth/**` e `app/api/proxy/**` chamam `validarOrigem()` (`lib/utils.ts`): exigem `Origin` igual ao de `FRONTEND_URL` ou, na ausência de `Origin`, `Sec-Fetch-Site: same-origin`; caso contrário respondem `403`;
+- **Guarda do proxy genérico** (`lib/proxy-guard.ts`): o destino é resolvido contra `BACKEND_URL` e rejeitado se sair do host/prefixo `/api` (bloqueia `//host`, `\\`, caracteres de controle e `%2e`/`%2f`/`%5c`/`%00` no path — proteção contra SSRF/path traversal); só os métodos GET, POST, PUT, PATCH e DELETE são aceitos; o cliente só pode enviar o header `X-Acesso-Suporte-Id` (validado como UUID) — `Authorization`, `X-Forwarded-For` etc. nunca vêm do navegador;
+- **IP do cliente** (`lib/client-ip.ts`): o BFF repassa ao backend um único IP válido, calculado a partir do `X-Forwarded-For` com `TRUSTED_PROXY_HOPS` (padrão `1`; `0` = não repassa nada), evitando que um cliente forje o IP para escapar dos rate limits;
+- **Cabeçalhos** (`next.config.ts`): `Content-Security-Policy` **parcial** (`frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'` — sem `script-src`/`style-src`; o próprio arquivo registra a CSP estrita com nonces como evolução), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` restritivo e, em produção, `Strict-Transport-Security: max-age=31536000`;
+- **Ponto de atenção — token no corpo da resposta:** os handlers `app/api/auth/{admin,private}/login` e `/2fa` gravam o JWT no cookie `httpOnly`, mas repassam ao navegador o objeto `data` devolvido pelo backend, que inclui o campo `token`. O cookie continua inacessível a JavaScript, porém o valor também trafega no corpo dessas duas respostas. Removê-lo do JSON (devolver só os demais campos) é uma melhoria simples recomendada;
+- `middleware.ts` só decodifica o JWT para checar expiração (verificação de UX); a validação real de assinatura, sessão e permissão acontece no backend.
+
+## Matriz de controles por camada
+
+| Camada | Controles confirmados no código |
+|---|---|
+| Rede / borda | Rate limit por IP e por usuário; CORS fechado por padrão; `TRUSTED_PROXIES` / `TRUSTED_PROXY_HOPS`; HSTS em produção |
+| BFF (Next.js) | Cookies `httpOnly`/`secure`/`sameSite=lax`; validação de origem; guarda de URL/método/headers do proxy; CSP parcial e demais cabeçalhos |
+| Autenticação | JWT (TTL padrão 60 min, `JWT_TTL`), sessão em banco revogável, expiração por inatividade (30 min), 2FA TOTP com anti-replay, limite de tentativas de login e de 2FA |
+| Autorização | `Gate::before` com permissões por grupo; `AudienciaMiddleware` (Admin × Private); `EscopoEntidadeService` (multi-tenant); Acesso de Suporte temporário e auditável |
+| Aplicação | Form Requests + DTOs; sanitização de HTML por allowlist; validação de MIME real em uploads; tratamento central de exceções |
+| Dados | UUID como chave; soft delete; segredo 2FA criptografado; hash de senha; arquivos de chamado em disco privado com link assinado e expirável |
+| Auditoria | Trait `Auditavel` + `GravarAuditoriaJob`; `acesso_suporte_id` nos registros de suporte |
+| Documentação da API | Swagger Admin com Basic Auth *fail-closed* e rate limit próprio |
+
+## Pentest (teste de intrusão)
+
+**Status verificado nesta análise: não foi localizada nenhuma evidência de pentest no repositório.** Foram pesquisados, em todos os arquivos e no histórico de commits (153 commits até 2026-09-28), termos como *pentest*, *penetration*, *OWASP* e *vulnerabilidade*, além de arquivos `*.pdf`, `*report*` e `*pentest*`: nenhum resultado. Portanto:
+
+- não há relatório, escopo, metodologia, achados, severidades, correções vinculadas ou reteste documentados;
+- **não é possível afirmar que o sistema passou por pentest** com base nas evidências do projeto;
+- os commits de "melhorias de segurança" (rate limit, CORS, cabeçalhos, escopo por contexto, guarda do proxy, etc.) e a suíte `SegurancaTest` mostram endurecimento e verificação **automatizada**, mas não substituem um teste de intrusão independente.
+
+Se um pentest tiver sido realizado fora do repositório, recomenda-se arquivar aqui (por exemplo em `docs/pentest/`) o relatório, a data, o escopo, a lista de achados com severidade e as evidências de correção/reteste, e então atualizar esta seção e as apresentações em `docs/apresentacoes/`. Enquanto isso não ocorrer, comunique a segurança do projeto como "controles implementados e testados automaticamente", nunca como "aprovado em pentest".
 
 ## O que fica fora deste documento
 

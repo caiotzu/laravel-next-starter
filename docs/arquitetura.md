@@ -6,11 +6,17 @@
 flowchart LR
     Browser["Navegador"] -->|"cookie httpOnly"| BFF["Next.js\napp/api/* (BFF)"]
     BFF -->|"Bearer JWT via BACKEND_URL"| API["Laravel API\n(routes/api.php)"]
-    API --> DB[("PostgreSQL")]
+    API --> DB[("PostgreSQL 17")]
+    API --> Cache["Cache\n(CACHE_STORE=database)"]
     API --> Queue["Fila\n(QUEUE_CONNECTION=database)"]
+    Queue --> Worker["queue:work\n(jobs, listeners)"]
+    Worker --> DB
+    Sched["schedule:work\n(2 comandos agendados)"] --> DB
+    API -->|"CEP (timeout 3s, com fallback)"| CEP["ViaCEP / BrasilAPI"]
+    Worker -->|"e-mail"| Mail["Amazon SES / Mailtrap"]
 ```
 
-O navegador nunca fala diretamente com o Laravel. Toda chamada passa pelo Next.js, que decide o que repassar e nunca expõe o token JWT a JavaScript no cliente (fica em cookie `httpOnly`).
+O navegador nunca fala diretamente com o Laravel. Toda chamada passa pelo Next.js, que decide o que repassar. O JWT é gravado em cookie `httpOnly` (não acessível a JavaScript) e o BFF injeta o `Authorization: Bearer` nas chamadas ao backend. Observação: os handlers de login e 2FA também devolvem o objeto `data` do backend (que contém o campo `token`) no corpo da resposta — ver [`seguranca.md`](./seguranca.md#camada-bff-nextjs).
 
 O projeto modela dois contextos de acesso, replicados em ambas as camadas:
 
@@ -65,8 +71,8 @@ Integrações externas (CEP, e-mail) ficam isoladas atrás de interfaces em `app
 O fluxo de autenticação/proxy:
 
 1. A página chama uma rota interna em `app/api/auth/**` (ex.: `/api/auth/admin/login`);
-2. Essa rota chama o Laravel via `BACKEND_URL` (variável só de servidor) e grava o JWT em cookie `httpOnly` (`admin_access_token` / `private_access_token`);
-3. Chamadas seguintes passam por `app/api/proxy/{admin,private}`, que lê o cookie, injeta `Authorization: Bearer` e repassa a chamada;
+2. Essa rota valida a origem da requisição (`validarOrigem`), chama o Laravel via `BACKEND_URL` (variável só de servidor) e grava o JWT em cookie `httpOnly` (`admin_access_token` / `private_access_token`, validade de 1 hora);
+3. Chamadas seguintes passam por `app/api/proxy/{admin,private}`, que valida a origem, resolve o destino com `lib/proxy-guard.ts` (só caminhos dentro de `BACKEND_URL`, métodos GET/POST/PUT/PATCH/DELETE e apenas o header `X-Acesso-Suporte-Id`), lê o cookie, injeta `Authorization: Bearer` e o IP do cliente validado (`lib/client-ip.ts`) e repassa a chamada;
 4. `middleware.ts` intercepta a navegação e usa `routes/routes.ts` para redirecionar quando não há cookie válido (ou para o dashboard certo, se já autenticado).
 
 ### Estrutura de diretórios (`frontend/`)
@@ -77,15 +83,37 @@ frontend/
 │   ├── admin/              # Páginas da área Admin
 │   ├── (private)/          # Páginas da área Private (route group)
 │   └── api/
-│       ├── auth/           # Login/logout/2FA/refresh — grava os cookies httpOnly
+│       ├── auth/           # Login/logout/2FA/primeiro acesso/senha — grava os cookies httpOnly (não há handler de refresh)
 │       └── proxy/          # Proxy autenticado para a API Laravel
 ├── domains/                # Dados por contexto/recurso: types, services, hooks, mappers
 ├── features/               # UI por contexto/recurso: components, schemas
 ├── components/             # ui (shadcn), layouts, data-tables, forms, feedback, providers
 ├── hooks/                  # Hooks compartilhados
-├── lib/                    # Helpers de proxy, validações Zod
+├── lib/                    # Helpers de proxy (proxy-guard, client-ip, proxy-admin/private), validações Zod
 ├── routes/routes.ts        # Mapa de rotas protegidas (consumido pelo middleware)
 └── middleware.ts           # Proteção de rotas por cookie/JWT
 ```
 
 Mais detalhes de cada pasta em [`frontend-arquitetura.md`](./frontend-arquitetura.md).
+
+## Inventário (contagem em 2026-09-28)
+
+| Item | Quantidade |
+|---|---:|
+| Rotas de API declaradas (`routes/api.php`) | 158 (64 GET, 35 POST, 13 PUT, 29 PATCH, 17 DELETE) |
+| Controllers (Admin, Private, Global, Lookup) | 39 |
+| Services / Models / Enums | 23 / 23 / 24 |
+| Form Requests / Resources / DTOs | 77 / 86 / 62 |
+| Migrations | 31 |
+| Jobs / Events / Listeners | 2 / 8 / 7 |
+| Comandos Artisan customizados | 4 (2 agendados) |
+| Testes (Pest) | 133 casos declarados (151 execuções) |
+| Páginas Next.js (`page.tsx`) | 65 (40 Admin, 25 Private) |
+| Route handlers do BFF | 18 (16 de auth + 2 de proxy) |
+| Código PHP em `backend/app` | ~25 mil linhas |
+| Código TS/TSX no frontend | ~50 mil linhas |
+
+## Cache e armazenamento
+
+- **Cache:** `CACHE_STORE=database` no `.env.example` (tabela `cache`). É usado para o cache de permissões por grupo/versão (`Usuario::permissoesCache()`), para os `temp_token` do 2FA, para o controle anti-replay de TOTP e para os contadores do rate limit. Há variáveis de Redis/Memcached no `.env.example`, mas nenhum uso de Redis foi identificado no código;
+- **Arquivos:** anexos de chamado ficam no disco privado (`local`) e só são entregues por link assinado; o comando `chamados:mover-anexos-privados` migra anexos legados do disco público.
