@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, Suspense } from "react"
 
 import Image from "next/image"
 import Link from "next/link"
@@ -43,7 +43,7 @@ type LoginProxyResponse = {
   data: LoginResponse
 }
 
-export default function LoginPage() {
+function LoginPageConteudo() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
   const [isLoading, setIsLoading] = useState(false)
 
@@ -260,5 +260,14 @@ export default function LoginPage() {
         />
       </div>
     </div>
+  )
+}
+
+// useSearchParams() exige um limite <Suspense> para o build de produção (prerender).
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageConteudo />
+    </Suspense>
   )
 }

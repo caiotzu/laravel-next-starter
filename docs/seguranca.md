@@ -1,6 +1,6 @@
 # Segurança
 
-Este documento reúne os mecanismos de segurança que atravessam vários módulos do backend — autenticação, autorização, JWT, 2FA e o isolamento entre audiências (Admin/Private) e Acesso de Suporte estão documentados em [`autenticacao-e-autorizacao.md`](./autenticacao-e-autorizacao.md). Tudo abaixo foi confirmado no código atual do repositório (`backend/` e `frontend/`); nada aqui é aspiracional. Para uma visão consolidada por camada, veja a [matriz de controles](#matriz-de-controles-por-camada); para o status de testes de intrusão, veja [Pentest](#pentest-teste-de-intrusão).
+Este documento reúne os mecanismos de segurança que atravessam vários módulos do backend — autenticação, autorização, JWT, 2FA e o isolamento entre audiências (Admin/Private) e Acesso de Suporte estão documentados em [`autenticacao-e-autorizacao.md`](./autenticacao-e-autorizacao.md). Tudo abaixo foi confirmado no código atual do repositório (`backend/` e `frontend/`); nada aqui é aspiracional. Para uma visão consolidada por camada, veja a [matriz de controles](#matriz-de-controles-por-camada); para o status de testes de intrusão, veja [Pentest e avaliação de segurança](#pentest-e-avaliação-de-segurança).
 
 ## Escopo multi-tenant (isolamento entre empresas)
 
@@ -110,15 +110,20 @@ Como o navegador só fala com o Next.js, o BFF também aplica controles próprio
 | Auditoria | Trait `Auditavel` + `GravarAuditoriaJob`; `acesso_suporte_id` nos registros de suporte |
 | Documentação da API | Swagger Admin com Basic Auth *fail-closed* e rate limit próprio |
 
-## Pentest (teste de intrusão)
+## Pentest e avaliação de segurança
 
-**Status verificado nesta análise: não foi localizada nenhuma evidência de pentest no repositório.** Foram pesquisados, em todos os arquivos e no histórico de commits (153 commits até 2026-09-28), termos como *pentest*, *penetration*, *OWASP* e *vulnerabilidade*, além de arquivos `*.pdf`, `*report*` e `*pentest*`: nenhum resultado. Portanto:
+**Pentest independente (terceiros / black-box): não há evidência no repositório.** Foram pesquisados *pentest*, *penetration*, *OWASP* e *vulnerabilidade* em todos os arquivos e nos 153 commits, além de PDFs e relatórios: nenhum resultado. Não é possível afirmar que o sistema passou por esse tipo de teste.
 
-- não há relatório, escopo, metodologia, achados, severidades, correções vinculadas ou reteste documentados;
-- **não é possível afirmar que o sistema passou por pentest** com base nas evidências do projeto;
-- os commits de "melhorias de segurança" (rate limit, CORS, cabeçalhos, escopo por contexto, guarda do proxy, etc.) e a suíte `SegurancaTest` mostram endurecimento e verificação **automatizada**, mas não substituem um teste de intrusão independente.
+**Avaliação de segurança white-box (2026-09-29): realizada.** Documentada em [`pentest-avaliacao-seguranca.md`](./pentest-avaliacao-seguranca.md), com scripts e resultados brutos em [`pentest/evidencias/`](./pentest/evidencias/). Resumo:
 
-Se um pentest tiver sido realizado fora do repositório, recomenda-se arquivar aqui (por exemplo em `docs/pentest/`) o relatório, a data, o escopo, a lista de achados com severidade e as evidências de correção/reteste, e então atualizar esta seção e as apresentações em `docs/apresentacoes/`. Enquanto isso não ocorrer, comunique a segurança do projeto como "controles implementados e testados automaticamente", nunca como "aprovado em pentest".
+- **150 verificações dinâmicas** executadas sobre o código real: sanitizador de HTML (55 payloads XSS), proxy do BFF (SSRF/path traversal, métodos, headers), IP do cliente, CSRF por origem e `middleware.ts` — sem falhas de proteção; 1 observação informativa e 1 fraqueza confirmada (F-06, mitigada pelo backend);
+- **Revisão estática:** 158 rotas (107 com `authorize()`, 16 públicas, 35 de autoatendimento/catálogo), SQL, uploads, tokens, auditoria, segredos no histórico Git — sem SQL injection, execução de código, IDOR ou segredo real encontrados;
+- **Dependências:** `npm audit` (38 avisos em produção; **34 após a atualização para Next.js 16.3.7, sem nenhum crítico**) e cruzamento do `composer.lock` (17 avisos em produção). Concentram os achados mais graves: Next.js 15.5.6 (crítico, **corrigido** na atualização para 16.3.7), axios 1.13.1 (alto), Laravel 12.26.4 e pacotes Symfony/Guzzle (médio);
+- **15 achados:** 1 crítico (F-01, **corrigido** em 2026-09-30), 1 alto, 2 médios, 5 baixos e 6 informativos (1 deles, F-15, também corrigido). Os demais permanecem em aberto.
+
+**O que não foi feito:** a API Laravel não foi atacada em execução (sem PHP/Composer/PostgreSQL no ambiente), nem houve testes black-box, fuzzing, TLS/infra ou navegador real. Esta avaliação **não substitui** um pentest independente em homologação. Comunique a segurança como "controles implementados, testados automaticamente e avaliados por revisão white-box", nunca como "aprovado em pentest".
+
+Se um pentest de terceiros tiver sido realizado fora do repositório, arquive o relatório em `docs/pentest/` (data, escopo, achados com severidade, evidências de correção e reteste) e atualize esta seção e as apresentações em `docs/apresentacoes/`.
 
 ## O que fica fora deste documento
 

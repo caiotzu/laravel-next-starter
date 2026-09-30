@@ -1,6 +1,6 @@
 # Laravel Next Starter
 
-Starter full stack com back-end em **Laravel 12** (API + JWT + permissões) e front-end em **Next.js 15** (App Router, atuando como BFF). Inclui domínios de negócio prontos como referência: usuários, grupos/permissões, empresas, mensagens, banners, chamados de suporte (com anexos), releases (novidades da plataforma), Acesso de Suporte (impersonação temporária e auditável), dashboard administrativo e auditoria.
+Starter full stack com back-end em **Laravel 12** (API + JWT + permissões) e front-end em **Next.js 16** (App Router, atuando como BFF). Inclui domínios de negócio prontos como referência: usuários, grupos/permissões, empresas, mensagens, banners, chamados de suporte (com anexos), releases (novidades da plataforma), Acesso de Suporte (impersonação temporária e auditável), dashboard administrativo e auditoria.
 
 ## Em números (2026-09-28)
 
@@ -12,12 +12,12 @@ Starter full stack com back-end em **Laravel 12** (API + JWT + permissões) e fr
 | Testes automatizados (Pest) | 133 casos declarados (151 execuções) |
 | Comandos agendados | 2 (sessões e acessos de suporte) |
 
-> Segurança em uma linha: JWT em cookie `httpOnly` via BFF, sessão revogável em banco, 2FA (TOTP), permissões por grupo, isolamento Admin × Private e multi-tenant, rate limit, cabeçalhos de segurança, sanitização de HTML, uploads validados por conteúdo e auditoria. **Não há relatório de pentest no repositório** — ver [`docs/seguranca.md`](./docs/seguranca.md#pentest-teste-de-intrusão).
+> Segurança em uma linha: JWT em cookie `httpOnly` via BFF, sessão revogável em banco, 2FA (TOTP), permissões por grupo, isolamento Admin × Private e multi-tenant, rate limit, cabeçalhos de segurança, sanitização de HTML, uploads validados por conteúdo e auditoria. Avaliação de segurança white-box (2026-09-29) em [`docs/pentest-avaliacao-seguranca.md`](./docs/pentest-avaliacao-seguranca.md); **não há relatório de pentest independente no repositório** — ver [`docs/seguranca.md`](./docs/seguranca.md#pentest-e-avaliação-de-segurança).
 
 ## Stack
 
 **Backend:** PHP 8.2+ (Sail com PHP 8.4), Laravel 12, PostgreSQL 17, JWT (`tymon/jwt-auth`), 2FA (Google2FA), Swagger (`l5-swagger`), Pest 4, Docker (Sail — apenas desenvolvimento).
-**Frontend:** Next.js 15, React 19, TypeScript, Tailwind CSS 4, shadcn/ui, TanStack Query/Table.
+**Frontend:** Next.js 16, React 19, TypeScript, Tailwind CSS 4, shadcn/ui, TanStack Query/Table.
 
 ## Quick start
 
@@ -64,6 +64,7 @@ Front-end em `http://localhost:3000`, API em `http://localhost:8000` (ou porta c
 | [`docs/frontend-arquitetura.md`](./docs/frontend-arquitetura.md) | `domains/`, `features/`, componentes, estado |
 | [`docs/testes.md`](./docs/testes.md) | Como rodar os testes |
 | [`docs/seguranca.md`](./docs/seguranca.md) | Controles de segurança por camada, BFF, rate limit, cabeçalhos, uploads e status do pentest |
+| [`docs/pentest-avaliacao-seguranca.md`](./docs/pentest-avaliacao-seguranca.md) | Avaliação de segurança white-box: achados por severidade, o que passou, limitações e plano de correção (evidências em `docs/pentest/evidencias/`) |
 | [`docs/vantagens.md`](./docs/vantagens.md) | Por que essa arquitetura — decisões de design e segurança |
 | [`docs/apresentacoes/`](./docs/apresentacoes) | Fontes (HTML) e script de geração das apresentações comercial e técnica |
 | [`APRESENTACAO_COMERCIAL_SISTEMA.pdf`](./APRESENTACAO_COMERCIAL_SISTEMA.pdf) | Apresentação para o time Comercial |

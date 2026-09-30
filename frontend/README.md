@@ -1,12 +1,12 @@
 # Frontend — Next.js
 
-Aplicação Next.js 15 (App Router) que atua como *Backend for Frontend* (BFF) da [API Laravel](../backend/README.md) — o navegador nunca chama o backend diretamente.
+Aplicação Next.js 16 (App Router) que atua como *Backend for Frontend* (BFF) da [API Laravel](../backend/README.md) — o navegador nunca chama o backend diretamente.
 
 Para arquitetura, autenticação e organização de pastas em detalhe, veja [`docs/frontend-arquitetura.md`](../docs/frontend-arquitetura.md).
 
 ## Stack
 
-Next.js `15.5.6` (Turbopack) · React `19.1` · TypeScript · Tailwind CSS `^4` · shadcn/ui + Radix UI · TanStack Query/Table · React Hook Form + Zod · Tiptap + DOMPurify · Recharts.
+Next.js `16.3.7` (Turbopack) — exige Node.js ≥ 20.9 · React `19.1` · TypeScript · Tailwind CSS `^4` · shadcn/ui + Radix UI · TanStack Query/Table · React Hook Form + Zod · Tiptap + DOMPurify · Recharts.
 
 ## Instalação
 

@@ -84,9 +84,11 @@ export function AcessoSuporteProvider({ children }: { children: React.ReactNode 
       return
     }
 
+    const expiraEm = acessoSuporteAtivo.expiraEm
+
     const calcular = () => {
       const restante = Math.floor(
-        (new Date(acessoSuporteAtivo.expiraEm).getTime() - Date.now()) / 1000
+        (new Date(expiraEm).getTime() - Date.now()) / 1000
       )
 
       if (restante <= 0) {

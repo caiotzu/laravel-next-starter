@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -30,7 +30,7 @@ type ResetSenhaValidacaoResponse = {
   data: ResetSenhaValidacao
 }
 
-export default function RedefinirSenhaPage() {
+function RedefinirSenhaPageConteudo() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
   const [isValidating, setIsValidating] = useState(true)
   const [tokenIsValid, setTokenIsValid] = useState(false)
@@ -206,5 +206,14 @@ export default function RedefinirSenhaPage() {
         />
       </div>
     </div>
+  )
+}
+
+// useSearchParams() exige um limite <Suspense> para o build de produção (prerender).
+export default function RedefinirSenhaPage() {
+  return (
+    <Suspense fallback={null}>
+      <RedefinirSenhaPageConteudo />
+    </Suspense>
   )
 }

@@ -53,7 +53,7 @@ Tailwind CSS 4, tema via variáveis CSS em `app/globals.css` (`baseColor: slate`
 
 | Necessidade | Biblioteca |
 |---|---|
-| Framework | Next.js 15.5.6 (App Router, Turbopack), React 19.1 |
+| Framework | Next.js 16.3.7 (App Router, Turbopack), React 19.1 |
 | Dados/cache de servidor | TanStack Query 5, TanStack Table 8 |
 | Formulários e validação | React Hook Form + Zod 4 (`@hookform/resolvers`) |
 | UI | Tailwind CSS 4, shadcn/ui (Radix UI, `@base-ui/react`), lucide-react, Tabler Icons, sonner, vaul |
@@ -66,3 +66,24 @@ Tailwind CSS 4, tema via variáveis CSS em `app/globals.css` (`baseColor: slate`
 ## Tamanho do frontend
 
 65 páginas (`page.tsx`): 40 na área Admin e 25 na Private; 18 *route handlers* do BFF (16 de autenticação e 2 de proxy); ~50 mil linhas de TypeScript/TSX.
+
+## Next.js 16 (atualização de 2026-09-30)
+
+O frontend foi atualizado do Next.js 15.5.6 para o **16.3.7** (`next` e `eslint-config-next` fixados em `16.3.7`), principalmente para eliminar as vulnerabilidades críticas da 15.5.6 (ver [`pentest-avaliacao-seguranca.md`](./pentest-avaliacao-seguranca.md), achado F-01). A estrutura de pastas, as rotas e o BFF **não mudaram**: a tabela de 84 rotas geradas pelo `next build` e o comportamento em runtime (middleware, validação de origem, guarda do proxy e cabeçalhos de segurança) foram idênticos entre 15.5.6 e 16.3.7 nos testes descritos em [`pentest/evidencias/06_upgrade_next16_validacao.md`](./pentest/evidencias/06_upgrade_next16_validacao.md).
+
+O que mudou por causa da atualização:
+
+- **Node.js ≥ 20.9** passa a ser exigido pelo Next.js 16 (o `.nvmrc`/imagem de CI/deploy deve refletir isso);
+- **`middleware.ts` continua funcionando**, mas o Next 16 o marca como depreciado em favor de `proxy.ts` e emite um aviso no build/dev. A migração é opcional e automática: `npx @next/codemod@canary middleware-to-proxy .`. Não foi feita para não alterar a estrutura;
+- **ESLint**: o `eslint-config-next@16` é *flat config* nativo; o `eslint.config.mjs` deixou de usar `FlatCompat` e importa `eslint-config-next/core-web-vitals` e `eslint-config-next/typescript`. Todas as regras `import/order` do projeto foram mantidas. As novas regras do React Compiler (`react-hooks/set-state-in-effect`, `react-hooks/purity`, `react-hooks/static-components`) foram mantidas como **aviso** para não mudar o resultado do `npm run lint`;
+- **`tsconfig.json`**: `jsx` passou de `preserve` para `react-jsx` e `.next/dev/types/**/*.ts` entrou em `include` (o Next 16 faz essas duas mudanças automaticamente);
+- O `next build` do Next 16 **não executa mais o lint**; use `npm run lint` separadamente.
+
+### Correções mínimas para o build de produção (pré-existentes)
+
+Ao validar o build, foram encontrados dois bloqueios que já existiam na 15.5.6 (o `next build` falhava também nela) e que foram corrigidos de forma mecânica:
+
+1. seis páginas usavam `useSearchParams()` sem `<Suspense>` (login Admin/Private, primeiro acesso e redefinir senha, das duas áreas) — cada página agora renderiza o mesmo conteúdo dentro de um `<Suspense fallback={null}>`;
+2. erro de tipo em `app/admin/providers/acesso-suporte-provider.tsx` (perda de *narrowing* dentro de um *closure*) — o valor `expiraEm` é lido antes do closure.
+
+**Pendência não relacionada à atualização:** existem 18 erros de `import/order` reportados por `npm run lint` desde antes (corrigíveis com `npx eslint . --fix`); com o Next 16 eles deixam de bloquear o `next build`.

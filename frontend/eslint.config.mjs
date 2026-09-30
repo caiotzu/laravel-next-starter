@@ -1,18 +1,10 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-
-import { FlatCompat } from "@eslint/eslintrc";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
 import importPlugin from "eslint-plugin-import";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...nextVitals,
+  ...nextTs,
 
   {
     plugins: {
@@ -82,6 +74,16 @@ const eslintConfig = [
           },
         },
       ],
+    },
+  },
+
+  {
+    // Regras do React Compiler (eslint-plugin-react-hooks 7, incluído no eslint-config-next 16).
+    // Mantidas como aviso para não alterar o resultado do `npm run lint` existente.
+    rules: {
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/purity": "warn",
+      "react-hooks/static-components": "warn",
     },
   },
 
