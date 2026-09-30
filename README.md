@@ -2,18 +2,6 @@
 
 Starter full stack com back-end em **Laravel 12** (API + JWT + permissões) e front-end em **Next.js 16** (App Router, atuando como BFF). Inclui domínios de negócio prontos como referência: usuários, grupos/permissões, empresas, mensagens, banners, chamados de suporte (com anexos), releases (novidades da plataforma), Acesso de Suporte (impersonação temporária e auditável), dashboard administrativo e auditoria.
 
-## Em números (2026-09-28)
-
-| | |
-|---|---|
-| Rotas de API | 158 (Admin, Private, Global, Lookup) |
-| Páginas Next.js | 65 (40 Admin + 25 Private) |
-| Migrations / Models | 31 / 23 |
-| Testes automatizados (Pest) | 133 casos declarados (151 execuções) |
-| Comandos agendados | 2 (sessões e acessos de suporte) |
-
-> Segurança em uma linha: JWT em cookie `httpOnly` via BFF, sessão revogável em banco, 2FA (TOTP), permissões por grupo, isolamento Admin × Private e multi-tenant, rate limit, cabeçalhos de segurança, sanitização de HTML, uploads validados por conteúdo e auditoria. Avaliação de segurança white-box (2026-09-29) em [`docs/pentest-avaliacao-seguranca.md`](./docs/pentest-avaliacao-seguranca.md); **não há relatório de pentest independente no repositório** — ver [`docs/seguranca.md`](./docs/seguranca.md#pentest-e-avaliação-de-segurança).
-
 ## Stack
 
 **Backend:** PHP 8.2+ (Sail com PHP 8.4), Laravel 12, PostgreSQL 17, JWT (`tymon/jwt-auth`), 2FA (Google2FA), Swagger (`l5-swagger`), Pest 4, Docker (Sail — apenas desenvolvimento).
