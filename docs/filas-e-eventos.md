@@ -22,7 +22,7 @@ Definidos em `backend/routes/console.php` e executados por `php artisan schedule
 | Comando | Frequência | O que faz |
 |---|---|---|
 | `usuario-sessao:limpar-expiradas` | a cada 10 minutos | Encerra sessões inativas há mais de 30 minutos |
-| `acesso-suporte:expirar-vencidos` | a cada minuto | Marca como expirados os Acessos de Suporte vencidos e gera auditoria da mudança de status (duração mínima de um acesso é 5 minutos) |
+| `acesso-suporte:expirar-vencidos` | a cada minuto | Marca como expirados os Acessos de Suporte vencidos (duração mínima de um acesso é 5 minutos). **Atenção:** o teste `AcessoSuporteTest` que espera uma auditoria dessa mudança de status falha desde antes da atualização de 2026-10-01 (ver `docs/testes.md`); não há confirmação de que a auditoria seja gerada |
 
 ## Events / Listeners
 

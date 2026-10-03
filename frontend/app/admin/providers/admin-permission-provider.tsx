@@ -30,7 +30,7 @@ const PermissionContext = createContext<PermissionContextType>({
  * derrubando o usuário de `/admin/primeiro-acesso?token=...` de volta para
  * o login antes dele conseguir definir a senha.
  *
- * Reaproveita a mesma lista de rotas do middleware.ts (routes/routes.ts)
+ * Reaproveita a mesma lista de rotas do proxy.ts (routes/routes.ts; antigo middleware.ts)
  * para decidir se a rota atual realmente exige permissões.
  */
 function exigePermissoesAdmin(pathname: string): boolean {

@@ -76,7 +76,7 @@ A trait `App\Auditoria\Auditavel` (models como `Usuario`) registra alterações 
 
 - Senhas (primeiro acesso, redefinição e troca no perfil) exigem no mínimo 8 caracteres com maiúsculas e minúsculas, letras, números e símbolos (`Password::min(8)->mixedCase()->letters()->numbers()->symbols()` nos Form Requests) e confirmação idêntica;
 - O hash de senha é feito com `Hash::make` (bcrypt, `BCRYPT_ROUNDS=12` no `.env.example`);
-- No login, se o e-mail não existe o sistema executa um hash de custo equivalente e devolve a mesma mensagem de credenciais inválidas — reduz enumeração de usuários por tempo de resposta e por texto de erro (coberto por `SegurancaTest`);
+- No login, se o e-mail não existe o controller executa um hash de custo equivalente e devolve a mesma mensagem e o mesmo status (401) de uma senha errada, para não permitir enumerar usuários (`SegurancaTest`). **Correção de 2026-10-01 (F-16):** até então o `LoginRequest` validava o e-mail com `Rule::exists`, devolvendo 422 para e-mail inexistente e 401 para senha errada — o teste já existia mas falhava e esta documentação afirmava o contrário; a regra foi removida e o teste passou a passar;
 - O segredo TOTP do 2FA é armazenado criptografado (`google2fa_secret` com cast `encrypted` em `Usuario`); o código TOTP só é aceito uma vez (anti-replay, `verifyKeyNewer`); o `temp_token` da etapa de 2FA vive 5 minutos no cache e é descartado após tentativas inválidas;
 - Trocar a senha encerra as demais sessões do usuário; tokens de primeiro acesso/redefinição têm expiração e não podem ser reutilizados.
 
@@ -95,7 +95,7 @@ Como o navegador só fala com o Next.js, o BFF também aplica controles próprio
 - **IP do cliente** (`lib/client-ip.ts`): o BFF repassa ao backend um único IP válido, calculado a partir do `X-Forwarded-For` com `TRUSTED_PROXY_HOPS` (padrão `1`; `0` = não repassa nada), evitando que um cliente forje o IP para escapar dos rate limits;
 - **Cabeçalhos** (`next.config.ts`): `Content-Security-Policy` **parcial** (`frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'` — sem `script-src`/`style-src`; o próprio arquivo registra a CSP estrita com nonces como evolução), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` restritivo e, em produção, `Strict-Transport-Security: max-age=31536000`;
 - **Ponto de atenção — token no corpo da resposta:** os handlers `app/api/auth/{admin,private}/login` e `/2fa` gravam o JWT no cookie `httpOnly`, mas repassam ao navegador o objeto `data` devolvido pelo backend, que inclui o campo `token`. O cookie continua inacessível a JavaScript, porém o valor também trafega no corpo dessas duas respostas. Removê-lo do JSON (devolver só os demais campos) é uma melhoria simples recomendada;
-- `middleware.ts` só decodifica o JWT para checar expiração (verificação de UX); a validação real de assinatura, sessão e permissão acontece no backend.
+- `proxy.ts` (antigo `middleware.ts`) só decodifica o JWT para checar expiração (verificação de UX); a validação real de assinatura, sessão e permissão acontece no backend.
 
 ## Matriz de controles por camada
 
@@ -116,12 +116,12 @@ Como o navegador só fala com o Next.js, o BFF também aplica controles próprio
 
 **Avaliação de segurança white-box (2026-09-29): realizada.** Documentada em [`pentest-avaliacao-seguranca.md`](./pentest-avaliacao-seguranca.md), com scripts e resultados brutos em [`pentest/evidencias/`](./pentest/evidencias/). Resumo:
 
-- **150 verificações dinâmicas** executadas sobre o código real: sanitizador de HTML (55 payloads XSS), proxy do BFF (SSRF/path traversal, métodos, headers), IP do cliente, CSRF por origem e `middleware.ts` — sem falhas de proteção; 1 observação informativa e 1 fraqueza confirmada (F-06, mitigada pelo backend);
+- **150 verificações dinâmicas** executadas sobre o código real: sanitizador de HTML (55 payloads XSS), proxy do BFF (SSRF/path traversal, métodos, headers), IP do cliente, CSRF por origem e `middleware.ts` — sem falhas de proteção; 1 observação informativa e 1 fraqueza confirmada (F-06, mitigada pelo backend). A execução da suíte Pest em 2026-10-01 encontrou ainda uma falha real de anti-enumeração no login (F-16), **corrigida**;
 - **Revisão estática:** 158 rotas (107 com `authorize()`, 16 públicas, 35 de autoatendimento/catálogo), SQL, uploads, tokens, auditoria, segredos no histórico Git — sem SQL injection, execução de código, IDOR ou segredo real encontrados;
-- **Dependências:** `npm audit` (38 avisos em produção; **34 após a atualização para Next.js 16.3.7, sem nenhum crítico**) e cruzamento do `composer.lock` (17 avisos em produção). Concentram os achados mais graves: Next.js 15.5.6 (crítico, **corrigido** na atualização para 16.3.7), axios 1.13.1 (alto), Laravel 12.26.4 e pacotes Symfony/Guzzle (médio);
-- **15 achados:** 1 crítico (F-01, **corrigido** em 2026-09-30), 1 alto, 2 médios, 5 baixos e 6 informativos (1 deles, F-15, também corrigido). Os demais permanecem em aberto.
+- **Dependências:** `npm audit` (38 avisos em produção, 1 crítico) e cruzamento do `composer.lock` (17 avisos em produção). **Todos corrigidos em 2026-09-30 e 2026-10-01:** Next.js 15.5.6 → 16.3.7, axios 1.20.0, Tiptap 3.31.4, Laravel 12.26.4 → **13.34.0** e pacotes Symfony/Guzzle. Resultado: `npm audit` com **0 vulnerabilidades em produção** (em desenvolvimento resta um aviso sem correção publicada, do `braces`, só no lint) e **0 avisos** no cruzamento do novo `composer.lock` (confirme com `composer audit`);
+- **16 achados:** 1 crítico, 1 alto, 3 médios, 5 baixos e 6 informativos. **6 corrigidos** (F-01 a F-04, F-15 e F-16); **10 em aberto**, todos de severidade baixa ou informativa (F-05 a F-14). Detalhes e plano em `pentest-avaliacao-seguranca.md`.
 
-**O que não foi feito:** a API Laravel não foi atacada em execução (sem PHP/Composer/PostgreSQL no ambiente), nem houve testes black-box, fuzzing, TLS/infra ou navegador real. Esta avaliação **não substitui** um pentest independente em homologação. Comunique a segurança como "controles implementados, testados automaticamente e avaliados por revisão white-box", nunca como "aprovado em pentest".
+**O que não foi feito:** a API Laravel não foi atacada por um cliente externo em um ambiente implantado (a suíte Pest, de 153 testes, foi executada em 2026-10-01: 139 passam e 14 já falhavam antes), nem houve testes black-box, fuzzing, TLS/infra ou navegador real. Esta avaliação **não substitui** um pentest independente em homologação. Comunique a segurança como "controles implementados, testados automaticamente e avaliados por revisão white-box", nunca como "aprovado em pentest".
 
 Se um pentest de terceiros tiver sido realizado fora do repositório, arquive o relatório em `docs/pentest/` (data, escopo, achados com severidade, evidências de correção e reteste) e atualize esta seção e as apresentações em `docs/apresentacoes/`.
 

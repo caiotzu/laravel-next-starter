@@ -1,4 +1,4 @@
-// middleware.ts
+// proxy.ts (antigo middleware.ts; convenção renomeada no Next.js 16)
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 
 import { protectedRoutes } from "./routes/routes";
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
   // Ordena rotas do mais específico para o mais genérico
@@ -84,7 +84,7 @@ function isTokenValid(token: string) {
   }
 }
 
-// Define quais rotas passam pelo middleware
+// Define quais rotas passam pelo proxy
 export const config = {
   matcher: [
     "/",

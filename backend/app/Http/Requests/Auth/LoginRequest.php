@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Auth;
 
-use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class LoginRequest extends FormRequest
@@ -18,7 +17,6 @@ class LoginRequest extends FormRequest
             'email' => [
                 'required',
                 'email',
-                Rule::exists('usuarios', 'email')
             ],
             'senha' => 'required'
         ];
@@ -28,7 +26,6 @@ class LoginRequest extends FormRequest
         return [
             'email.required' => 'O e-mail é obrigatório',
             'email.email' => 'O e-mail está com formato inválido',
-            'email.exists' => 'Credenciais informadas são inválidas',
 
             'senha.required' => 'A senha é obrigatória',
         ];

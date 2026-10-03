@@ -71,5 +71,5 @@ Alterações em models auditáveis são registradas via job em fila, não de for
 Nenhuma arquitetura é isenta de trade-offs — vale registrar honestamente:
 
 - A duplicação Admin/Private (rotas, controllers, telas) tem custo de manutenção: uma correção pode precisar ser replicada nos dois lados.
-- A cobertura de testes está concentrada no backend (Pest: 133 casos nos domínios, foco em autenticação, isolamento entre contextos e segurança); o frontend não tem testes automatizados e não há pipeline de CI que os execute — ver [`testes.md`](./testes.md).
-- O `middleware.ts` do frontend decodifica o JWT apenas para checar expiração, sem validar assinatura — a validação real de assinatura acontece no backend a cada chamada ao proxy, então isso não é uma falha de segurança, mas vale entender a diferença entre "verificação de UX" (middleware) e "verificação de segurança" (backend).
+- A cobertura de testes está concentrada no backend (Pest: 153 testes, 139 passam; foco em autenticação, isolamento entre contextos e segurança); o frontend não tem testes automatizados e não há pipeline de CI que os execute — ver [`testes.md`](./testes.md).
+- O `proxy.ts` (antigo `middleware.ts`) do frontend decodifica o JWT apenas para checar expiração, sem validar assinatura — a validação real de assinatura acontece no backend a cada chamada ao proxy, então isso não é uma falha de segurança, mas vale entender a diferença entre "verificação de UX" (middleware) e "verificação de segurança" (backend).

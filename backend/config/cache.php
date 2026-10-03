@@ -105,4 +105,18 @@ return [
 
     'prefix' => env('CACHE_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-cache-'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Serializable Classes
+    |--------------------------------------------------------------------------
+    |
+    | Define quais classes PHP podem ser desserializadas a partir do cache. Com
+    | `false`, nenhuma classe é desserializada, o que impede ataques de "gadget
+    | chain" caso a APP_KEY vaze. O projeto só armazena arrays e escalares no
+    | cache (permissões, temp_token do 2FA, contadores de rate limit).
+    |
+    */
+
+    'serializable_classes' => false,
+
 ];

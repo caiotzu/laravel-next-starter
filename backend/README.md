@@ -1,12 +1,12 @@
 # Backend — API Laravel
 
-API REST em Laravel 12: autenticação JWT com sessão revogável e 2FA, autorização por permissões, isolamento multi-tenant, e os domínios de negócio do starter (empresas, usuários, grupos, mensagens, banners, chamados de suporte, releases, Acesso de Suporte e auditoria).
+API REST em Laravel 13: autenticação JWT com sessão revogável e 2FA, autorização por permissões, isolamento multi-tenant, e os domínios de negócio do starter (empresas, usuários, grupos, mensagens, banners, chamados de suporte, releases, Acesso de Suporte e auditoria).
 
 Para arquitetura, autenticação, rotas e demais detalhes, veja [`docs/`](../docs).
 
 ## Stack
 
-PHP `^8.2` (container Sail com PHP 8.4) · Laravel `^12.0` · PostgreSQL 17 · `tymon/jwt-auth` · `pragmarx/google2fa` · `darkaonline/l5-swagger` · `laravel/sail` · Pest 4.
+PHP `^8.3` (container Sail com PHP 8.4) · Laravel `^13.0` · PostgreSQL 17 · `tymon/jwt-auth` · `pragmarx/google2fa` · `darkaonline/l5-swagger` · `laravel/sail` · Pest 4.
 
 ## Instalação
 

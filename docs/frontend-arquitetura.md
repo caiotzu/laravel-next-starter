@@ -39,7 +39,7 @@ App Router com dois agrupamentos:
 - `app/admin/**` — área administrativa (`/admin`, `/admin/home`, `/admin/dashboard`, `/admin/usuarios`, `/admin/grupos`, `/admin/grupos-empresas`, `/admin/empresas`, `/admin/mensagens`, `/admin/banners`, `/admin/chamados`, `/admin/releases`, `/admin/acessos-suporte`, `/admin/auditorias`, `/admin/perfil`, `/admin/(auth)/**`);
 - `app/(private)/**` — área privada, usando um *route group* (`(private)`) para não afetar a URL — páginas ficam acessíveis a partir da raiz (`/`, `/home`, `/dashboard`, `/usuarios`, `/grupos`, `/empresas`, `/chamados`, `/releases`, `/acesso-suporte`, `/perfil`, `/(auth)/**`).
 
-Cada grupo tem seu próprio `layout.tsx` e pasta `providers/`. Rotas protegidas e mapeamento de cookie por rota ficam em `routes/routes.ts`, ordenado da mais específica para a mais genérica — consumido por `middleware.ts` (veja [`autenticacao-e-autorizacao.md`](./autenticacao-e-autorizacao.md#frontend)).
+Cada grupo tem seu próprio `layout.tsx` e pasta `providers/`. Rotas protegidas e mapeamento de cookie por rota ficam em `routes/routes.ts`, ordenado da mais específica para a mais genérica — consumido por `proxy.ts` (veja [`autenticacao-e-autorizacao.md`](./autenticacao-e-autorizacao.md#frontend)).
 
 ## Estado
 
@@ -61,7 +61,7 @@ Tailwind CSS 4, tema via variáveis CSS em `app/globals.css` (`baseColor: slate`
 | Gráficos | Recharts 2 (dashboard Admin) |
 | Tabelas com arrastar-e-soltar | dnd-kit (`components/data-table.tsx`) |
 | 2FA | `react-qr-code`, `input-otp` |
-| HTTP no BFF | axios; `jsonwebtoken` só para decodificar/verificar expiração no `middleware.ts` |
+| HTTP no BFF | axios; `jsonwebtoken` só para decodificar/verificar expiração no `proxy.ts` |
 
 ## Tamanho do frontend
 
@@ -74,7 +74,7 @@ O frontend foi atualizado do Next.js 15.5.6 para o **16.3.7** (`next` e `eslint-
 O que mudou por causa da atualização:
 
 - **Node.js ≥ 20.9** passa a ser exigido pelo Next.js 16 (o `.nvmrc`/imagem de CI/deploy deve refletir isso);
-- **`middleware.ts` continua funcionando**, mas o Next 16 o marca como depreciado em favor de `proxy.ts` e emite um aviso no build/dev. A migração é opcional e automática: `npx @next/codemod@canary middleware-to-proxy .`. Não foi feita para não alterar a estrutura;
+- **`middleware.ts` foi migrado para `proxy.ts`** (convenção do Next 16) com o codemod oficial `npx @next/codemod@canary middleware-to-proxy .` em 2026-10-01; o aviso de depreciação deixou de aparecer. A lógica e o `matcher` não mudaram e o smoke test HTTP deu o mesmo resultado. **O arquivo antigo `frontend/middleware.ts` deve ser removido** (com os dois presentes o Next acusa erro);
 - **ESLint**: o `eslint-config-next@16` é *flat config* nativo; o `eslint.config.mjs` deixou de usar `FlatCompat` e importa `eslint-config-next/core-web-vitals` e `eslint-config-next/typescript`. Todas as regras `import/order` do projeto foram mantidas. As novas regras do React Compiler (`react-hooks/set-state-in-effect`, `react-hooks/purity`, `react-hooks/static-components`) foram mantidas como **aviso** para não mudar o resultado do `npm run lint`;
 - **`tsconfig.json`**: `jsx` passou de `preserve` para `react-jsx` e `.next/dev/types/**/*.ts` entrou em `include` (o Next 16 faz essas duas mudanças automaticamente);
 - O `next build` do Next 16 **não executa mais o lint**; use `npm run lint` separadamente.

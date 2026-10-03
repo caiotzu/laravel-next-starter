@@ -4,7 +4,7 @@ import type { NextConfig } from "next";
  * Headers de segurança aplicados a todas as rotas.
  *
  * Não inclui um Content-Security-Policy completo (script-src/style-src) de propósito: o Next
- * injeta scripts/estilos inline e um CSP estrito exige nonces por requisição (middleware) —
+ * injeta scripts/estilos inline e um CSP estrito exige nonces por requisição (proxy.ts) —
  * fica como evolução. Aqui vão as diretivas que NÃO quebram a aplicação e fecham riscos reais:
  * clickjacking (frame-ancestors), <base> e <form> sequestrados e plugins (object-src).
  */

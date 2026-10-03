@@ -86,7 +86,7 @@ export async function proxyPrivateRequest<T>({
       // O acesso de suporte não é mais válido (expirado/revogado/
       // encerrado) — independentemente da entidade em que o Admin estava,
       // o retorno é sempre para o Dashboard do Admin (rota oficial, ver
-      // middleware.ts: redirectPath para admin_access_token).
+      // proxy.ts: redirectPath para admin_access_token).
       redirecionarUmaVez("/admin/dashboard");
       return Promise.reject(error);
     }

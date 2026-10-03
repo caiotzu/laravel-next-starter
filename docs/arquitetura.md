@@ -73,7 +73,7 @@ O fluxo de autenticação/proxy:
 1. A página chama uma rota interna em `app/api/auth/**` (ex.: `/api/auth/admin/login`);
 2. Essa rota valida a origem da requisição (`validarOrigem`), chama o Laravel via `BACKEND_URL` (variável só de servidor) e grava o JWT em cookie `httpOnly` (`admin_access_token` / `private_access_token`, validade de 1 hora);
 3. Chamadas seguintes passam por `app/api/proxy/{admin,private}`, que valida a origem, resolve o destino com `lib/proxy-guard.ts` (só caminhos dentro de `BACKEND_URL`, métodos GET/POST/PUT/PATCH/DELETE e apenas o header `X-Acesso-Suporte-Id`), lê o cookie, injeta `Authorization: Bearer` e o IP do cliente validado (`lib/client-ip.ts`) e repassa a chamada;
-4. `middleware.ts` intercepta a navegação e usa `routes/routes.ts` para redirecionar quando não há cookie válido (ou para o dashboard certo, se já autenticado).
+4. `proxy.ts` (antigo `middleware.ts`) intercepta a navegação e usa `routes/routes.ts` para redirecionar quando não há cookie válido (ou para o dashboard certo, se já autenticado).
 
 ### Estrutura de diretórios (`frontend/`)
 
@@ -91,7 +91,7 @@ frontend/
 ├── hooks/                  # Hooks compartilhados
 ├── lib/                    # Helpers de proxy (proxy-guard, client-ip, proxy-admin/private), validações Zod
 ├── routes/routes.ts        # Mapa de rotas protegidas (consumido pelo middleware)
-└── middleware.ts           # Proteção de rotas por cookie/JWT
+└── proxy.ts                # Proteção de rotas por cookie/JWT (antigo middleware.ts)
 ```
 
 Mais detalhes de cada pasta em [`frontend-arquitetura.md`](./frontend-arquitetura.md).
@@ -107,7 +107,7 @@ Mais detalhes de cada pasta em [`frontend-arquitetura.md`](./frontend-arquitetur
 | Migrations | 31 |
 | Jobs / Events / Listeners | 2 / 8 / 7 |
 | Comandos Artisan customizados | 4 (2 agendados) |
-| Testes (Pest) | 133 casos declarados (151 execuções) |
+| Testes (Pest) | 153 (139 passam em 2026-10-01; 14 desatualizados) |
 | Páginas Next.js (`page.tsx`) | 65 (40 Admin, 25 Private) |
 | Route handlers do BFF | 18 (16 de auth + 2 de proxy) |
 | Código PHP em `backend/app` | ~25 mil linhas |
