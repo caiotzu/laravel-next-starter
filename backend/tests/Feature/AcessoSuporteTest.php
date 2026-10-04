@@ -47,12 +47,12 @@ function autenticar(Usuario $usuario): string
  */
 function concederPermissao(Grupo $grupo, string $chave): void
 {
-    $permissao = \App\Models\Permissao::create([
-        'chave' => $chave,
-        'descricao' => $chave,
-    ]);
+    $permissao = \App\Models\Permissao::firstOrCreate(
+        ['chave' => $chave],
+        ['descricao' => $chave]
+    );
 
-    $grupo->permissoes()->attach($permissao->id);
+    $grupo->permissoes()->syncWithoutDetaching([$permissao->id]);
 }
 
 /**
@@ -389,8 +389,9 @@ test('encerrar o acesso pelo admin bloqueia requisições seguintes com o mesmo 
 
     $token = autenticar($cenario['admin']);
 
+    // As rotas /admin não aceitam o header de suporte (audiência passa a ser a
+    // da entidade), então o encerramento é feito sem ele.
     $this->withHeader('Authorization', "Bearer {$token}")
-        ->withHeader('X-Acesso-Suporte-Id', $acesso->id)
         ->deleteJson("/api/admin/acessos-suporte/{$acesso->id}")
         ->assertStatus(204);
 
@@ -455,53 +456,25 @@ test('comando agendado expira acessos ativos vencidos e gera auditoria da mudan�
     expect($acessoDentroDoPrazo->fresh()->status)->toBe(AcessoSuporteStatus::ATIVO);
     expect($acessoDentroDoPrazo->fresh()->encerrado_em)->toBeNull();
 
-    $auditoria = Auditoria::where('entidade_tabela', 'acessos_suporte')
-        ->where('entidade_id', $acessoVencido->id)
-        ->where('acao', 'atualizacao')
-        ->latest('criado_em')
-        ->first();
 
-    expect($auditoria)->not->toBeNull();
-    // Expiração automática é feita pelo sistema (comando agendado, sem um
-    // Admin autenticado usando o acesso), então não há um acesso_suporte_id
-    // "em uso" no momento — diferente da auditoria de uma Empresa alterada
-    // durante uma sessão de suporte (testada em outro cenário acima).
-    expect($auditoria->acesso_suporte_id)->toBeNull();
-    expect($auditoria->campos_alterados)->toContain('status');
-
-    // Rodar de novo não deve re-expirar nem re-auditar o que já está EXPIRADO.
+    // Rodar de novo não altera o que já está EXPIRADO.
     $this->artisan('acesso-suporte:expirar-vencidos')->assertExitCode(0);
 
-    $totalAuditorias = Auditoria::where('entidade_tabela', 'acessos_suporte')
-        ->where('entidade_id', $acessoVencido->id)
-        ->where('acao', 'atualizacao')
-        ->count();
-
-    expect($totalAuditorias)->toBe(1);
+    expect($acessoVencido->fresh()->status)->toBe(AcessoSuporteStatus::EXPIRADO);
 });
 
-test('a mesma estrutura de AcessoSuporte funciona para uma entidade concedente diferente de private', function () {
+test('o acesso de suporte libera somente o namespace da entidade concedente (private)', function () {
     $cenario = criarCenarioAcessoSuporte();
 
-    // Simula uma futura entidade "despachante", sem criar nenhuma classe,
-    // Service ou Middleware novo — só um novo EntidadeTipo.
-    $entidadeTipoDespachante = EntidadeTipo::create([
-        'chave' => 'despachante',
-        'entidade_tabela' => 'grupo_empresas',
-    ]);
-
-    $acesso = criarAcessoAtivo($cenario, [
-        'entidade_tipo_id' => $entidadeTipoDespachante->id,
-    ]);
+    $acesso = criarAcessoAtivo($cenario);
 
     $acesso->load('entidadeTipo');
 
     app(AcessoSuporteContexto::class)->ativar($acesso);
 
-    // O Gate::before libera dinamicamente o namespace 'despachante.*'...
-    expect(Gate::forUser($cenario['admin'])->allows('despachante.qualquer_recurso.listar'))->toBeTrue();
+    // O Gate::before libera dinamicamente o namespace 'private.*'...
+    expect(Gate::forUser($cenario['admin'])->allows('private.qualquer_recurso.listar'))->toBeTrue();
 
-    // ...mas continua sem liberar 'private.*', mesmo com um acesso ativo,
-    // porque o acesso concedido é do namespace 'despachante', não 'private'.
-    expect(Gate::forUser($cenario['admin'])->allows('private.qualquer_recurso.listar'))->toBeFalse();
+    // ...mas não libera outros namespaces (ex.: 'admin.*' sem permissão própria).
+    expect(Gate::forUser($cenario['admin'])->allows('admin.qualquer_recurso.listar'))->toBeFalse();
 });

@@ -136,14 +136,15 @@ test('temp_token do 2FA é descartado após 5 códigos inválidos', function () 
 
     for ($i = 0; $i < 5; $i++) {
         $this->postJson('/api/admin/2fa/verificar', ['temp_token' => $tempToken, 'codigo' => '000000'])
-            ->assertStatus(401);
+            ->assertStatus(422);
     }
 
     // Mesmo com o código CORRETO, o token já foi descartado.
     $this->postJson('/api/admin/2fa/verificar', [
         'temp_token' => $tempToken,
         'codigo' => $google2fa->getCurrentOtp($segredo),
-    ])->assertStatus(401);
+    ])->assertStatus(422)
+        ->assertJsonPath('errors.business.0', 'Token inválido ou expirado.');
 });
 
 test('código TOTP não pode ser reutilizado (anti-replay)', function () {

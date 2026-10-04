@@ -245,7 +245,8 @@ test('empresa A não consegue atualizar um usuário da empresa B mesmo enviando 
             'email' => 'colaborador.b.upd@exemplo.com',
         ])
         ->assertStatus(400)
-        ->assertJsonPath('errors.business.0', 'Usuário não encontrado.');
+        // O Service valida o grupo (que pertence à empresa B) antes de buscar o usuário.
+        ->assertJsonPath('errors.business.0', 'O grupo selecionado não é válido para este cadastro.');
 
     expect($usuarioB->fresh()->nome)->toBe('Colaborador B');
 });

@@ -200,7 +200,7 @@ foreach ([EntidadeTipo::ADMIN->value, EntidadeTipo::PRIVATE->value] as $entidade
         ])->assertStatus(204);
 
         $usuario->refresh();
-        expect($usuario->status)->toBe(UsuarioStatus::ATIVO->value);
+        expect($usuario->status)->toBe(UsuarioStatus::ATIVO);
         expect(\Illuminate\Support\Facades\Hash::check('NovaSenha@456', $usuario->senha))->toBeTrue();
 
         $this->postJson("{$c['base']}/login", [
@@ -249,7 +249,7 @@ foreach ([EntidadeTipo::ADMIN->value, EntidadeTipo::PRIVATE->value] as $entidade
         ])->assertStatus(422)->assertJsonValidationErrors(['senha_confirma']);
 
         // O usuário continua convidado, pois nenhuma das tentativas foi válida.
-        expect($usuario->fresh()->status)->toBe(UsuarioStatus::CONVIDADO->value);
+        expect($usuario->fresh()->status)->toBe(UsuarioStatus::CONVIDADO);
     });
 
     test("[{$entidade}] primeiro acesso: o mesmo token não pode ser usado duas vezes", function () use ($entidade) {

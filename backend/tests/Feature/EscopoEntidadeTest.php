@@ -312,9 +312,8 @@ test('admin fora de modo de suporte enxerga empresas de A e de B', function () {
 
 // #region Admin em modo de suporte — restrito à entidade impersonada (mesmo em rota /admin)
 
-test('admin em modo de suporte só enxerga a empresa da entidade impersonada, mesmo pela rota /admin', function () {
+test('admin em modo de suporte só enxerga a empresa da entidade impersonada (rota do Private)', function () {
     $cenario = criarCenarioEscopoEntidade();
-    concederPermissoesEscopo($cenario['grupoAdmin'], ['admin.empresa.listar']);
 
     $acesso = criarAcessoAtivoEscopo($cenario);
 
@@ -322,7 +321,7 @@ test('admin em modo de suporte só enxerga a empresa da entidade impersonada, me
 
     $response = $this->withHeader('Authorization', "Bearer {$token}")
         ->withHeader('X-Acesso-Suporte-Id', $acesso->id)
-        ->getJson('/api/admin/empresas');
+        ->getJson('/api/empresas');
 
     $response->assertStatus(200);
 
@@ -332,9 +331,9 @@ test('admin em modo de suporte só enxerga a empresa da entidade impersonada, me
     expect($nomes)->not->toContain('Empresa Escopo b');
 });
 
-test('admin em modo de suporte consegue atualizar apenas a empresa impersonada, pela rota /admin', function () {
+test('com o acesso de suporte ativo, as rotas /admin são recusadas (a audiência passa a ser a da entidade)', function () {
     $cenario = criarCenarioEscopoEntidade();
-    concederPermissoesEscopo($cenario['grupoAdmin'], ['admin.empresa.atualizar']);
+    concederPermissoesEscopo($cenario['grupoAdmin'], ['admin.empresa.listar']);
 
     $acesso = criarAcessoAtivoEscopo($cenario);
 
@@ -342,8 +341,20 @@ test('admin em modo de suporte consegue atualizar apenas a empresa impersonada, 
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->withHeader('X-Acesso-Suporte-Id', $acesso->id)
-        ->putJson("/api/admin/empresas/{$cenario['clienteA']['empresa']->id}", [
-            'cnpj' => '11111111000101',
+        ->getJson('/api/admin/empresas')
+        ->assertStatus(403);
+});
+
+test('admin em modo de suporte consegue atualizar apenas a empresa impersonada (rota do Private)', function () {
+    $cenario = criarCenarioEscopoEntidade();
+
+    $acesso = criarAcessoAtivoEscopo($cenario);
+
+    $token = autenticarEscopo($cenario['admin']);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->withHeader('X-Acesso-Suporte-Id', $acesso->id)
+        ->putJson("/api/empresas/{$cenario['clienteA']['empresa']->id}", [
             'nome_fantasia' => 'Empresa A via suporte',
             'razao_social' => 'Empresa A via suporte LTDA',
             'uf' => 'RJ',
@@ -352,8 +363,7 @@ test('admin em modo de suporte consegue atualizar apenas a empresa impersonada, 
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->withHeader('X-Acesso-Suporte-Id', $acesso->id)
-        ->putJson("/api/admin/empresas/{$cenario['clienteB']['empresa']->id}", [
-            'cnpj' => '22222222000102',
+        ->putJson("/api/empresas/{$cenario['clienteB']['empresa']->id}", [
             'nome_fantasia' => 'Invasão via suporte',
             'razao_social' => 'Invasão via suporte LTDA',
             'uf' => 'RJ',
@@ -361,9 +371,8 @@ test('admin em modo de suporte consegue atualizar apenas a empresa impersonada, 
         ->assertStatus(400);
 });
 
-test('admin em modo de suporte não consegue alterar campos administrativos (cnpj/status) da empresa impersonada', function () {
+test('admin em modo de suporte não altera campos administrativos (cnpj/status) da empresa impersonada', function () {
     $cenario = criarCenarioEscopoEntidade();
-    concederPermissoesEscopo($cenario['grupoAdmin'], ['admin.empresa.atualizar']);
 
     $acesso = criarAcessoAtivoEscopo($cenario);
 
@@ -373,11 +382,7 @@ test('admin em modo de suporte não consegue alterar campos administrativos (cnp
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->withHeader('X-Acesso-Suporte-Id', $acesso->id)
-        ->putJson("/api/admin/empresas/{$cenario['clienteA']['empresa']->id}", [
-            // cnpj é obrigatório na validação da rota Admin, mas não deve
-            // ser persistido fora de um contexto irrestrito — ver
-            // EmpresaAtualizacaoDTO::paraPersistencia() e
-            // EmpresaService::atualizar().
+        ->putJson("/api/empresas/{$cenario['clienteA']['empresa']->id}", [
             'cnpj' => '99999999000199',
             'status' => 'inativo',
             'nome_fantasia' => 'Empresa A via suporte (campos administrativos)',
@@ -388,10 +393,7 @@ test('admin em modo de suporte não consegue alterar campos administrativos (cnp
 
     $this->assertDatabaseHas('empresas', [
         'id' => $cenario['clienteA']['empresa']->id,
-        // O campo cadastral enviado FOI persistido...
         'nome_fantasia' => 'Empresa A via suporte (campos administrativos)',
-        // ...mas cnpj e status, que só um contexto irrestrito pode
-        // alterar, permaneceram como estavam.
         'cnpj' => $cnpjOriginal,
         'status' => 'pendente',
     ]);
@@ -426,7 +428,6 @@ test('admin fora de modo de suporte consegue alterar campos administrativos (cnp
 
 test('admin em modo de suporte cria Grupo no contexto da entidade impersonada, não no do Admin real', function () {
     $cenario = criarCenarioEscopoEntidade();
-    concederPermissoesEscopo($cenario['grupoAdmin'], ['admin.grupo.cadastrar']);
 
     $acesso = criarAcessoAtivoEscopo($cenario);
 
@@ -434,7 +435,7 @@ test('admin em modo de suporte cria Grupo no contexto da entidade impersonada, n
 
     $response = $this->withHeader('Authorization', "Bearer {$token}")
         ->withHeader('X-Acesso-Suporte-Id', $acesso->id)
-        ->postJson('/api/admin/grupos', [
+        ->postJson('/api/grupos', [
             'descricao' => 'Grupo criado em suporte',
         ]);
 

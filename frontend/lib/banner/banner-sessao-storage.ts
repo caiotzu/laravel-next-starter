@@ -1,77 +1,56 @@
 /**
- * Ponto único de leitura/escrita de "o usuário já fechou o Banner nesta
- * sessão de login" — usado pelos dois BannerProvider (Admin e Private).
+ * Controle de "o Banner deve ser exibido agora?" — usado pelos dois
+ * BannerProvider (Admin e Private).
  *
- * Problema que isto resolve (ver item 1 do pedido): guardar esse
- * "fechado" só em estado React (useState/useRef) funciona para navegação
- * dentro do app, mas é perdido a cada reload/remontagem — fazendo o
- * Banner reaparecer mesmo sem um novo login. Guardar com uma chave FIXA
- * resolveria o reload, mas erraria no sentido contrário: um logout
- * seguido de um novo login manteria a marca de "fechado" antiga,
- * escondendo o Banner quando ele deveria voltar a aparecer.
+ * Regra: o Banner aparece EXCLUSIVAMENTE logo após um login concluído
+ * (inclusive após a etapa de 2FA) e em nenhum outro momento — nem ao trocar
+ * de menu, nem ao navegar, nem ao recarregar a página.
  *
- * A solução, sem depender do token (que continua 100% httpOnly, como
- * deve): a própria tela de login (Admin/Private) chama `marcarNovoLogin`
- * no exato momento em que o login é concluído com sucesso — inclusive
- * após a etapa de 2FA, quando existir (ver app/admin/page.tsx e
- * app/(private)/page.tsx). Isso grava em localStorage um marcador único,
- * sem nenhuma relação com o token/sessão do backend — é só um "carimbo"
- * de UI. Guardamos também, separadamente, o marcador vigente no momento
- * em que o usuário fechou o Banner, e comparamos os dois:
- *  - mesmo marcador (reload, remontagem, navegação, re-render, nova aba
- *    da mesma sessão) → continua fechado;
- *  - marcador diferente (um login novo aconteceu) → o Banner pode
- *    aparecer de novo, seguindo as regras de negócio já existentes.
- *
- * Usa localStorage (não sessionStorage) de propósito: precisa sobreviver
- * a reload E ser o MESMO em outra aba da mesma sessão (abrir uma nova
- * aba não deveria fazer o Banner reaparecer). Só uma chamada real a
- * `marcarNovoLogin` — ou seja, um login de verdade — troca o valor.
+ * Como funciona: a tela de login chama `marcarNovoLogin` no instante em que o
+ * login se completa. Isso "arma" um sinal de uso único (sessionStorage, por
+ * aba — o redirecionamento do login acontece na mesma aba). O BannerProvider
+ * lê o sinal, busca os banners e o CONSOME na mesma hora
+ * (`consumirBannerPendente`). Sem sinal armado, nada é buscado nem exibido.
+ * Não depende de rota, de token nem de estado em memória.
  */
 
-function chaveMarcador(prefixo: string): string {
-  return `banner_sessao_login_${prefixo}`;
+function chavePendente(prefixo: string): string {
+  return `banner_pendente_${prefixo}`;
 }
 
-function chaveFechado(prefixo: string): string {
-  return `banner_fechado_para_sessao_${prefixo}`;
+function storage(): Storage | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
 }
 
-/**
- * Chamado pela tela de login (ver app/admin/page.tsx e
- * app/(private)/page.tsx) no momento em que o login é concluído com
- * sucesso — tanto no fluxo sem 2FA quanto imediatamente após validar o
- * código do 2FA.
- *
- * @param prefixo "admin" ou "private".
- */
+/** Chamado pela tela de login quando o login é concluído com sucesso. */
 export function marcarNovoLogin(prefixo: string): void {
-  if (typeof window === "undefined") return;
-
-  const marcador = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  window.localStorage.setItem(chaveMarcador(prefixo), marcador);
+  try {
+    storage()?.setItem(chavePendente(prefixo), "1");
+  } catch {
+    // Storage indisponível: o Banner simplesmente não é exibido.
+  }
 }
 
-export function bannerFoiFechadoNestaSessao(prefixo: string): boolean {
-  if (typeof window === "undefined") return false;
-
-  const marcadorAtual = window.localStorage.getItem(chaveMarcador(prefixo));
-
-  // Sem marcador (ex.: cache do navegador foi limpo, ou é a primeira
-  // verificação antes de qualquer login passar por esta tela nesta
-  // origem) não há o que comparar — trata como "não fechado" em vez de
-  // assumir qualquer coisa.
-  if (!marcadorAtual) return false;
-
-  return window.localStorage.getItem(chaveFechado(prefixo)) === marcadorAtual;
+/** Há um login recém-concluído cujo Banner ainda não foi tratado? */
+export function existeBannerPendente(prefixo: string): boolean {
+  try {
+    return storage()?.getItem(chavePendente(prefixo)) === "1";
+  } catch {
+    return false;
+  }
 }
 
-export function marcarBannerFechadoNestaSessao(prefixo: string): void {
-  if (typeof window === "undefined") return;
-
-  const marcadorAtual = window.localStorage.getItem(chaveMarcador(prefixo));
-
-  if (!marcadorAtual) return;
-
-  window.localStorage.setItem(chaveFechado(prefixo), marcadorAtual);
+/** Gasta o sinal: a partir daqui o Banner não volta até o próximo login. */
+export function consumirBannerPendente(prefixo: string): void {
+  try {
+    storage()?.removeItem(chavePendente(prefixo));
+  } catch {
+    // ignora
+  }
 }

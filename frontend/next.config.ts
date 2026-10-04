@@ -26,7 +26,38 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
+/**
+ * Origem do backend que serve os arquivos públicos (`/storage/...`: avatar e
+ * imagens de banner). As URLs chegam ao navegador como caminho relativo
+ * (ver lib/media-url.ts) e este rewrite as encaminha ao backend pelo servidor
+ * Next, o que funciona igual em `next dev` e depois do `next build`.
+ * `BACKEND_STORAGE_URL` é opcional; por padrão usa a origem de `BACKEND_URL`.
+ */
+function origemDoStorage(): string | null {
+  const bruto = process.env.BACKEND_STORAGE_URL || process.env.BACKEND_URL;
+
+  if (!bruto) return null;
+
+  try {
+    return new URL(bruto).origin;
+  } catch {
+    return null;
+  }
+}
+
 const nextConfig: NextConfig = {
+  async rewrites() {
+    const origem = origemDoStorage();
+
+    if (!origem) return [];
+
+    return [
+      {
+        source: "/storage/:path*",
+        destination: `${origem}/storage/:path*`,
+      },
+    ];
+  },
   async headers() {
     return [
       {

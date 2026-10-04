@@ -1,89 +1,96 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { usePathname } from "next/navigation";
 
+import { useQueryClient } from "@tanstack/react-query";
+
 import { useBannersDisponiveis } from "@/domains/admin/banner/hooks/useBannersDisponiveis";
-import { bannerFoiFechadoNestaSessao, marcarBannerFechadoNestaSessao } from "@/lib/banner/banner-sessao-storage";
+import { BannerDisponivel as Banner } from "@/domains/admin/banner/types/banner.disponivel";
+import {
+  consumirBannerPendente,
+  existeBannerPendente,
+} from "@/lib/banner/banner-sessao-storage";
 import { protectedRoutes } from "@/routes/routes";
 
 import { BannerCarouselModal } from "@/features/admin/banner/components/BannerCarouselModal";
 
 // Ver banner-sessao-storage.ts e app/admin/page.tsx (marcarNovoLogin).
 const PREFIXO_SESSAO = "admin";
+const COOKIE = "admin_access_token";
+const QUERY_KEY = ["banners-admin-disponiveis"];
 
-/**
- * Espelha `app/(private)/providers/banner-provider.tsx` — mesma lógica,
- * trocando apenas o cookie/rota de referência para o Admin (ver item 8 do
- * pedido: antes não existia NENHUM provider/consulta de banners para o
- * Admin, então um banner direcionado ao público admin nunca era buscado,
- * mesmo estando corretamente configurado).
- *
- * "Fechado" é resolvido a partir de `banner-sessao-storage.ts`
- * (compartilhado com o Private) — reload, remontagem, navegação e
- * re-render nunca fazem o Banner reaparecer; só um login novo faz (ver
- * item 1 do pedido).
- */
-function exigePermissoesAdmin(pathname: string): boolean {
+/** Telas públicas (login/recuperação de senha) desta área. */
+export function ehRotaPublica(pathname: string): boolean {
   return protectedRoutes.some(
     (route) =>
-      route.cookieName === "admin_access_token" &&
-      route.protected &&
+      route.cookieName === COOKIE &&
+      route.isLoginRoute === true &&
       route.regex?.test(pathname)
   );
 }
 
 /**
- * Monta a consulta de banners disponíveis UMA ÚNICA VEZ por sessão de
- * navegação no layout persistente do Admin e exibe o carousel/modal
- * quando há algo para mostrar — mesmo comportamento do BannerProvider do
- * Private (ver item 8 do pedido: "o comportamento deve ser consistente
- * com os demais públicos existentes").
+ * O Banner é exibido SOMENTE logo após o login, uma única vez.
+ *
+ * O login "arma" um sinal de uso único (ver banner-sessao-storage.ts). Ao
+ * entrar numa tela autenticada com o sinal armado, o provider busca os
+ * banners elegíveis, mostra o carousel (se houver algo) e consome o sinal.
+ * Trocar de menu, navegar, recarregar ou fechar/reabrir telas nunca arma o
+ * sinal de novo — só um novo login faz isso.
  */
 export function BannerProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const habilitado = exigePermissoesAdmin(pathname);
+  const queryClient = useQueryClient();
 
-  const { data: banners = [] } = useBannersDisponiveis({ enabled: habilitado });
-
-  const [fechado, setFechado] = useState(() =>
-    bannerFoiFechadoNestaSessao(PREFIXO_SESSAO)
-  );
+  const [pendente, setPendente] = useState(false);
+  const [banners, setBanners] = useState<Banner[]>([]);
   const [visivel, setVisivel] = useState(false);
 
-  const eraProtegidaAnteriormente = useRef(habilitado);
-
+  // Detecta o login recém-concluído (somente em telas autenticadas).
   useEffect(() => {
-    const entrouAgoraEmRotaProtegida = habilitado && !eraProtegidaAnteriormente.current;
+    if (pendente || ehRotaPublica(pathname)) return;
 
-    if (entrouAgoraEmRotaProtegida) {
-      setFechado(bannerFoiFechadoNestaSessao(PREFIXO_SESSAO));
+    if (existeBannerPendente(PREFIXO_SESSAO)) {
+      // Garante dados novos do login atual, nunca um cache de login anterior.
+      queryClient.removeQueries({ queryKey: QUERY_KEY });
+      setPendente(true);
     }
+  }, [pathname, pendente, queryClient]);
 
-    eraProtegidaAnteriormente.current = habilitado;
-  }, [habilitado]);
+  const { data, isSuccess, isError } = useBannersDisponiveis({ enabled: pendente });
 
+  // Resolve a consulta UMA vez e consome o sinal.
   useEffect(() => {
-    if (banners.length > 0 && !fechado) {
-      setVisivel(true);
+    if (!pendente) return;
+
+    if (isSuccess) {
+      consumirBannerPendente(PREFIXO_SESSAO);
+      setPendente(false);
+
+      if (data && data.length > 0) {
+        setBanners(data);
+        setVisivel(true);
+      }
+
+      return;
     }
 
-    if (banners.length === 0) {
-      setVisivel(false);
+    if (isError) {
+      consumirBannerPendente(PREFIXO_SESSAO);
+      setPendente(false);
     }
-  }, [banners, fechado]);
-
-  function fechar() {
-    setVisivel(false);
-    marcarBannerFechadoNestaSessao(PREFIXO_SESSAO);
-    setFechado(true);
-  }
+  }, [pendente, isSuccess, isError, data]);
 
   return (
     <>
       {children}
-      <BannerCarouselModal banners={banners} open={visivel} onClose={fechar} />
+      <BannerCarouselModal
+        banners={banners}
+        open={visivel}
+        onClose={() => setVisivel(false)}
+      />
     </>
   );
 }

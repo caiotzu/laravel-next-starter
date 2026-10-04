@@ -1,99 +1,96 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { usePathname } from "next/navigation";
 
+import { useQueryClient } from "@tanstack/react-query";
+
 import { useBannersDisponiveis } from "@/domains/private/banner/hooks/useBannersDisponiveis";
-import { bannerFoiFechadoNestaSessao, marcarBannerFechadoNestaSessao } from "@/lib/banner/banner-sessao-storage";
+import { Banner } from "@/domains/private/banner/types/banner.model";
+import {
+  consumirBannerPendente,
+  existeBannerPendente,
+} from "@/lib/banner/banner-sessao-storage";
 import { protectedRoutes } from "@/routes/routes";
 
 import { BannerCarouselModal } from "@/features/private/banner/components/BannerCarouselModal";
 
 // Ver banner-sessao-storage.ts e app/(private)/page.tsx (marcarNovoLogin).
 const PREFIXO_SESSAO = "private";
+const COOKIE = "private_access_token";
+const QUERY_KEY = ["banners-private-disponiveis"];
 
-/**
- * Mesmo cuidado do MensagemContadorProvider/PrivatePermissionProvider: só
- * habilita a busca em rotas realmente protegidas do Private, para nunca
- * disparar a consulta de banners disponíveis em telas públicas (login,
- * recuperação de senha etc) — ver item 10 do pedido original (nenhuma
- * requisição desnecessária).
- */
-function exigePermissoesPrivate(pathname: string): boolean {
+/** Telas públicas (login/recuperação de senha) desta área. */
+export function ehRotaPublica(pathname: string): boolean {
   return protectedRoutes.some(
     (route) =>
-      route.cookieName === "private_access_token" &&
-      route.protected &&
+      route.cookieName === COOKIE &&
+      route.isLoginRoute === true &&
       route.regex?.test(pathname)
   );
 }
 
 /**
- * Monta a consulta de banners disponíveis UMA ÚNICA VEZ por sessão de
- * navegação no layout persistente do Private (mesmo padrão do
- * MensagemContadorProvider) e exibe o carousel/modal quando há algo para
- * mostrar.
+ * O Banner é exibido SOMENTE logo após o login, uma única vez.
  *
- * "Fechado" é resolvido a partir de `banner-sessao-storage.ts` (não de
- * um estado solto em memória) — é o que garante que reload, remontagem,
- * navegação e re-render NUNCA façam o Banner reaparecer, e que só um
- * login novo o faça (ver item 1 do pedido original).
- *
- * IMPORTANTE: `app/(private)/layout.tsx` é o layout raiz de todo o app
- * (`<html>`/`<body>`), inclusive da tela de login — ele nunca desmonta
- * entre um logout e um login seguinte na mesma aba. Por isso o efeito
- * abaixo REAVALIA (não apenas "esquece") o estado de fechado sempre que
- * a navegação SAI de uma rota protegida (login/logout) e volta a ENTRAR
- * numa rota protegida (login concluído) — a fronteira de uma nova
- * sessão é exatamente onde a tela de login já terá chamado
- * `marcarNovoLogin` (ver banner-sessao-storage.ts).
+ * O login "arma" um sinal de uso único (ver banner-sessao-storage.ts). Ao
+ * entrar numa tela autenticada com o sinal armado, o provider busca os
+ * banners elegíveis, mostra o carousel (se houver algo) e consome o sinal.
+ * Trocar de menu, navegar, recarregar ou fechar/reabrir telas nunca arma o
+ * sinal de novo — só um novo login faz isso.
  */
 export function BannerProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const habilitado = exigePermissoesPrivate(pathname);
+  const queryClient = useQueryClient();
 
-  const { data: banners = [] } = useBannersDisponiveis({ enabled: habilitado });
-
-  const [fechado, setFechado] = useState(() =>
-    bannerFoiFechadoNestaSessao(PREFIXO_SESSAO)
-  );
+  const [pendente, setPendente] = useState(false);
+  const [banners, setBanners] = useState<Banner[]>([]);
   const [visivel, setVisivel] = useState(false);
 
-  const eraProtegidaAnteriormente = useRef(habilitado);
-
+  // Detecta o login recém-concluído (somente em telas autenticadas).
   useEffect(() => {
-    const entrouAgoraEmRotaProtegida = habilitado && !eraProtegidaAnteriormente.current;
+    if (pendente || ehRotaPublica(pathname)) return;
 
-    if (entrouAgoraEmRotaProtegida) {
-      // Fronteira de uma possível nova sessão (login concluído) —
-      // reavalia contra o marcador atual em vez de assumir que mudou.
-      setFechado(bannerFoiFechadoNestaSessao(PREFIXO_SESSAO));
+    if (existeBannerPendente(PREFIXO_SESSAO)) {
+      // Garante dados novos do login atual, nunca um cache de login anterior.
+      queryClient.removeQueries({ queryKey: QUERY_KEY });
+      setPendente(true);
     }
+  }, [pathname, pendente, queryClient]);
 
-    eraProtegidaAnteriormente.current = habilitado;
-  }, [habilitado]);
+  const { data, isSuccess, isError } = useBannersDisponiveis({ enabled: pendente });
 
+  // Resolve a consulta UMA vez e consome o sinal.
   useEffect(() => {
-    if (banners.length > 0 && !fechado) {
-      setVisivel(true);
+    if (!pendente) return;
+
+    if (isSuccess) {
+      consumirBannerPendente(PREFIXO_SESSAO);
+      setPendente(false);
+
+      if (data && data.length > 0) {
+        setBanners(data);
+        setVisivel(true);
+      }
+
+      return;
     }
 
-    if (banners.length === 0) {
-      setVisivel(false);
+    if (isError) {
+      consumirBannerPendente(PREFIXO_SESSAO);
+      setPendente(false);
     }
-  }, [banners, fechado]);
-
-  function fechar() {
-    setVisivel(false);
-    marcarBannerFechadoNestaSessao(PREFIXO_SESSAO);
-    setFechado(true);
-  }
+  }, [pendente, isSuccess, isError, data]);
 
   return (
     <>
       {children}
-      <BannerCarouselModal banners={banners} open={visivel} onClose={fechar} />
+      <BannerCarouselModal
+        banners={banners}
+        open={visivel}
+        onClose={() => setVisivel(false)}
+      />
     </>
   );
 }

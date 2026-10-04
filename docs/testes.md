@@ -65,3 +65,41 @@ Não foi identificado no projeto nenhum framework ou script de testes automatiza
 ## CI/CD e verificação de dependências
 
 Não foi identificado pipeline de CI/CD (não existe `.github/workflows` nem equivalente) nem passo automatizado de `composer audit` / `npm audit`. A execução dos testes e a auditoria de dependências dependem, hoje, de execução manual.
+
+
+---
+
+## Atualização: testes unitários e frontend
+
+### Backend — `backend/tests/Unit` (Pest)
+
+| Arquivo | Foco |
+|---|---|
+| `EnumsTest.php` | Contrato de todos os enums de `app/Enums` (valores únicos, `from`/`tryFrom`, `label()`), `ChamadoStatus`, lookups, UF |
+| `HtmlSanitizerTest.php` | Tags permitidas/descartadas, atributos, esquemas de link perigosos, UTF-8 |
+| `HelpersTest.php` | `formatar_cpf_cnpj` (CPF, CNPJ numérico e alfanumérico) |
+| `BusinessExceptionTest.php` | Status e código padrão/customizado |
+| `DtoTest.php` | `PaginationDTO`, filtros, DTOs de Banner e `EmpresaAtualizacaoDTO` (restrito × irrestrito) |
+| `ModelsTest.php` | URL de avatar/imagem de banner, casts, escopo `disponivelAgora` |
+| `ContextosTest.php` | `AuditoriaContexto` |
+
+Os 14 testes de *feature* que falhavam foram ajustados para refletir o comportamento atual do código (enum de status, rotas `/admin` recusando o header de suporte, 422 no 2FA etc.). Nenhuma regra de negócio foi alterada.
+
+```bash
+cd backend && ./vendor/bin/pest        # 252 testes
+```
+
+### Frontend — Vitest + Testing Library (`frontend/tests`)
+
+```bash
+cd frontend
+npm test               # roda uma vez (109 testes)
+npm run test:watch
+npm run test:coverage
+```
+
+Cobre `lib/*` (media-url, client-ip, utils, proxy-guard, acesso-suporte, banner), proxies axios, `proxy.ts`/rotas, validações, mappers e serviços de banner/perfil, constantes e componentes (perfil e carousel de banner), além do fluxo do `BannerProvider`.
+
+### Imagens (avatar e banner)
+
+O frontend normaliza URLs `/storage/...` para caminho relativo (`lib/media-url.ts`) e o `next.config.ts` faz o *rewrite* `/storage/*` → backend (origem de `BACKEND_URL`, ou `BACKEND_STORAGE_URL` se definido). O backend precisa de `php artisan storage:link`.
