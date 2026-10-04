@@ -121,7 +121,7 @@
 
 <script src="{{ l5_swagger_asset($documentation, 'swagger-ui-bundle.js') }}"></script>
 <script src="{{ l5_swagger_asset($documentation, 'swagger-ui-standalone-preset.js') }}"></script>
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     window.onload = function() {
         const urls = [];
 

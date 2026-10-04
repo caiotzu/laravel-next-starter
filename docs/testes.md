@@ -103,3 +103,12 @@ Cobre `lib/*` (media-url, client-ip, utils, proxy-guard, acesso-suporte, banner)
 ### Imagens (avatar e banner)
 
 O frontend normaliza URLs `/storage/...` para caminho relativo (`lib/media-url.ts`) e o `next.config.ts` faz o *rewrite* `/storage/*` → backend (origem de `BACKEND_URL`, ou `BACKEND_STORAGE_URL` se definido). O backend precisa de `php artisan storage:link`.
+
+
+### Swagger (regressão)
+
+`backend/tests/Feature/SwaggerTest.php` garante que a tela do Swagger UI recebe uma CSP própria (scripts com *nonce*, sem `unsafe-inline` para JS) e que o JSON da documentação e o restante da API mantêm `default-src 'none'`. Sem isso, o `SecurityHeadersMiddleware` bloqueava CSS/JS da página e ela abria em branco.
+
+### Versões de teste do frontend
+
+Vite 8 + `@vitejs/plugin-react` 6 + Vitest 5 (versões alinhadas) e `jsdom` 30. Node mínimo: **22.22.2** (campo `engines` do `package.json`).

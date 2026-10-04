@@ -456,11 +456,11 @@
                                                 "properties": {
                                                     "valor": {
                                                         "type": "string",
+                                                        "example": "T",
                                                         "enum": [
                                                             "T",
                                                             "E"
-                                                        ],
-                                                        "example": "T"
+                                                        ]
                                                     },
                                                     "descricao": {
                                                         "type": "string",
@@ -511,14 +511,14 @@
                                                 "properties": {
                                                     "valor": {
                                                         "type": "string",
+                                                        "example": "COMERCIAL",
                                                         "enum": [
                                                             "COMERCIAL",
                                                             "FISCAL",
                                                             "CORRESPONDENCIA",
                                                             "COBRANCA",
                                                             "ENTREGA"
-                                                        ],
-                                                        "example": "COMERCIAL"
+                                                        ]
                                                     },
                                                     "descricao": {
                                                         "type": "string",
@@ -2721,8 +2721,8 @@
                                     },
                                     "complemento": {
                                         "type": "string",
-                                        "maxLength": 50,
-                                        "nullable": true
+                                        "nullable": true,
+                                        "maxLength": 50
                                     }
                                 },
                                 "type": "object"
@@ -2908,8 +2908,8 @@
                                     },
                                     "complemento": {
                                         "type": "string",
-                                        "maxLength": 50,
-                                        "nullable": true
+                                        "nullable": true,
+                                        "maxLength": 50
                                     }
                                 },
                                 "type": "object"
@@ -4189,12 +4189,12 @@
                                     },
                                     "status": {
                                         "type": "string",
+                                        "nullable": true,
                                         "enum": [
                                             "ativo",
                                             "inativo",
                                             "bloqueado"
-                                        ],
-                                        "nullable": true
+                                        ]
                                     }
                                 },
                                 "type": "object"
@@ -4441,13 +4441,13 @@
                     },
                     "encerrado_por": {
                         "type": "string",
+                        "nullable": true,
                         "enum": [
                             "cliente",
                             "admin",
                             "expiracao",
                             "sistema"
-                        ],
-                        "nullable": true
+                        ]
                     },
                     "ativo": {
                         "type": "boolean"
@@ -4509,13 +4509,13 @@
                     },
                     "encerrado_por": {
                         "type": "string",
+                        "nullable": true,
                         "enum": [
                             "cliente",
                             "admin",
                             "expiracao",
                             "sistema"
-                        ],
-                        "nullable": true
+                        ]
                     },
                     "ativo": {
                         "type": "boolean"
@@ -5637,8 +5637,8 @@
                     },
                     "complemento": {
                         "type": "string",
-                        "maxLength": 50,
-                        "nullable": true
+                        "nullable": true,
+                        "maxLength": 50
                     },
                     "created_at": {
                         "type": "string",
