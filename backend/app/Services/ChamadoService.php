@@ -4,8 +4,9 @@ namespace App\Services;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
+use App\Contracts\Storage\FileStorageInterface;
 
 use App\Models\Chamado;
 use App\Models\ChamadoMensagem;
@@ -19,6 +20,7 @@ use App\DTO\Chamado\ChamadoFiltroDTO;
 use App\DTO\Mensagem\MensagemCadastroDTO;
 use App\DTO\Mensagem\MensagemDirecionamentoDTO;
 
+use App\Enums\ArquivoVisibilidade;
 use App\Enums\ChamadoStatus;
 use App\Enums\ChamadoPrioridade;
 use App\Enums\ErrorCode;
@@ -36,6 +38,8 @@ use App\Exceptions\BusinessException;
 class ChamadoService
 {
     private const PERMISSAO_ATENDER = 'admin.chamado.atender';
+
+    public function __construct(private FileStorageInterface $arquivos) {}
 
     public function abrir(ChamadoAberturaDTO $dto): Chamado
     {
@@ -276,12 +280,12 @@ class ChamadoService
 
             $caminho = 'chamados/' . $chamado->id . '/' . Str::uuid() . '.' . $extensao;
 
-            // Disco privado: os anexos só saem por link assinado (Global\ChamadoAnexoController).
-            // O disco 'local' tem 'throw' => false (config/filesystems.php), então uma falha de
+            // Armazenamento privado: os anexos só saem por link assinado (Global\ChamadoAnexoController).
+            // Os discos têm 'throw' => false (config/filesystems.php), então uma falha de
             // gravação (permissão, disco cheio etc.) não lança exceção sozinha — o retorno de
             // put() precisa ser checado, senão o registro do anexo é criado apontando para um
             // arquivo que nunca existiu: ele aparece na conversa, mas o download sempre dá 404.
-            $gravado = Storage::disk('local')->put($caminho, $decodificado);
+            $gravado = $this->arquivos->put(ArquivoVisibilidade::PRIVADO, $caminho, $decodificado);
 
             if (! $gravado) {
                 throw new BusinessException(

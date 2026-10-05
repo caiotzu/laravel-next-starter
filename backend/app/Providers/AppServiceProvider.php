@@ -15,6 +15,7 @@ use App\Services\External\Email\MailtrapService;
 use App\Services\External\Email\AmazonSesService;
 
 use App\Contracts\Email\EmailProviderInterface;
+use App\Contracts\Storage\FileStorageInterface;
 
 use App\Auditoria\AuditoriaContexto;
 use App\AcessoSuporte\AcessoSuporteContexto;
@@ -45,6 +46,21 @@ class AppServiceProvider extends ServiceProvider
                 };
             }
         );
+
+        // Storage de arquivos: a escolha do provider fica só na configuração
+        // (config/api.php -> 'storage'); o código de negócio recebe FileStorageInterface.
+        $this->app->bind(FileStorageInterface::class, function ($app) {
+            $driver = (string) config('api.storage.driver');
+            $config = config("api.storage.drivers.{$driver}");
+
+            if (! is_array($config) || empty($config['adapter'])) {
+                throw new \InvalidArgumentException(
+                    "FILE_STORAGE_DRIVER '{$driver}' não é um storage de arquivos configurado (config/api.php)."
+                );
+            }
+
+            return $app->make($config['adapter'], ['discos' => $config['discos'] ?? []]);
+        });
     }
 
     /**

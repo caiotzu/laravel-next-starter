@@ -4,9 +4,10 @@ namespace App\Services;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+
+use App\Contracts\Storage\FileStorageInterface;
 
 use App\Models\Banner;
 use App\Models\BannerImagem;
@@ -20,6 +21,7 @@ use App\DTO\Banner\BannerImagemAtualizacaoDTO;
 use App\DTO\Common\PaginationDTO;
 
 use App\Enums\ErrorCode;
+use App\Enums\ArquivoVisibilidade;
 use App\Enums\BannerStatus;
 use App\Enums\BannerDirecionamentoTipo;
 use App\Enums\EntidadeTipo as EntidadeTipoChave;
@@ -28,6 +30,8 @@ use App\Exceptions\BusinessException;
 
 class BannerService
 {
+    public function __construct(private FileStorageInterface $arquivos) {}
+
     /**
      * Tipos de imagem aceitos. Mesma abordagem de segurança do restante do
      * projeto (ver ChamadoService::criarMensagem): o tipo é sempre inferido
@@ -303,7 +307,7 @@ class BannerService
         $extensao = self::MIMES_IMAGEM_PERMITIDOS[$mime];
         $caminho = 'banners/' . $banner->id . '/' . Str::uuid() . '.' . $extensao;
 
-        Storage::disk('public')->put($caminho, $decodificado);
+        $this->arquivos->put(ArquivoVisibilidade::PUBLICO, $caminho, $decodificado);
 
         return BannerImagem::create([
             'banner_id' => $banner->id,
@@ -351,7 +355,7 @@ class BannerService
         // Remove as que não vieram mais na lista.
         foreach ($imagensAtuais as $imagemAtual) {
             if (! in_array($imagemAtual->id, $idsRecebidos, true)) {
-                Storage::disk('public')->delete($imagemAtual->getRawOriginal('caminho'));
+                $this->arquivos->delete(ArquivoVisibilidade::PUBLICO, $imagemAtual->getRawOriginal('caminho'));
                 $imagemAtual->delete();
             }
         }

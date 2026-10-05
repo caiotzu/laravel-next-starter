@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Facades\Storage;
+use App\Contracts\Storage\FileStorageInterface;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -77,7 +77,7 @@ class Usuario extends Authenticatable implements JWTSubject
     {
         return Attribute::make(
             get: fn ($value) =>
-                $value ? url(Storage::url($value)) : null
+                $value ? url(app(FileStorageInterface::class)->url($value)) : null
         );
     }
 

@@ -5,9 +5,10 @@ namespace App\Services;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 
 use Tymon\JWTAuth\Facades\JWTAuth;
+
+use App\Contracts\Storage\FileStorageInterface;
 
 use App\Events\SenhaUsuarioAlterada;
 
@@ -19,13 +20,15 @@ use App\DTO\Perfil\PerfilAvatarBase64AtualizacaoDTO;
 
 use App\Enums\ErrorCode;
 use App\Enums\EntidadeTipo;
+use App\Enums\ArquivoVisibilidade;
 
 use App\Exceptions\BusinessException;
 
 class PerfilService {
     public function __construct(
         private TokenResetSenhaService $tokenResetSenhaService,
-        private UsuarioService $usuarioService
+        private UsuarioService $usuarioService,
+        private FileStorageInterface $arquivos
     ) {}
 
     /**
@@ -99,14 +102,17 @@ class PerfilService {
             default      => throw new \Exception('Formato inválido'),
         };
 
-        // Remove antigo
-        if ($usuario->avatar) {
-            Storage::disk('public')->delete($usuario->avatar);
+        // Remove antigo. O accessor `avatar` devolve a URL; o que o storage conhece é o
+        // caminho relativo gravado no banco.
+        $avatarAtual = $usuario->getRawOriginal('avatar');
+
+        if ($avatarAtual) {
+            $this->arquivos->delete(ArquivoVisibilidade::PUBLICO, $avatarAtual);
         }
 
         $path = 'avatars/' . Str::uuid() . '.' . $extension;
 
-        Storage::disk('public')->put($path, $decoded);
+        $this->arquivos->put(ArquivoVisibilidade::PUBLICO, $path, $decoded);
 
         $usuario->update([
             'avatar' => $path,

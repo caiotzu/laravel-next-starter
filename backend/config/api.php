@@ -21,4 +21,33 @@ return [
         // disco privado e só são entregues por link assinado e temporário.
         'anexo_url_expira_minutos' => env('CHAMADO_ANEXO_URL_EXPIRA_MINUTOS', 30),
     ],
+    /*
+     | Armazenamento de arquivos (avatar, imagens de banner, anexos de chamado).
+     |
+     | O código de negócio usa apenas App\Contracts\Storage\FileStorageInterface; aqui se
+     | escolhe QUEM atende o contrato (FILE_STORAGE_DRIVER) e, para os providers baseados no
+     | filesystem do Laravel, qual disco de config/filesystems.php guarda cada visibilidade:
+     |   - publico: servido por URL direta (avatar, banners);
+     |   - privado: só pela aplicação (anexos de chamado, por link assinado).
+     |
+     | Para um novo provider: crie uma classe que implemente FileStorageInterface, adicione uma
+     | entrada em 'drivers' com 'adapter' (e 'discos', se usar o filesystem do Laravel) e
+     | aponte FILE_STORAGE_DRIVER para ela. Ver docs/armazenamento-de-arquivos.md.
+     */
+    'storage' => [
+        'driver' => env('FILE_STORAGE_DRIVER', 'local'),
+
+        'drivers' => [
+            // Padrão: disco do próprio servidor, sem custo adicional.
+            'local' => [
+                'adapter' => \App\Services\Storage\LaravelFileStorage::class,
+                'discos' => ['publico' => 'public', 'privado' => 'local'],
+            ],
+            // Requer: composer require league/flysystem-aws-s3-v3 "^3.0" --with-all-dependencies
+            's3' => [
+                'adapter' => \App\Services\Storage\LaravelFileStorage::class,
+                'discos' => ['publico' => 's3_public', 'privado' => 's3_private'],
+            ],
+        ],
+    ],
 ];

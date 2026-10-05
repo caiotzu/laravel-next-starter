@@ -112,3 +112,12 @@ O frontend normaliza URLs `/storage/...` para caminho relativo (`lib/media-url.t
 ### Versões de teste do frontend
 
 Vite 8 + `@vitejs/plugin-react` 6 + Vitest 5 (versões alinhadas) e `jsdom` 30. Node mínimo: **22.22.2** (campo `engines` do `package.json`).
+
+### Armazenamento de arquivos
+
+| Arquivo | Foco |
+|---|---|
+| `backend/tests/Unit/FileStorageTest.php` | `LaravelFileStorage` isolado: gravar/ler/remover, isolamento público × privado, URL, entrega em stream, `move`, falhas de storage, path traversal |
+| `backend/tests/Feature/ArmazenamentoDeArquivosTest.php` | Fluxos reais (avatar, banner, anexos de chamado, comando de migração) rodando sobre um provider em memória (`tests/Support/ArquivosEmMemoria.php`), além da resolução de `local`/`s3`/provider novo/driver inválido pelo container |
+
+Detalhes da arquitetura em [`armazenamento-de-arquivos.md`](./armazenamento-de-arquivos.md).

@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
+use App\Contracts\Storage\FileStorageInterface;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,14 +37,14 @@ class BannerImagem extends Model
 
     /**
      * Mesmo padrão já usado em ChamadoAnexo::caminho: o banco guarda o
-     * caminho relativo no disco 'public', a URL absoluta é resolvida aqui
+     * caminho relativo (arquivo PÚBLICO, ver FileStorageInterface), a URL absoluta é resolvida aqui
      * na leitura — nunca persistida, para não quebrar se APP_URL mudar.
      */
     protected function caminho(): Attribute
     {
         return Attribute::make(
             get: fn ($value) =>
-                $value ? url(Storage::url($value)) : null
+                $value ? url(app(FileStorageInterface::class)->url($value)) : null
         );
     }
 }
