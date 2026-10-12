@@ -121,3 +121,15 @@ Vite 8 + `@vitejs/plugin-react` 6 + Vitest 5 (versões alinhadas) e `jsdom` 30. 
 | `backend/tests/Feature/ArmazenamentoDeArquivosTest.php` | Fluxos reais (avatar, banner, anexos de chamado, comando de migração) rodando sobre um provider em memória (`tests/Support/ArquivosEmMemoria.php`), além da resolução de `local`/`s3`/provider novo/driver inválido pelo container |
 
 Detalhes da arquitetura em [`armazenamento-de-arquivos.md`](./armazenamento-de-arquivos.md).
+
+
+### Repositories e escopo
+
+| Arquivo | Foco |
+|---|---|
+| `backend/tests/Feature/GrupoTest.php` | caracteriza `GrupoService` (CRUD, listagem, permissões, isolamento A × B) |
+| `backend/tests/Feature/UsuarioEscopoTest.php` | grupos excluídos, filtros, lookups de login/esqueci-senha, administradores, sem oráculo de existência |
+| `backend/tests/Feature/RepositoriesTest.php` | `EscopoEntidadeService::atual()` (inclui modo de suporte) e cada método dos repositories contra uma empresa vizinha |
+| `backend/tests/Unit/RepositoriesEscopoTest.php` | guardas estruturais: método sem escopo, leitura direta do contexto, consultas no Service |
+
+Detalhes em [`repositories.md`](./repositories.md).

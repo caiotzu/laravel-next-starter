@@ -3,10 +3,9 @@
 namespace App\Http\Requests\Private\Empresa;
 
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Http\FormRequest;
 
-use App\AcessoSuporte\AcessoSuporteContexto;
+use App\Services\EscopoEntidadeService;
 
 use App\Enums\UF;
 
@@ -61,8 +60,8 @@ class ListarRequest extends FormRequest
                 'uuid',
                 // Rule::exists('empresas', 'id')
                 Rule::exists('empresas', 'id')->where(function ($query) {
-                    $contexto = app(AcessoSuporteContexto::class);
-                    $query->where('grupo_empresa_id', $contexto->entidadeId(Auth::user()));
+                    // Escopo efetivo (considera o modo de suporte): fonte da verdade em EscopoEntidadeService.
+                    $query->where('grupo_empresa_id', app(EscopoEntidadeService::class)->atual()->entidadeId);
                 }),
             ],
             'cnpj' => [

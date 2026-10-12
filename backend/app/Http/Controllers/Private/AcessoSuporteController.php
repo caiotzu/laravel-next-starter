@@ -52,6 +52,8 @@ class AcessoSuporteController extends Controller
     {
         $this->authorize('private.acesso_suporte.conceder');
 
+        // IDENTIDADE, não contexto: quem concede é o usuário real e a organização dele
+        // (ver comentário em ConcederRequest). Por isso não passa por EscopoEntidadeService.
         $concedente = Auth::user();
 
         $acesso = $this->acessoSuporteService->conceder(

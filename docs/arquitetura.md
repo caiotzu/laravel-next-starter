@@ -116,4 +116,5 @@ Mais detalhes de cada pasta em [`frontend-arquitetura.md`](./frontend-arquitetur
 ## Cache e armazenamento
 
 - **Cache:** `CACHE_STORE=database` no `.env.example` (tabela `cache`). É usado para o cache de permissões por grupo/versão (`Usuario::permissoesCache()`), para os `temp_token` do 2FA, para o controle anti-replay de TOTP e para os contadores do rate limit. Há variáveis de Redis/Memcached no `.env.example`, mas nenhum uso de Redis foi identificado no código;
+- **Dados com dono (Usuario, Grupo):** consultas ficam em `GrupoRepository`/`UsuarioRepository` e recebem sempre um `EscopoEntidade` (resolvido por `EscopoEntidadeService::atual()`), o que impede esquecer o filtro de empresa. Detalhes em [`repositories.md`](./repositories.md).
 - **Arquivos:** todo upload passa por `FileStorageInterface` (provider escolhido por `FILE_STORAGE_DRIVER`: `local` por padrão, `s3` preparado). Anexos de chamado ficam no armazenamento privado e só são entregues por link assinado; o comando `chamados:mover-anexos-privados` migra anexos legados do público. Detalhes em [`armazenamento-de-arquivos.md`](./armazenamento-de-arquivos.md).

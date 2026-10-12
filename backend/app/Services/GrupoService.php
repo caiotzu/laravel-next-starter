@@ -3,12 +3,12 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 use App\Events\GrupoExcluido;
 
 use App\Models\Grupo;
+use App\Models\Permissao;
 
 use App\DTO\Grupo\GrupoFiltroDTO;
 use App\DTO\Grupo\GrupoCadastroDTO;
@@ -19,35 +19,36 @@ use App\Enums\ErrorCode;
 use App\Enums\AuditoriaAcao;
 
 use App\Exceptions\BusinessException;
-use App\Models\Permissao;
 
+use App\Repositories\GrupoRepository;
+
+/**
+ * Todo grupo pertence a um tipo de entidade (Ex: admin, private) e a um identificador da
+ * entidade (Ex: null para admin, grupo_empresas para private). O "de quem são os dados" vem
+ * SEMPRE de EscopoEntidadeService::atual() — a fonte da verdade, que já considera o modo de
+ * suporte — e é aplicado pelo GrupoRepository, nunca montado aqui.
+ */
 class GrupoService {
+
+    public function __construct(
+        private GrupoRepository $grupos,
+        private EscopoEntidadeService $escopoEntidade,
+    ) {}
 
     public function cadastrar(GrupoCadastroDTO $dto): Grupo
     {
         return DB::transaction(function () use ($dto) {
 
-            $user = Auth::user();
+            $escopo = $this->escopoEntidade->atual();
 
-            $contexto = app(\App\AcessoSuporte\AcessoSuporteContexto::class);
-
-            $entidadeTipoId = $contexto->entidadeTipoId($user);
-            $entidadeId = $contexto->entidadeId($user);
-
-            $grupoExiste = Grupo::where('entidade_tipo_id', $entidadeTipoId)
-                ->where('entidade_id', $entidadeId)
-                ->where('descricao', $dto->descricao)
-                ->exists();
-
-            if ($grupoExiste) {
+            if ($this->grupos->existeComDescricaoNoEscopo($escopo, $dto->descricao)) {
                 throw new BusinessException(
                     'Já existe um grupo com essa descrição.',
                     ErrorCode::GRUPO_ALREADY_EXISTS->value
                 );
             }
 
-            $grupo = Grupo::create(['descricao' => $dto->descricao]);
-            return $grupo;
+            return $this->grupos->criarNoEscopo($escopo, $dto->descricao);
         });
     }
 
@@ -61,16 +62,9 @@ class GrupoService {
              * E também deve pertencer ao mesmo identificador da entidade.
              * Ex: null (admin), grupo_empresas.
              */
-            $user = Auth::user();
+            $escopo = $this->escopoEntidade->atual();
 
-            $contexto = app(\App\AcessoSuporte\AcessoSuporteContexto::class);
-
-            $entidadeTipoId = $contexto->entidadeTipoId($user);
-            $entidadeId = $contexto->entidadeId($user);
-
-            $grupo = Grupo::where('entidade_tipo_id', $entidadeTipoId)
-                ->where('entidade_id', $entidadeId)
-                ->find($dto->id);
+            $grupo = $this->grupos->buscarNoEscopo($escopo, $dto->id);
 
             if (!$grupo) {
                 throw new BusinessException(
@@ -89,13 +83,7 @@ class GrupoService {
             // Verifica duplicidade somente se a descrição estiver sendo alterada
             if ($dto->descricao !== null) {
 
-                $grupoExiste = Grupo::where('entidade_tipo_id', $entidadeTipoId)
-                    ->where('entidade_id', $entidadeId)
-                    ->where('descricao', $dto->descricao)
-                    ->where('id', '!=', $grupo->id)
-                    ->exists();
-
-                if ($grupoExiste) {
+                if ($this->grupos->existeComDescricaoNoEscopo($escopo, $dto->descricao, $grupo->id)) {
                     throw new BusinessException(
                         'Já existe um grupo com essa descrição.',
                         ErrorCode::GRUPO_ALREADY_EXISTS->value
@@ -116,12 +104,7 @@ class GrupoService {
              * Para visualizar o grupo precisa ser do mesmo tipo de entidade. Ex: admin, private
              * e também deve pertencer ao mesmo identificador da entidade. Ex: null (admin), grupo_empresas.
              */
-            $user = Auth::user();
-
-            $grupo = Grupo::with('permissoes')
-                ->where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
-                ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
-                ->find($id);
+            $grupo = $this->grupos->buscarComPermissoesNoEscopo($this->escopoEntidade->atual(), $id);
 
             if (! $grupo) {
                 throw new BusinessException(
@@ -141,11 +124,7 @@ class GrupoService {
              * Para excluir o grupo precisa ser do mesmo tipo de entidade. Ex: admin, private
              * e também deve pertencer ao mesmo identificador da entidade. Ex: null (admin), grupo_empresas.
              */
-            $user = Auth::user();
-
-            $grupo = Grupo::where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
-                ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
-                ->find($id);
+            $grupo = $this->grupos->buscarNoEscopo($this->escopoEntidade->atual(), $id);
 
             if (!$grupo) {
                 throw new BusinessException(
@@ -168,12 +147,7 @@ class GrupoService {
              * Para ativar o grupo precisa ser do mesmo tipo de entidade. Ex: admin, private
              * e também deve pertencer ao mesmo identificador da entidade. Ex: null (admin), grupo_empresas.
              */
-            $user = Auth::user();
-
-            $grupo = Grupo::onlyTrashed()
-                ->where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
-                ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
-                ->find($id);
+            $grupo = $this->grupos->buscarExcluidoNoEscopo($this->escopoEntidade->atual(), $id);
 
             if (!$grupo) {
                 throw new BusinessException(
@@ -194,22 +168,7 @@ class GrupoService {
          * Para listar o grupo precisa ser do mesmo tipo de entidade. Ex: admin, private
          * e também deve pertencer ao mesmo identificador da entidade. Ex: null (admin), grupo_empresas.
          */
-        $user = Auth::user();
-
-        return Grupo::query()
-            ->where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
-            ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
-            ->when($filtro->id, fn ($q) =>
-                $q->where('id', $filtro->id)
-            )
-            ->when($filtro->descricao, fn ($q) =>
-                $q->where('descricao', 'ilike', "%{$filtro->descricao}%")
-            )
-             ->when($filtro->excluido, fn ($q) =>
-                $q->withTrashed()
-            )
-            ->orderBy('created_at', 'DESC')
-            ->paginate($filtro->paginacao->por_pagina);
+        return $this->grupos->listarNoEscopo($this->escopoEntidade->atual(), $filtro);
     }
 
     public function sincronizarPermissoes(SincronizarPermissoesDTO $dto)
@@ -235,12 +194,7 @@ class GrupoService {
              * Para sincronizar o grupo precisa ser do mesmo tipo de entidade. Ex: admin, private
              * e também deve pertencer ao mesmo identificador da entidade. Ex: null (admin), grupo_empresas.
              */
-            $user = Auth::user();
-
-            $grupo = Grupo::with('permissoes')
-                ->where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
-                ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
-                ->findOrFail($dto->grupo_id);
+            $grupo = $this->grupos->buscarComPermissoesNoEscopoOuFalhar($this->escopoEntidade->atual(), $dto->grupo_id);
 
             /**
              * sync() altera a tabela pivô grupo_permissoes diretamente, sem

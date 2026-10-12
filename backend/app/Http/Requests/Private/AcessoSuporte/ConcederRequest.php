@@ -88,6 +88,9 @@ class ConcederRequest extends FormRequest
 
             if ($empresaId) {
                 $empresa = Empresa::find($empresaId);
+                // IDENTIDADE, não contexto: a concessão pertence à organização REAL de quem concede.
+                // Não usar EscopoEntidadeService::atual() aqui — em modo de suporte ele devolve a
+                // entidade impersonada e permitiria a um admin conceder acesso em nome do cliente.
                 $grupoEmpresaId = Auth::user()->grupo->entidade_id;
 
                 if (!$empresa || $empresa->grupo_empresa_id !== $grupoEmpresaId) {

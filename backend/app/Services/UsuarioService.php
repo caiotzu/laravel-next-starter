@@ -3,9 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 use App\Events\UsuarioCriado;
@@ -14,7 +12,6 @@ use App\Events\SenhaUsuarioAlterada;
 use App\Events\UsuarioEsqueceuSenha;
 use App\Events\UsuarioStatusAlterado;
 
-use App\Models\Grupo;
 use App\Models\Usuario;
 
 use App\DTO\Usuario\UsuarioFiltroDTO;
@@ -30,9 +27,15 @@ use App\Enums\UsuarioStatus;
 
 use App\Exceptions\BusinessException;
 
+use App\Repositories\GrupoRepository;
+use App\Repositories\UsuarioRepository;
+
 class UsuarioService {
     public function __construct(
-        private TokenResetSenhaService $tokenResetSenhaService
+        private TokenResetSenhaService $tokenResetSenhaService,
+        private UsuarioRepository $usuarios,
+        private GrupoRepository $grupos,
+        private EscopoEntidadeService $escopoEntidade,
     ) {}
 
     public function cadastrar(UsuarioCadastroDTO $dto): Usuario
@@ -42,16 +45,11 @@ class UsuarioService {
              * Consulta o Grupo do usuário autenticado para verificar se o ID
              * do grupo passado está dentro da mesma regra
              */
-            $user = Auth::user();
-
-            $grupo = Grupo::where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
-                ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
-                ->find($dto->grupo_id);
+            $grupo = $this->grupos->buscarNoEscopo($this->escopoEntidade->atual(), $dto->grupo_id);
             if(!$grupo)
                 throw new BusinessException('O grupo selecionado não é válido para este cadastro.', ErrorCode::GRUPO_REQUIRED->value);
 
-            $usuario = Usuario::create([
-                'grupo_id' => $dto->grupo_id,
+            $usuario = $this->usuarios->criarNoGrupo($grupo, [
                 'nome' => $dto->nome,
                 'email' => $dto->email,
                 'status' => UsuarioStatus::CONVIDADO->value
@@ -71,20 +69,13 @@ class UsuarioService {
              * Consulta o Grupo do usuário autenticado para verificar se o ID
              * do grupo passado está dentro da mesma regra
              */
-            $user = Auth::user();
+            $escopo = $this->escopoEntidade->atual();
 
-            $grupo = Grupo::where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
-                ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
-                ->find($dto->grupo_id);
+            $grupo = $this->grupos->buscarNoEscopo($escopo, $dto->grupo_id);
             if(!$grupo)
                 throw new BusinessException('O grupo selecionado não é válido para este cadastro.', ErrorCode::GRUPO_REQUIRED->value);
 
-            $usuario = Usuario::query()
-                ->whereHas('grupo', function (Builder $query) use ($user) {
-                    return $query->where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
-                        ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user));
-                })
-                ->find($dto->id);
+            $usuario = $this->usuarios->buscarNoEscopo($escopo, $dto->id);
             if(!$usuario)
                 throw new BusinessException('Usuário não encontrado.', ErrorCode::USUARIO_NOT_FOUND->value);
 
@@ -105,7 +96,7 @@ class UsuarioService {
              * Faz atualização apenas do status. Essa função deve ser chamada apenas por usuários administrativos,
              * caso precise atualizar o usuário normalmente, utilizar a função atualizar padrão.
              */
-            $usuario = $this->usuarioPrivateDoGrupo($dto->usuarioId, $dto->grupoId);
+            $usuario = $this->usuarios->buscarClienteDoGrupo($dto->usuarioId, $dto->grupoId);
             if(!$usuario)
                 throw new BusinessException('Usuário não encontrado.', ErrorCode::USUARIO_NOT_FOUND->value);
 
@@ -127,24 +118,6 @@ class UsuarioService {
         });
     }
 
-    /**
-     * Busca um usuário pelo id garantindo que ele pertence ao grupo informado E que esse
-     * grupo é de uma entidade do tipo Private (cliente). Sem essa restrição, o
-     * {grupoId} vindo da URL permitia que um admin com a permissão de gestão de usuários
-     * de cliente alterasse/redefinisse usuários do próprio tipo Admin.
-     */
-    private function usuarioPrivateDoGrupo(string $usuarioId, string $grupoId, bool $somenteAtivos = false): ?Usuario
-    {
-        return Usuario::where('grupo_id', $grupoId)
-            ->whereHas('grupo.entidadeTipo', fn (Builder $query) =>
-                $query->where('chave', EntidadeTipo::PRIVATE->value)
-            )
-            ->when($somenteAtivos, fn (Builder $query) =>
-                $query->whereIn('status', [UsuarioStatus::ATIVO->value, UsuarioStatus::CONVIDADO->value])
-            )
-            ->find($usuarioId);
-    }
-
     public function visualizar(string $id): Usuario
     {
         return DB::transaction(function () use ($id) {
@@ -152,15 +125,7 @@ class UsuarioService {
              * Para listar o usuário precisa ser do mesmo tipo de entidade. Ex: admin, private
              * e também deve pertencer ao mesmo identificador da entidade. Ex: null (admin), grupo_empresas.
              */
-            $user = Auth::user();
-
-            $usuario = Usuario::query()
-                ->with('grupo')
-                ->whereHas('grupo', function (Builder $query) use ($user) {
-                    return $query->where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
-                        ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user));
-                })
-                ->find($id);
+            $usuario = $this->usuarios->buscarComGrupoNoEscopo($this->escopoEntidade->atual(), $id);
 
             if (! $usuario) {
                 throw new BusinessException(
@@ -176,27 +141,18 @@ class UsuarioService {
     public function excluir(string $id): void
     {
         DB::transaction(function () use ($id) {
-
-            $usuario = Usuario::find($id);
+            /**
+             * O usuário só é encontrado se o grupo dele estiver no escopo do contexto (inclusive
+             * grupo excluído). Uma única consulta escopada: um usuário de outra empresa é
+             * indistinguível de um inexistente.
+             */
+            $usuario = $this->usuarios->buscarComGrupoExcluidoNoEscopo($this->escopoEntidade->atual(), $id);
             if (!$usuario) {
                 throw new BusinessException(
                     'Usuário não encontrado para exclusão.',
                     ErrorCode::USUARIO_NOT_FOUND->value
                 );
             }
-
-            /**
-             * Consulta o Grupo do usuário autenticado para verificar se o ID
-             * do grupo passado está dentro da mesma regra
-             */
-            $user = Auth::user();
-
-            $grupo = Grupo::where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
-                ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
-                ->withTrashed()
-                ->find($usuario->grupo_id);
-            if(!$grupo)
-                throw new BusinessException('Usuário não encontrado ou não disponível para exclusão.', ErrorCode::USUARIO_NOT_FOUND->value);
 
             $usuario->delete();
             $usuario->fresh();
@@ -208,27 +164,16 @@ class UsuarioService {
     public function ativar(string $id): Usuario
     {
         return DB::transaction(function () use ($id) {
-
-            $usuario = Usuario::onlyTrashed()->find($id);
+            /**
+             * Mesma regra da exclusão: só enxerga usuários excluídos do escopo do contexto.
+             */
+            $usuario = $this->usuarios->buscarExcluidoNoEscopo($this->escopoEntidade->atual(), $id);
             if (!$usuario) {
                 throw new BusinessException(
                     'Usuário não encontrado para ativação.',
                     ErrorCode::USUARIO_NOT_FOUND->value
                 );
             }
-
-            /**
-             * Consulta o Grupo do usuário autenticado para verificar se o ID
-             * do grupo passado está dentro da mesma regra
-             */
-            $user = Auth::user();
-
-            $grupo = Grupo::where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
-                ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user))
-                ->withTrashed()
-                ->find($usuario->grupo_id);
-            if(!$grupo)
-                throw new BusinessException('Usuário não encontrado ou não disponível para exclusão.', ErrorCode::USUARIO_NOT_FOUND->value);
 
             $usuario->restore();
             return $usuario->fresh();
@@ -241,28 +186,7 @@ class UsuarioService {
          * Para listar o usuário precisa ser do mesmo tipo de entidade. Ex: admin, private
          * e também deve pertencer ao mesmo identificador da entidade. Ex: null (admin), grupo_empresas.
          */
-        $user = Auth::user();
-
-        return Usuario::query()
-            ->with('grupoComExcluidos')
-            ->whereHas('grupoComExcluidos', function (Builder $query) use ($user) {
-                return $query->where('entidade_tipo_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeTipoId($user))
-                    ->where('entidade_id', app(\App\AcessoSuporte\AcessoSuporteContexto::class)->entidadeId($user));
-            })
-            ->when($filtro->id, fn ($q) =>
-                $q->where('id', $filtro->id)
-            )
-            ->when($filtro->nome, fn ($q) =>
-                $q->where('nome', 'ilike', "%{$filtro->nome}%")
-            )
-            ->when($filtro->grupo_id, fn ($q) =>
-                $q->where('grupo_id', $filtro->grupo_id)
-            )
-             ->when($filtro->excluido, fn ($q) =>
-                $q->withTrashed()
-            )
-            ->orderBy('created_at', 'DESC')
-            ->paginate($filtro->paginacao->por_pagina);
+        return $this->usuarios->listarNoEscopo($this->escopoEntidade->atual(), $filtro);
     }
 
     public function primeiroAcesso(UsuarioPrimeiroAcessoDTO $dto): void
@@ -285,13 +209,7 @@ class UsuarioService {
 
     public function esqueceuSenha(string $email, EntidadeTipo $entidadeTipo): void
     {
-        $usuario = Usuario::with('grupo.entidadeTipo')
-            ->whereHas('grupo.entidadeTipo', function (Builder $query) use ($entidadeTipo) {
-                return $query->where('chave', $entidadeTipo->value);
-            })
-            ->where('email', $email)
-            ->whereIn('status', [UsuarioStatus::ATIVO->value, UsuarioStatus::CONVIDADO->value])
-            ->first();
+        $usuario = $this->usuarios->buscarAtivoOuConvidadoPorEmail($email, $entidadeTipo);
 
         if (! $usuario) {
             return;
@@ -357,36 +275,12 @@ class UsuarioService {
 
     public function obterUsuarioAtivoPorEmail(string $email, EntidadeTipo $entidadeTipo): Usuario | null
     {
-        return Usuario::with('grupo.entidadeTipo', 'grupo.grupoEmpresa')
-            ->whereHas('grupo.entidadeTipo', function (Builder $query) use ($entidadeTipo) {
-                $query->where('chave', $entidadeTipo->value);
-            })
-            ->where('email', $email)
-            ->where('status', UsuarioStatus::ATIVO->value)
-            ->when($entidadeTipo !== EntidadeTipo::ADMIN, function (Builder $query) {
-                $query->whereHas('grupo', function (Builder $query) {
-                    $query->where(function ($query) {
-                        // Não é grupo_empresa, não precisa validar entidade
-                        $query->whereHas('entidadeTipo', function ($query) {
-                            $query->where('entidade_tabela', '!=', 'grupo_empresas');
-                        })
-                        // Ou é grupo_empresa e precisa existir
-                        ->orWhereHas('grupoEmpresa');
-                    });
-                });
-            })
-            ->first();
+        return $this->usuarios->buscarAtivoPorEmail($email, $entidadeTipo);
     }
 
     public function obterUsuarioAtivoPorId(string $id, EntidadeTipo $entidadeTipo): Usuario | null
     {
-        return Usuario::with('grupo.entidadeTipo')
-            ->whereHas('grupo.entidadeTipo', function (Builder $query) use ($entidadeTipo) {
-                return $query->where('chave', $entidadeTipo->value);
-            })
-            ->where('id', $id)
-            ->where('status', UsuarioStatus::ATIVO->value)
-            ->first();
+        return $this->usuarios->buscarAtivoPorId($id, $entidadeTipo);
     }
 
     public function resetarSenha(string $id, string $grupoId): void
@@ -395,7 +289,7 @@ class UsuarioService {
          * Esse método é utilizado pelo administrativo para forçar um envio de e-mail para o usuário.
          * Para reset de senha normal pela tela de login utilizar o fluxo padrão de esqueceu a senha
          */
-        $usuario = $this->usuarioPrivateDoGrupo($id, $grupoId, somenteAtivos: true);
+        $usuario = $this->usuarios->buscarClienteDoGrupo($id, $grupoId, somenteAtivosOuConvidados: true);
         if (! $usuario) {
             return;
         }
@@ -410,22 +304,6 @@ class UsuarioService {
             'admin.acesso_suporte.listar' // A listagem já permite o acesso por parte do admin
         ];
 
-        return Usuario::query()
-            ->whereHas('grupo.entidadeTipo', fn ($q) =>
-                $q->where('chave', EntidadeTipo::ADMIN->value)
-            )
-            ->where('status', UsuarioStatus::ATIVO->value)
-            ->when($busca, fn ($q) =>
-                $q->where(fn ($sub) =>
-                    $sub->where('nome', 'ilike', "%{$busca}%")
-                        ->orWhere('email', 'ilike', "%{$busca}%")
-                )
-            )
-            ->whereHas('grupo.permissoes', fn ($q) =>
-                $q->whereIn('chave', $permissoes)
-            )
-            ->orderBy('nome')
-            ->limit(20)
-            ->get();
+        return $this->usuarios->listarAdministradoresComPermissao($busca, $permissoes);
     }
 }

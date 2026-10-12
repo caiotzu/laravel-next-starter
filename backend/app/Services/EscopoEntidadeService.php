@@ -13,6 +13,8 @@ use App\Enums\EntidadeTipo;
 
 use App\Exceptions\BusinessException;
 
+use App\Support\EscopoEntidade;
+
 /**
  * Serviço central de escopo por entidade.
  *
@@ -156,6 +158,31 @@ class EscopoEntidadeService
         if ($valorRecebido === null || $valorRecebido !== $this->entidadeIdAtual()) {
             throw new BusinessException($mensagem, $codigoErro);
         }
+    }
+
+    /**
+     * Escopo EFETIVO (tipo de entidade + entidade) da requisição, a fonte da verdade para
+     * qualquer consulta de dados com dono. Considera o modo de suporte: um Admin impersonando
+     * um cliente enxerga exatamente o escopo do cliente.
+     *
+     * Diferente de aplicar()/irrestrito(), NÃO existe "sem escopo" aqui: mesmo o Admin é
+     * escopado ao próprio tipo (admin, entidade nula) em Usuario e Grupo.
+     *
+     * Lança LogicException se não houver usuário autenticado: consultar dados com dono sem
+     * saber de quem são é erro de programação, e falhar é mais seguro do que listar tudo.
+     */
+    public function atual(): EscopoEntidade
+    {
+        $usuario = $this->usuarioAutenticado();
+
+        if (! $usuario) {
+            throw new \LogicException('Escopo de entidade solicitado sem usuário autenticado.');
+        }
+
+        return new EscopoEntidade(
+            $this->contexto->entidadeTipoId($usuario),
+            $this->contexto->entidadeId($usuario),
+        );
     }
 
     /**
