@@ -19,11 +19,25 @@ O Eloquent não vai ser trocado, e os testes usam o banco real, então uma inter
 
 | Repository | Usado por | Por quê |
 |---|---|---|
-| `App\Repositories\GrupoRepository` | `GrupoService`, `UsuarioService` | consultas com dono (escopo), duplicadas em 12 pontos |
-| `App\Repositories\UsuarioRepository` | `UsuarioService` | consultas com dono + 3 lookups de autenticação parecidos |
+| `App\Repositories\GrupoRepository` | `GrupoService`, `UsuarioService`, `GrupoEmpresaService` | consultas com dono (escopo), duplicadas em 12 pontos |
+| `App\Repositories\UsuarioRepository` | `UsuarioService`, `GrupoEmpresaService` | consultas com dono + 3 lookups de autenticação parecidos |
 
 Não têm Repository (de propósito): Empresa (já usa `EscopoEntidadeService::aplicar`), Chamado, Banner, Release,
 Mensagem, AcessoSuporte, Dashboard (somente agregações de leitura) e as tabelas simples.
+
+### Onboarding de empresa (`GrupoEmpresaService::cadastrar`)
+
+Um Admin cria a empresa, o grupo "Administrador" e o usuário convidado. O grupo nasce no escopo da **nova**
+empresa (não no do admin autenticado), então o `EscopoEntidade` é montado explicitamente — é o caso previsto no
+docblock da classe ("em jobs/testes, construindo de forma explícita"):
+
+```php
+$grupo = $this->grupos->criarNoEscopo(new EscopoEntidade($entidadeTipo->id, $grupoEmpresa->id), 'Administrador');
+$usuario = $this->usuarios->criarNoGrupo($grupo, [/* nome, email, senha => null, status */]);
+```
+
+Coberto por `tests/Feature/GrupoEmpresaOnboardingTest.php`; `GrupoEmpresaService` também entra na guarda
+estrutural (não pode voltar a usar `Usuario::create`/`Grupo::create`).
 
 ## Escopo de entidade (a regra de ouro)
 
@@ -65,6 +79,13 @@ Por que isso evita vazamento:
 | `buscarClienteDoGrupo` | ação de Admin sobre usuários de clientes (restrita ao tipo `private`, autorizada por permissão na rota) |
 | `listarAdministradoresComPermissao` | lookup exclusivo de administradores |
 | `criarNoGrupo(Grupo $grupo, ...)` | recebe um `Grupo` que o Service já validou no escopo |
+
+### Consultas de Usuario fora do repository (pendência REPO-003)
+
+Ainda existem, de propósito ou por avaliar: `MensagemService::buscarUsuarios` (busca global por design, para
+direcionar mensagem a qualquer usuário), a busca do admin em `AcessoSuporteService::conceder` e em
+`Private\AcessoSuporte\ConcederRequest`, os listeners `InvalidarSessoesDosUsuariosDoGrupo[Empresa]` e o
+`PopularDestinatariosMensagemJob`. Estado e decisão: `IMPLEMENTATION_PLAN.md` (F-4, REPO-002/003).
 
 ## Identidade × contexto
 

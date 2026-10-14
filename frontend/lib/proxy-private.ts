@@ -6,6 +6,7 @@ import {
   limparAcessoSuporteAtivo,
   obterAcessoSuporteAtivo,
 } from "@/lib/acesso-suporte/acesso-suporte-storage";
+import { normalizarUrlsDeMidia } from "@/lib/media-url";
 
 interface ProxyPayload {
   url: string;
@@ -71,7 +72,7 @@ export async function proxyPrivateRequest<T>({
       }
     );
 
-    return response.data;
+    return normalizarUrlsDeMidia(response.data);
   } catch (err) {
     const error = err as AxiosError<ApiErrorResponse>;
 

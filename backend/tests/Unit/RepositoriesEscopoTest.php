@@ -108,10 +108,10 @@ it('só o EscopoEntidadeService lê entidade_tipo/entidade do AcessoSuporteConte
     expect($infratores)->toBe([], 'Use EscopoEntidadeService::atual() em vez de ler o contexto direto.');
 });
 
-it('UsuarioService e GrupoService não montam consultas nem leem o usuário autenticado', function () {
+it('UsuarioService, GrupoService e GrupoEmpresaService não montam consultas de Usuario/Grupo nem leem o usuário autenticado', function () {
     $base = dirname(__DIR__, 2) . '/app/Services/';
 
-    foreach (['UsuarioService.php', 'GrupoService.php'] as $arquivo) {
+    foreach (['UsuarioService.php', 'GrupoService.php', 'GrupoEmpresaService.php'] as $arquivo) {
         $codigo = preg_replace('#/\*.*?\*/|//[^\n]*#s', '', file_get_contents($base . $arquivo));
 
         expect($codigo)

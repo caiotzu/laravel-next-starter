@@ -45,6 +45,10 @@ Front-end em `http://localhost:3000`, API em `http://localhost:8000` (ou porta c
 |---|---|
 | [`backend/README.md`](./backend/README.md) | Instalação, variáveis de ambiente e comandos do backend |
 | [`frontend/README.md`](./frontend/README.md) | Instalação, variáveis de ambiente e comandos do frontend |
+| [`CLAUDE.md`](./CLAUDE.md) | Regras permanentes para o Claude Code (arquitetura aprovada, skills, comandos, critérios de conclusão) |
+| [`docs/PROJECT_GUIDE.md`](./docs/PROJECT_GUIDE.md) | Guia técnico: fluxos, convenções, como criar funcionalidades, testes e comandos |
+| [`docs/IMPLEMENTATION_PLAN.md`](./docs/IMPLEMENTATION_PLAN.md) | Estado atual, backlog priorizado, próxima tarefa e histórico de decisões |
+| [`docs/repositories.md`](./docs/repositories.md) | Padrão de Repository e escopo de entidade (multi-tenant) |
 | [`docs/arquitetura.md`](./docs/arquitetura.md) | Como back-end e front-end se conectam, camadas, diagramas |
 | [`docs/autenticacao-e-autorizacao.md`](./docs/autenticacao-e-autorizacao.md) | JWT, sessões, 2FA, permissões |
 | [`docs/api.md`](./docs/api.md) | Swagger e referência de rotas por recurso |

@@ -33,6 +33,7 @@ Route (routes/api.php)
    → Form Request (validação em app/Http/Requests)
    → DTO (app/DTO) — normaliza os dados validados
    → Service (app/Services) — regra de negócio, transações, eventos
+   → Repository (app/Repositories) — só para dados com dono (Usuario, Grupo); ver repositories.md
    → Model (app/Models) — persistência (Eloquent)
    → Resource (app/Http/Resources) — formata a resposta JSON
 ```
@@ -57,6 +58,7 @@ app/
 │   └── Resources/
 ├── Jobs/
 ├── Models/
+├── Repositories/       # Acesso a dados com dono (Grupo, Usuario) — ver repositories.md
 ├── OpenApi/            # Schemas/respostas OpenAPI reutilizados
 ├── Providers/          # AuthServiceProvider (Gate::before)
 ├── Services/

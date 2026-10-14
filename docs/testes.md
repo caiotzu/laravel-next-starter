@@ -133,3 +133,22 @@ Detalhes da arquitetura em [`armazenamento-de-arquivos.md`](./armazenamento-de-a
 | `backend/tests/Unit/RepositoriesEscopoTest.php` | guardas estruturais: método sem escopo, leitura direta do contexto, consultas no Service |
 
 Detalhes em [`repositories.md`](./repositories.md).
+
+
+---
+
+## Atualização 2026-10-14 (baseline medido)
+
+Executado com PHP 8.3 + PostgreSQL 16 locais (fora do Sail), banco `testing`:
+
+| Suíte | Resultado |
+|---|---|
+| Backend (`./vendor/bin/pest`) | **362 testes verdes** (1520 asserções) |
+| Frontend (`npm test`) | **109 testes verdes** (14 arquivos) |
+| Frontend (`npx tsc --noEmit`) | sem erros |
+| Frontend (`npm run lint`) | 0 erros, 70 avisos |
+
+As contagens históricas acima (153/252 testes) refletem momentos anteriores; use esta tabela como referência atual.
+Novos arquivos: `tests/Feature/GrupoEmpresaOnboardingTest.php` (onboarding de empresa: sucesso, permissões `private.*`, 401, 403, 422) e,
+no frontend, `tests/lib/media-url.test.ts` passou a resolver (o módulo `lib/media-url.ts` não existia no repositório).
+Para rodar sem Docker: ver `PROJECT_GUIDE.md` §12.

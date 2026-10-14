@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 
 import axios from "axios";
 
+import { ipsEncaminhados } from "@/lib/client-ip";
 import { validarOrigem } from "@/lib/utils";
 
-import { ipsEncaminhados } from "@/lib/client-ip";
 
 export async function POST(req: Request) {
   try {

@@ -8,8 +8,6 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use App\Events\UsuarioCriado;
 use App\Events\GrupoEmpresaExcluido;
 
-use App\Models\Grupo;
-use App\Models\Usuario;
 use App\Models\Permissao;
 use App\Models\EntidadeTipo;
 use App\Models\GrupoEmpresa;
@@ -23,10 +21,17 @@ use App\Enums\UsuarioStatus;
 
 use App\Exceptions\BusinessException;
 
+use App\Repositories\GrupoRepository;
+use App\Repositories\UsuarioRepository;
+
+use App\Support\EscopoEntidade;
+
 class GrupoEmpresaService {
 
     public function __construct(
-        private TokenResetSenhaService $tokenResetSenhaService
+        private TokenResetSenhaService $tokenResetSenhaService,
+        private GrupoRepository $grupos,
+        private UsuarioRepository $usuarios,
     ) {}
 
     public function cadastrar(GrupoEmpresaCadastroDTO $dto): GrupoEmpresa
@@ -40,16 +45,16 @@ class GrupoEmpresaService {
                 'nome' => $dto->nome
             ]);
 
-            $grupo = Grupo::create([
-                'descricao' => 'Administrador',
-                'entidade_tipo_id' => $entidadeTipo->id,
-                'entidade_id' => $grupoEmpresa->id
-            ]);
+            // Onboarding: o grupo nasce no escopo da NOVA empresa (não no do admin autenticado),
+            // por isso o EscopoEntidade é montado explicitamente aqui.
+            $grupo = $this->grupos->criarNoEscopo(
+                new EscopoEntidade($entidadeTipo->id, $grupoEmpresa->id),
+                'Administrador'
+            );
 
             $grupo->permissoes()->sync($permissoesIds);
 
-            $usuario = Usuario::create([
-                'grupo_id' => $grupo->id,
+            $usuario = $this->usuarios->criarNoGrupo($grupo, [
                 'nome' => $dto->usuario->nome,
                 'email' => $dto->usuario->email,
                 'senha' => null,
