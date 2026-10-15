@@ -5,6 +5,7 @@ namespace App\Http\Requests\Private\EmpresaContato;
 use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
+use App\Services\EscopoEntidadeService;
 use App\Models\EmpresaContato;
 
 use App\Enums\EmpresaContatoTipo;
@@ -61,6 +62,11 @@ class CadastrarRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
+            // Empresa fora do escopo: não consulta dados dela; o Service responde "Empresa não encontrada".
+            if (! app(EscopoEntidadeService::class)->empresaVisivel($this->route('empresaId'))) {
+                return;
+            }
+
             if (!$this->boolean('principal')) {
                 return;
             }

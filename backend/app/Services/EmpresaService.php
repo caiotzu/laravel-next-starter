@@ -138,7 +138,7 @@ class EmpresaService {
     {
         DB::transaction(function () use ($id) {
 
-            $empresa = Empresa::find($id);
+            $empresa = $this->escopoEntidade->aplicar(Empresa::query())->find($id);
 
             if (!$empresa) {
                 throw new BusinessException(
@@ -161,7 +161,7 @@ class EmpresaService {
     {
         return DB::transaction(function () use ($id) {
 
-            $empresa = Empresa::onlyTrashed()->find($id);
+            $empresa = $this->escopoEntidade->aplicar(Empresa::onlyTrashed())->find($id);
 
 
             if (!$empresa) {

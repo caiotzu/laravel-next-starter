@@ -5,6 +5,7 @@ namespace App\Http\Requests\Private\EmpresaEndereco;
 use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
+use App\Services\EscopoEntidadeService;
 use App\Models\EmpresaEndereco;
 
 use App\Enums\EmpresaEnderecoTipo;
@@ -112,6 +113,11 @@ class AtualizarRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
+            // Empresa fora do escopo: não consulta dados dela; o Service responde "Empresa não encontrada".
+            if (! app(EscopoEntidadeService::class)->empresaVisivel($this->route('empresaId'))) {
+                return;
+            }
+
             if (!$this->boolean('principal')) {
                 return;
             }

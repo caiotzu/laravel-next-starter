@@ -68,7 +68,8 @@ Frontend (em `frontend/`, Node ≥ 22.22.2):
 ## Segurança (não enfraquecer)
 
 - Autorização por chave no controller (`$this->authorize('admin.x.y')`); `Gate::before` em `AuthServiceProvider`.
-- Dado com dono: nunca consultar sem escopo. Não aceitar `entidade_id`/`grupo_empresa_id` do payload sem `EscopoEntidadeService::validarPertence`.
+- Dado com dono: nunca consultar sem escopo — **inclusive em Form Requests** (`EscopoEntidadeService::empresaVisivel()` antes de checar "já existe…") e em métodos `excluir`/`ativar`/`restaurar`. Resposta de erro não pode distinguir "existe em outra empresa" de "não existe".
+- `authorize('chave')`: use a chave do **recurso e da ação** do próprio método (copiar de um controller irmão e esquecer de trocar já gerou o bug F-10); ao criar rota, teste com um usuário que tenha **só** essa permissão (200) e outro com permissão de recurso vizinho (403). Não aceitar `entidade_id`/`grupo_empresa_id` do payload sem `EscopoEntidadeService::validarPertence`.
 - Usar `validated()`; nunca `$request->all()`. HTML de usuário passa por `HtmlSanitizer`/DOMPurify.
 - JWT só em cookie `httpOnly` via BFF; `lib/proxy-guard.ts` restringe destino/métodos/headers. Não ampliar sem justificativa.
 - Uploads: somente via `FileStorageInterface`. Anexos de chamado: privados + link assinado.

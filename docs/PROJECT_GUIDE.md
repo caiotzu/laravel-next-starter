@@ -85,7 +85,7 @@ $usuario = $this->usuarios->criarNoGrupo($grupo, [/* nome, email, senha => null,
 1. Leia a skill `laravel-best-practices` (índice → regras da tarefa) e o módulo irmão mais parecido.
 2. Migration (+ factory/seeder se for Model novo, conforme `AGENTS.md`) → Model.
 3. Form Requests por verbo → DTO(s) → Service (transação, evento, `BusinessException` + `ErrorCode`).
-4. Repository **só** se atender aos 4 critérios de `repositories.md`; senão Eloquent no Service (como `EmpresaService`).
+4. Repository **só** se atender aos 4 critérios de `repositories.md`; senão Eloquent no Service (como `EmpresaService`, com `EscopoEntidadeService::aplicar()` em **todo** método que busca por id). A chave de `authorize()` deve ser a do **próprio recurso e ação** (ex.: endereço → `*.empresa.endereco.*`).
 5. Resource(s), Controller com `authorize('chave')` + atributos OpenAPI, rotas em `routes/api.php`.
 6. Permissão nova: `database/seeders/AdminPermissaoSeeder.php` ou `PrivatePermissaoSeeder.php` + ver `autenticacao-e-autorizacao.md`.
 7. Testes Pest (item 11) e `docs/` afetadas.
@@ -101,14 +101,14 @@ $usuario = $this->usuarios->criarNoGrupo($grupo, [/* nome, email, senha => null,
 ## 11. Testes
 
 - **Backend (Pest, banco real `testing`, `RefreshDatabase`)**: `tests/Feature/{Dominio}Test.php` exercita rota→banco; cada arquivo define helpers de cenário próprios (`cenarioGr()`, `tokenGr()`…) criando `EntidadeTipo`, empresas, grupos, usuários e um JWT com sessão. Estilo local: `test('frase em português', fn …)`. `tests/Unit` = enums, DTOs, helpers e **guardas arquiteturais** (`RepositoriesEscopoTest`).
-- Dado com dono ⇒ sempre incluir caso cross-tenant (A não vê/altera B). Escreva **teste de caracterização antes** de refatorar.
+- Dado com dono ⇒ sempre incluir caso cross-tenant (A não vê/altera B) **e** verificar que a resposta de erro não revela se o dado de B existe (mesmo status/mensagem com e sem dado). Escreva **teste de caracterização antes** de refatorar.
 - **Frontend (Vitest)**: `tests/{lib,proxy,domains,components,banner,validations}`; alias `@/`.
 
 ## 12. Comandos (verificados nesta sessão)
 
 | Onde | Comando | Observação |
 |---|---|---|
-| backend | `./vendor/bin/sail artisan test --compact` · `./vendor/bin/pest` | baseline atual: **362 verdes** (1520 asserções) |
+| backend | `./vendor/bin/sail artisan test --compact` · `./vendor/bin/pest` | baseline atual: **375 verdes** (1549 asserções) |
 | backend | `pint <arquivo-novo.php>` | não rodar `--dirty` em legado (ver `CLAUDE.md`) |
 | frontend | `npm test` · `npx tsc --noEmit` · `npm run lint` · `npm run build` | baseline: 109 testes (14 arquivos), tsc limpo, lint 0 erros / 70 avisos |
 
@@ -132,4 +132,4 @@ Localização e quando usar: tabela em [`../CLAUDE.md`](../CLAUDE.md#skills-leia
 
 ## 15. Limitações conhecidas e pendências
 
-Lista viva em `IMPLEMENTATION_PLAN.md` (seção D). Principais: lookups sem escopo fora de repository (`MensagemService::buscarUsuarios`, admin em `AcessoSuporteService`/`ConcederRequest`, listeners/job de mensagem); sem CI (`.github` não existe); sem teste do frontend para a maioria dos domínios; Pint não aplicado ao legado; docs históricas (`testes.md`, `arquitetura.md`) com contagens desatualizadas; `docs/pentest-avaliacao-seguranca.md` e `docs/pentest/` são citados por `seguranca.md`/`frontend-arquitetura.md`, mas **não existem** em `docs/` neste checkout.
+Lista viva em `IMPLEMENTATION_PLAN.md` (seção D). Principais: lookups de Usuario sem escopo fora de repository (`MensagemService::buscarUsuarios`, admin em `AcessoSuporteService`/`ConcederRequest`, listeners/job de mensagem); sem CI (`.github` não existe); sem teste do frontend para a maioria dos domínios; Pint não aplicado ao legado; docs históricas (`testes.md`, `arquitetura.md`) com contagens desatualizadas; `docs/pentest-avaliacao-seguranca.md` e `docs/pentest/` são citados por `seguranca.md`/`frontend-arquitetura.md`, mas **não existem** em `docs/` neste checkout.

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 use App\AcessoSuporte\AcessoSuporteContexto;
 
+use App\Models\Empresa;
 use App\Models\Usuario;
 
 use App\Enums\EntidadeTipo;
@@ -139,6 +140,21 @@ class EscopoEntidadeService
         }
 
         return $query->where($coluna, $this->entidadeIdAtual());
+    }
+
+    /**
+     * A empresa existe E está dentro do escopo atual? Para os Form Requests: as verificações que
+     * consultam dados da empresa (ex.: "já existe contato principal") só devem rodar quando ela é
+     * visível ao usuário — senão a mensagem de validação revelaria dados de outra organização
+     * antes de o Service responder "Empresa não encontrada".
+     */
+    public function empresaVisivel(?string $empresaId): bool
+    {
+        if ($empresaId === null) {
+            return false;
+        }
+
+        return $this->aplicar(Empresa::query())->whereKey($empresaId)->exists();
     }
 
     /**

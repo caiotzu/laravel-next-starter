@@ -80,6 +80,26 @@ Por que isso evita vazamento:
 | `listarAdministradoresComPermissao` | lookup exclusivo de administradores |
 | `criarNoGrupo(Grupo $grupo, ...)` | recebe um `Grupo` que o Service já validou no escopo |
 
+### Auditoria dos demais módulos (REPO-002, 2026-10-15)
+
+Quem é o "dono" de cada dado e o que garante o isolamento hoje. **Conclusão: nenhum precisa de Repository** — o
+isolamento já existe e um Repository só moveria código. Critério para reavaliar: aparecer a 3ª consulta
+duplicada com dono, ou um bug de escopo que o mecanismo atual não consiga evitar.
+
+| Módulo | Dono | Garantia atual | Decisão |
+|---|---|---|---|
+| Empresa | `grupo_empresa_id` | `EscopoEntidadeService::aplicar()` em todos os métodos (inclui `excluir`/`ativar`, corrigido em SEC-003) | manter |
+| EmpresaContato / EmpresaEndereco | via `empresa_id` | `validarAcessoEmpresa()` em 100% dos métodos do Service (verificado por script) + guarda `empresaVisivel()` nos Form Requests Private (SEC-002) | manter |
+| Chamado | `usuario_id` (quem abriu) | controller Private passa `Auth::id()`; `visualizarPrivate` filtra por dono; `responder` é precedido dele (fragilidade: SEC-004) | manter |
+| Mensagem (destinatário) | `usuario_id` | `MensagemDestinatarioService` recebe o usuário e filtra por ele | manter |
+| Banner / Release | não é dado de empresa: **audiência** (`entidade_tipo_id`) | filtro por contexto (`disponiveisPara`, `listarPublicadas`) | manter |
+| AcessoSuporte | ator (concedente / admin) | todo método filtra por `usuario_concedente_id` ou `usuario_admin_id` | manter |
+| Dashboard | agregados globais, só Admin | não há rota Private | manter |
+
+Regra para **Form Requests** que consultam dados com dono: chamar `EscopoEntidadeService::empresaVisivel($empresaId)`
+antes e retornar sem validar se a empresa não for visível — assim o Service responde o 400 padrão e a mensagem
+de validação não vira um oráculo sobre dados de outra organização.
+
 ### Consultas de Usuario fora do repository (pendência REPO-003)
 
 Ainda existem, de propósito ou por avaliar: `MensagemService::buscarUsuarios` (busca global por design, para

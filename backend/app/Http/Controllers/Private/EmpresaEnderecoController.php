@@ -98,7 +98,7 @@ class EmpresaEnderecoController extends Controller
     )]
     public function atualizar(AtualizarRequest $request, string $empresaId, string $enderecoId): JsonResponse
     {
-        $this->authorize('private.empresa.contato.atualizar');
+        $this->authorize('private.empresa.endereco.atualizar');
 
         $endereco = $this->empresaEnderecoService->atualizar(
             EmpresaEnderecoAtualizacaoDTO::criarParaAtualizacao(

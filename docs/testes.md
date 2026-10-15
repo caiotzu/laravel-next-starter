@@ -143,10 +143,12 @@ Executado com PHP 8.3 + PostgreSQL 16 locais (fora do Sail), banco `testing`:
 
 | Suíte | Resultado |
 |---|---|
-| Backend (`./vendor/bin/pest`) | **362 testes verdes** (1520 asserções) |
+| Backend (`./vendor/bin/pest`) | **375 testes verdes** (1549 asserções) |
 | Frontend (`npm test`) | **109 testes verdes** (14 arquivos) |
 | Frontend (`npx tsc --noEmit`) | sem erros |
 | Frontend (`npm run lint`) | 0 erros, 70 avisos |
+
+Novos em 2026-10-15: `tests/Feature/EmpresaEnderecoAutorizacaoTest.php` (permissão de endereço, Admin e Private) e, em `EscopoEntidadeTest.php`, excluir/ativar de empresa e Form Requests que não revelam dados de outra empresa.
 
 As contagens históricas acima (153/252 testes) refletem momentos anteriores; use esta tabela como referência atual.
 Novos arquivos: `tests/Feature/GrupoEmpresaOnboardingTest.php` (onboarding de empresa: sucesso, permissões `private.*`, 401, 403, 422) e,

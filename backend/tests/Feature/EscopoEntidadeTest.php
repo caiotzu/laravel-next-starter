@@ -9,14 +9,23 @@ use App\Models\Grupo;
 use App\Models\GrupoEmpresa;
 use App\Models\Empresa;
 use App\Models\EmpresaContato;
+use App\Models\EmpresaEndereco;
+use App\Models\Municipio;
 use App\Models\EntidadeTipo as EntidadeTipoModel;
 use App\Models\AcessoSuporte;
 use App\Models\Permissao;
 use App\Models\UsuarioSessao;
 
+use App\Services\EmpresaService;
+use App\Enums\ErrorCode;
+use App\Exceptions\BusinessException;
+
+use Illuminate\Support\Facades\Auth;
+
 use App\Enums\UsuarioStatus;
 use App\Enums\AcessoSuporteStatus;
 use App\Enums\EmpresaContatoTipo;
+use App\Enums\EmpresaEnderecoTipo;
 
 /**
  * Cobre a centralização de escopo por entidade (EscopoEntidadeService) nos
@@ -508,3 +517,185 @@ test('EscopoEntidadeService não quebra e resulta em escopo vazio quando não h�
 });
 
 // #endregion Sem usuário autenticado
+
+// #region Empresa — excluir/ativar (rotas só do Admin)
+
+test('admin fora de modo de suporte exclui e reativa a empresa de qualquer cliente', function () {
+    $cenario = criarCenarioEscopoEntidade();
+    concederPermissoesEscopo($cenario['grupoAdmin'], ['admin.empresa.excluir', 'admin.empresa.ativar']);
+
+    $token = autenticarEscopo($cenario['admin']);
+    $empresaId = $cenario['clienteB']['empresa']->id;
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->deleteJson("/api/admin/empresas/{$empresaId}")
+        ->assertSuccessful();
+
+    $this->assertSoftDeleted('empresas', ['id' => $empresaId]);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->patchJson("/api/admin/empresas/{$empresaId}/ativar")
+        ->assertSuccessful();
+
+    $this->assertNotSoftDeleted('empresas', ['id' => $empresaId]);
+});
+
+test('EmpresaService::excluir não alcança a empresa de outro cliente quando o contexto é de um usuário private', function () {
+    $cenario = criarCenarioEscopoEntidade();
+    $empresaB = $cenario['clienteB']['empresa'];
+
+    Auth::setUser($cenario['clienteA']['usuario']);
+
+    expect(fn () => app(EmpresaService::class)->excluir($empresaB->id))
+        ->toThrow(BusinessException::class, 'Empresa não encontrado para exclusão.');
+
+    $this->assertNotSoftDeleted('empresas', ['id' => $empresaB->id]);
+});
+
+test('EmpresaService::ativar não alcança a empresa excluída de outro cliente quando o contexto é de um usuário private', function () {
+    $cenario = criarCenarioEscopoEntidade();
+    $empresaB = $cenario['clienteB']['empresa'];
+    $empresaB->delete();
+
+    Auth::setUser($cenario['clienteA']['usuario']);
+
+    expect(fn () => app(EmpresaService::class)->ativar($empresaB->id))
+        ->toThrow(BusinessException::class, 'Empresa não encontrado para ativação.');
+
+    $this->assertSoftDeleted('empresas', ['id' => $empresaB->id]);
+});
+
+test('EmpresaService::excluir ainda alcança a própria empresa do usuário private', function () {
+    $cenario = criarCenarioEscopoEntidade();
+    $empresaA = $cenario['clienteA']['empresa'];
+
+    Auth::setUser($cenario['clienteA']['usuario']);
+
+    app(EmpresaService::class)->excluir($empresaA->id);
+
+    $this->assertSoftDeleted('empresas', ['id' => $empresaA->id]);
+});
+
+// #endregion Empresa — excluir/ativar (rotas só do Admin)
+
+// #region Private — Form Requests não revelam dados de outra empresa
+
+function criarEnderecoPrincipalEscopo(Empresa $empresa): EmpresaEndereco
+{
+    $municipio = Municipio::firstOrCreate(
+        ['codigo_ibge' => '9999999'],
+        ['nome' => 'Cidade Teste', 'uf' => 'SP', 'codigo_siafi' => '9999']
+    );
+
+    return EmpresaEndereco::create([
+        'empresa_id' => $empresa->id, 'tipo' => EmpresaEnderecoTipo::COMERCIAL->value, 'municipio_id' => $municipio->id,
+        'ativo' => true, 'principal' => true, 'cep' => '01001000', 'logradouro' => 'Rua B', 'numero' => '2', 'bairro' => 'Centro',
+    ]);
+}
+
+function dadosEnderecoEscopo(string $municipioId, bool $principal): array
+{
+    return [
+        'tipo' => EmpresaEnderecoTipo::FISCAL->value, 'municipio_id' => $municipioId, 'principal' => $principal, 'ativo' => true,
+        'cep' => '01001000', 'logradouro' => 'Rua Nova', 'numero' => '10', 'bairro' => 'Centro', 'complemento' => null,
+    ];
+}
+
+test('private A recebe a mesma resposta ao cadastrar contato principal na empresa de B, exista ou não principal lá', function () {
+    $cenario = criarCenarioEscopoEntidade();
+    concederPermissoesEscopo($cenario['clienteA']['grupo'], ['private.empresa.contato.cadastrar']);
+    $empresaB = $cenario['clienteB']['empresa'];
+
+    EmpresaContato::create([
+        'empresa_id' => $empresaB->id, 'tipo' => EmpresaContatoTipo::EMAIL->value,
+        'valor' => 'principal@b.com', 'principal' => true, 'ativo' => true,
+    ]);
+
+    $token = autenticarEscopo($cenario['clienteA']['usuario']);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/empresas/{$empresaB->id}/contatos", [
+            'tipo' => EmpresaContatoTipo::EMAIL->value, 'valor' => 'x@x.com', 'principal' => true, 'ativo' => true,
+        ])
+        ->assertStatus(400)
+        ->assertJsonMissingValidationErrors(['principal']);
+});
+
+test('private A recebe a mesma resposta ao atualizar contato inexistente ou existente na empresa de B', function () {
+    $cenario = criarCenarioEscopoEntidade();
+    concederPermissoesEscopo($cenario['clienteA']['grupo'], ['private.empresa.contato.atualizar']);
+    $empresaB = $cenario['clienteB']['empresa'];
+
+    $contatoB = EmpresaContato::create([
+        'empresa_id' => $empresaB->id, 'tipo' => EmpresaContatoTipo::EMAIL->value,
+        'valor' => 'b@b.com', 'principal' => false, 'ativo' => true,
+    ]);
+
+    $token = autenticarEscopo($cenario['clienteA']['usuario']);
+    $dados = ['tipo' => EmpresaContatoTipo::EMAIL->value, 'valor' => 'y@y.com', 'principal' => false, 'ativo' => true];
+
+    $existente = $this->withHeader('Authorization', "Bearer {$token}")
+        ->putJson("/api/empresas/{$empresaB->id}/contatos/{$contatoB->id}", $dados);
+
+    $inexistente = $this->withHeader('Authorization', "Bearer {$token}")
+        ->putJson("/api/empresas/{$empresaB->id}/contatos/" . \Illuminate\Support\Str::uuid(), $dados);
+
+    $existente->assertStatus(400);
+    $inexistente->assertStatus(400);
+    $this->assertDatabaseMissing('empresa_contatos', ['valor' => 'y@y.com']);
+});
+
+test('private A recebe a mesma resposta ao cadastrar endereço principal na empresa de B, exista ou não principal lá', function () {
+    $cenario = criarCenarioEscopoEntidade();
+    concederPermissoesEscopo($cenario['clienteA']['grupo'], ['private.empresa.endereco.cadastrar']);
+    $empresaB = $cenario['clienteB']['empresa'];
+    $enderecoB = criarEnderecoPrincipalEscopo($empresaB);
+
+    $token = autenticarEscopo($cenario['clienteA']['usuario']);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/empresas/{$empresaB->id}/enderecos", dadosEnderecoEscopo($enderecoB->municipio_id, true))
+        ->assertStatus(400)
+        ->assertJsonMissingValidationErrors(['principal']);
+});
+
+test('private A recebe a mesma resposta ao atualizar endereço inexistente na empresa de B', function () {
+    $cenario = criarCenarioEscopoEntidade();
+    concederPermissoesEscopo($cenario['clienteA']['grupo'], ['private.empresa.endereco.atualizar']);
+    $empresaB = $cenario['clienteB']['empresa'];
+    $enderecoB = criarEnderecoPrincipalEscopo($empresaB);
+
+    $token = autenticarEscopo($cenario['clienteA']['usuario']);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->putJson("/api/empresas/{$empresaB->id}/enderecos/" . \Illuminate\Support\Str::uuid(), dadosEnderecoEscopo($enderecoB->municipio_id, true))
+        ->assertStatus(400);
+});
+
+test('private A continua recebendo a validação de principal duplicado na PRÓPRIA empresa', function () {
+    $cenario = criarCenarioEscopoEntidade();
+    concederPermissoesEscopo($cenario['clienteA']['grupo'], ['private.empresa.contato.cadastrar', 'private.empresa.endereco.cadastrar']);
+    $empresaA = $cenario['clienteA']['empresa'];
+
+    EmpresaContato::create([
+        'empresa_id' => $empresaA->id, 'tipo' => EmpresaContatoTipo::EMAIL->value,
+        'valor' => 'principal@a.com', 'principal' => true, 'ativo' => true,
+    ]);
+    $enderecoA = criarEnderecoPrincipalEscopo($empresaA);
+
+    $token = autenticarEscopo($cenario['clienteA']['usuario']);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/empresas/{$empresaA->id}/contatos", [
+            'tipo' => EmpresaContatoTipo::EMAIL->value, 'valor' => 'z@z.com', 'principal' => true, 'ativo' => true,
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['principal']);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/empresas/{$empresaA->id}/enderecos", dadosEnderecoEscopo($enderecoA->municipio_id, true))
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['principal']);
+});
+
+// #endregion Private — Form Requests não revelam dados de outra empresa
