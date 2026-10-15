@@ -25,6 +25,8 @@ const METODOS_SEM_ESCOPO = [
         'buscarAtivoOuConvidadoPorEmail',     // esqueci minha senha
         'buscarClienteDoGrupo',               // ação de Admin sobre usuários de clientes
         'listarAdministradoresComPermissao',  // lookup exclusivo de administradores
+        'buscarAdministradorPorId',           // lookup exclusivo de administradores (Acesso de Suporte)
+        'pesquisarEmTodasAsEntidades',        // busca GLOBAL de destinatários de mensagem (só Admin)
     ],
 ];
 
@@ -108,10 +110,10 @@ it('só o EscopoEntidadeService lê entidade_tipo/entidade do AcessoSuporteConte
     expect($infratores)->toBe([], 'Use EscopoEntidadeService::atual() em vez de ler o contexto direto.');
 });
 
-it('UsuarioService, GrupoService e GrupoEmpresaService não montam consultas de Usuario/Grupo nem leem o usuário autenticado', function () {
+it('UsuarioService, GrupoService, GrupoEmpresaService, MensagemService e AcessoSuporteService não montam consultas de Usuario/Grupo nem leem o usuário autenticado', function () {
     $base = dirname(__DIR__, 2) . '/app/Services/';
 
-    foreach (['UsuarioService.php', 'GrupoService.php', 'GrupoEmpresaService.php'] as $arquivo) {
+    foreach (['UsuarioService.php', 'GrupoService.php', 'GrupoEmpresaService.php', 'MensagemService.php', 'AcessoSuporteService.php'] as $arquivo) {
         $codigo = preg_replace('#/\*.*?\*/|//[^\n]*#s', '', file_get_contents($base . $arquivo));
 
         expect($codigo)

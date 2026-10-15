@@ -6,6 +6,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
+use App\DTO\Mensagem\MensagemBuscaUsuarioFiltroDTO;
 use App\DTO\Usuario\UsuarioFiltroDTO;
 use App\Enums\EntidadeTipo;
 use App\Enums\UsuarioStatus;
@@ -26,7 +27,11 @@ use App\Support\EscopoEntidade;
  *    autenticado, o tipo de entidade vem da audiência da rota (Admin/Private);
  *  - buscarClienteDoGrupo: ação de um Admin sobre usuários de clientes, autorizada por
  *    permissão administrativa na rota;
- *  - listarAdministradoresComPermissao: lookup exclusivo de administradores.
+ *  - listarAdministradoresComPermissao / buscarAdministradorPorId: lookups exclusivos de
+ *    administradores (a regra "é administrador" vive aqui, não nos chamadores);
+ *  - pesquisarEmTodasAsEntidades: busca GLOBAL de destinatários de mensagem, só para o Admin.
+ *    É a leitura mais sensível deste repository (nome e e-mail de usuários de TODAS as
+ *    empresas) — por isso fica aqui, visível na lista de exceções, e não solta num Service.
  *
  * Só acessa dados: regras (status permitido, tokens, eventos, transações) ficam no
  * UsuarioService.
@@ -212,5 +217,33 @@ class UsuarioRepository
             ->orderBy('nome')
             ->limit($limite)
             ->get();
+    }
+
+    /**
+     * Administrador (grupo de entidade do tipo Admin, não excluído) por id, em qualquer status.
+     * Usado na concessão de Acesso de Suporte, que valida a regra no Request E no Service.
+     */
+    public function buscarAdministradorPorId(string $id): ?Usuario
+    {
+        return Usuario::with('grupo.entidadeTipo')
+            ->whereHas('grupo.entidadeTipo', fn (Builder $query) =>
+                $query->where('chave', EntidadeTipo::ADMIN->value)
+            )
+            ->find($id);
+    }
+
+    /**
+     * Busca estilo autocomplete entre usuários de TODAS as entidades (destinatários de mensagem).
+     * Só id, nome e e-mail. Sem escopo de propósito: o Admin escolhe qualquer usuário do sistema.
+     */
+    public function pesquisarEmTodasAsEntidades(MensagemBuscaUsuarioFiltroDTO $filtro): LengthAwarePaginator
+    {
+        return Usuario::query()
+            ->select(['id', 'nome', 'email'])
+            ->when($filtro->nome, fn (Builder $query) =>
+                $query->where('nome', 'ilike', "%{$filtro->nome}%")
+            )
+            ->orderBy('nome')
+            ->paginate($filtro->paginacao->por_pagina);
     }
 }

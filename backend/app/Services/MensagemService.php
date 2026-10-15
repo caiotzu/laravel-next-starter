@@ -11,7 +11,6 @@ use App\Jobs\PopularDestinatariosMensagemJob;
 use App\Models\Mensagem;
 use App\Models\MensagemDirecionamento;
 use App\Models\EntidadeTipo as EntidadeTipoModel;
-use App\Models\Usuario;
 
 use App\DTO\Mensagem\MensagemFiltroDTO;
 use App\DTO\Mensagem\MensagemCadastroDTO;
@@ -22,7 +21,13 @@ use App\Enums\MensagemOrigem;
 
 use App\Exceptions\BusinessException;
 
+use App\Repositories\UsuarioRepository;
+
 class MensagemService {
+
+    public function __construct(
+        private UsuarioRepository $usuarios,
+    ) {}
 
     /**
      * @param MensagemOrigem $origem Padrão ADMIN (mantém o comportamento
@@ -152,12 +157,6 @@ class MensagemService {
      */
     public function buscarUsuarios(MensagemBuscaUsuarioFiltroDTO $filtro): LengthAwarePaginator
     {
-        return Usuario::query()
-            ->select(['id', 'nome', 'email'])
-            ->when($filtro->nome, fn ($q) =>
-                $q->where('nome', 'ilike', "%{$filtro->nome}%")
-            )
-            ->orderBy('nome')
-            ->paginate($filtro->paginacao->por_pagina);
+        return $this->usuarios->pesquisarEmTodasAsEntidades($filtro);
     }
 }

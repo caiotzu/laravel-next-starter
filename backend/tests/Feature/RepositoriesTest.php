@@ -245,3 +245,31 @@ test('UsuarioRepository: lookups de autenticação, cliente do grupo e administr
 
     expect($repo->listarAdministradoresComPermissao(null, ['permissao.que.nao.existe']))->toBeEmpty();
 });
+
+test('UsuarioRepository::buscarAdministradorPorId só devolve usuário de grupo Admin não excluído', function () {
+    $c = cenarioRepo();
+    $repo = app(UsuarioRepository::class);
+
+    expect($repo->buscarAdministradorPorId($c['uAdmin']->id)?->id)->toBe($c['uAdmin']->id);
+    expect($repo->buscarAdministradorPorId($c['uAdmin']->id)?->relationLoaded('grupo'))->toBeTrue();
+    expect($repo->buscarAdministradorPorId($c['A']['usuario']->id))->toBeNull();                   // usuário de cliente
+    expect($repo->buscarAdministradorPorId((string) \Illuminate\Support\Str::uuid()))->toBeNull();  // inexistente
+
+    $c['uAdmin']->update(['status' => 'bloqueado']);
+    expect($repo->buscarAdministradorPorId($c['uAdmin']->id))->not->toBeNull();                    // qualquer status (comportamento original)
+
+    $c['gAdmin']->delete();
+    expect($repo->buscarAdministradorPorId($c['uAdmin']->id))->toBeNull();                         // grupo excluído
+});
+
+test('UsuarioRepository::pesquisarEmTodasAsEntidades é global, filtra por nome e limita as colunas', function () {
+    $c = cenarioRepo();
+    $repo = app(UsuarioRepository::class);
+
+    $todos = $repo->pesquisarEmTodasAsEntidades(\App\DTO\Mensagem\MensagemBuscaUsuarioFiltroDTO::criarParaFiltro([]));
+    expect(collect($todos->items())->pluck('nome')->all())->toEqualCanonicalizing(['U A', 'U admin', 'U B']);   // ordem depende da collation do banco
+    expect(array_keys($todos->items()[0]->getAttributes()))->toBe(['id', 'nome', 'email']);
+
+    $filtrado = $repo->pesquisarEmTodasAsEntidades(\App\DTO\Mensagem\MensagemBuscaUsuarioFiltroDTO::criarParaFiltro(['nome' => 'u b']));
+    expect(collect($filtrado->items())->pluck('nome')->all())->toBe(['U B']);
+});

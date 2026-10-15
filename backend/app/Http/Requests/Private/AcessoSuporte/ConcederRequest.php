@@ -6,9 +6,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Http\FormRequest;
 
 use App\Models\Empresa;
-use App\Models\Usuario;
 
-use App\Enums\EntidadeTipo;
+use App\Repositories\UsuarioRepository;
 use App\Services\AcessoSuporteService;
 
 class ConcederRequest extends FormRequest
@@ -75,9 +74,9 @@ class ConcederRequest extends FormRequest
                 return;
             }
 
-            $admin = Usuario::with('grupo.entidadeTipo')->find($adminId);
+            $admin = app(UsuarioRepository::class)->buscarAdministradorPorId($adminId);
 
-            if (!$admin || $admin->grupo?->entidadeTipo?->chave !== EntidadeTipo::ADMIN) {
+            if (!$admin) {
                 $validator->errors()->add(
                     'usuario_admin_id',
                     'O usuário selecionado não é um administrador.'

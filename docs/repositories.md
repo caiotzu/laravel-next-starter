@@ -20,7 +20,7 @@ O Eloquent não vai ser trocado, e os testes usam o banco real, então uma inter
 | Repository | Usado por | Por quê |
 |---|---|---|
 | `App\Repositories\GrupoRepository` | `GrupoService`, `UsuarioService`, `GrupoEmpresaService` | consultas com dono (escopo), duplicadas em 12 pontos |
-| `App\Repositories\UsuarioRepository` | `UsuarioService`, `GrupoEmpresaService` | consultas com dono + 3 lookups de autenticação parecidos |
+| `App\Repositories\UsuarioRepository` | `UsuarioService`, `GrupoEmpresaService`, `AcessoSuporteService` (+ `ConcederRequest`), `MensagemService` | consultas com dono + lookups de autenticação + lookups de administrador + busca global de destinatários |
 
 Não têm Repository (de propósito): Empresa (já usa `EscopoEntidadeService::aplicar`), Chamado, Banner, Release,
 Mensagem, AcessoSuporte, Dashboard (somente agregações de leitura) e as tabelas simples.
@@ -100,12 +100,20 @@ Regra para **Form Requests** que consultam dados com dono: chamar `EscopoEntidad
 antes e retornar sem validar se a empresa não for visível — assim o Service responde o 400 padrão e a mensagem
 de validação não vira um oráculo sobre dados de outra organização.
 
-### Consultas de Usuario fora do repository (pendência REPO-003)
+### Lookups de Usuario sem escopo (REPO-003, 2026-10-15)
 
-Ainda existem, de propósito ou por avaliar: `MensagemService::buscarUsuarios` (busca global por design, para
-direcionar mensagem a qualquer usuário), a busca do admin em `AcessoSuporteService::conceder` e em
-`Private\AcessoSuporte\ConcederRequest`, os listeners `InvalidarSessoesDosUsuariosDoGrupo[Empresa]` e o
-`PopularDestinatariosMensagemJob`. Estado e decisão: `IMPLEMENTATION_PLAN.md` (F-4, REPO-002/003).
+Cinco pontos consultavam `Usuario` fora do repository. Decisão por ponto, pelo critério "qual problema concreto
+a abstração resolve":
+
+| Ponto | Decisão | Motivo |
+|---|---|---|
+| `AcessoSuporteService::conceder` + `ConcederRequest` | **migrado** → `UsuarioRepository::buscarAdministradorPorId` | a regra "é administrador" estava **duplicada** (Request e Service, com comparações ligeiramente diferentes); agora vive na consulta (`whereHas` no tipo Admin) e o chamador só testa `null` |
+| `MensagemService::buscarUsuarios` | **migrado** → `UsuarioRepository::pesquisarEmTodasAsEntidades` | é a leitura mais sensível (nome e e-mail de usuários de **todas** as empresas); em um Service ela era invisível à guarda. Agora está em `METODOS_SEM_ESCOPO` e `MensagemService` não pode mais montar consulta de Usuario |
+| Listeners `InvalidarSessoesDosUsuariosDoGrupo[Empresa]` | **mantido** | ação de sistema disparada por evento (sem usuário autenticado), um `pluck('id')` de uma linha, um único chamador cada |
+| `PopularDestinatariosMensagemJob` (4 consultas) | **mantido** | job em fila, em lotes (`chunkById`); o fan-out entre empresas é a **função** do job (mensagem geral/por entidade/por permissão, criada só pelo Admin). Mover exigiria um método por modo, sem ganho |
+
+`buscarAdministradorPorId` **não filtra por status** (preserva o comportamento anterior: o Request e o Service
+nunca checaram se o admin está ativo). Se isso deve mudar, é decisão de regra de negócio separada.
 
 ## Identidade × contexto
 

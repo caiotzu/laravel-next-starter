@@ -6,13 +6,13 @@ Só marque `[x]` depois de verificar (teste executado, lint/tsc, leitura do resu
 
 ---
 
-## A. Resumo do estado atual (2026-10-15)
+## A. Resumo do estado atual (2026-10-16)
 
 - **Padronização:** instruções permanentes e docs criadas e já publicadas no `main` (commit `213ed62`); convenções registradas sem alterar a arquitetura existente (ela já era coerente).
-- **Repository Pattern:** adotado de forma deliberada e restrita (dados com dono). `GrupoRepository` e `UsuarioRepository` existem; consumidores: `GrupoService`, `UsuarioService`, `GrupoEmpresaService::cadastrar`. Guarda estrutural em `tests/Unit/RepositoriesEscopoTest.php`.
+- **Repository Pattern (trilha concluída):** adotado de forma deliberada e restrita. `GrupoRepository` e `UsuarioRepository`; consumidores: `GrupoService`, `UsuarioService`, `GrupoEmpresaService`, `AcessoSuporteService`/`ConcederRequest`, `MensagemService`. Guarda estrutural em `tests/Unit/RepositoriesEscopoTest.php` cobre 5 Services. Não há mais consultas de `Usuario`/`Grupo` soltas em Services, exceto as decididas e justificadas em `repositories.md`.
 - **Auditoria dos demais módulos (REPO-002, concluída):** nenhum precisa de Repository novo; o isolamento já é garantido por outros mecanismos (tabela em `repositories.md`). A auditoria encontrou e corrigiu 3 falhas reais de autorização/escopo (SEC-001..003).
 - **Módulos padronizados:** Grupo, Usuario (Repository); Empresa/Contato/Endereco (`EscopoEntidadeService`); Chamado/Mensagem (dono = usuário passado pelo controller); Banner/Release (audiência por contexto); AcessoSuporte (filtro pelo ator).
-- **Verificação:** backend **375 testes verdes** (1549 asserções; baseline inicial 357); frontend 109 testes verdes, `tsc` limpo, ESLint 0 erros / 70 avisos (baseline inicial: 2 testes falhando + 19 erros de lint).
+- **Verificação:** backend **386 testes verdes** (1589 asserções; baseline inicial 357); frontend 109 testes verdes, `tsc` limpo, ESLint 0 erros / 70 avisos (baseline inicial: 2 testes falhando + 19 erros de lint).
 - **Bloqueios/riscos:** nenhum bloqueio. Não há CI; sem execução via Sail/Docker (verificado com PHP 8.3 + PostgreSQL 16 local — PROJECT_GUIDE §12). Auditoria de segurança **não é completa**: cobriu escopo/tenant, chaves de `authorize()` e fluxo de proxy.
 - **Atenção em produção (SEC-001):** grupos *personalizados* que tinham só `*.empresa.contato.atualizar` deixam de poder editar endereços (corrigido: exige `*.empresa.endereco.atualizar`). Grupos semeados/onboarding recebem ambas e não são afetados.
 
@@ -23,7 +23,7 @@ Só marque `[x]` depois de verificar (teste executado, lint/tsc, leitura do resu
 | F-1 | P1 | `lib/media-url.ts` documentado e exigido por testes, mas nunca commitado | `git log --all -- frontend/lib/media-url.ts` vazio | **Resolvido** (FRONT-001) |
 | F-2 | P1 | Onboarding criava `Grupo`/`Usuario` direto no Eloquent, sem teste | grep + ausência de teste | **Resolvido** (REPO-001) |
 | F-3 | P2 | 19 erros `import/order` no lint | `npx eslint .` | **Resolvido** (FRONT-002) |
-| F-4 | P2 | Lookups de Usuario sem escopo fora de repository (`MensagemService::buscarUsuarios` é global por design; admin em `AcessoSuporteService`/`ConcederRequest`; listeners/job) | grep em `app/` | Aberto → REPO-003 |
+| F-4 | P2 | Lookups de Usuario sem escopo fora de repository (admin em `AcessoSuporteService`/`ConcederRequest` com regra duplicada; busca global em `MensagemService`; listeners; job) | grep em `app/` | **Resolvido** (REPO-003): 2 migrados, 3 mantidos com justificativa |
 | F-5 | P2 | Sem CI/CD nem `composer audit`/`npm audit` automatizados | não existe `.github/` | Aberto → CI-001 |
 | F-6 | P2 | Frontend com testes só em lib/proxy/banner/perfil/validações | `frontend/tests/**` | Aberto → TEST-001 |
 | F-7 | P3 | Pint não aplicado ao legado (340/501 arquivos fora do preset) vs `AGENTS.md` | `pint --test` | Decisão D-005; opcional → QUAL-001 |
@@ -86,6 +86,12 @@ Verificado e **sem achado**: toda chave usada em `authorize()` existe nos seeder
 - **Arquivos:** `backend/app/Services/EmpresaService.php`; testes em `EscopoEntidadeTest.php` (caracterização do Admin via HTTP + 3 casos de service com contexto Private).
 - **Resultado:** sem mudança para o Admin (`irrestrito`); defesa em profundidade para qualquer chamador futuro.
 
+### REPO-003 — Lookups de Usuario sem escopo (F-4)
+- **Arquivos:** `backend/app/Repositories/UsuarioRepository.php` (+2 métodos), `AcessoSuporteService`, `Private/AcessoSuporte/ConcederRequest`, `MensagemService` (agora com construtor), `tests/Unit/RepositoriesEscopoTest.php` (2 métodos em `METODOS_SEM_ESCOPO`; guarda estendida a `MensagemService` e `AcessoSuporteService`), testes novos em `AcessoSuporteTest` (4), `MensagemBuscaUsuariosTest` (novo, 5) e `RepositoriesTest` (2).
+- **Resultado:** migrados `buscarAdministradorPorId` (regra "é administrador" deixa de estar duplicada) e `pesquisarEmTodasAsEntidades` (busca global agora auditável); listeners e job mantidos (decisão e motivo em `repositories.md`). Comportamento HTTP inalterado.
+- **Verificação:** 9 testes de caracterização escritos e **verdes antes** do refactor; guarda confirmada por mutação (falha ao reintroduzir `Usuario::query()` no `MensagemService`); suíte completa 386 verdes.
+- **Pendências:** nenhuma. Observação registrada: `buscarAdministradorPorId` não filtra status (comportamento original preservado).
+
 ## C. Tarefas em andamento
 
 Nenhuma. (Última unidade coerente concluída: REPO-002 + SEC-001..003.)
@@ -96,10 +102,6 @@ Nenhuma. (Última unidade coerente concluída: REPO-002 + SEC-001..003.)
 
 Legenda de prioridade: P1 > P2 > P3. Ordem sugerida = ordem da lista.
 
-- [ ] **REPO-003 (P2) — Lookups de Usuario sem escopo (F-4)**
-  - Escopo: `AcessoSuporteService::conceder` + `ConcederRequest` (`Usuario::with('grupo.entidadeTipo')->find`), `MensagemService::buscarUsuarios`, listeners `InvalidarSessoesDosUsuariosDoGrupo[Empresa]`, `PopularDestinatariosMensagemJob`.
-  - Regra de decisão: só migrar se a consulta duplicada ficar mais legível; método sem escopo entra em `METODOS_SEM_ESCOPO` com justificativa. É aceitável **concluir descartando** a migração e registrando o porquê.
-  - Dependência: REPO-002 (concluída; confirmou que não há outros módulos a migrar). Testes: `AcessoSuporteTest`, `MensagemTest` (se existir; senão caracterização), `RepositoriesEscopoTest`. Status: pendente.
 - [ ] **SEC-004 (P3) — Dono do chamado dentro do Service (F-13)**
   - Objetivo: `ChamadoService` deixar de depender só do controller para a posse. Opção mínima: `responder` receber/validar `usuario_id` do dono quando o chamador é Private (ou método `buscarDoUsuario`). Pode ser **descartada** se registrado o motivo.
   - Testes: `ChamadoTest` já cobre "cliente não visualiza chamado de outro"; incluir chamada direta ao Service. Status: pendente.
@@ -117,10 +119,10 @@ Legenda de prioridade: P1 > P2 > P3. Ordem sugerida = ordem da lista.
 
 ## E. Próxima tarefa recomendada
 
-**REPO-003 — Lookups de Usuario sem escopo (F-4).**
-Por que agora: fecha a trilha do Repository Pattern (objetivo prioritário). A REPO-002 já confirmou que nenhum outro módulo exige Repository, então resta decidir os 5 lookups de Usuario (admin em `AcessoSuporteService::conceder` + `ConcederRequest`, `MensagemService::buscarUsuarios`, listeners de sessão, `PopularDestinatariosMensagemJob`). É aceitável concluir **descartando** a migração se o ganho for só mover uma linha — registrar o porquê (regra de decisão do `CLAUDE.md`).
-Para iniciar: `docs/repositories.md` (seção "Consultas de Usuario fora do repository"), `UsuarioRepository` + `METODOS_SEM_ESCOPO` em `tests/Unit/RepositoriesEscopoTest.php`, skill `laravel-best-practices` (`rules/architecture.md`), `testes` de `AcessoSuporteTest`. Nenhuma decisão do usuário é necessária.
-Alternativa se preferir priorizar segurança/qualidade: **CI-001** (requer aprovação para criar `.github/`).
+**CI-001 — Pipeline de CI (Pest, Vitest, `tsc`, ESLint, `composer audit`, `npm audit`).**
+Por que agora: a trilha do Repository Pattern está concluída e as correções de segurança/escopo dependem de testes que hoje só rodam na máquina de quem lembrar de executá-los. Os baselines estão medidos (backend 386, frontend 109, `tsc` limpo, lint 0 erros) e servem de critério de aceitação: o workflow deve ficar verde no estado atual.
+**Requer sua aprovação**, porque cria uma pasta nova na raiz (`.github/workflows/`). Informações necessárias: provedor de CI (GitHub Actions assumido), versão do PostgreSQL de produção (testes usam o banco real; Sail usa 17) e se `composer audit`/`npm audit` devem **bloquear** o build ou só avisar.
+**Sem aprovação**, a alternativa que pode começar de imediato é **TEST-001** (testes de frontend dos domínios críticos) ou **SEC-004** (posse do chamado dentro do Service).
 
 ---
 
@@ -137,6 +139,7 @@ Alternativa se preferir priorizar segurança/qualidade: **CI-001** (requer aprov
 | D-007 | REPO-002: manter `EscopoEntidadeService::aplicar` para Empresa/Contato/Endereco e "usuário como dono" em Chamado/Mensagem; **nenhum Repository novo** | Auditoria mostrou isolamento já correto; Repository só moveria código | Repository para Empresa/Chamado |
 | D-008 | Guarda de escopo em Form Requests via `EscopoEntidadeService::empresaVisivel()` (um método, 4 chamadas) | Regra num lugar só; sem classe/trait nova; precedente: Requests já usam `EscopoEntidadeService` | Trait nos Requests; duplicar a consulta em cada um |
 | D-009 | Corrigir F-10 trocando a chave de permissão (e documentar o impacto), sem camada de compatibilidade | A chave "certa" já existe nos seeders e no frontend | Aceitar ambas as permissões |
+| D-010 | REPO-003: migrar só os 2 lookups com problema concreto (regra duplicada; leitura global sensível); manter listeners e job | Critério do `CLAUDE.md`: abstração só com problema real; listeners/job são sistema, 1 chamador, fan-out por design | Mover todos os 5; mover nenhum |
 
 ---
 
@@ -146,3 +149,4 @@ Alternativa se preferir priorizar segurança/qualidade: **CI-001** (requer aprov
 |---|---|---|---|---|
 | 2026-10-14 | ARCH-001, REPO-001, FRONT-001, FRONT-002, DOC-001 | `CLAUDE.md`, `docs/{PROJECT_GUIDE,IMPLEMENTATION_PLAN}.md`, `GrupoEmpresaService`, `GrupoEmpresaOnboardingTest`, `RepositoriesEscopoTest`, `frontend/lib/{media-url,proxy-admin,proxy-private}.ts` | Pest 362 ✔; Vitest 109 ✔; `tsc` ✔; ESLint 0 erros | REPO-002 |
 | 2026-10-15 | REPO-002, SEC-001, SEC-002, SEC-003 | `EmpresaService`, `EscopoEntidadeService`, `EmpresaEnderecoController` (Admin/Private), 4 Form Requests Private, `EscopoEntidadeTest`, `EmpresaEnderecoAutorizacaoTest`, `docs/repositories.md` | Pest 375 ✔ (cada correção vista vermelha antes); varredura de `authorize()` × seeders ✔ | REPO-003 |
+| 2026-10-16 | REPO-003 | `UsuarioRepository`, `AcessoSuporteService`, `ConcederRequest`, `MensagemService`, `RepositoriesEscopoTest`, `AcessoSuporteTest`, `MensagemBuscaUsuariosTest`, `RepositoriesTest`, `docs/repositories.md` | Pest 386 ✔; caracterização verde antes do refactor; guarda validada por mutação | CI-001 (aprovação) ou TEST-001 |

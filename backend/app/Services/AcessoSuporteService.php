@@ -22,6 +22,8 @@ use App\Enums\MensagemDirecionamentoTipo;
 
 use App\Exceptions\BusinessException;
 
+use App\Repositories\UsuarioRepository;
+
 /**
  * Genérico para qualquer entidade concedente (Private, e futuramente
  * Despachante, Revenda, Montadora...) — nada aqui sabe o nome de uma
@@ -43,6 +45,7 @@ class AcessoSuporteService
 
     public function __construct(
         protected MensagemService $mensagemService,
+        protected UsuarioRepository $usuarios,
     ) {}
 
     public function conceder(AcessoSuporteConcessaoDTO $dto): AcessoSuporte
@@ -58,9 +61,9 @@ class AcessoSuporteService
                 );
             }
 
-            $admin = Usuario::with('grupo.entidadeTipo')->find($dto->usuario_admin_id);
+            $admin = $this->usuarios->buscarAdministradorPorId($dto->usuario_admin_id);
 
-            if (!$admin || $admin->grupo?->entidadeTipo?->chave->value !== EntidadeTipoEnum::ADMIN->value) {
+            if (!$admin) {
                 throw new BusinessException(
                     'O usuário selecionado não é um administrador válido.',
                     ErrorCode::ACESSO_SUPORTE_REQUIRED->value

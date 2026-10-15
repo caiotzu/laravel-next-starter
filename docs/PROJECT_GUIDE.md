@@ -72,7 +72,7 @@ Tabela em [`../CLAUDE.md`](../CLAUDE.md#arquitetura-aprovada). Regra de ouro: **
 ## 8. Padrão oficial de repositories
 
 Resumo; completo em [`repositories.md`](./repositories.md).
-Concretos, sem interface, sem base class. Existem `GrupoRepository` e `UsuarioRepository` porque Usuario/Grupo têm **dono** (tenant) e eram consultados em ~12 pontos. Leitura exige `EscopoEntidade`; filtro único em `noEscopo()`; exceções em `METODOS_SEM_ESCOPO` (testado). Consumidores atuais: `GrupoService`, `UsuarioService`, `GrupoEmpresaService::cadastrar`.
+Concretos, sem interface, sem base class. Existem `GrupoRepository` e `UsuarioRepository` porque Usuario/Grupo têm **dono** (tenant) e eram consultados em ~12 pontos. Leitura exige `EscopoEntidade`; filtro único em `noEscopo()`; exceções em `METODOS_SEM_ESCOPO` (testado). Consumidores atuais: `GrupoService`, `UsuarioService`, `GrupoEmpresaService::cadastrar`, `AcessoSuporteService`/`ConcederRequest` (admin) e `MensagemService` (busca global de destinatários).
 
 ```php
 // GrupoEmpresaService::cadastrar — onboarding: o escopo é o da NOVA empresa, montado explicitamente
@@ -108,7 +108,7 @@ $usuario = $this->usuarios->criarNoGrupo($grupo, [/* nome, email, senha => null,
 
 | Onde | Comando | Observação |
 |---|---|---|
-| backend | `./vendor/bin/sail artisan test --compact` · `./vendor/bin/pest` | baseline atual: **375 verdes** (1549 asserções) |
+| backend | `./vendor/bin/sail artisan test --compact` · `./vendor/bin/pest` | baseline atual: **386 verdes** (1589 asserções) |
 | backend | `pint <arquivo-novo.php>` | não rodar `--dirty` em legado (ver `CLAUDE.md`) |
 | frontend | `npm test` · `npx tsc --noEmit` · `npm run lint` · `npm run build` | baseline: 109 testes (14 arquivos), tsc limpo, lint 0 erros / 70 avisos |
 
@@ -132,4 +132,4 @@ Localização e quando usar: tabela em [`../CLAUDE.md`](../CLAUDE.md#skills-leia
 
 ## 15. Limitações conhecidas e pendências
 
-Lista viva em `IMPLEMENTATION_PLAN.md` (seção D). Principais: lookups de Usuario sem escopo fora de repository (`MensagemService::buscarUsuarios`, admin em `AcessoSuporteService`/`ConcederRequest`, listeners/job de mensagem); sem CI (`.github` não existe); sem teste do frontend para a maioria dos domínios; Pint não aplicado ao legado; docs históricas (`testes.md`, `arquitetura.md`) com contagens desatualizadas; `docs/pentest-avaliacao-seguranca.md` e `docs/pentest/` são citados por `seguranca.md`/`frontend-arquitetura.md`, mas **não existem** em `docs/` neste checkout.
+Lista viva em `IMPLEMENTATION_PLAN.md` (seção D). Principais: sem CI (`.github` não existe); sem teste do frontend para a maioria dos domínios; Pint não aplicado ao legado; docs históricas (`testes.md`, `arquitetura.md`) com contagens desatualizadas; `docs/pentest-avaliacao-seguranca.md` e `docs/pentest/` são citados por `seguranca.md`/`frontend-arquitetura.md`, mas **não existem** em `docs/` neste checkout.
