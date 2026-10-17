@@ -124,13 +124,11 @@ jobs:
         continue-on-error: true
         run: npm audit
 
-  # Ainda NÃO verificado em CI (o ambiente de desenvolvimento do plano não alcança o Google Fonts,
-  # usado por next/font). Não bloqueante até o primeiro run verde; depois remova `continue-on-error`.
+  # Verificado: passou no primeiro run do GitHub Actions e localmente (com o Google Fonts simulado).
   frontend-build:
-    name: Frontend (build, informativo)
+    name: Frontend (build)
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    continue-on-error: true
     defaults:
       run:
         working-directory: frontend

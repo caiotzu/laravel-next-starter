@@ -110,9 +110,11 @@ $usuario = $this->usuarios->criarNoGrupo($grupo, [/* nome, email, senha => null,
 |---|---|---|
 | backend | `./vendor/bin/sail artisan test --compact` · `./vendor/bin/pest` | baseline atual: **393 verdes** (1618 asserções) |
 | backend | `pint <arquivo-novo.php>` | não rodar `--dirty` em legado (ver `CLAUDE.md`) |
-| frontend | `npm test` · `npx tsc --noEmit` · `npm run lint` · `npm run build` | baseline: 142 testes (16 arquivos), tsc limpo, `npm run lint` 0 erros / 44 avisos |
+| frontend | `npm test` · `npx tsc --noEmit` · `npm run lint` · `npm run build` | baseline: 145 testes (17 arquivos), tsc limpo, `npm run lint` 0 erros / 44 avisos |
 
 Se `npm test` mostrar uma versão do vitest diferente da do `package-lock.json` (hoje 5.0.3), seu `node_modules` está desatualizado: rode `npm ci`.
+
+**Build local sem acesso ao Google Fonts** (`next/font/google` precisa dele): o Next aceita `NEXT_FONT_GOOGLE_MOCKED_RESPONSES=/caminho/mock.js`, um módulo que exporta `{ "https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap": "<css com @font-face apontando para http://127.0.0.1:PORTA/mock.woff2>", ... }` (uma entrada por fonte, incl. `Geist+Mono`) e um servidor HTTP local servindo o `.woff2`. Em ambiente com internet normal isso não é necessário.
 
 Execução fora do Sail (ex.: ambiente sem Docker): PHP 8.3 + PostgreSQL local, `.env` com `DB_HOST=127.0.0.1`, `APP_KEY` e `JWT_SECRET` gerados (`artisan key:generate --force`, `artisan jwt:secret --force`) e banco `testing` criado.
 
@@ -138,4 +140,4 @@ Lista viva em `IMPLEMENTATION_PLAN.md` (seção D). Principais: CI criado mas ai
 
 ## 16. CI (GitHub Actions)
 
-`.github/workflows/ci.yml`, em `push` na `main` e em `pull_request`: **backend** (PHP 8.3, PostgreSQL 17, `vendor/bin/pest`), **frontend** (`tsc`, `npm run lint`, `npm test`) e **frontend-build** (informativo). Audits: só severidade **alta/crítica** em dependências de produção bloqueia (`composer audit --ignore-severity=low --ignore-severity=medium`, `npm audit --omit=dev --audit-level=high`); o relatório completo roda em passo que não bloqueia. Antes de abrir PR, rode localmente os mesmos comandos da tabela do §12. O filtro de gravidade do `composer audit` é feito por `.github/scripts/composer-audit-grave.php` (lê o JSON; não depende de `--ignore-severity`, que não existe em Composer antigo). **Atenção:** a pasta `.github/` começa com ponto e fica oculta no Finder do macOS — confira com `ls -a` e `git status` que ela entrou no commit. Estado: ainda não executado no GitHub (CI-002).
+`.github/workflows/ci.yml`, em `push` na `main` e em `pull_request`: **backend** (PHP 8.3, PostgreSQL 17, `vendor/bin/pest`), **frontend** (`tsc`, `npm run lint`, `npm test`) e **frontend-build** (`npm run build`). Audits: só severidade **alta/crítica** em dependências de produção bloqueia (`composer audit --ignore-severity=low --ignore-severity=medium`, `npm audit --omit=dev --audit-level=high`); o relatório completo roda em passo que não bloqueia. Antes de abrir PR, rode localmente os mesmos comandos da tabela do §12. O filtro de gravidade do `composer audit` é feito por `.github/scripts/composer-audit-grave.php` (lê o JSON; não depende de `--ignore-severity`, que não existe em Composer antigo). **Atenção:** a pasta `.github/` começa com ponto e fica oculta no Finder do macOS — confira com `ls -a` e `git status` que ela entrou no commit. Estado: **primeiro run verde no GitHub** (os 3 jobs bloqueiam); falta ativar a proteção da branch `main` (CI-003).

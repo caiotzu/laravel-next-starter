@@ -12,8 +12,8 @@ Só marque `[x]` depois de verificar (teste executado, lint/tsc, leitura do resu
 - **Repository Pattern (trilha concluída):** adotado de forma deliberada e restrita. `GrupoRepository` e `UsuarioRepository`; consumidores: `GrupoService`, `UsuarioService`, `GrupoEmpresaService`, `AcessoSuporteService`/`ConcederRequest`, `MensagemService`. Guarda estrutural em `tests/Unit/RepositoriesEscopoTest.php` cobre 5 Services. Não há mais consultas de `Usuario`/`Grupo` soltas em Services, exceto as decididas e justificadas em `repositories.md`.
 - **Auditoria dos demais módulos (REPO-002, concluída):** nenhum precisa de Repository novo; o isolamento já é garantido por outros mecanismos (tabela em `repositories.md`). A auditoria encontrou e corrigiu 3 falhas reais de autorização/escopo (SEC-001..003).
 - **Módulos padronizados:** Grupo, Usuario (Repository); Empresa/Contato/Endereco (`EscopoEntidadeService`); Chamado/Mensagem (dono = usuário passado pelo controller); Banner/Release (audiência por contexto); AcessoSuporte (filtro pelo ator).
-- **Verificação:** backend **393 testes verdes** (1618 asserções; baseline inicial 357); frontend **142 testes verdes** (16 arquivos), `tsc` limpo, `npm run lint` 0 erros / **44 avisos** (eram 70), `npm audit --omit=dev --audit-level=high` sem achados. Resultados também **confirmados na máquina do dono** (macOS, Sail): backend 391 verdes na rodada anterior, `composer audit --locked` sem advisories, frontend verde.
-- **CI:** `.github/workflows/ci.yml` existe no meu clone, **mas não está no GitHub**: o commit `c294610` contém o restante do zip 4 sem a pasta `.github/` (pasta oculta no Finder do macOS ao extrair). Portanto o CI **nunca rodou**. As etapas foram simuladas localmente e validadas pelo dono (ver CI-002).
+- **Verificação:** backend **393 testes verdes** (1618 asserções; baseline inicial 357); frontend **145 testes verdes** (17 arquivos), `tsc` limpo, `npm run lint` 0 erros / **44 avisos** (eram 70), `npm run build` ✔ (local, com Google Fonts simulado), `npm audit --omit=dev --audit-level=high` sem achados.
+- **CI:** `.github/workflows/ci.yml` está no GitHub (commit `d3ff70b`) e o **primeiro run passou** (workflow "passing", 3 jobs "completed successfully"). Os jobs `backend`, `frontend` e `frontend-build` agora são todos **bloqueantes**. Falta só decidir a proteção da branch `main` (CI-003).
 - **Bloqueios/riscos:** nenhum bloqueio. Não há CI; sem execução via Sail/Docker (verificado com PHP 8.3 + PostgreSQL 16 local — PROJECT_GUIDE §12). Auditoria de segurança **não é completa**: cobriu escopo/tenant, chaves de `authorize()` e fluxo de proxy.
 - **Atenção em produção (SEC-001):** grupos *personalizados* que tinham só `*.empresa.contato.atualizar` deixam de poder editar endereços (corrigido: exige `*.empresa.endereco.atualizar`). Grupos semeados/onboarding recebem ambas e não são afetados.
 
@@ -37,8 +37,8 @@ Só marque `[x]` depois de verificar (teste executado, lint/tsc, leitura do resu
 | F-14 | **P1** | 2 vulnerabilidades **críticas** em dependências de produção: `seroval` ≤1.6.2 (CVSS 9.8, desserialização) e `solid-js`, ambas transitivas de `@tanstack/react-query-devtools` | `npm audit --omit=dev` | **Resolvido** (DEP-001) |
 | F-15 | P3 | `npm run lint` varria `.agents/` (skills de terceiros) e acusava 1 erro fora do código do projeto; minha afirmação anterior "0 erros" valia só para as pastas da aplicação | `npm run lint` | **Resolvido** (CI-001: `.agents/**` e `.claude/**` ignorados) |
 | F-16 | P2 | Paginação compartilhada só mostrava 5 números ao redor da atual: para chegar à última página era preciso avançar de uma em uma | `components/data-tables/Pagination.tsx` (usada em 10 páginas) | **Resolvido** (FRONT-004) |
-| F-17 | P3 | `@tanstack/react-query-devtools` está em `dependencies` e é renderizado sempre (`ReactQueryProvider`); os avisos moderados restantes (`@tailwindcss/typography`/`postcss-selector-parser`) e os altos de dev (`braces`/`micromatch` via `eslint-config-next`) só têm correção semver-major | `npm audit` | Aberto → DEP-002 (não bloqueia o CI, por política) |
-| F-18 | **P1** | A pasta `.github/` (workflow do CI) **não chegou ao GitHub**: o commit `c294610` não a contém | `git diff --name-only` entre o `edd6045` e o `c294610` | Aberto → CI-002 |
+| F-17 | P3 | `@tanstack/react-query-devtools` estava em `dependencies` (instalado em produção, junto com `solid-js`/`seroval`, que tinham as 2 críticas). Premissa corrigida: no bundle de produção ele **não** entrava (pacote vazio em produção). Os avisos moderados restantes (`@tailwindcss/typography`) e os altos de dev só têm correção semver-major | `npm audit`; `.next/static` sem devtools | **Resolvido** (DEP-002) no que cabia; o restante não bloqueia o CI, por política |
+| F-18 | **P1** | A pasta `.github/` (workflow do CI) não chegou ao GitHub no commit `c294610` | `git diff --name-only` | **Resolvido**: enviada em `d3ff70b`; primeiro run verde (CI-002) |
 | F-19 | **P1** | O workflow usava `composer audit --ignore-severity`, opção que **não existe em versões antigas do Composer** (confirmado no Composer do dono); o job de backend falharia | saída do dono: `The "--ignore-severity" option does not exist` | **Resolvido** (CI-001): filtro por script que lê o JSON; também removido `--abandoned` |
 | F-20 | P3 | `node_modules` do dono desatualizado: `npm test` rodou o vitest **3.2.7**, mas o `package-lock.json` fixa **5.0.3** | saída do dono; `package-lock.json` | Aberto: rodar `npm ci` (o CI já usa `npm ci`) |
 
@@ -145,6 +145,17 @@ Verificado e **sem achado**: toda chave usada em `authorize()` existe nos seeder
 - **Verificação:** `tsc` limpo, Vitest 142/142, lint 0 erros. Zero mudança de comportamento.
 - **Restam 44** (todos do React Compiler/Next, ver backlog FRONT-003).
 
+### CI-002 — Primeiro run do CI no GitHub
+- **Evidência:** `.github/` enviada em `d3ff70b`; a página de Actions mostra o Run 1 "completed successfully" (selo "CI - passing") com os 3 jobs concluídos com sucesso: Backend (Pest) 50 s, Frontend (tsc, lint, Vitest) 1 min 9 s, Frontend (build) 1 min 3 s. O `composer audit` filtrado por script, que era a incógnita, passou.
+- **Limite da evidência:** li o **resumo** do GitHub (página pública). Os passos individuais não puderam ser lidos (a página de job é montada por JavaScript e a API pública deu *rate limit*); como os passos do `composer audit` e do build não são `continue-on-error` no backend/frontend, o job verde implica que passaram.
+- **Resultado:** job `frontend-build` promovido a **bloqueante** (removido `continue-on-error`), pois passou no GitHub e localmente.
+- **Pendência:** proteção da branch `main` → CI-003 (decisão do dono).
+
+### DEP-002 — Devtools do TanStack fora das dependências de produção (F-17)
+- **Arquivos:** `frontend/components/providers/react-query-provider.tsx` (import dinâmico sem SSR, só em `NODE_ENV === "development"`), `frontend/package.json` (devtools movido para `devDependencies`, 1 linha), `frontend/package-lock.json` (31 pacotes marcados `dev`, **nenhuma versão alterada**), teste novo `frontend/tests/components/react-query-provider.test.tsx` (3 testes, inclui guarda de que o devtools não volta a `dependencies`).
+- **Verificação:** `tsc`, lint 0 erros, Vitest 145/145; `npm run build` ✔; `npm prune --omit=dev` removeu `react-query-devtools`, `solid-js`, `seroval` e `typescript` (restaram 184 pacotes) e o `next start` **respondeu HTTP 200** em `/esqueceu-senha`, `/primeiro-acesso` e `/redefinir-senha`, sem erros no log. **Não** testado: o modo `next dev` no navegador (o import dinâmico do devtools em desenvolvimento).
+- **Descoberta:** o build local passou a ser possível simulando o Google Fonts (ver `PROJECT_GUIDE.md` §12).
+
 ## C. Tarefas em andamento
 
 Nenhuma. (Última unidade coerente concluída: REPO-002 + SEC-001..003.)
@@ -155,12 +166,7 @@ Nenhuma. (Última unidade coerente concluída: REPO-002 + SEC-001..003.)
 
 Legenda de prioridade: P1 > P2 > P3. Ordem sugerida = ordem da lista.
 
-- [ ] **CI-002 (P1) — Colocar o CI no GitHub e rodar pela primeira vez**
-  - Situação: o `.github/` **não está no GitHub** (F-18). Verificado pelo dono na máquina dele: backend (Sail) verde, frontend verde, `composer audit --locked` sem advisories, `npm audit` de produção só com 2 moderados (não bloqueiam).
-  - Escopo: (1) incluir a pasta `.github/` (com `workflows/ci.yml` e `scripts/composer-audit-grave.php`) no commit e dar push; (2) olhar a aba Actions e me enviar o resultado/log; (3) conferir o job `frontend-build` e, estando verde, remover o `continue-on-error`; (4) decidir se o CI vira check obrigatório da `main`.
-  - Dependência: o dono. Critério: workflow verde na `main`. Status: pendente.
-- [ ] **DEP-002 (P3) — Higiene de dependências do frontend (F-17)**
-  - Escopo: mover `@tanstack/react-query-devtools` para `devDependencies` e renderizá-lo só em desenvolvimento (hoje vai no bundle de produção como no-op); reavaliar os avisos moderados/dev-only quando houver versão não-major. Não bloqueia o CI. Status: pendente.
+- [ ] **CI-003 (P2) — Proteção da branch `main` (decisão do dono, ~2 minutos)**: no GitHub, Settings → Branches → Add rule para `main` → marcar "Require status checks to pass" e escolher `Backend (Pest)`, `Frontend (tsc, lint, Vitest)` e `Frontend (build)`. Assim ninguém faz merge com o CI vermelho. Só o dono do repositório pode fazer isso. Status: pendente.
 - [ ] **DOC-002 (P3) — Referências quebradas em docs** (`pentest-avaliacao-seguranca.md`, `docs/pentest/**`, versão do Next em `frontend-arquitetura.md`). Restaurar os arquivos ou remover os links. Status: pendente.
 - [ ] **FRONT-003 (P3) — Avisos restantes de lint (44)**: `react-hooks/incompatible-library` ×20 (`watch()` do React Hook Form e `useReactTable`; trocar por `useWatch` caso a caso), `react-hooks/set-state-in-effect` ×19, `react-hooks/static-components` ×2 (`StatusIcon` criado no render em `ChamadoConversa`), `@next/next/no-location-assign-relative-destination` ×2 (`window.location.href` em `proxy-admin.ts` e no provider de suporte), `react-hooks/purity` ×1 (`Math.random` em `components/ui/sidebar.tsx`, componente gerado do shadcn). Todos são **avisos por decisão** (`eslint.config.mjs`) e cada correção muda o fluxo de render/efeitos: fazer um arquivo por vez, com teste. Status: pendente.
 - [ ] **TEST-002 (P3) — Testes de services/hooks dos domínios** (proxy mockado) para usuário, grupo e empresa, além dos schemas já cobertos. Status: pendente.
@@ -171,9 +177,8 @@ Legenda de prioridade: P1 > P2 > P3. Ordem sugerida = ordem da lista.
 
 ## E. Próxima tarefa recomendada
 
-**CI-002 — Colocar a pasta `.github/` no GitHub e ver o primeiro run.**
-O que falta é só isso: a pasta `.github/` não foi no último commit (provavelmente por ser oculta no Finder do macOS). Depois do push, a aba **Actions** do GitHub mostra o resultado em ~5 minutos; me envie ✅/❌ (e o log, se falhar). Todo o restante que dependia de mim já está feito e verificado localmente.
-**Sem depender disso**, o que posso implementar sozinho: **FRONT-003** (os 44 avisos restantes, um arquivo por vez), **TEST-002** (services/hooks de domínio), **DEP-002** (devtools fora do bundle — melhor depois do `frontend-build` verde no CI) e **DOC-002** (precisa que você diga se os arquivos de pentest existem em outro lugar).
+**CI-003 — Proteger a branch `main` com o CI** (ação sua, ~2 minutos, passo a passo em D). É o que transforma o CI de "avisa" em "impede": sem isso, qualquer push com CI vermelho ainda entra na `main`.
+**O que posso implementar sozinho em seguida:** **FRONT-003** (44 avisos de React Compiler, um arquivo por vez, com teste) ou **TEST-002** (services/hooks de domínio). Pendências que dependem de decisão sua: **DOC-002** (os arquivos de pentest existem em outro lugar?), **QUAL-001** (Pint) e **ARCH-002** (`.ai/rules`).
 
 ---
 
@@ -199,6 +204,8 @@ O que falta é só isso: a pasta `.github/` não foi no último commit (provavel
 | D-016 | Filtrar gravidade do `composer audit` por script que lê o JSON, em vez de `--ignore-severity` | A opção não existe em Composer antigo (confirmado pelo dono); o script funciona em qualquer versão. Severidade desconhecida bloqueia (não dá para julgar) | Exigir Composer recente; ignorar o resultado do audit |
 | D-017 | Guarda `authorize()` × seeders por leitura de arquivos (regex) | Barata, sem banco, e a mutação prova que acusa. Limite documentado (não pega chave errada-mas-existente) | Teste só de comportamento por rota (caro para as ~94 chaves) |
 | D-018 | `ignoreRestSiblings` + prefixo `_` no `no-unused-vars` | É o idioma padrão para omitir uma chave por desestruturação; evita 10 falsos avisos | Desabilitar a regra; renomear variáveis |
+| D-019 | DEP-002: devtools em `devDependencies` + `next/dynamic` (`ssr: false`) só em desenvolvimento | Tira `solid-js`/`seroval` da instalação de produção; o ramo morto é descartado no build; comprovado com prune + `next start` | Manter em `dependencies`; `overrides` para versões corrigidas |
+| D-020 | Job `frontend-build` do CI passa a bloquear | Passou no GitHub e localmente; build quebrado é impeditivo de deploy | Manter informativo |
 
 ---
 
@@ -211,3 +218,4 @@ O que falta é só isso: a pasta `.github/` não foi no último commit (provavel
 | 2026-10-16 | REPO-003 | `UsuarioRepository`, `AcessoSuporteService`, `ConcederRequest`, `MensagemService`, `RepositoriesEscopoTest`, `AcessoSuporteTest`, `MensagemBuscaUsuariosTest`, `RepositoriesTest`, `docs/repositories.md` | Pest 386 ✔; caracterização verde antes do refactor; guarda validada por mutação | CI-001 (aprovação) ou TEST-001 |
 | 2026-10-16 (2ª) | SEC-006, DEP-001, CI-001, FRONT-004, SEC-004 (descartada) | `UsuarioRepository`, `AcessoSuporteService`, `ConcederRequest`, `frontend/package-lock.json`, `.github/workflows/ci.yml`, `eslint.config.mjs`, `Pagination.tsx` + `pagination-pages.ts`, `ChamadoTest`, docs | Pest 391 ✔; Vitest 118 ✔; `tsc` ✔; lint 0 erros ✔; `npm audit` prod alta/crítica ✔; CI simulado localmente (não executado no GitHub) | CI-002 |
 | 2026-10-17 | CI-001 (correção), SEC-005, TEST-001, FRONT-003 (parcial) | `.github/scripts/composer-audit-grave.php`, `ci.yml`, `PermissoesAuthorizeTest`, `tests/features/schemas.test.ts`, `eslint.config.mjs` + 9 componentes | Pest 393 ✔; Vitest 142 ✔; `tsc` ✔; lint 0 erros / 44 avisos; mutações detectadas; script de audit com 8 cenários | CI-002 (push do `.github/`) |
+| 2026-10-17 (2ª) | CI-002, DEP-002 | `ci.yml` (build bloqueante), `react-query-provider.tsx`, `package.json`, `package-lock.json`, `react-query-provider.test.tsx`, docs | Run 1 do CI verde (GitHub); Vitest 145 ✔; `tsc` ✔; lint 0 erros; build ✔; prune + `next start` HTTP 200 | CI-003 (dono) / FRONT-003 |

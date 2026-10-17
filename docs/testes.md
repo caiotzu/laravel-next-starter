@@ -144,7 +144,7 @@ Executado com PHP 8.3 + PostgreSQL 16 locais (fora do Sail), banco `testing`:
 | Suíte | Resultado |
 |---|---|
 | Backend (`./vendor/bin/pest`) | **393 testes verdes** (1618 asserções) |
-| Frontend (`npm test`) | **142 testes verdes** (16 arquivos) |
+| Frontend (`npm test`) | **145 testes verdes** (17 arquivos) |
 | Frontend (`npx tsc --noEmit`) | sem erros |
 | Frontend (`npm run lint`) | 0 erros, 44 avisos |
 
@@ -155,6 +155,8 @@ Novos em 2026-10-16: `tests/Feature/MensagemBuscaUsuariosTest.php` (busca global
 Novos em 2026-10-16 (2ª rodada): administrador ativo na concessão de Acesso de Suporte (Request e Service), ausência de efeitos na tentativa indevida em chamado alheio e, no frontend, `tests/components/paginacao.test.tsx` (paginação com primeira/última página). O CI (`.github/workflows/ci.yml`) executa estas mesmas suítes.
 
 Novos em 2026-10-17: `tests/Unit/PermissoesAuthorizeTest.php` (toda chave de `authorize()` existe nos seeders) e, no frontend, `tests/features/schemas.test.ts` (schemas de usuário, grupo, empresa, contato e endereço, Admin e Private).
+
+Novo em 2026-10-17 (2ª): `tests/components/react-query-provider.test.tsx` (provider do TanStack Query e guarda de que o devtools fica em `devDependencies`).
 
 As contagens históricas acima (153/252 testes) refletem momentos anteriores; use esta tabela como referência atual.
 Novos arquivos: `tests/Feature/GrupoEmpresaOnboardingTest.php` (onboarding de empresa: sucesso, permissões `private.*`, 401, 403, 422) e,
