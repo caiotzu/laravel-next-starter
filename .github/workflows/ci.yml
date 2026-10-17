@@ -1,0 +1,153 @@
+name: CI
+
+# Política de audits: só severidade ALTA/CRÍTICA bloqueia o build (npm: só dependências de produção).
+# Qualquer outra coisa (moderada/baixa, dependências de desenvolvimento, pacote abandonado) é
+# apenas reportada, em passos com `continue-on-error`.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (Pest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:17-alpine # mesma versão do Sail (backend/docker-compose.yml)
+        env:
+          POSTGRES_DB: testing
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: testing
+      DB_USERNAME: postgres
+      DB_PASSWORD: secret
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3" # mínimo suportado (composer.json: ^8.3) e versão em que a suíte foi verificada
+          extensions: mbstring, pgsql, pdo_pgsql, bcmath, intl, gd, zip, xml, curl
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache do Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer/files
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Instalar dependências
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Preparar .env de teste
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+          php artisan jwt:secret --force
+
+      - name: Testes (Pest)
+        run: vendor/bin/pest --compact
+
+      # Bloqueia só se houver advisory ALTO/CRÍTICO. O filtro é feito lendo o JSON (script abaixo),
+      # porque `composer audit --ignore-severity` só existe em versões recentes do Composer.
+      - name: composer audit (bloqueia só severidade alta/crítica)
+        run: |
+          composer audit --locked --format=json > composer-audit.json || true
+          php ../.github/scripts/composer-audit-grave.php composer-audit.json
+
+      - name: composer audit (relatório completo, não bloqueia)
+        continue-on-error: true
+        run: composer audit --locked
+
+  frontend:
+    name: Frontend (tsc, lint, Vitest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22" # package.json: engines.node >=22.22.2
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci --no-audit --no-fund
+
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Testes (Vitest)
+        run: npm test
+
+      - name: npm audit (bloqueia só alta/crítica em produção)
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: npm audit (relatório completo, não bloqueia)
+        continue-on-error: true
+        run: npm audit
+
+  # Ainda NÃO verificado em CI (o ambiente de desenvolvimento do plano não alcança o Google Fonts,
+  # usado por next/font). Não bloqueante até o primeiro run verde; depois remova `continue-on-error`.
+  frontend-build:
+    name: Frontend (build, informativo)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      BACKEND_URL: http://localhost/api
+      FRONTEND_URL: http://localhost:3000
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci --no-audit --no-fund
+
+      - run: npm run build
