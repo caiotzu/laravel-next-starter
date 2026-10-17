@@ -546,4 +546,40 @@ test('conceder a um administrador cujo grupo foi excluído é recusado', functio
         ->assertJsonValidationErrors(['usuario_admin_id']);
 });
 
+test('não é possível conceder acesso a um administrador que não está ativo', function (string $status) {
+    $cenario = criarCenarioAcessoSuporte();
+    concederPermissao($cenario['clienteA']['grupo'], 'private.acesso_suporte.conceder');
+    $cenario['admin']->update(['status' => $status]);
+
+    $token = autenticar($cenario['clienteA']['usuario']);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/acessos-suporte', [
+            'usuario_admin_id' => $cenario['admin']->id,
+            'duracao_minutos' => 30,
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['usuario_admin_id']);
+
+    expect(AcessoSuporte::count())->toBe(0);
+})->with(['bloqueado', 'inativo', 'convidado', 'expirado']);
+
+test('AcessoSuporteService::conceder recusa administrador inativo mesmo sem passar pelo Request', function () {
+    $cenario = criarCenarioAcessoSuporte();
+    $clienteA = $cenario['clienteA'];
+    $cenario['admin']->update(['status' => 'bloqueado']);
+
+    $dto = \App\DTO\AcessoSuporte\AcessoSuporteConcessaoDTO::criarParaCadastro(
+        $cenario['entidadeTipoPrivate']->id,
+        $clienteA['grupoEmpresa']->id,
+        $clienteA['usuario']->id,
+        ['usuario_admin_id' => $cenario['admin']->id, 'duracao_minutos' => 30]
+    );
+
+    expect(fn () => app(\App\Services\AcessoSuporteService::class)->conceder($dto))
+        ->toThrow(\App\Exceptions\BusinessException::class, 'O usuário selecionado não é um administrador válido.');
+
+    expect(AcessoSuporte::count())->toBe(0);
+});
+
 // #endregion Conceder — o usuário escolhido precisa ser um administrador

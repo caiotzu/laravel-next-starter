@@ -95,7 +95,7 @@ $usuario = $this->usuarios->criarNoGrupo($grupo, [/* nome, email, senha => null,
 1. Siga `domains/{ctx}/grupo` + `features/{ctx}/grupo` como molde. Tipos em `types/`, chamadas em `services/` via `proxyAdminRequest`/`proxyPrivateRequest` (nunca `fetch` direto ao Laravel), conversão em `mappers/`, hooks TanStack em `hooks/` (`"use client"`).
 2. Formulário: schema Zod em `features/.../schemas` + React Hook Form; erros do backend (`ApiErrorResponse`) exibidos ao usuário.
 3. Páginas em `app/admin/**` ou `app/(private)/**`; rota protegida em `routes/routes.ts`.
-4. Componente só vai para `components/` se for reutilizado de fato. Mantenha loading/skeleton e estado vazio como nos módulos existentes.
+4. Listas paginadas usam `components/data-tables/Pagination` (sempre mostra primeira e última página; props `currentPage`, `lastPage`, `total`, `from`, `to`, `onPageChange`). Componente só vai para `components/` se for reutilizado de fato. Mantenha loading/skeleton e estado vazio como nos módulos existentes.
 5. Valide: `npx tsc --noEmit`, `npm run lint`, `npm test`. Para runtime, skill `next-dev-loop`.
 
 ## 11. Testes
@@ -108,9 +108,9 @@ $usuario = $this->usuarios->criarNoGrupo($grupo, [/* nome, email, senha => null,
 
 | Onde | Comando | Observação |
 |---|---|---|
-| backend | `./vendor/bin/sail artisan test --compact` · `./vendor/bin/pest` | baseline atual: **386 verdes** (1589 asserções) |
+| backend | `./vendor/bin/sail artisan test --compact` · `./vendor/bin/pest` | baseline atual: **391 verdes** (1615 asserções) |
 | backend | `pint <arquivo-novo.php>` | não rodar `--dirty` em legado (ver `CLAUDE.md`) |
-| frontend | `npm test` · `npx tsc --noEmit` · `npm run lint` · `npm run build` | baseline: 109 testes (14 arquivos), tsc limpo, lint 0 erros / 70 avisos |
+| frontend | `npm test` · `npx tsc --noEmit` · `npm run lint` · `npm run build` | baseline: 118 testes (15 arquivos), tsc limpo, `npm run lint` 0 erros / 70 avisos |
 
 Execução fora do Sail (ex.: ambiente sem Docker): PHP 8.3 + PostgreSQL local, `.env` com `DB_HOST=127.0.0.1`, `APP_KEY` e `JWT_SECRET` gerados (`artisan key:generate --force`, `artisan jwt:secret --force`) e banco `testing` criado.
 
@@ -132,4 +132,8 @@ Localização e quando usar: tabela em [`../CLAUDE.md`](../CLAUDE.md#skills-leia
 
 ## 15. Limitações conhecidas e pendências
 
-Lista viva em `IMPLEMENTATION_PLAN.md` (seção D). Principais: sem CI (`.github` não existe); sem teste do frontend para a maioria dos domínios; Pint não aplicado ao legado; docs históricas (`testes.md`, `arquitetura.md`) com contagens desatualizadas; `docs/pentest-avaliacao-seguranca.md` e `docs/pentest/` são citados por `seguranca.md`/`frontend-arquitetura.md`, mas **não existem** em `docs/` neste checkout.
+Lista viva em `IMPLEMENTATION_PLAN.md` (seção D). Principais: CI criado mas ainda sem 1ª execução real no GitHub (CI-002); sem teste do frontend para a maioria dos domínios; Pint não aplicado ao legado; docs históricas (`testes.md`, `arquitetura.md`) com contagens desatualizadas; `docs/pentest-avaliacao-seguranca.md` e `docs/pentest/` são citados por `seguranca.md`/`frontend-arquitetura.md`, mas **não existem** em `docs/` neste checkout.
+
+## 16. CI (GitHub Actions)
+
+`.github/workflows/ci.yml`, em `push` na `main` e em `pull_request`: **backend** (PHP 8.3, PostgreSQL 17, `vendor/bin/pest`), **frontend** (`tsc`, `npm run lint`, `npm test`) e **frontend-build** (informativo). Audits: só severidade **alta/crítica** em dependências de produção bloqueia (`composer audit --ignore-severity=low --ignore-severity=medium`, `npm audit --omit=dev --audit-level=high`); o relatório completo roda em passo que não bloqueia. Antes de abrir PR, rode localmente os mesmos comandos da tabela do §12. Estado: simulado localmente, ainda não executado no GitHub (CI-002).

@@ -246,20 +246,25 @@ test('UsuarioRepository: lookups de autenticação, cliente do grupo e administr
     expect($repo->listarAdministradoresComPermissao(null, ['permissao.que.nao.existe']))->toBeEmpty();
 });
 
-test('UsuarioRepository::buscarAdministradorPorId só devolve usuário de grupo Admin não excluído', function () {
+test('UsuarioRepository::buscarAdministradorAtivoPorId só devolve administrador ATIVO de grupo Admin não excluído', function () {
     $c = cenarioRepo();
     $repo = app(UsuarioRepository::class);
 
-    expect($repo->buscarAdministradorPorId($c['uAdmin']->id)?->id)->toBe($c['uAdmin']->id);
-    expect($repo->buscarAdministradorPorId($c['uAdmin']->id)?->relationLoaded('grupo'))->toBeTrue();
-    expect($repo->buscarAdministradorPorId($c['A']['usuario']->id))->toBeNull();                   // usuário de cliente
-    expect($repo->buscarAdministradorPorId((string) \Illuminate\Support\Str::uuid()))->toBeNull();  // inexistente
+    expect($repo->buscarAdministradorAtivoPorId($c['uAdmin']->id)?->id)->toBe($c['uAdmin']->id);
+    expect($repo->buscarAdministradorAtivoPorId($c['uAdmin']->id)?->relationLoaded('grupo'))->toBeTrue();
+    expect($repo->buscarAdministradorAtivoPorId($c['A']['usuario']->id))->toBeNull();                   // usuário de cliente
+    expect($repo->buscarAdministradorAtivoPorId((string) \Illuminate\Support\Str::uuid()))->toBeNull();  // inexistente
 
-    $c['uAdmin']->update(['status' => 'bloqueado']);
-    expect($repo->buscarAdministradorPorId($c['uAdmin']->id))->not->toBeNull();                    // qualquer status (comportamento original)
+    foreach (['bloqueado', 'inativo', 'convidado', 'expirado'] as $status) {
+        $c['uAdmin']->update(['status' => $status]);
+        expect($repo->buscarAdministradorAtivoPorId($c['uAdmin']->id))->toBeNull("status {$status} não pode receber concessão");
+    }
+
+    $c['uAdmin']->update(['status' => 'ativo']);
+    expect($repo->buscarAdministradorAtivoPorId($c['uAdmin']->id))->not->toBeNull();
 
     $c['gAdmin']->delete();
-    expect($repo->buscarAdministradorPorId($c['uAdmin']->id))->toBeNull();                         // grupo excluído
+    expect($repo->buscarAdministradorAtivoPorId($c['uAdmin']->id))->toBeNull();                         // grupo excluído
 });
 
 test('UsuarioRepository::pesquisarEmTodasAsEntidades é global, filtra por nome e limita as colunas', function () {

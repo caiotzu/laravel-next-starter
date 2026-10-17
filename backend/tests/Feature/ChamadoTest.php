@@ -213,6 +213,14 @@ test('cliente não consegue visualizar chamado de outro cliente', function () {
     $this->withHeader('Authorization', "Bearer {$tokenB}")
         ->postJson("/api/chamados/{$chamado['id']}/mensagens", ['mensagem' => '<p>Tentativa indevida</p>'])
         ->assertStatus(404);
+
+    // A tentativa indevida não pode deixar rastro: sem mensagem nova, e sem ser tratada como
+    // resposta do suporte (o que gravaria primeira_resposta_em e distorceria as métricas de SLA).
+    $chamadoDoBanco = \App\Models\Chamado::findOrFail($chamado['id']);
+
+    expect($chamadoDoBanco->primeira_resposta_em)->toBeNull();
+    expect($chamadoDoBanco->status)->toBe(\App\Enums\ChamadoStatus::ABERTO);
+    expect(\App\Models\ChamadoMensagem::where('chamado_id', $chamado['id'])->count())->toBe(1);
 });
 
 test('usuário sem permissão não consegue acessar a listagem de chamados', function () {

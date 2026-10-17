@@ -74,12 +74,12 @@ class ConcederRequest extends FormRequest
                 return;
             }
 
-            $admin = app(UsuarioRepository::class)->buscarAdministradorPorId($adminId);
+            $admin = app(UsuarioRepository::class)->buscarAdministradorAtivoPorId($adminId);
 
             if (!$admin) {
                 $validator->errors()->add(
                     'usuario_admin_id',
-                    'O usuário selecionado não é um administrador.'
+                    'O usuário selecionado não é um administrador ativo.'
                 );
             }
 

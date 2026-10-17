@@ -27,7 +27,7 @@ use App\Support\EscopoEntidade;
  *    autenticado, o tipo de entidade vem da audiência da rota (Admin/Private);
  *  - buscarClienteDoGrupo: ação de um Admin sobre usuários de clientes, autorizada por
  *    permissão administrativa na rota;
- *  - listarAdministradoresComPermissao / buscarAdministradorPorId: lookups exclusivos de
+ *  - listarAdministradoresComPermissao / buscarAdministradorAtivoPorId: lookups exclusivos de
  *    administradores (a regra "é administrador" vive aqui, não nos chamadores);
  *  - pesquisarEmTodasAsEntidades: busca GLOBAL de destinatários de mensagem, só para o Admin.
  *    É a leitura mais sensível deste repository (nome e e-mail de usuários de TODAS as
@@ -220,15 +220,18 @@ class UsuarioRepository
     }
 
     /**
-     * Administrador (grupo de entidade do tipo Admin, não excluído) por id, em qualquer status.
-     * Usado na concessão de Acesso de Suporte, que valida a regra no Request E no Service.
+     * Administrador ATIVO (grupo de entidade do tipo Admin, não excluído) por id. Usado na
+     * concessão de Acesso de Suporte, que valida a regra no Request E no Service: só um
+     * administrador ativo pode receber o acesso (bloqueado, inativo, convidado ou com senha
+     * expirada não).
      */
-    public function buscarAdministradorPorId(string $id): ?Usuario
+    public function buscarAdministradorAtivoPorId(string $id): ?Usuario
     {
         return Usuario::with('grupo.entidadeTipo')
             ->whereHas('grupo.entidadeTipo', fn (Builder $query) =>
                 $query->where('chave', EntidadeTipo::ADMIN->value)
             )
+            ->where('status', UsuarioStatus::ATIVO->value)
             ->find($id);
     }
 

@@ -61,7 +61,7 @@ class AcessoSuporteService
                 );
             }
 
-            $admin = $this->usuarios->buscarAdministradorPorId($dto->usuario_admin_id);
+            $admin = $this->usuarios->buscarAdministradorAtivoPorId($dto->usuario_admin_id);
 
             if (!$admin) {
                 throw new BusinessException(

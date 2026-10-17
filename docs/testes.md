@@ -143,14 +143,16 @@ Executado com PHP 8.3 + PostgreSQL 16 locais (fora do Sail), banco `testing`:
 
 | Suíte | Resultado |
 |---|---|
-| Backend (`./vendor/bin/pest`) | **386 testes verdes** (1589 asserções) |
-| Frontend (`npm test`) | **109 testes verdes** (14 arquivos) |
+| Backend (`./vendor/bin/pest`) | **391 testes verdes** (1615 asserções) |
+| Frontend (`npm test`) | **118 testes verdes** (15 arquivos) |
 | Frontend (`npx tsc --noEmit`) | sem erros |
 | Frontend (`npm run lint`) | 0 erros, 70 avisos |
 
 Novos em 2026-10-15: `tests/Feature/EmpresaEnderecoAutorizacaoTest.php` (permissão de endereço, Admin e Private) e, em `EscopoEntidadeTest.php`, excluir/ativar de empresa e Form Requests que não revelam dados de outra empresa.
 
 Novos em 2026-10-16: `tests/Feature/MensagemBuscaUsuariosTest.php` (busca global de destinatários), validação de administrador na concessão em `AcessoSuporteTest.php` e testes dos 2 métodos novos em `RepositoriesTest.php`.
+
+Novos em 2026-10-16 (2ª rodada): administrador ativo na concessão de Acesso de Suporte (Request e Service), ausência de efeitos na tentativa indevida em chamado alheio e, no frontend, `tests/components/paginacao.test.tsx` (paginação com primeira/última página). O CI (`.github/workflows/ci.yml`) executa estas mesmas suítes.
 
 As contagens históricas acima (153/252 testes) refletem momentos anteriores; use esta tabela como referência atual.
 Novos arquivos: `tests/Feature/GrupoEmpresaOnboardingTest.php` (onboarding de empresa: sucesso, permissões `private.*`, 401, 403, 422) e,

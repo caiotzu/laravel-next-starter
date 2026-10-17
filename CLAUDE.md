@@ -65,6 +65,8 @@ Backend (sempre via Sail, em `backend/`):
 Frontend (em `frontend/`, Node ≥ 22.22.2):
 - `npm test` · `npx tsc --noEmit` · `npm run lint` · `npm run build`
 
+CI: `.github/workflows/ci.yml` roda as mesmas suítes (+ `composer audit`/`npm audit`, que só bloqueiam severidade **alta/crítica**). Antes de concluir uma tarefa, rode localmente o equivalente do que o CI vai rodar. Mudança em `package-lock.json`/`composer.lock` só com justificativa registrada no plano (preferir atualização cirúrgica à regeneração).
+
 ## Segurança (não enfraquecer)
 
 - Autorização por chave no controller (`$this->authorize('admin.x.y')`); `Gate::before` em `AuthServiceProvider`.

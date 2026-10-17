@@ -107,13 +107,12 @@ a abstração resolve":
 
 | Ponto | Decisão | Motivo |
 |---|---|---|
-| `AcessoSuporteService::conceder` + `ConcederRequest` | **migrado** → `UsuarioRepository::buscarAdministradorPorId` | a regra "é administrador" estava **duplicada** (Request e Service, com comparações ligeiramente diferentes); agora vive na consulta (`whereHas` no tipo Admin) e o chamador só testa `null` |
+| `AcessoSuporteService::conceder` + `ConcederRequest` | **migrado** → `UsuarioRepository::buscarAdministradorAtivoPorId` | a regra "é administrador" estava **duplicada** (Request e Service, com comparações ligeiramente diferentes); agora vive na consulta (`whereHas` no tipo Admin) e o chamador só testa `null` |
 | `MensagemService::buscarUsuarios` | **migrado** → `UsuarioRepository::pesquisarEmTodasAsEntidades` | é a leitura mais sensível (nome e e-mail de usuários de **todas** as empresas); em um Service ela era invisível à guarda. Agora está em `METODOS_SEM_ESCOPO` e `MensagemService` não pode mais montar consulta de Usuario |
 | Listeners `InvalidarSessoesDosUsuariosDoGrupo[Empresa]` | **mantido** | ação de sistema disparada por evento (sem usuário autenticado), um `pluck('id')` de uma linha, um único chamador cada |
 | `PopularDestinatariosMensagemJob` (4 consultas) | **mantido** | job em fila, em lotes (`chunkById`); o fan-out entre empresas é a **função** do job (mensagem geral/por entidade/por permissão, criada só pelo Admin). Mover exigiria um método por modo, sem ganho |
 
-`buscarAdministradorPorId` **não filtra por status** (preserva o comportamento anterior: o Request e o Service
-nunca checaram se o admin está ativo). Se isso deve mudar, é decisão de regra de negócio separada.
+`buscarAdministradorAtivoPorId` devolve **só administrador ativo** (decisão do dono do produto em 2026-10-16): bloqueado, inativo, convidado ou com senha expirada não recebem concessão de Acesso de Suporte, nem pelo Request (422) nem pelo Service (`BusinessException`). Antes, o status nunca era checado.
 
 ## Identidade × contexto
 

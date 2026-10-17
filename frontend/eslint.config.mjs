@@ -94,6 +94,9 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      // Skills de agentes (conteúdo de terceiros, vendored): não são código da aplicação.
+      ".agents/**",
+      ".claude/**",
     ],
   },
 ];

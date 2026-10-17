@@ -5,6 +5,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
+import { gerarPaginas } from "./pagination-pages";
+
 interface PaginationProps {
   currentPage: number;
   lastPage: number;
@@ -12,7 +14,6 @@ interface PaginationProps {
   from: number | null;
   to: number | null;
   onPageChange: (page: number) => void;
-  maxVisiblePages?: number;
 }
 
 export function Pagination({
@@ -22,25 +23,7 @@ export function Pagination({
   from,
   to,
   onPageChange,
-  maxVisiblePages = 5,
 }: PaginationProps) {
-  const generatePages = () => {
-    const pages: number[] = [];
-
-    let start = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    const end = Math.min(lastPage, start + maxVisiblePages - 1);
-
-    if (end - start < maxVisiblePages - 1) {
-      start = Math.max(1, end - maxVisiblePages + 1);
-    }
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-
-    return pages;
-  };
-
   if (lastPage <= 1) return null;
 
   return (
@@ -66,17 +49,31 @@ export function Pagination({
             Anterior
           </Button>
 
-          {generatePages().map((page) => (
-            <Button
-              key={page}
-              size="sm"
-              variant={page === currentPage ? "default" : "outline"}
-              onClick={() => onPageChange(page)}
-              className="cursor-pointer"
-            >
-              {page}
-            </Button>
-          ))}
+          {gerarPaginas(currentPage, lastPage).map((item) =>
+            typeof item === "number" ? (
+              <Button
+                key={item}
+                size="sm"
+                variant={item === currentPage ? "default" : "outline"}
+                onClick={() => onPageChange(item)}
+                aria-current={item === currentPage ? "page" : undefined}
+                aria-label={
+                  item === 1 && currentPage !== 1
+                    ? "Ir para a primeira página"
+                    : item === lastPage && currentPage !== lastPage
+                      ? `Ir para a última página (${lastPage})`
+                      : `Ir para a página ${item}`
+                }
+                className="cursor-pointer"
+              >
+                {item}
+              </Button>
+            ) : (
+              <span key={item} aria-hidden="true" className="px-1 text-muted-foreground select-none">
+                …
+              </span>
+            )
+          )}
 
           <Button
             variant="outline"

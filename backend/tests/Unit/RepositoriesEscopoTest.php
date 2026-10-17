@@ -25,7 +25,7 @@ const METODOS_SEM_ESCOPO = [
         'buscarAtivoOuConvidadoPorEmail',     // esqueci minha senha
         'buscarClienteDoGrupo',               // ação de Admin sobre usuários de clientes
         'listarAdministradoresComPermissao',  // lookup exclusivo de administradores
-        'buscarAdministradorPorId',           // lookup exclusivo de administradores (Acesso de Suporte)
+        'buscarAdministradorAtivoPorId',      // lookup exclusivo de administradores ativos (Acesso de Suporte)
         'pesquisarEmTodasAsEntidades',        // busca GLOBAL de destinatários de mensagem (só Admin)
     ],
 ];
