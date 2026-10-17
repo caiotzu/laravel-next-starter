@@ -2,7 +2,6 @@
 
 import { use } from "react";
 
-import { ArrowLeft } from "lucide-react";
 
 import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";

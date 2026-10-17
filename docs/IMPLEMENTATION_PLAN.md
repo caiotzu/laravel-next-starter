@@ -6,14 +6,14 @@ Só marque `[x]` depois de verificar (teste executado, lint/tsc, leitura do resu
 
 ---
 
-## A. Resumo do estado atual (2026-10-16, 2ª rodada)
+## A. Resumo do estado atual (2026-10-17)
 
 - **Padronização:** instruções permanentes e docs criadas e já publicadas no `main` (commit `213ed62`); convenções registradas sem alterar a arquitetura existente (ela já era coerente).
 - **Repository Pattern (trilha concluída):** adotado de forma deliberada e restrita. `GrupoRepository` e `UsuarioRepository`; consumidores: `GrupoService`, `UsuarioService`, `GrupoEmpresaService`, `AcessoSuporteService`/`ConcederRequest`, `MensagemService`. Guarda estrutural em `tests/Unit/RepositoriesEscopoTest.php` cobre 5 Services. Não há mais consultas de `Usuario`/`Grupo` soltas em Services, exceto as decididas e justificadas em `repositories.md`.
 - **Auditoria dos demais módulos (REPO-002, concluída):** nenhum precisa de Repository novo; o isolamento já é garantido por outros mecanismos (tabela em `repositories.md`). A auditoria encontrou e corrigiu 3 falhas reais de autorização/escopo (SEC-001..003).
 - **Módulos padronizados:** Grupo, Usuario (Repository); Empresa/Contato/Endereco (`EscopoEntidadeService`); Chamado/Mensagem (dono = usuário passado pelo controller); Banner/Release (audiência por contexto); AcessoSuporte (filtro pelo ator).
-- **Verificação:** backend **391 testes verdes** (1615 asserções; baseline inicial 357); frontend **118 testes verdes**, `tsc` limpo, `npm run lint` 0 erros / 70 avisos, `npm audit --omit=dev --audit-level=high` sem achados (baseline inicial: 2 testes falhando + 19 erros de lint + 2 vulnerabilidades críticas de produção).
-- **CI:** workflow `.github/workflows/ci.yml` criado (CI-001). **Ainda não foi executado no GitHub** — as etapas foram simuladas localmente; ver limites em CI-001/CI-002.
+- **Verificação:** backend **393 testes verdes** (1618 asserções; baseline inicial 357); frontend **142 testes verdes** (16 arquivos), `tsc` limpo, `npm run lint` 0 erros / **44 avisos** (eram 70), `npm audit --omit=dev --audit-level=high` sem achados. Resultados também **confirmados na máquina do dono** (macOS, Sail): backend 391 verdes na rodada anterior, `composer audit --locked` sem advisories, frontend verde.
+- **CI:** `.github/workflows/ci.yml` existe no meu clone, **mas não está no GitHub**: o commit `c294610` contém o restante do zip 4 sem a pasta `.github/` (pasta oculta no Finder do macOS ao extrair). Portanto o CI **nunca rodou**. As etapas foram simuladas localmente e validadas pelo dono (ver CI-002).
 - **Bloqueios/riscos:** nenhum bloqueio. Não há CI; sem execução via Sail/Docker (verificado com PHP 8.3 + PostgreSQL 16 local — PROJECT_GUIDE §12). Auditoria de segurança **não é completa**: cobriu escopo/tenant, chaves de `authorize()` e fluxo de proxy.
 - **Atenção em produção (SEC-001):** grupos *personalizados* que tinham só `*.empresa.contato.atualizar` deixam de poder editar endereços (corrigido: exige `*.empresa.endereco.atualizar`). Grupos semeados/onboarding recebem ambas e não são afetados.
 
@@ -38,6 +38,9 @@ Só marque `[x]` depois de verificar (teste executado, lint/tsc, leitura do resu
 | F-15 | P3 | `npm run lint` varria `.agents/` (skills de terceiros) e acusava 1 erro fora do código do projeto; minha afirmação anterior "0 erros" valia só para as pastas da aplicação | `npm run lint` | **Resolvido** (CI-001: `.agents/**` e `.claude/**` ignorados) |
 | F-16 | P2 | Paginação compartilhada só mostrava 5 números ao redor da atual: para chegar à última página era preciso avançar de uma em uma | `components/data-tables/Pagination.tsx` (usada em 10 páginas) | **Resolvido** (FRONT-004) |
 | F-17 | P3 | `@tanstack/react-query-devtools` está em `dependencies` e é renderizado sempre (`ReactQueryProvider`); os avisos moderados restantes (`@tailwindcss/typography`/`postcss-selector-parser`) e os altos de dev (`braces`/`micromatch` via `eslint-config-next`) só têm correção semver-major | `npm audit` | Aberto → DEP-002 (não bloqueia o CI, por política) |
+| F-18 | **P1** | A pasta `.github/` (workflow do CI) **não chegou ao GitHub**: o commit `c294610` não a contém | `git diff --name-only` entre o `edd6045` e o `c294610` | Aberto → CI-002 |
+| F-19 | **P1** | O workflow usava `composer audit --ignore-severity`, opção que **não existe em versões antigas do Composer** (confirmado no Composer do dono); o job de backend falharia | saída do dono: `The "--ignore-severity" option does not exist` | **Resolvido** (CI-001): filtro por script que lê o JSON; também removido `--abandoned` |
+| F-20 | P3 | `node_modules` do dono desatualizado: `npm test` rodou o vitest **3.2.7**, mas o `package-lock.json` fixa **5.0.3** | saída do dono; `package-lock.json` | Aberto: rodar `npm ci` (o CI já usa `npm ci`) |
 
 Verificado e **sem achado**: toda chave usada em `authorize()` existe nos seeders; nenhum controller usa chave de outro recurso (varredura por script); Requests **Admin** têm as mesmas consultas sem escopo, mas o Admin é irrestrito por design (modo de suporte recusa `/admin`).
 
@@ -123,6 +126,25 @@ Verificado e **sem achado**: toda chave usada em `authorize()` existe nos seeder
 - **Arquivos:** `backend/tests/Feature/ChamadoTest.php` (teste existente fortalecido: após a tentativa indevida do cliente B, sem mensagem nova, status `aberto`, `primeira_resposta_em` nulo).
 - **Motivo:** `responder` é compartilhado com o Admin; endurecer o Service exigiria método/parâmetro novo para duplicar uma checagem que o controller já faz e que já é testada. Teste validado por mutação (sem a checagem do controller, falha com 201).
 
+### CI-001 (correção de 2026-10-17) — audit do Composer independente de versão
+- **Arquivos:** `.github/scripts/composer-audit-grave.php` (novo), `.github/workflows/ci.yml`.
+- **Resultado:** o passo roda `composer audit --locked --format=json` e o script falha **só** com advisory `high`/`critical` (ou severidade desconhecida, que não dá para julgar); baixa/média só são reportadas. Não depende de `--ignore-severity` nem de `--abandoned`. `tools: composer:v2` fixado no setup.
+- **Verificação:** script testado com 8 cenários simulados (sem advisories, alto, crítico, médio/baixo, severidade nula, misto, JSON inválido, arquivo ausente) — todos com a saída esperada; YAML válido. **Não** executado contra o Packagist real neste ambiente (o dono confirmou `composer audit --locked`: sem advisories).
+
+### SEC-005 — Guarda automática de chaves de `authorize()`
+- **Arquivo:** `backend/tests/Unit/PermissoesAuthorizeTest.php` (novo, 2 testes): toda chave usada em `->authorize('x')` precisa existir nos `*PermissaoSeeder`; um teste confere que a guarda não está vazia (>50 chaves de cada lado).
+- **Verificação:** validada por mutação (chave com letra a mais num controller → falha com o nome da chave e do arquivo; restaurado). **Limite:** não pega chave que existe mas é a errada (caso F-10); isso só teste de comportamento por rota pega.
+
+### TEST-001 — Testes de frontend dos schemas dos domínios críticos
+- **Arquivo:** `frontend/tests/features/schemas.test.ts` (24 testes): usuário, grupo, empresa, contato e endereço (Admin **e** Private via `describe.each`), onboarding de grupo-empresa e troca de status.
+- **Destaque:** garante que o schema de edição de empresa do **Private não repassa** `cnpj` nem `grupo_empresa_id`; CNPJ aceita máscara e alfanumérico (14 caracteres); telefone 10/11 dígitos; CEP 8 dígitos.
+- **Verificação:** 3 mutações propositais (CNPJ aceitando 13, Private aceitando `cnpj`, telefone sem tamanho) foram detectadas; schemas restaurados. **Fora do escopo:** services/hooks de domínio com proxy mockado → TEST-002.
+
+### FRONT-003 (parcial) — Avisos de lint 70 → 44
+- **Arquivos:** 9 componentes/páginas (imports não usados: `BadgeCheck`, `Bell`, `CreditCard`, `ArrowLeft`, `Send`, `Card*`), `eslint.config.mjs` (`@typescript-eslint/no-unused-vars` com `ignoreRestSiblings` e prefixo `_`, que cobre `const { status, ...rest } = x` e os `_f/_u/_p` dos testes).
+- **Verificação:** `tsc` limpo, Vitest 142/142, lint 0 erros. Zero mudança de comportamento.
+- **Restam 44** (todos do React Compiler/Next, ver backlog FRONT-003).
+
 ## C. Tarefas em andamento
 
 Nenhuma. (Última unidade coerente concluída: REPO-002 + SEC-001..003.)
@@ -133,17 +155,15 @@ Nenhuma. (Última unidade coerente concluída: REPO-002 + SEC-001..003.)
 
 Legenda de prioridade: P1 > P2 > P3. Ordem sugerida = ordem da lista.
 
-- [ ] **SEC-005 (P3) — Guarda automática de chaves de permissão:** teste Unit que falha se um `authorize('x')` não existir nos seeders (a varredura da REPO-002 mostrou 0 casos hoje). Limite conhecido: não pega chave **existente porém errada** (caso F-10) — isso exige teste de comportamento por rota. Status: pendente.
-- [ ] **CI-002 (P1) — Primeira execução real do CI no GitHub**
-  - Objetivo: confirmar que o workflow roda verde e ajustar o que o ambiente de desenvolvimento não conseguiu verificar.
-  - Escopo: (1) rodar `composer audit` e tratar advisories altos/críticos do `composer.lock`, se houver; (2) conferir o job `frontend-build` e, estando verde, remover o `continue-on-error`; (3) decidir se o status do CI vira check obrigatório da branch `main`.
-  - Dependência: você fazer o push do `.github/` e me informar o resultado (ou colar o log da falha). Critério: workflow verde na `main`. Status: pendente.
+- [ ] **CI-002 (P1) — Colocar o CI no GitHub e rodar pela primeira vez**
+  - Situação: o `.github/` **não está no GitHub** (F-18). Verificado pelo dono na máquina dele: backend (Sail) verde, frontend verde, `composer audit --locked` sem advisories, `npm audit` de produção só com 2 moderados (não bloqueiam).
+  - Escopo: (1) incluir a pasta `.github/` (com `workflows/ci.yml` e `scripts/composer-audit-grave.php`) no commit e dar push; (2) olhar a aba Actions e me enviar o resultado/log; (3) conferir o job `frontend-build` e, estando verde, remover o `continue-on-error`; (4) decidir se o CI vira check obrigatório da `main`.
+  - Dependência: o dono. Critério: workflow verde na `main`. Status: pendente.
 - [ ] **DEP-002 (P3) — Higiene de dependências do frontend (F-17)**
   - Escopo: mover `@tanstack/react-query-devtools` para `devDependencies` e renderizá-lo só em desenvolvimento (hoje vai no bundle de produção como no-op); reavaliar os avisos moderados/dev-only quando houver versão não-major. Não bloqueia o CI. Status: pendente.
-- [ ] **TEST-001 (P2) — Testes de frontend para domínios críticos** (services via proxy mockado, schemas Zod de grupo/usuário/empresa)
-  - Dependência: nenhuma. Critério: ≥1 teste por domínio crítico sem mockar regra de negócio. Status: pendente.
 - [ ] **DOC-002 (P3) — Referências quebradas em docs** (`pentest-avaliacao-seguranca.md`, `docs/pentest/**`, versão do Next em `frontend-arquitetura.md`). Restaurar os arquivos ou remover os links. Status: pendente.
-- [ ] **FRONT-003 (P3) — Reduzir 70 avisos de lint** (agrupar por regra; não alterar comportamento). Status: pendente.
+- [ ] **FRONT-003 (P3) — Avisos restantes de lint (44)**: `react-hooks/incompatible-library` ×20 (`watch()` do React Hook Form e `useReactTable`; trocar por `useWatch` caso a caso), `react-hooks/set-state-in-effect` ×19, `react-hooks/static-components` ×2 (`StatusIcon` criado no render em `ChamadoConversa`), `@next/next/no-location-assign-relative-destination` ×2 (`window.location.href` em `proxy-admin.ts` e no provider de suporte), `react-hooks/purity` ×1 (`Math.random` em `components/ui/sidebar.tsx`, componente gerado do shadcn). Todos são **avisos por decisão** (`eslint.config.mjs`) e cada correção muda o fluxo de render/efeitos: fazer um arquivo por vez, com teste. Status: pendente.
+- [ ] **TEST-002 (P3) — Testes de services/hooks dos domínios** (proxy mockado) para usuário, grupo e empresa, além dos schemas já cobertos. Status: pendente.
 - [ ] **QUAL-001 (P3) — Decidir Pint:** adotar `pint.json` que reflita o estilo atual **ou** formatar tudo em um commit isolado. Hoje: só arquivos novos (D-005). Status: pendente, depende de decisão do dono.
 - [ ] **ARCH-002 (P3) — `infer-conventions` / `.ai/rules`** — somente se o usuário pedir explicitamente (a skill proíbe rodar por conta própria). Status: pendente.
 
@@ -151,10 +171,9 @@ Legenda de prioridade: P1 > P2 > P3. Ordem sugerida = ordem da lista.
 
 ## E. Próxima tarefa recomendada
 
-**CI-002 — Primeira execução real do CI no GitHub.**
-Por que primeiro: o workflow foi simulado localmente, mas nunca rodou no GitHub, e duas etapas não puderam ser verificadas (`composer audit` e `npm run build`). Um CI que nunca ficou verde não protege nada, e a política "só bloqueia se for grave" depende de saber o que o `composer.lock` realmente tem.
-O que preciso de você: fazer o push do `.github/workflows/ci.yml` e me enviar o resultado do primeiro run (ou o log das etapas que falharem). Com isso eu ajusto o workflow e, se houver advisory grave no Composer, trato como P1.
-**Se preferir não depender do push agora**, a próxima que posso implementar sozinho é **TEST-001** (testes de frontend dos domínios críticos) ou **DEP-002** (devtools fora do bundle de produção).
+**CI-002 — Colocar a pasta `.github/` no GitHub e ver o primeiro run.**
+O que falta é só isso: a pasta `.github/` não foi no último commit (provavelmente por ser oculta no Finder do macOS). Depois do push, a aba **Actions** do GitHub mostra o resultado em ~5 minutos; me envie ✅/❌ (e o log, se falhar). Todo o restante que dependia de mim já está feito e verificado localmente.
+**Sem depender disso**, o que posso implementar sozinho: **FRONT-003** (os 44 avisos restantes, um arquivo por vez), **TEST-002** (services/hooks de domínio), **DEP-002** (devtools fora do bundle — melhor depois do `frontend-build` verde no CI) e **DOC-002** (precisa que você diga se os arquivos de pentest existem em outro lugar).
 
 ---
 
@@ -177,6 +196,9 @@ O que preciso de você: fazer o push do `.github/workflows/ci.yml` e me enviar o
 | D-013 | Corrigir os críticos do npm por atualização cirúrgica do lockfile, não por `npm audit fix` | `audit fix` regenerava dezenas de pacotes opcionais (ruído) ; a cirúrgica mexe em 3 pacotes transitivos e não toca `package.json` | `npm audit fix`; `overrides` no `package.json` |
 | D-014 | `buscarAdministradorAtivoPorId`: só admin ativo recebe Acesso de Suporte | Decisão do usuário | Manter qualquer status |
 | D-015 | Paginação: primeira/última sempre visíveis + janela, no componente compartilhado, sem mudar props | Resolve em 10 páginas de uma vez, sem tocar nelas | Botões "primeira/última" separados; paginação por página |
+| D-016 | Filtrar gravidade do `composer audit` por script que lê o JSON, em vez de `--ignore-severity` | A opção não existe em Composer antigo (confirmado pelo dono); o script funciona em qualquer versão. Severidade desconhecida bloqueia (não dá para julgar) | Exigir Composer recente; ignorar o resultado do audit |
+| D-017 | Guarda `authorize()` × seeders por leitura de arquivos (regex) | Barata, sem banco, e a mutação prova que acusa. Limite documentado (não pega chave errada-mas-existente) | Teste só de comportamento por rota (caro para as ~94 chaves) |
+| D-018 | `ignoreRestSiblings` + prefixo `_` no `no-unused-vars` | É o idioma padrão para omitir uma chave por desestruturação; evita 10 falsos avisos | Desabilitar a regra; renomear variáveis |
 
 ---
 
@@ -188,3 +210,4 @@ O que preciso de você: fazer o push do `.github/workflows/ci.yml` e me enviar o
 | 2026-10-15 | REPO-002, SEC-001, SEC-002, SEC-003 | `EmpresaService`, `EscopoEntidadeService`, `EmpresaEnderecoController` (Admin/Private), 4 Form Requests Private, `EscopoEntidadeTest`, `EmpresaEnderecoAutorizacaoTest`, `docs/repositories.md` | Pest 375 ✔ (cada correção vista vermelha antes); varredura de `authorize()` × seeders ✔ | REPO-003 |
 | 2026-10-16 | REPO-003 | `UsuarioRepository`, `AcessoSuporteService`, `ConcederRequest`, `MensagemService`, `RepositoriesEscopoTest`, `AcessoSuporteTest`, `MensagemBuscaUsuariosTest`, `RepositoriesTest`, `docs/repositories.md` | Pest 386 ✔; caracterização verde antes do refactor; guarda validada por mutação | CI-001 (aprovação) ou TEST-001 |
 | 2026-10-16 (2ª) | SEC-006, DEP-001, CI-001, FRONT-004, SEC-004 (descartada) | `UsuarioRepository`, `AcessoSuporteService`, `ConcederRequest`, `frontend/package-lock.json`, `.github/workflows/ci.yml`, `eslint.config.mjs`, `Pagination.tsx` + `pagination-pages.ts`, `ChamadoTest`, docs | Pest 391 ✔; Vitest 118 ✔; `tsc` ✔; lint 0 erros ✔; `npm audit` prod alta/crítica ✔; CI simulado localmente (não executado no GitHub) | CI-002 |
+| 2026-10-17 | CI-001 (correção), SEC-005, TEST-001, FRONT-003 (parcial) | `.github/scripts/composer-audit-grave.php`, `ci.yml`, `PermissoesAuthorizeTest`, `tests/features/schemas.test.ts`, `eslint.config.mjs` + 9 componentes | Pest 393 ✔; Vitest 142 ✔; `tsc` ✔; lint 0 erros / 44 avisos; mutações detectadas; script de audit com 8 cenários | CI-002 (push do `.github/`) |

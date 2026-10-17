@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { Send } from "lucide-react";
 import { toast } from "sonner";
 
 import { PrivatePermissionGuard } from "@/app/(private)/_components/guard/PrivatePermissionGuard";

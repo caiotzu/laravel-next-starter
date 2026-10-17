@@ -2,7 +2,7 @@
 
 import { use } from "react";
 
-import { ArrowLeft, CalendarDays, Layers3 } from "lucide-react";
+import { CalendarDays, Layers3 } from "lucide-react";
 
 import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
 import { AppSidebar } from "@/app/admin/_components/layouts/app-sidebar";

@@ -2,7 +2,7 @@
 
 import { use } from "react";
 
-import { ArrowLeft, CalendarDays } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 
 import { PrivatePermissionGuard } from "@/app/(private)/_components/guard/PrivatePermissionGuard";
 import { AppSidebar } from "@/app/(private)/_components/layouts/app-sidebar";

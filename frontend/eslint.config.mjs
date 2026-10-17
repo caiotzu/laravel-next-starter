@@ -78,6 +78,16 @@ const eslintConfig = [
   },
 
   {
+    // `const { campo, ...resto } = obj` (omitir uma chave) e variáveis iniciadas por `_` são intencionais.
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { ignoreRestSiblings: true, varsIgnorePattern: "^_", argsIgnorePattern: "^_" },
+      ],
+    },
+  },
+
+  {
     // Regras do React Compiler (eslint-plugin-react-hooks 7, incluído no eslint-config-next 16).
     // Mantidas como aviso para não alterar o resultado do `npm run lint` existente.
     rules: {
