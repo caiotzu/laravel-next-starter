@@ -65,8 +65,17 @@ export function NavMain({ items }: { items: Item[] }) {
     )
   }, [items, pathname])
 
-  // Abre automaticamente o menu que contém a rota ativa
-  React.useEffect(() => {
+  // Abre automaticamente o menu que contém a rota ativa. Feito durante a
+  // renderização, só quando `pathname` ou `items` mudam (o menu continua aberto
+  // depois, como antes), no lugar de um useEffect com setState.
+  const [ultimaRota, setUltimaRota] = React.useState<{
+    pathname: string
+    items: typeof items
+  } | null>(null)
+
+  if (!ultimaRota || ultimaRota.pathname !== pathname || ultimaRota.items !== items) {
+    setUltimaRota({ pathname, items })
+
     const activeParents = items
       .filter((item) =>
         item.items?.some((subItem) =>
@@ -78,7 +87,7 @@ export function NavMain({ items }: { items: Item[] }) {
     setOpenMenus((prev) => [
       ...new Set([...prev, ...activeParents]),
     ])
-  }, [pathname, items])
+  }
 
   function toggleMenu(title: string) {
     setOpenMenus((prev) =>

@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { useForm, UseFormSetError } from "react-hook-form";
+import { useForm, useWatch, UseFormSetError } from "react-hook-form";
 import { toast } from "sonner";
 
 import { AppAlert } from "@/components/feedback/AppAlert";
@@ -71,7 +71,7 @@ export function BannerForm({
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     setValue,
     getValues,
     formState: { errors },
@@ -83,8 +83,10 @@ export function BannerForm({
       ...defaultValues,
     },
   });
+  const direcionamentoTipoObservado = useWatch({ control, name: "direcionamento_tipo" });
+  const entidadeTipoObservado = useWatch({ control, name: "entidade_tipo" });
 
-  const direcionamentoTipo = watch("direcionamento_tipo");
+  const direcionamentoTipo = direcionamentoTipoObservado;
 
   const [preview, setPreview] = useState<BannerDisponivel | null>(null);
 
@@ -229,7 +231,7 @@ export function BannerForm({
                     Entidade <span className="text-red-600">*</span>
                   </Label>
                   <Select
-                    value={watch("entidade_tipo")}
+                    value={entidadeTipoObservado}
                     onValueChange={(v) => setValue("entidade_tipo", v as BannerFormData["entidade_tipo"])}
                     disabled={isLoading}
                   >

@@ -98,22 +98,22 @@ frontend/
 
 Mais detalhes de cada pasta em [`frontend-arquitetura.md`](./frontend-arquitetura.md).
 
-## Inventário (contagem em 2026-09-28)
+## Inventário (contagem em 2026-10-17)
 
 | Item | Quantidade |
 |---|---:|
 | Rotas de API declaradas (`routes/api.php`) | 158 (64 GET, 35 POST, 13 PUT, 29 PATCH, 17 DELETE) |
 | Controllers (Admin, Private, Global, Lookup) | 39 |
-| Services / Models / Enums | 23 / 23 / 24 |
+| Services / Models / Enums / Repositories | 23 / 23 / 25 / 2 |
 | Form Requests / Resources / DTOs | 77 / 86 / 62 |
 | Migrations | 31 |
 | Jobs / Events / Listeners | 2 / 8 / 7 |
 | Comandos Artisan customizados | 4 (2 agendados) |
-| Testes (Pest) | 153 (139 passam em 2026-10-01; 14 desatualizados) |
+| Testes | 393 no backend (Pest) e 183 no frontend (Vitest), todos verdes e executados pelo CI — ver [`testes.md`](./testes.md) |
 | Páginas Next.js (`page.tsx`) | 65 (40 Admin, 25 Private) |
 | Route handlers do BFF | 18 (16 de auth + 2 de proxy) |
 | Código PHP em `backend/app` | ~25 mil linhas |
-| Código TS/TSX no frontend | ~50 mil linhas |
+| Código TS/TSX no frontend | ~52 mil linhas |
 
 ## Cache e armazenamento
 

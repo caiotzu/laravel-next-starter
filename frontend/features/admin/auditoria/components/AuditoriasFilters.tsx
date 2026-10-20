@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { PerPage } from "@/components/data-tables/PerPage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -72,22 +72,19 @@ export function AuditoriasFilters({
     useState<AuditoriaEntidadeRegistro | null>(null);
 
   // Sincroniza a seleção inicial (ex: filtros vindos da URL) assim que a
-  // lista estiver disponível.
-  useEffect(() => {
-    if (filters.entidade_id && !selectedRegistro) {
-      const found = registrosEntidade?.find(
-        (item) => item.id === filters.entidade_id
-      );
-      if (found) setSelectedRegistro(found);
-    }
-  }, [registrosEntidade, filters.entidade_id, selectedRegistro]);
+  // lista estiver disponível. Feito durante a renderização (a condição deixa
+  // de valer assim que o item é selecionado), sem useEffect com setState.
+  if (filters.entidade_id && !selectedRegistro) {
+    const found = registrosEntidade?.find(
+      (item) => item.id === filters.entidade_id
+    );
+    if (found) setSelectedRegistro(found);
+  }
 
-  useEffect(() => {
-    if (filters.usuario_id && !selectedUsuario) {
-      const found = usuarios.find((item) => item.id === filters.usuario_id);
-      if (found) setSelectedUsuario(found);
-    }
-  }, [usuarios, filters.usuario_id, selectedUsuario]);
+  if (filters.usuario_id && !selectedUsuario) {
+    const found = usuarios.find((item) => item.id === filters.usuario_id);
+    if (found) setSelectedUsuario(found);
+  }
 
   function updateFilter<K extends keyof AuditoriaFilters>(
     key: K,

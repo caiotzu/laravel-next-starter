@@ -6,7 +6,7 @@ Este documento resume as decisões de design do starter e o que elas trazem na p
 
 ### Separação clara de responsabilidades no backend
 
-O fluxo `Controller → Request → DTO → Service → Model → Resource` mantém cada camada com uma única responsabilidade:
+O fluxo `Controller → Request → DTO → Service → (Repository) → Model → Resource` mantém cada camada com uma única responsabilidade (o Repository só existe onde há dado com dono, como usuários e grupos — ver [`repositories.md`](./repositories.md)):
 
 - **Controller** só orquestra (validação, autorização, chamada ao service, resposta);
 - **Request** valida a entrada;
@@ -71,5 +71,5 @@ Alterações em models auditáveis são registradas via job em fila, não de for
 Nenhuma arquitetura é isenta de trade-offs — vale registrar honestamente:
 
 - A duplicação Admin/Private (rotas, controllers, telas) tem custo de manutenção: uma correção pode precisar ser replicada nos dois lados.
-- A cobertura de testes está concentrada no backend (Pest: 153 testes, 139 passam; foco em autenticação, isolamento entre contextos e segurança); o frontend não tem testes automatizados e não há pipeline de CI que os execute — ver [`testes.md`](./testes.md).
+- A cobertura de testes é maior no backend (393 testes de Pest, com foco em autenticação, isolamento entre empresas e segurança) do que na interface: o frontend tem 183 testes (schemas, services, BFF e alguns componentes), mas não há testes de ponta a ponta com navegador nem medição de cobertura. O CI do GitHub executa as duas suítes, o lint, os tipos e o build a cada push — ver [`testes.md`](./testes.md).
 - O `proxy.ts` (antigo `middleware.ts`) do frontend decodifica o JWT apenas para checar expiração, sem validar assinatura — a validação real de assinatura acontece no backend a cada chamada ao proxy, então isso não é uma falha de segurança, mas vale entender a diferença entre "verificação de UX" (middleware) e "verificação de segurança" (backend).

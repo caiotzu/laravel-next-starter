@@ -5,7 +5,7 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import {
-  useForm,
+  useForm, useWatch,
   UseFormSetError,
 } from "react-hook-form";
 
@@ -63,7 +63,7 @@ export function UsuarioFormCreate({
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     setError,
     formState: { errors },
   } = useForm<UsuarioFormDataCadastro>({
@@ -75,8 +75,9 @@ export function UsuarioFormCreate({
       grupo_id: usuario?.grupoId ?? "",
     },
   });
+  const grupoIdObservado = useWatch({ control, name: "grupo_id" });
 
-  const selectedGrupoId = watch("grupo_id");
+  const selectedGrupoId = grupoIdObservado;
 
   async function handleFormSubmit(data: UsuarioFormDataCadastro) {
     await onSubmit(data, setError);

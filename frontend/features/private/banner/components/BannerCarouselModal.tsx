@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import Image from "next/image";
 
@@ -38,10 +38,14 @@ export function BannerCarouselModal({ banners, open, onClose }: Props) {
 
   // Sempre que o conjunto de banners elegíveis mudar (ex.: novo login),
   // volta para o início em vez de manter um índice de uma sessão anterior.
-  useEffect(() => {
+  // O ajuste é feito durante a renderização (padrão recomendado pelo React),
+  // sem um useEffect que faria uma renderização extra com os índices antigos.
+  const [bannersAnteriores, setBannersAnteriores] = useState(banners);
+  if (bannersAnteriores !== banners) {
+    setBannersAnteriores(banners);
     setBannerIndex(0);
     setImagemIndex(0);
-  }, [banners]);
+  }
 
   const banner = banners[bannerIndex];
   const imagem = banner?.imagens[imagemIndex];

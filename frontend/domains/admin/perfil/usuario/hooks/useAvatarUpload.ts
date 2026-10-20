@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
@@ -8,22 +8,24 @@ import { toast } from "sonner";
 
 import { ApiErrorResponse } from "@/types/errors";
 
+import { useSyncedState } from "@/hooks/use-synced-state";
+
 import { atualizarAvatar } from "../services/usuarioService";
 import { Usuario } from "../types/usuario.model";
 import { AtualizarAvatarRequest } from "../types/usuario.requests";
 import { AtualizarAvatarResponse } from "../types/usuario.responses";
 
 export function useAvatarUpload(initialAvatar: string | null) {
-  const [avatar, setAvatar] = useState<string | null>(initialAvatar);
+  // Acompanha o avatar vindo do servidor; o upload atualiza localmente quando a imagem nova carrega.
+  const [avatar, setAvatar] = useSyncedState<string | null>(initialAvatar);
 
   const previousAvatarRef = useRef<string | null>(initialAvatar);
   const previewUrlRef = useRef<string | null>(null);
 
   const queryClient = useQueryClient();
 
-  // Mantém sincronizado caso venha atualização externa
+  // Mantém a referência do avatar anterior em dia caso venha atualização externa
   useEffect(() => {
-    setAvatar(initialAvatar);
     previousAvatarRef.current = initialAvatar;
   }, [initialAvatar]);
 

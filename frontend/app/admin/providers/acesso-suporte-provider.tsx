@@ -66,6 +66,7 @@ export function AcessoSuporteProvider({ children }: { children: React.ReactNode 
     }
 
     redirecionandoRef.current = true
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Navegação COMPLETA intencional: recarrega a página para descartar o cache do TanStack Query da área do cliente ao voltar ao Admin (router.push manteria dados de outra entidade em cache).
     window.location.href = ROTA_DASHBOARD_ADMIN
   }, [])
 
@@ -74,12 +75,14 @@ export function AcessoSuporteProvider({ children }: { children: React.ReactNode 
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Lê e assina o sessionStorage (sistema externo) na montagem. obterAcessoSuporteAtivo() tem efeito colateral (limpa o acesso expirado), então não pode ser lido durante a renderização (useSyncExternalStore).
     sincronizar()
     return assinarAlteracoesAcessoSuporte(sincronizar)
   }, [sincronizar])
 
   useEffect(() => {
     if (!acessoSuporteAtivo || !acessoSuporteAtivo.expiraEm) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Contador regressivo derivado do relógio (sistema externo): reinicia quando o acesso muda; o estado acompanha o timer abaixo.
       setSegundosRestantes(null)
       return
     }

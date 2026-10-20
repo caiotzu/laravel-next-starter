@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Building2, Globe, Layers, Send, User } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 
 import { AppAlert } from "@/components/feedback/AppAlert";
 import { Button } from "@/components/ui/button";
@@ -69,7 +69,7 @@ export function MensagemFormCreate({
     handleSubmit,
     formState: { errors },
     setValue,
-    watch,
+    control,
     reset,
   } = useForm<MensagemFormDataCadastro>({
     resolver: zodResolver(mensagemSchemaCadastro),
@@ -82,9 +82,13 @@ export function MensagemFormCreate({
       usuario_id: undefined,
     },
   });
+  const direcionamentoTipoObservado = useWatch({ control, name: "direcionamento_tipo" });
+  const entidadeTipoObservado = useWatch({ control, name: "entidade_tipo" });
+  const grupoEmpresaIdObservado = useWatch({ control, name: "grupo_empresa_id" });
+  const usuarioIdObservado = useWatch({ control, name: "usuario_id" });
 
-  const direcionamentoTipo = watch("direcionamento_tipo");
-  const entidadeTipo = watch("entidade_tipo");
+  const direcionamentoTipo = direcionamentoTipoObservado;
+  const entidadeTipo = entidadeTipoObservado;
 
   const [grupoEmpresaBusca, setGrupoEmpresaBusca] = useState("");
   const [usuarioBusca, setUsuarioBusca] = useState("");
@@ -97,7 +101,7 @@ export function MensagemFormCreate({
   });
   const grupos = (gruposData?.data ?? []) as GrupoEmpresa[];
   const grupoSelecionado =
-    grupos.find((item) => item.id === watch("grupo_empresa_id")) ?? null;
+    grupos.find((item) => item.id === grupoEmpresaIdObservado) ?? null;
 
   /**
    * Busca de qualquer usuário do sistema (não escopada pela entidade/grupo
@@ -111,7 +115,7 @@ export function MensagemFormCreate({
     });
   const usuarios = usuariosData?.data ?? [];
   const usuarioSelecionado =
-    usuarios.find((item) => item.id === watch("usuario_id")) ?? null;
+    usuarios.find((item) => item.id === usuarioIdObservado) ?? null;
 
   function limparDestinos() {
     setValue("entidade_tipo", undefined);

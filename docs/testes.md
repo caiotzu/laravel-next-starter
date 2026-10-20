@@ -1,164 +1,99 @@
-# Testes
+# Testes e qualidade
 
-## Backend (Pest)
+Estado verificado em **2026-10-17**. Contagens obtidas pelos relatórios do próprio Pest (JUnit) e do Vitest (JSON);
+para conferir de novo, rode os comandos da seção "Como executar".
 
-O backend usa [Pest](https://pestphp.com/) 4 (`pestphp/pest` + `pestphp/pest-plugin-laravel`), configurado em `backend/phpunit.xml` com as suites `Unit` e `Feature` (`backend/tests/Unit`, `backend/tests/Feature`). Em ambiente de teste, o `phpunit.xml` força `CACHE_STORE=array`, `QUEUE_CONNECTION=sync`, `MAIL_MAILER=array`, `BCRYPT_ROUNDS=4` e `DB_DATABASE=testing` (o banco `testing` é criado pelo script de inicialização do PostgreSQL no `docker-compose.yml` do Sail).
+## Visão geral
+
+| Camada | Ferramenta | Testes | Resultado |
+|---|---|---|---|
+| Backend | Pest 4 sobre PHPUnit, **PostgreSQL real** (banco `testing`) | **393** em 29 arquivos (1618 asserções) | verde |
+| Frontend | Vitest 5 + Testing Library (jsdom) | **183** em 21 arquivos | verde |
+| Tipos | `npx tsc --noEmit` | — | sem erros |
+| Lint | `npm run lint` (ESLint 9, flat config) | — | **0 erros, 0 avisos** |
+| CI | GitHub Actions (`.github/workflows/ci.yml`) | os mesmos comandos acima | verde no `main` |
+
+## Como executar
 
 ```bash
-./vendor/bin/sail artisan test
-# ou
-composer test
+# Backend (em backend/)
+./vendor/bin/sail artisan test --compact           # tudo
+./vendor/bin/sail artisan test --filter=GrupoTest  # só um arquivo/teste (comece pelo mais estreito)
+
+# Frontend (em frontend/)
+npm test            # Vitest, uma execução
+npx tsc --noEmit    # tipos
+npm run lint        # ESLint
+npm run build       # build de produção (precisa de internet para o Google Fonts; ver PROJECT_GUIDE §12)
 ```
 
-### O que está coberto
+Sem Docker: PHP 8.3 + PostgreSQL local, `.env` com `DB_HOST=127.0.0.1`, `APP_KEY` e `JWT_SECRET` gerados e o banco `testing` criado
+(detalhes em [`PROJECT_GUIDE.md`](./PROJECT_GUIDE.md) §12). Se o `npm test` mostrar uma versão do Vitest diferente da do
+`package-lock.json`, rode `npm ci`.
 
-Os testes de *feature* exercitam a API de ponta a ponta (rota → middleware → controller → service → banco), com foco nos pontos de maior risco: autenticação, isolamento entre contextos e regras de segurança.
+## Backend
 
-| Arquivo | Casos declarados | Foco |
-|---|---:|---|
-| `AuthFluxoTest.php` | 18 (× 2 audiências = 36 execuções) | Login com/sem 2FA, primeiro acesso, esqueceu/redefinir senha, refresh, logout, `/me` — rodado para **Admin** e **Private** |
-| `SegurancaTest.php` | 12 | Isolamento Admin × Private sem `authorize()`, resposta idêntica para e-mail inexistente, expiração do `temp_token` do 2FA, anti-replay de TOTP, troca de e-mail exige senha, encerramento de sessões ao trocar senha, sanitização de conteúdo de release, anexo por link assinado fora do disco público |
-| `EscopoEntidadeTest.php` | 17 | Isolamento multi-tenant: Private A não lê/altera dados de B; Admin irrestrito × Admin em modo de suporte |
-| `AcessoSuporteTest.php` | 16 | Concessão, expiração, revogação, encerramento, uso por outro admin, auditoria com `acesso_suporte_id`, comando agendado de expiração |
-| `UsuarioTest.php` | 12 | Regras de cadastro/atualização/status de usuários |
-| `ChamadoTest.php` | 16 | Abertura, resposta, anexos, status/prioridade/responsável |
-| `BannerTest.php` | 29 | CRUD, período, direcionamento, imagens e links, restauração |
-| `ReleaseTest.php` | 8 | Rascunho/publicação e visibilidade por contexto |
-| `DashboardTest.php` | 5 | KPIs do dashboard Admin |
-| `ExampleTest.php` (Feature e Unit) | 1 + 1 | Testes de exemplo do skeleton Laravel |
+**Feature** (`tests/Feature`, `RefreshDatabase`, banco real): exercitam rota → controller → service → banco.
+Cada arquivo define seus próprios helpers de cenário (empresas, grupos, usuários e um JWT com sessão), então os testes não dependem uns dos outros.
 
-**Total:** 133 casos declarados nos domínios do sistema, que resultam em 151 execuções (o fluxo de autenticação roda uma vez por audiência), mais 2 exemplos do skeleton = **153 testes**. São ~3.900 linhas de teste.
-
-### Resultado da execução (2026-10-01)
-
-A suíte foi executada de verdade (Pest 4, PHP 8.3, PostgreSQL 16 local, banco `testing`), antes e depois da atualização para o Laravel 13:
-
-| Cenário | Passam | Falham |
-|---|---:|---:|
-| Laravel 12.26.4 (antes) | 138 | 15 |
-| Laravel 13.34.0, sem nenhuma outra mudança | 138 | 15 (os mesmos testes, **0 regressões**, mensagens de falha equivalentes) |
-| Laravel 13.34.0 + correção F-16 (anti-enumeração no login) | **139** | **14** |
-
-**Os 14 testes que ainda falham já falhavam antes da atualização e não têm relação com a versão do framework.** São testes desatualizados em relação ao código ou pontos que precisam de decisão do dono do projeto:
-
-| Teste(s) | Causa observada |
+| Área | Arquivos (testes) |
 |---|---|
-| `AuthFluxoTest` — primeiro acesso (4, Admin e Private) | O teste compara `$usuario->status` com a string `'ativo'`, mas o model devolve o enum `UsuarioStatus` |
-| `AcessoSuporteTest` — entidade diferente de `private` | O teste usa o valor de enum `despachante`, que não existe em `EntidadeTipo` (`ValueError`) |
-| `AcessoSuporteTest` — "o mesmo admin pode possuir acessos…" | `UniqueConstraintViolation` em `permissoes_chave_unique`: o teste cria uma permissão que já existe |
-| `AcessoSuporteTest` — encerrar o acesso pelo admin | Retorna 403 onde o teste espera 204 |
-| `AcessoSuporteTest` — comando agendado que expira acessos | O teste espera um registro de auditoria da mudança de status e não o encontra (**não está confirmado que a auditoria seja gerada**) |
-| `EscopoEntidadeTest` — admin em modo de suporte (4) | O admin recebe 403 em rotas `/admin/*` quando envia `X-Acesso-Suporte-Id`; parece mudança de design posterior aos testes, a confirmar |
-| `SegurancaTest` — `temp_token` do 2FA | O comportamento está correto (após 5 códigos inválidos o token é descartado), mas o código HTTP devolvido é 422 e o teste espera 401 |
-| `UsuarioTest` — empresa A não atualiza usuário da empresa B | O isolamento funciona (resposta 400), porém a mensagem é a da validação de grupo, não "Usuário não encontrado." |
+| Autenticação e sessão | `AuthFluxoTest` (36: login, 2FA, primeiro acesso, redefinição, refresh, logout, nos dois contextos) |
+| Segurança | `SegurancaTest` (12: anti-enumeração, anti-replay do TOTP, sessões, anexos por link assinado, sanitização), `SwaggerTest` (5: CSP e credenciais) |
+| Isolamento entre empresas | `EscopoEntidadeTest` (27), `RepositoriesTest` (15), `UsuarioEscopoTest` (14), `UsuarioTest` (12), `GrupoTest` (13) |
+| Autorização por permissão | `EmpresaEnderecoAutorizacaoTest` (4: a permissão do **recurso certo** é exigida) |
+| Acesso de Suporte | `AcessoSuporteTest` (25: concessão só a administrador **ativo**, expiração, revogação, auditoria, escopo) |
+| Onboarding de empresa | `GrupoEmpresaOnboardingTest` (5) |
+| Conteúdo | `BannerTest` (29), `ReleaseTest` (8), `ChamadoTest` (16), `MensagemBuscaUsuariosTest` (5), `DashboardTest` (5) |
+| Arquivos | `ArmazenamentoDeArquivosTest` (17: drivers, disco privado, migração de anexos) |
 
-**Verificação adicional (feita só numa cópia de teste, nada disso foi aplicado ao repositório):** corrigindo apenas a comparação de enum, os **36 testes de `AuthFluxoTest` passam na Laravel 13** (login com e sem 2FA, primeiro acesso, esqueci/redefinir senha, refresh e logout, nas duas áreas); e, aceitando 422 no teste do 2FA, o `temp_token` é descartado após 5 códigos inválidos, mesmo que o código correto seja enviado depois.
+**Unit** (`tests/Unit`): enums, DTOs, models, helpers, `HtmlSanitizer` (16), `FileStorage` (33: path traversal e afins), contextos, exceções.
 
-Recomenda-se corrigir esses testes (ou o código, nos casos de decisão de design) para que `composer test` volte a ficar 100% verde e possa ser usado como porta de entrada no CI.
+**Guardas arquiteturais** (falham se a regra for quebrada):
 
-> **Nota de transparência:** o resultado acima é de um ambiente de teste local do analista, não de um pipeline do projeto. Os artefatos estão em [`pentest/evidencias/`](./pentest/evidencias/).
+- `RepositoriesEscopoTest`: todo método público dos repositories recebe o escopo (exceto a lista revisada `METODOS_SEM_ESCOPO`), o filtro vive em um único método privado, e os services listados não montam consultas de `Usuario`/`Grupo` nem leem o usuário autenticado.
+- `PermissoesAuthorizeTest`: toda chave usada em `->authorize('x')` existe nos seeders de permissão. **Limite:** não detecta uma chave que existe mas é a errada para a ação; para isso há testes de comportamento por rota (`EmpresaEnderecoAutorizacaoTest`).
+
+### Convenções
+
+- Dado com dono ⇒ sempre um caso **cross-tenant** (A não vê nem altera B) e a resposta de erro não pode distinguir "existe em outra empresa" de "não existe".
+- Antes de refatorar código sem cobertura, escreva um **teste de caracterização** e veja-o passar; depois da mudança ele deve continuar verde.
+- Teste novo de regra de segurança: veja-o **falhar** sem a correção (ou faça uma mutação proposital) antes de considerá-lo válido.
+- Não dependa da ordenação do banco (a *collation* do PostgreSQL muda a ordem de strings); compare conjuntos quando a ordem não é o que está sendo testado.
+- Estilo: `test('frase em português', …)`; Pint só em arquivos **novos** (decisão D-005 do plano).
 
 ## Frontend
 
-Não foi identificado no projeto nenhum framework ou script de testes automatizados no frontend (`frontend/package.json` só define `dev`, `build`, `start` e `lint`). A qualidade do frontend é verificada por TypeScript e ESLint.
+Configuração: `vitest.config.mts` (jsdom, alias `@/`) e `tests/setup.ts` (limpa o DOM e o storage a cada teste e define um *stub* de `ResizeObserver`, que o jsdom não tem e o Radix exige).
 
-## CI/CD e verificação de dependências
-
-Não foi identificado pipeline de CI/CD (não existe `.github/workflows` nem equivalente) nem passo automatizado de `composer audit` / `npm audit`. A execução dos testes e a auditoria de dependências dependem, hoje, de execução manual.
-
-
----
-
-## Atualização: testes unitários e frontend
-
-### Backend — `backend/tests/Unit` (Pest)
-
-| Arquivo | Foco |
+| Área | Arquivos (testes) |
 |---|---|
-| `EnumsTest.php` | Contrato de todos os enums de `app/Enums` (valores únicos, `from`/`tryFrom`, `label()`), `ChamadoStatus`, lookups, UF |
-| `HtmlSanitizerTest.php` | Tags permitidas/descartadas, atributos, esquemas de link perigosos, UTF-8 |
-| `HelpersTest.php` | `formatar_cpf_cnpj` (CPF, CNPJ numérico e alfanumérico) |
-| `BusinessExceptionTest.php` | Status e código padrão/customizado |
-| `DtoTest.php` | `PaginationDTO`, filtros, DTOs de Banner e `EmpresaAtualizacaoDTO` (restrito × irrestrito) |
-| `ModelsTest.php` | URL de avatar/imagem de banner, casts, escopo `disponivelAgora` |
-| `ContextosTest.php` | `AuditoriaContexto` |
+| Schemas Zod dos domínios críticos | `features/schemas.test.ts` (24: usuário, grupo, empresa, contato, endereço, onboarding; Admin e Private) |
+| Services de domínio (proxy mockado) | `domains/services-crud.test.ts` (16: usuário, grupo, empresa), `services-bff.test.ts` (3), `banner-mappers.test.ts` (3), `constants.test.ts` (3) |
+| BFF e proxy | `lib/proxy-guard.test.ts` (15), `proxy/middleware.test.ts` (10), `proxy/proxy-clients.test.ts` (8), `lib/client-ip.test.ts` (6), `lib/media-url.test.ts` (6), `lib/acesso-suporte-storage.test.ts` (6) |
+| Banner | `banner/banner-provider.test.tsx` (9), `banner/banner-sessao-storage.test.ts` (4), `components/imagens.test.tsx` (4) |
+| Componentes e hooks | `components/paginacao.test.tsx` (9), `components/nav-main.test.tsx` (8), `components/refatoracao-lint.test.tsx` (9), `components/react-query-provider.test.tsx` (3), `hooks/use-synced-state.test.ts` (5) |
+| Utilitários e validações | `lib/utils.test.ts` (21), `validations/validations.test.ts` (11) |
 
-Os 14 testes de *feature* que falhavam foram ajustados para refletir o comportamento atual do código (enum de status, rotas `/admin` recusando o header de suporte, 422 no 2FA etc.). Nenhuma regra de negócio foi alterada.
+### Convenções
 
-```bash
-cd backend && ./vendor/bin/pest        # 252 testes
-```
+- Services de domínio são testados **mockando o proxy** (`@/lib/proxy-admin` / `@/lib/proxy-private`), conferindo URL, método, corpo, serialização de filtros e o mapeamento para camelCase. O service Private de empresa **não** exporta cadastrar/excluir/ativar, e um teste garante isso.
+- Componentes do Radix (menus, tooltips) abrem e fecham de forma assíncrona: use `waitFor`/`findBy*`, nunca assuma o estado logo após o clique.
+- Erro de lint do React Compiler: corrija a causa. Só use `// eslint-disable-next-line <regra> -- <motivo>` quando o `useEffect` for a forma correta de sincronizar com um sistema externo (hoje há 10 exceções, todas justificadas no próprio código, mais 1 antiga de `<img>` em `AnexoChip.tsx`).
 
-### Frontend — Vitest + Testing Library (`frontend/tests`)
+## CI
 
-```bash
-cd frontend
-npm test               # roda uma vez (109 testes)
-npm run test:watch
-npm run test:coverage
-```
+`.github/workflows/ci.yml` roda em `push` na `main` e em `pull_request`: backend (Pest com PostgreSQL 17), frontend (`tsc`, `npm run lint`, Vitest) e `npm run build`. Os audits (`composer audit`, `npm audit`) só bloqueiam severidade **alta ou crítica**; o relatório completo roda sem bloquear. Detalhes: `PROJECT_GUIDE.md` §16.
 
-Cobre `lib/*` (media-url, client-ip, utils, proxy-guard, acesso-suporte, banner), proxies axios, `proxy.ts`/rotas, validações, mappers e serviços de banner/perfil, constantes e componentes (perfil e carousel de banner), além do fluxo do `BannerProvider`.
+## Lacunas conhecidas
 
-### Imagens (avatar e banner)
+- Não há testes de ponta a ponta com navegador (E2E); a verificação visual é manual.
+- Não há medição de cobertura de código (*coverage*).
+- Componentes de formulário e telas de domínio têm testes de **schema** e de **service**, mas poucos testes de renderização (os formulários de senha, o carrossel, o menu lateral e a paginação têm).
+- O modo `next dev` (import dinâmico do devtools) não é exercitado por teste automático.
+- Segurança: a suíte comprova controles implementados; **não substitui** um pentest independente (ver [`seguranca.md`](./seguranca.md)).
 
-O frontend normaliza URLs `/storage/...` para caminho relativo (`lib/media-url.ts`) e o `next.config.ts` faz o *rewrite* `/storage/*` → backend (origem de `BACKEND_URL`, ou `BACKEND_STORAGE_URL` se definido). O backend precisa de `php artisan storage:link`.
+## Histórico resumido
 
-
-### Swagger (regressão)
-
-`backend/tests/Feature/SwaggerTest.php` garante que a tela do Swagger UI recebe uma CSP própria (scripts com *nonce*, sem `unsafe-inline` para JS) e que o JSON da documentação e o restante da API mantêm `default-src 'none'`. Sem isso, o `SecurityHeadersMiddleware` bloqueava CSS/JS da página e ela abria em branco.
-
-### Versões de teste do frontend
-
-Vite 8 + `@vitejs/plugin-react` 6 + Vitest 5 (versões alinhadas) e `jsdom` 30. Node mínimo: **22.22.2** (campo `engines` do `package.json`).
-
-### Armazenamento de arquivos
-
-| Arquivo | Foco |
-|---|---|
-| `backend/tests/Unit/FileStorageTest.php` | `LaravelFileStorage` isolado: gravar/ler/remover, isolamento público × privado, URL, entrega em stream, `move`, falhas de storage, path traversal |
-| `backend/tests/Feature/ArmazenamentoDeArquivosTest.php` | Fluxos reais (avatar, banner, anexos de chamado, comando de migração) rodando sobre um provider em memória (`tests/Support/ArquivosEmMemoria.php`), além da resolução de `local`/`s3`/provider novo/driver inválido pelo container |
-
-Detalhes da arquitetura em [`armazenamento-de-arquivos.md`](./armazenamento-de-arquivos.md).
-
-
-### Repositories e escopo
-
-| Arquivo | Foco |
-|---|---|
-| `backend/tests/Feature/GrupoTest.php` | caracteriza `GrupoService` (CRUD, listagem, permissões, isolamento A × B) |
-| `backend/tests/Feature/UsuarioEscopoTest.php` | grupos excluídos, filtros, lookups de login/esqueci-senha, administradores, sem oráculo de existência |
-| `backend/tests/Feature/RepositoriesTest.php` | `EscopoEntidadeService::atual()` (inclui modo de suporte) e cada método dos repositories contra uma empresa vizinha |
-| `backend/tests/Unit/RepositoriesEscopoTest.php` | guardas estruturais: método sem escopo, leitura direta do contexto, consultas no Service |
-
-Detalhes em [`repositories.md`](./repositories.md).
-
-
----
-
-## Atualização 2026-10-14 (baseline medido)
-
-Executado com PHP 8.3 + PostgreSQL 16 locais (fora do Sail), banco `testing`:
-
-| Suíte | Resultado |
-|---|---|
-| Backend (`./vendor/bin/pest`) | **393 testes verdes** (1618 asserções) |
-| Frontend (`npm test`) | **145 testes verdes** (17 arquivos) |
-| Frontend (`npx tsc --noEmit`) | sem erros |
-| Frontend (`npm run lint`) | 0 erros, 44 avisos |
-
-Novos em 2026-10-15: `tests/Feature/EmpresaEnderecoAutorizacaoTest.php` (permissão de endereço, Admin e Private) e, em `EscopoEntidadeTest.php`, excluir/ativar de empresa e Form Requests que não revelam dados de outra empresa.
-
-Novos em 2026-10-16: `tests/Feature/MensagemBuscaUsuariosTest.php` (busca global de destinatários), validação de administrador na concessão em `AcessoSuporteTest.php` e testes dos 2 métodos novos em `RepositoriesTest.php`.
-
-Novos em 2026-10-16 (2ª rodada): administrador ativo na concessão de Acesso de Suporte (Request e Service), ausência de efeitos na tentativa indevida em chamado alheio e, no frontend, `tests/components/paginacao.test.tsx` (paginação com primeira/última página). O CI (`.github/workflows/ci.yml`) executa estas mesmas suítes.
-
-Novos em 2026-10-17: `tests/Unit/PermissoesAuthorizeTest.php` (toda chave de `authorize()` existe nos seeders) e, no frontend, `tests/features/schemas.test.ts` (schemas de usuário, grupo, empresa, contato e endereço, Admin e Private).
-
-Novo em 2026-10-17 (2ª): `tests/components/react-query-provider.test.tsx` (provider do TanStack Query e guarda de que o devtools fica em `devDependencies`).
-
-As contagens históricas acima (153/252 testes) refletem momentos anteriores; use esta tabela como referência atual.
-Novos arquivos: `tests/Feature/GrupoEmpresaOnboardingTest.php` (onboarding de empresa: sucesso, permissões `private.*`, 401, 403, 422) e,
-no frontend, `tests/lib/media-url.test.ts` passou a resolver (o módulo `lib/media-url.ts` não existia no repositório).
-Para rodar sem Docker: ver `PROJECT_GUIDE.md` §12.
+Em 2026-10-01 a suíte do backend tinha 153 testes (14 falhavam, depois corrigidos), o frontend não tinha testes e não havia CI.
+Desde então: 357 testes de backend na auditoria de 2026-10-14, 393 hoje; frontend de 0 para 183; CI criado e verde.

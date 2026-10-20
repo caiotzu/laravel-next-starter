@@ -62,6 +62,7 @@ export async function proxyAdminRequest<T>({
     const error = err as AxiosError<ApiErrorResponse>;
 
     if (error.response?.status === 401) {
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Navegação COMPLETA intencional após 401: módulo fora de React (sem router) e o estado do cliente deve ser descartado ao voltar para o login.
       window.location.href = "/admin";
       return Promise.reject(error);
     }

@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { Building2, Loader2, MapPinned, Phone } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { ApiErrorResponse } from "@/types/errors";
@@ -86,12 +86,15 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
     formState: { errors },
     setError,
     setValue,
-    watch,
+    control,
     reset
   } = useForm<EmpresaFormDataEdicao>({
     resolver: zodResolver(empresaSchemaEdicao),
     defaultValues,
   });
+  const matrizIdObservado = useWatch({ control, name: "matriz_id" });
+  const ufObservado = useWatch({ control, name: "uf" });
+  const statusObservado = useWatch({ control, name: "status" });
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState("dados");
@@ -113,7 +116,7 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
     nome_fantasia: matrizBusca || undefined,
   });
   const matrizes = (matrizesData?.data ?? []) as Empresa[];
-  const matrizSelecionada = matrizes.find((item) => item.id === watch("matriz_id")) ?? null;
+  const matrizSelecionada = matrizes.find((item) => item.id === matrizIdObservado) ?? null;
 
   // Precisa desse useEffect pois se excluir algum endereço ou contato e status alterar para pendente ele consegue atualizar na tela
   useEffect(() => {
@@ -340,8 +343,8 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
                     <Combobox
                       items={ESTADOS_LABELS}
                       value={
-                        watch("uf")
-                          ? getLabelByUF(watch("uf")!)
+                        ufObservado
+                          ? getLabelByUF(ufObservado!)
                           : null
                       }
                       onValueChange={(label) =>
@@ -387,7 +390,7 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
 
                     <Input
                       id="grupo-empresa-nome"
-                      value={statusOptions.find((s) => s.value === watch("status"))?.label ?? ""}
+                      value={statusOptions.find((s) => s.value === statusObservado)?.label ?? ""}
                       disabled
                       readOnly
                     />

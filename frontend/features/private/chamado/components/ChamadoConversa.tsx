@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, createElement } from "react";
 
 import { toast } from "sonner";
 
@@ -47,7 +47,6 @@ export function ChamadoConversa({ chamado }: Props) {
   const { mutate: responder, isPending } = useResponderChamado(chamado.id);
 
   const encerrado = chamadoBloqueiaMensagens(chamado.status);
-  const StatusIcon = getChamadoStatusIcon(chamado.status);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -87,7 +86,7 @@ export function ChamadoConversa({ chamado }: Props) {
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-mono text-xs text-muted-foreground">{chamado.ticket}</span>
           <Badge className={`gap-1.5 font-normal ${getChamadoStatusBadge(chamado.status)}`}>
-            <StatusIcon className="size-3.5" />
+            {createElement(getChamadoStatusIcon(chamado.status), { className: "size-3.5" })}
             {getChamadoStatusLabel(chamado.status)}
           </Badge>
           <Badge variant="outline">{getChamadoTipoLabel(chamado.tipo)}</Badge>

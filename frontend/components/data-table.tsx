@@ -343,6 +343,10 @@ export function DataTable({
 }: {
   data: z.infer<typeof schema>[]
 }) {
+  // `useReactTable` devolve funções que não podem ser memoizadas com segurança; a diretiva
+  // abaixo exclui só este componente da compilação do React Compiler (uso documentado pela TanStack).
+  "use no memo"
+
   const [data, setData] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -367,6 +371,7 @@ export function DataTable({
     [data]
   )
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table é incompatível com o React Compiler por design (o componente já está excluído com "use no memo").
   const table = useReactTable({
     data,
     columns,

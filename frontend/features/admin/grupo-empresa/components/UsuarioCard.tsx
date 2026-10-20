@@ -3,7 +3,7 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, User } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
@@ -58,7 +58,7 @@ export function UsuarioCard({ usuario }: Props) {
   const {
     handleSubmit,
     setValue,
-    watch,
+    control,
     reset,
     formState: { errors },
   } = useForm<UsuarioGrupoEmpresaFormDataAlteraStatus>({
@@ -67,6 +67,7 @@ export function UsuarioCard({ usuario }: Props) {
       status: usuario.status
     },
   });
+  const statusObservado = useWatch({ control, name: "status" });
 
 
   const queryClient = useQueryClient();
@@ -243,7 +244,7 @@ export function UsuarioCard({ usuario }: Props) {
                   items={statusOptions}
                   value={
                     statusOptions.find(
-                      (s) => s.value === watch("status")
+                      (s) => s.value === statusObservado
                     ) ?? null
                   }
                   onValueChange={(s) =>
@@ -258,7 +259,7 @@ export function UsuarioCard({ usuario }: Props) {
                     disabled={!canEditStatus}
                     value={
                       statusOptions.find(
-                        (s) => s.value === watch("status")
+                        (s) => s.value === statusObservado
                       )?.label ?? ""
                     }
                     showClear

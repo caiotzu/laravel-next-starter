@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Check, Eye, EyeOff, Loader2 } from "lucide-react"
-import { useForm, type UseFormSetError } from "react-hook-form"
+import { useForm, useWatch, type UseFormSetError } from "react-hook-form"
 
 import { AppAlert } from "@/components/feedback/AppAlert"
 import { Button } from "@/components/ui/button"
@@ -52,15 +52,17 @@ export function PrimeiroAcessoForm({
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     setError,
     formState: { errors, isSubmitting },
   } = useForm<PrimeiroAcessoData>({
     resolver: zodResolver(primeiroAcessoSchema),
   })
+  const senhaObservado = useWatch({ control, name: "senha" });
+  const senhaConfirmaObservado = useWatch({ control, name: "senha_confirma" });
 
-  const senha = watch("senha") || ""
-  const senhaConfirmacao = watch("senha_confirma") || ""
+  const senha = senhaObservado || ""
+  const senhaConfirmacao = senhaConfirmaObservado || ""
 
   const requisitos = useMemo(
     () => getPasswordRequirements(senha),

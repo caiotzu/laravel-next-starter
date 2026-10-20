@@ -12,8 +12,8 @@ Só marque `[x]` depois de verificar (teste executado, lint/tsc, leitura do resu
 - **Repository Pattern (trilha concluída):** adotado de forma deliberada e restrita. `GrupoRepository` e `UsuarioRepository`; consumidores: `GrupoService`, `UsuarioService`, `GrupoEmpresaService`, `AcessoSuporteService`/`ConcederRequest`, `MensagemService`. Guarda estrutural em `tests/Unit/RepositoriesEscopoTest.php` cobre 5 Services. Não há mais consultas de `Usuario`/`Grupo` soltas em Services, exceto as decididas e justificadas em `repositories.md`.
 - **Auditoria dos demais módulos (REPO-002, concluída):** nenhum precisa de Repository novo; o isolamento já é garantido por outros mecanismos (tabela em `repositories.md`). A auditoria encontrou e corrigiu 3 falhas reais de autorização/escopo (SEC-001..003).
 - **Módulos padronizados:** Grupo, Usuario (Repository); Empresa/Contato/Endereco (`EscopoEntidadeService`); Chamado/Mensagem (dono = usuário passado pelo controller); Banner/Release (audiência por contexto); AcessoSuporte (filtro pelo ator).
-- **Verificação:** backend **393 testes verdes** (1618 asserções; baseline inicial 357); frontend **145 testes verdes** (17 arquivos), `tsc` limpo, `npm run lint` 0 erros / **44 avisos** (eram 70), `npm run build` ✔ (local, com Google Fonts simulado), `npm audit --omit=dev --audit-level=high` sem achados.
-- **CI:** `.github/workflows/ci.yml` está no GitHub (commit `d3ff70b`) e o **primeiro run passou** (workflow "passing", 3 jobs "completed successfully"). Os jobs `backend`, `frontend` e `frontend-build` agora são todos **bloqueantes**. Falta só decidir a proteção da branch `main` (CI-003).
+- **Verificação:** backend **393 testes verdes** (1618 asserções; baseline inicial 357); frontend **183 testes verdes** (21 arquivos), `tsc` limpo, `npm run lint` **0 erros / 0 avisos** (eram 70), `npm run build` ✔ (local, com Google Fonts simulado), `npm audit --omit=dev --audit-level=high` sem achados. Documentação conferida contra o código (links, caminhos, classes, permissões, versões e contagens).
+- **CI:** `.github/workflows/ci.yml` está no GitHub, o primeiro run passou e os 3 jobs (`backend`, `frontend`, `frontend-build`) **bloqueiam**. A proteção da branch `main` (exigir CI antes do merge) foi **declinada pelo dono**, que mantém o push direto na `main` (D-021): o CI avisa, não impede.
 - **Bloqueios/riscos:** nenhum bloqueio. Não há CI; sem execução via Sail/Docker (verificado com PHP 8.3 + PostgreSQL 16 local — PROJECT_GUIDE §12). Auditoria de segurança **não é completa**: cobriu escopo/tenant, chaves de `authorize()` e fluxo de proxy.
 - **Atenção em produção (SEC-001):** grupos *personalizados* que tinham só `*.empresa.contato.atualizar` deixam de poder editar endereços (corrigido: exige `*.empresa.endereco.atualizar`). Grupos semeados/onboarding recebem ambas e não são afetados.
 
@@ -28,8 +28,8 @@ Só marque `[x]` depois de verificar (teste executado, lint/tsc, leitura do resu
 | F-5 | P2 | Sem CI/CD nem audits automatizados | não existia `.github/` | **Resolvido** (CI-001; falta 1ª execução real → CI-002) |
 | F-6 | P2 | Frontend com testes só em lib/proxy/banner/perfil/validações | `frontend/tests/**` | Aberto → TEST-001 |
 | F-7 | P3 | Pint não aplicado ao legado (340/501 arquivos fora do preset) vs `AGENTS.md` | `pint --test` | Decisão D-005; opcional → QUAL-001 |
-| F-8 | P3 | Docs com referências quebradas (`pentest-avaliacao-seguranca.md`, `docs/pentest/`), Next 16.3.7 vs 16.3.8 | `ls docs`; `package.json` | Aberto → DOC-002 |
-| F-9 | P3 | 70 avisos de lint | `npm run lint` | Aberto → FRONT-003 |
+| F-8 | P3 | Docs com referências quebradas (`pentest-avaliacao-seguranca.md`, `docs/pentest/`, `docs/apresentacoes/`), Next 16.3.7 vs 16.3.8, Node ≥ 20.9, contagens e afirmações obsoletas ("153 testes", "frontend sem testes", "sem CI") | varredura automática de links/caminhos/classes/permissões + leitura | **Resolvido** (DOC-002) |
+| F-9 | P3 | 70 avisos de lint | `npm run lint` | **Resolvido** (FRONT-003): 0 avisos |
 | F-10 | **P1** | `EmpresaEnderecoController::atualizar` (**Admin e Private**) autorizava com `*.empresa.contato.atualizar` em vez de `*.endereco.atualizar`: quem só tinha a permissão de contato editava endereços (200) e quem tinha a de endereço levava 403, enquanto o frontend exibe o botão pela permissão de endereço | testes vermelhos antes da correção; seeders e `frontend/**` usam `endereco.atualizar` | **Resolvido** (SEC-001) |
 | F-11 | P2 | Form Requests Private de contato/endereço consultavam dados da empresa **sem escopo**, antes do gate do Service: um usuário que conheça o UUID de outra empresa distinguia "tem principal" (422) de "não tem" (400) e "contato existe" de "não existe" | 4 testes vermelhos antes da correção | **Resolvido** (SEC-002) |
 | F-12 | P2 | `EmpresaService::excluir`/`ativar` não aplicavam o escopo (só `atualizar`/`visualizar`/`listar` aplicavam). Inalcançável hoje (rotas só do Admin; modo de suporte recusa `/admin`), mas dependia disso | 2 testes vermelhos antes da correção | **Resolvido** (SEC-003) |
@@ -41,6 +41,9 @@ Só marque `[x]` depois de verificar (teste executado, lint/tsc, leitura do resu
 | F-18 | **P1** | A pasta `.github/` (workflow do CI) não chegou ao GitHub no commit `c294610` | `git diff --name-only` | **Resolvido**: enviada em `d3ff70b`; primeiro run verde (CI-002) |
 | F-19 | **P1** | O workflow usava `composer audit --ignore-severity`, opção que **não existe em versões antigas do Composer** (confirmado no Composer do dono); o job de backend falharia | saída do dono: `The "--ignore-severity" option does not exist` | **Resolvido** (CI-001): filtro por script que lê o JSON; também removido `--abandoned` |
 | F-20 | P3 | `node_modules` do dono desatualizado: `npm test` rodou o vitest **3.2.7**, mas o `package-lock.json` fixa **5.0.3** | saída do dono; `package-lock.json` | Aberto: rodar `npm ci` (o CI já usa `npm ci`) |
+| F-21 | P2 | O relatório da avaliação de segurança (2026-09-29) foi apagado no commit `a0a2275` e as evidências nunca foram versionadas; os 10 achados abertos (F-05 a F-14) deixaram de ser rastreados | `git log --diff-filter=D`; `seguranca.md` | Parcial: referências corrigidas e situação documentada (DOC-002); relatório **não** restaurado (D-023); nova avaliação → SEC-008 |
+| F-22 | P2 | O login do BFF (`app/api/auth/{admin,private}/login` e `/2fa`) devolve o `token` JWT também no corpo da resposta, além do cookie `httpOnly` | `frontend/app/api/auth/**/route.ts`; já descrito em `seguranca.md` | Aberto → SEC-007 |
+| F-23 | P3 | Testes do `nav-main` falhavam de forma intermitente: o jsdom não tem `ResizeObserver` e o tooltip do Radix o exige | execução repetida; mensagem `ResizeObserver is not defined` | **Resolvido**: *stub* em `tests/setup.ts` (25/25 execuções estáveis) |
 
 Verificado e **sem achado**: toda chave usada em `authorize()` existe nos seeders; nenhum controller usa chave de outro recurso (varredura por script); Requests **Admin** têm as mesmas consultas sem escopo, mas o Admin é irrestrito por design (modo de suporte recusa `/admin`).
 
@@ -140,21 +143,23 @@ Verificado e **sem achado**: toda chave usada em `authorize()` existe nos seeder
 - **Destaque:** garante que o schema de edição de empresa do **Private não repassa** `cnpj` nem `grupo_empresa_id`; CNPJ aceita máscara e alfanumérico (14 caracteres); telefone 10/11 dígitos; CEP 8 dígitos.
 - **Verificação:** 3 mutações propositais (CNPJ aceitando 13, Private aceitando `cnpj`, telefone sem tamanho) foram detectadas; schemas restaurados. **Fora do escopo:** services/hooks de domínio com proxy mockado → TEST-002.
 
-### FRONT-003 (parcial) — Avisos de lint 70 → 44
-- **Arquivos:** 9 componentes/páginas (imports não usados: `BadgeCheck`, `Bell`, `CreditCard`, `ArrowLeft`, `Send`, `Card*`), `eslint.config.mjs` (`@typescript-eslint/no-unused-vars` com `ignoreRestSiblings` e prefixo `_`, que cobre `const { status, ...rest } = x` e os `_f/_u/_p` dos testes).
-- **Verificação:** `tsc` limpo, Vitest 142/142, lint 0 erros. Zero mudança de comportamento.
-- **Restam 44** (todos do React Compiler/Next, ver backlog FRONT-003).
+### FRONT-003 — Avisos de lint 70 → 0
+- **Arquivos (resumo):** 19 formulários (`watch()` → `useWatch`), `use-mobile` (→ `useSyncExternalStore`), 2 `useAvatarUpload` e 2 `TwoFactorSection` (→ novo hook `hooks/use-synced-state.ts`), 2 `BannerCarouselModal`, `AuditoriasFilters`, `chart-area-interactive` e 2 `nav-main` (ajuste de estado durante a renderização), 2 `ChamadoConversa` (`createElement`), `sidebar` (`useId` no lugar de `Math.random`), imports não usados, `eslint.config.mjs` (`no-unused-vars` com `ignoreRestSiblings`).
+- **Exceções justificadas (10, no próprio código, formato `eslint-disable-next-line <regra> -- <motivo>`):** 2 × `banner-provider` (Admin/Private, 4 pontos), `acesso-suporte-provider` (3: duas de efeito e uma navegação completa), `acesso-suporte-bootstrap` (1), `proxy-admin.ts` (navegação completa após 401), `data-table.tsx` (TanStack Table incompatível por design; `"use no memo"`). Em todas o `useEffect` é a forma correta de sincronizar com um sistema externo (leitura com efeito colateral no `sessionStorage`, ordem de limpeza do cache) ou a navegação completa é intencional (descarta o cache da área do cliente). Reescrevê-las mudaria o timing de funcionalidades sensíveis.
+- **Também melhorou a correção:** em `AcessoSuporteFormConceder` o envio passou a ler `getValues()` (valores completos no momento do clique) em vez do valor observado.
+- **Verificação:** `npm run lint` com `--max-warnings 0` ✔, `tsc` ✔, Vitest 183/183 (3 execuções), `npm run build` ✔; testes que travam o comportamento preservado em `tests/components/refatoracao-lint.test.tsx`, `nav-main.test.tsx` e `tests/hooks/use-synced-state.test.ts`, validados com mutações propositais (avatar, carrossel, formulário de senha, `use-mobile`, `nav-main`).
+- **Não testado:** `AuditoriasFilters`, `chart-area-interactive`, `TwoFactorSection` e os demais formulários convertidos para `useWatch` não têm teste de renderização próprio (a conversão foi mecânica e coberta por `tsc` e pelos formulários de senha).
 
-### CI-002 — Primeiro run do CI no GitHub
-- **Evidência:** `.github/` enviada em `d3ff70b`; a página de Actions mostra o Run 1 "completed successfully" (selo "CI - passing") com os 3 jobs concluídos com sucesso: Backend (Pest) 50 s, Frontend (tsc, lint, Vitest) 1 min 9 s, Frontend (build) 1 min 3 s. O `composer audit` filtrado por script, que era a incógnita, passou.
-- **Limite da evidência:** li o **resumo** do GitHub (página pública). Os passos individuais não puderam ser lidos (a página de job é montada por JavaScript e a API pública deu *rate limit*); como os passos do `composer audit` e do build não são `continue-on-error` no backend/frontend, o job verde implica que passaram.
-- **Resultado:** job `frontend-build` promovido a **bloqueante** (removido `continue-on-error`), pois passou no GitHub e localmente.
-- **Pendência:** proteção da branch `main` → CI-003 (decisão do dono).
+### TEST-002 — Testes de services de domínio
+- **Arquivo:** `frontend/tests/domains/services-crud.test.ts` (16 testes): usuário, grupo e empresa, Admin e Private — URL, método, corpo, serialização de filtros (sem campos vazios) e mapeamento para camelCase; garante que o service Private de empresa **não** exporta cadastrar/excluir/ativar.
+- **Verificação:** 3 mutações propositais detectadas (método HTTP, export indevido, filtro de string vazia); estáveis em execuções repetidas.
+- **Fora do escopo:** hooks de domínio (TanStack Query) e os services dos demais recursos.
 
-### DEP-002 — Devtools do TanStack fora das dependências de produção (F-17)
-- **Arquivos:** `frontend/components/providers/react-query-provider.tsx` (import dinâmico sem SSR, só em `NODE_ENV === "development"`), `frontend/package.json` (devtools movido para `devDependencies`, 1 linha), `frontend/package-lock.json` (31 pacotes marcados `dev`, **nenhuma versão alterada**), teste novo `frontend/tests/components/react-query-provider.test.tsx` (3 testes, inclui guarda de que o devtools não volta a `dependencies`).
-- **Verificação:** `tsc`, lint 0 erros, Vitest 145/145; `npm run build` ✔; `npm prune --omit=dev` removeu `react-query-devtools`, `solid-js`, `seroval` e `typescript` (restaram 184 pacotes) e o `next start` **respondeu HTTP 200** em `/esqueceu-senha`, `/primeiro-acesso` e `/redefinir-senha`, sem erros no log. **Não** testado: o modo `next dev` no navegador (o import dinâmico do devtools em desenvolvimento).
-- **Descoberta:** o build local passou a ser possível simulando o Google Fonts (ver `PROJECT_GUIDE.md` §12).
+### DOC-002 — Documentação corrigida e alinhada ao código
+- **Arquivos:** `docs/testes.md` (reescrito: tinha seções contraditórias), `seguranca.md`, `frontend-arquitetura.md`, `vantagens.md`, `arquitetura.md`, `PROJECT_GUIDE.md`, `CLAUDE.md`.
+- **Método:** varredura automática de todos os links, caminhos, classes, comandos e chaves de permissão citados nos docs; contagens e versões conferidas contra o repositório (rotas, controllers, enums, testes, páginas, Next 16.3.8, Node ≥ 22.22.2).
+- **Decisão importante:** o relatório de pentest **não foi restaurado** (D-023); `seguranca.md` agora explica o que aconteceu, como recuperá-lo e que os 10 achados abertos precisam ser reavaliados.
+- **Verificação:** 0 links quebrados; os números dos docs batem com a execução (393/183, 158 rotas: 106 com `authorize()`, 16 públicas, 36 só JWT).
 
 ## C. Tarefas em andamento
 
@@ -166,10 +171,8 @@ Nenhuma. (Última unidade coerente concluída: REPO-002 + SEC-001..003.)
 
 Legenda de prioridade: P1 > P2 > P3. Ordem sugerida = ordem da lista.
 
-- [ ] **CI-003 (P2) — Proteção da branch `main` (decisão do dono, ~2 minutos)**: no GitHub, Settings → Branches → Add rule para `main` → marcar "Require status checks to pass" e escolher `Backend (Pest)`, `Frontend (tsc, lint, Vitest)` e `Frontend (build)`. Assim ninguém faz merge com o CI vermelho. Só o dono do repositório pode fazer isso. Status: pendente.
-- [ ] **DOC-002 (P3) — Referências quebradas em docs** (`pentest-avaliacao-seguranca.md`, `docs/pentest/**`, versão do Next em `frontend-arquitetura.md`). Restaurar os arquivos ou remover os links. Status: pendente.
-- [ ] **FRONT-003 (P3) — Avisos restantes de lint (44)**: `react-hooks/incompatible-library` ×20 (`watch()` do React Hook Form e `useReactTable`; trocar por `useWatch` caso a caso), `react-hooks/set-state-in-effect` ×19, `react-hooks/static-components` ×2 (`StatusIcon` criado no render em `ChamadoConversa`), `@next/next/no-location-assign-relative-destination` ×2 (`window.location.href` em `proxy-admin.ts` e no provider de suporte), `react-hooks/purity` ×1 (`Math.random` em `components/ui/sidebar.tsx`, componente gerado do shadcn). Todos são **avisos por decisão** (`eslint.config.mjs`) e cada correção muda o fluxo de render/efeitos: fazer um arquivo por vez, com teste. Status: pendente.
-- [ ] **TEST-002 (P3) — Testes de services/hooks dos domínios** (proxy mockado) para usuário, grupo e empresa, além dos schemas já cobertos. Status: pendente.
+- [ ] **SEC-007 (P2) — Remover o `token` do corpo das respostas de login/2FA do BFF (F-22)**: os handlers gravam o JWT no cookie `httpOnly` mas repassam ao navegador o `data` completo, que inclui `token`. Devolver só os demais campos. Antes: conferir que nenhum código do frontend lê `data.token`. Critério: teste do handler provando que a resposta não contém `token` e que o cookie continua sendo gravado. Status: pendente.
+- [ ] **SEC-008 (P2) — Nova avaliação de segurança (reabrir F-05 a F-14)**: o relatório de 2026-09-29 não está mais no repositório; refazer a revisão white-box contra o código atual (Laravel 13, Next 16.3.8) e arquivar só um **resumo** público. Depende de decisão do dono. Status: pendente.
 - [ ] **QUAL-001 (P3) — Decidir Pint:** adotar `pint.json` que reflita o estilo atual **ou** formatar tudo em um commit isolado. Hoje: só arquivos novos (D-005). Status: pendente, depende de decisão do dono.
 - [ ] **ARCH-002 (P3) — `infer-conventions` / `.ai/rules`** — somente se o usuário pedir explicitamente (a skill proíbe rodar por conta própria). Status: pendente.
 
@@ -177,8 +180,8 @@ Legenda de prioridade: P1 > P2 > P3. Ordem sugerida = ordem da lista.
 
 ## E. Próxima tarefa recomendada
 
-**CI-003 — Proteger a branch `main` com o CI** (ação sua, ~2 minutos, passo a passo em D). É o que transforma o CI de "avisa" em "impede": sem isso, qualquer push com CI vermelho ainda entra na `main`.
-**O que posso implementar sozinho em seguida:** **FRONT-003** (44 avisos de React Compiler, um arquivo por vez, com teste) ou **TEST-002** (services/hooks de domínio). Pendências que dependem de decisão sua: **DOC-002** (os arquivos de pentest existem em outro lugar?), **QUAL-001** (Pint) e **ARCH-002** (`.ai/rules`).
+**SEC-007 — Remover o `token` do corpo das respostas de login e 2FA do BFF.** É a única fraqueza documentada que ainda está aberta e é pequena: o JWT já vai no cookie `httpOnly`; devolvê-lo também no JSON do navegador só amplia a exposição. A mudança fica em 4 handlers (`app/api/auth/{admin,private}/{login,2fa}`) e precisa de um teste que prove que a resposta não traz `token` e que o cookie continua sendo gravado. Antes de mexer, confirmo no código que nada no frontend lê `data.token`.
+Não depende de decisão sua. As demais pendências (QUAL-001 Pint, ARCH-002 `.ai/rules`, SEC-008 nova avaliação) dependem de você.
 
 ---
 
@@ -206,6 +209,10 @@ Legenda de prioridade: P1 > P2 > P3. Ordem sugerida = ordem da lista.
 | D-018 | `ignoreRestSiblings` + prefixo `_` no `no-unused-vars` | É o idioma padrão para omitir uma chave por desestruturação; evita 10 falsos avisos | Desabilitar a regra; renomear variáveis |
 | D-019 | DEP-002: devtools em `devDependencies` + `next/dynamic` (`ssr: false`) só em desenvolvimento | Tira `solid-js`/`seroval` da instalação de produção; o ramo morto é descartado no build; comprovado com prune + `next start` | Manter em `dependencies`; `overrides` para versões corrigidas |
 | D-020 | Job `frontend-build` do CI passa a bloquear | Passou no GitHub e localmente; build quebrado é impeditivo de deploy | Manter informativo |
+| D-021 | CI-003 **não será implementado**: sem proteção da branch `main`; o dono mantém o push direto | Decisão do dono do projeto. O CI continua rodando e avisando, mas não impede merge | Exigir status checks e trabalhar por Pull Request |
+| D-022 | FRONT-003: refatorar de verdade onde possível; 10 exceções documentadas só onde o `useEffect` é correto | Reescrever leitura de `sessionStorage` com efeito colateral e a ordem de limpeza do cache mudaria o timing de funcionalidades sensíveis (banner, acesso de suporte) | Suprimir os 44 avisos; reescrever tudo |
+| D-023 | Não restaurar o relatório de pentest de 2026-09-29; corrigir as referências e documentar | Escrito contra Laravel 12/Next 15 e listando vulnerabilidades então abertas; republicar, desatualizado, em repositório público induz a erro e expõe detalhes | Restaurar do histórico (`8180a63`); recriar o conteúdo |
+| D-024 | `testes.md` reescrito do zero a partir dos relatórios JUnit (Pest) e JSON (Vitest) | O arquivo acumulara seções contraditórias (14 testes falhando, "frontend sem testes", "sem CI") | Anexar mais um bloco de atualização |
 
 ---
 
@@ -219,3 +226,4 @@ Legenda de prioridade: P1 > P2 > P3. Ordem sugerida = ordem da lista.
 | 2026-10-16 (2ª) | SEC-006, DEP-001, CI-001, FRONT-004, SEC-004 (descartada) | `UsuarioRepository`, `AcessoSuporteService`, `ConcederRequest`, `frontend/package-lock.json`, `.github/workflows/ci.yml`, `eslint.config.mjs`, `Pagination.tsx` + `pagination-pages.ts`, `ChamadoTest`, docs | Pest 391 ✔; Vitest 118 ✔; `tsc` ✔; lint 0 erros ✔; `npm audit` prod alta/crítica ✔; CI simulado localmente (não executado no GitHub) | CI-002 |
 | 2026-10-17 | CI-001 (correção), SEC-005, TEST-001, FRONT-003 (parcial) | `.github/scripts/composer-audit-grave.php`, `ci.yml`, `PermissoesAuthorizeTest`, `tests/features/schemas.test.ts`, `eslint.config.mjs` + 9 componentes | Pest 393 ✔; Vitest 142 ✔; `tsc` ✔; lint 0 erros / 44 avisos; mutações detectadas; script de audit com 8 cenários | CI-002 (push do `.github/`) |
 | 2026-10-17 (2ª) | CI-002, DEP-002 | `ci.yml` (build bloqueante), `react-query-provider.tsx`, `package.json`, `package-lock.json`, `react-query-provider.test.tsx`, docs | Run 1 do CI verde (GitHub); Vitest 145 ✔; `tsc` ✔; lint 0 erros; build ✔; prune + `next start` HTTP 200 | CI-003 (dono) / FRONT-003 |
+| 2026-10-17 (3ª) | FRONT-003, TEST-002, DOC-002; CI-003 declinada | 19 formulários + ~15 componentes/hooks, `hooks/use-synced-state.ts`, `tests/**` (+4 arquivos), `eslint.config.mjs`, `tests/setup.ts`, `docs/{testes,seguranca,frontend-arquitetura,vantagens,arquitetura,PROJECT_GUIDE,IMPLEMENTATION_PLAN}.md`, `CLAUDE.md` | Vitest 183 ✔ (3 execuções); lint 0/0; `tsc` ✔; build ✔; 0 links quebrados; mutações detectadas; flakiness do `nav-main` corrigida (25/25) | SEC-007 |

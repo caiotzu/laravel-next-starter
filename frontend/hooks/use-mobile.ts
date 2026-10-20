@@ -2,18 +2,17 @@ import * as React from "react"
 
 const MOBILE_BREAKPOINT = 768
 
+// A largura da tela é um "store externo": assinamos a media query e lemos o valor atual,
+// em vez de copiar para um estado dentro de um useEffect.
+function assinar(aoMudar: () => void) {
+  const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+  mql.addEventListener("change", aoMudar)
+  return () => mql.removeEventListener("change", aoMudar)
+}
+
+const lerNoNavegador = () => window.innerWidth < MOBILE_BREAKPOINT
+const lerNoServidor = () => false
+
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
-
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    }
-    mql.addEventListener("change", onChange)
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
-
-  return !!isMobile
+  return React.useSyncExternalStore(assinar, lerNoNavegador, lerNoServidor)
 }

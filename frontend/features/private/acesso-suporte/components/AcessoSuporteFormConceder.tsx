@@ -6,7 +6,7 @@ import Link from "next/link";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, ShieldAlert } from "lucide-react";
-import { useForm, UseFormSetError } from "react-hook-form";
+import { useForm, useWatch, UseFormSetError } from "react-hook-form";
 
 import { PrivatePermissionGuard } from "@/app/(private)/_components/guard/PrivatePermissionGuard";
 
@@ -78,16 +78,17 @@ export function AcessoSuporteFormConceder({
 
   const {
     handleSubmit,
-    watch,
+    control,
     setValue,
     formState: { errors },
     setError,
+    getValues,
   } = useForm<AcessoSuporteFormDataConceder>({
     resolver: zodResolver(acessoSuporteSchemaConceder),
     defaultValues: { duracao_minutos: 30 },
   });
-
-  const valores = watch();
+  // Valores para exibir na tela (reativos). No envio, `getValues()` lê os valores completos.
+  const valores = useWatch({ control });
 
   const adminSelecionado = administradores?.find(
     (a) => a.id === valores.usuario_admin_id
@@ -95,7 +96,7 @@ export function AcessoSuporteFormConceder({
 
   async function confirmarEnviar() {
     setConfirmando(false);
-    await onSubmit(valores, setError);
+    await onSubmit(getValues(), setError);
   }
 
   return (

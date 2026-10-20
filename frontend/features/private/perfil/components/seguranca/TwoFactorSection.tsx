@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { AxiosError } from "axios";
 import { Loader2, ShieldCheck, ShieldOff } from "lucide-react";
@@ -21,13 +21,14 @@ import {
   useDesabilitar2FA,
   useHabilitar2FA,
 } from "@/domains/private/perfil/autenticacao-dois-fatores/hooks/useAutenticacaoDoisFatores";
+import { useSyncedState } from "@/hooks/use-synced-state";
 
 interface Props {
   twoFactorEnabled: boolean;
 }
 
 export function TwoFactorSection({ twoFactorEnabled }: Props) {
-  const [is2FAEnabled, setIs2FAEnabled] = useState(twoFactorEnabled);
+  const [is2FAEnabled, setIs2FAEnabled] = useSyncedState(twoFactorEnabled);
 
   const [openHabilitar, setOpenHabilitar] = useState(false);
   const [openDesabilitar, setOpenDesabilitar] = useState(false);
@@ -44,10 +45,6 @@ export function TwoFactorSection({ twoFactorEnabled }: Props) {
   const habilitarMutation = useHabilitar2FA();
   const confirmarMutation = useConfirmar2FA();
   const desabilitarMutation = useDesabilitar2FA();
-
-  useEffect(() => {
-    setIs2FAEnabled(twoFactorEnabled);
-  }, [twoFactorEnabled]);
 
   function resetHabilitarState() {
     setSenhaHabilitar("");

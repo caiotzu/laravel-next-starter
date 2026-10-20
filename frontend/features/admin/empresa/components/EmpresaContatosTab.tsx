@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { Loader2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { ApiErrorResponse } from "@/types/errors";
@@ -77,13 +77,13 @@ export function EmpresaContatosTab({
     formState: { errors },
     setError,
     reset,
-    watch
   } = useForm<EmpresaContatoFormData>({
     resolver: zodResolver(empresaContatoSchema),
     defaultValues: DEFAULT_VALUES,
   });
+  const tipoObservado = useWatch({ control, name: "tipo" });
   const queryClient = useQueryClient();
-  const tipo = watch("tipo");
+  const tipo = tipoObservado;
   const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
   const [editingContato, setEditingContato] = useState<EmpresaContato | null>(null);
   

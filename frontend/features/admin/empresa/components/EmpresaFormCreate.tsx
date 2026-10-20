@@ -6,7 +6,7 @@ import Link from "next/link";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Building2, Loader2, MapPinned, Phone } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 
 import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
 
@@ -67,7 +67,7 @@ export function EmpresaFormCreate({
     handleSubmit,
     formState: { errors },
     setValue,
-    watch,
+    control,
   } = useForm<EmpresaFormDataCadastro>({
     resolver: zodResolver(empresaSchemaCadastro),
     defaultValues: {
@@ -81,6 +81,9 @@ export function EmpresaFormCreate({
       uf: undefined,
     },
   });
+  const matrizIdObservado = useWatch({ control, name: "matriz_id" });
+  const grupoEmpresaIdObservado = useWatch({ control, name: "grupo_empresa_id" });
+  const ufObservado = useWatch({ control, name: "uf" });
 
   const [activeTab, setActiveTab] = useState("dados");
   const [matrizBusca, setMatrizBusca] = useState("");
@@ -93,7 +96,7 @@ export function EmpresaFormCreate({
     nome_fantasia: matrizBusca || undefined,
   });
   const matrizes = (matrizesData?.data ?? []) as Empresa[];
-  const matrizSelecionada = matrizes.find((item) => item.id === watch("matriz_id")) ?? null;
+  const matrizSelecionada = matrizes.find((item) => item.id === matrizIdObservado) ?? null;
 
   const { data: gruposData , isLoading: isLoadingGrupos} = useGrupoEmpresas({
     page: 1,
@@ -102,7 +105,7 @@ export function EmpresaFormCreate({
     nome: grupoEmpresaBusca || undefined,
   });
   const grupos = (gruposData?.data ?? []) as GrupoEmpresa[];
-  const grupoSelecionado = grupos.find((item) => item.id === watch("grupo_empresa_id")) ?? null;
+  const grupoSelecionado = grupos.find((item) => item.id === grupoEmpresaIdObservado) ?? null;
  
   if(isLoadingMatrizes || isLoadingGrupos)
     return (<EmpresaFormCreateSkeleton />);
@@ -333,8 +336,8 @@ export function EmpresaFormCreate({
                     <Combobox
                       items={ESTADOS_LABELS}
                       value={
-                        watch("uf")
-                          ? getLabelByUF(watch("uf")!)
+                        ufObservado
+                          ? getLabelByUF(ufObservado!)
                           : null
                       }
                       onValueChange={(label) =>

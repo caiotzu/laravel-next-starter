@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
 import { Loader2 } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { ApiErrorResponse } from "@/types/errors";
@@ -33,7 +33,7 @@ export function PerfilTabContent({ user }: PerfilTabContentProps) {
     formState: { errors, isDirty },
     setError,
     reset,
-    watch,
+    control,
   } = useForm<UsuarioPerfilFormData>({
     resolver: zodResolver(usuarioPerfilSchema),
     defaultValues: {
@@ -42,6 +42,7 @@ export function PerfilTabContent({ user }: PerfilTabContentProps) {
       senha_atual: "",
     },
   });
+  const emailObservado = useWatch({ control, name: "email" });
 
   const [backendErrors, setBackendErrors] = useState<string[] | null>(null);
 
@@ -57,7 +58,7 @@ export function PerfilTabContent({ user }: PerfilTabContentProps) {
   }, [user, reset]);
 
   // A senha atual só é pedida quando o e-mail está sendo alterado.
-  const emailAlterado = watch("email") !== user.email;
+  const emailAlterado = emailObservado !== user.email;
 
   function handleUpdatePerfil(data: UsuarioPerfilFormData) {
     setBackendErrors(null);

@@ -42,6 +42,7 @@ export function AcessoSuporteBootstrap({
         expiraEm: null,
       })
 
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Inicialização única na montagem: lê a URL, grava o acesso no storage e remove o parâmetro do histórico (efeitos colaterais); o setState faz parte desse mesmo fluxo.
       setAguardandoConfirmacao(true)
 
       url.searchParams.delete("acesso_suporte_id")

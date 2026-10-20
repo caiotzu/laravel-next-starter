@@ -84,6 +84,8 @@ CI: `.github/workflows/ci.yml` roda as mesmas suítes (+ `composer audit`/`npm a
 - Mudança de comportamento ⇒ teste Pest (backend) ou Vitest (frontend). Teste de caracterização **antes** de refatorar código sem cobertura.
 - Mudou endpoint ⇒ atualize os atributos OpenAPI do controller.
 - Uma unidade coerente por vez; pequenas mudanças verificáveis; sem refatorar o que não faz parte da tarefa.
+- **Lint do frontend em 0 avisos.** `npm run lint` deve terminar sem erros nem avisos; corrija a causa (padrões em `docs/frontend-arquitetura.md`: `useSyncedState`, `useWatch`, ajuste de estado na renderização). Exceção só com `// eslint-disable-next-line <regra> -- <motivo>` quando o `useEffect` for a forma correta de sincronizar com um sistema externo.
+- Teste que depende de Radix (menu, tooltip) usa `waitFor`/`findBy*`; teste de ordenação não pode depender da *collation* do PostgreSQL.
 
 ## Conflitos conhecidos entre instruções (decisões já tomadas — não rediscutir)
 

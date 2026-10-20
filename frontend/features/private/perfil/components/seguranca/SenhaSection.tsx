@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
 import { Eye, EyeOff, Loader2, Lock } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { ApiErrorResponse } from "@/types/errors";
@@ -41,14 +41,15 @@ export function SenhaSection() {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     reset,
     formState: { errors },
   } = useForm<AtualizarSenhaFormData>({
     resolver: zodResolver(atualizarSenhaSchema),
   });
+  const senhaNovaObservado = useWatch({ control, name: "senha_nova" });
 
-  const senhaNova = watch("senha_nova") || "";
+  const senhaNova = senhaNovaObservado || "";
 
   const requisitos = useMemo(
     () => ({

@@ -55,6 +55,7 @@ export function BannerProvider({ children }: { children: React.ReactNode }) {
     if (existeBannerPendente(PREFIXO_SESSAO)) {
       // Garante dados novos do login atual, nunca um cache de login anterior.
       queryClient.removeQueries({ queryKey: QUERY_KEY });
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Sincroniza com o sinal de uso único no sessionStorage (sistema externo) e precisa limpar o cache ANTES de habilitar a consulta; fazer isso na renderização inverteria essa ordem e poderia exibir banner de um login anterior. Coberto por tests/banner/banner-provider.test.tsx.
       setPendente(true);
     }
   }, [pathname, pendente, queryClient]);
@@ -67,6 +68,7 @@ export function BannerProvider({ children }: { children: React.ReactNode }) {
 
     if (isSuccess) {
       consumirBannerPendente(PREFIXO_SESSAO);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Resolve a consulta UMA vez e consome o sinal de uso único (efeito colateral no sessionStorage); os estados derivam do resultado da query. Coberto por tests/banner/banner-provider.test.tsx.
       setPendente(false);
 
       if (data && data.length > 0) {

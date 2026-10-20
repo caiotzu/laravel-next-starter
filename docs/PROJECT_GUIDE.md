@@ -96,13 +96,13 @@ $usuario = $this->usuarios->criarNoGrupo($grupo, [/* nome, email, senha => null,
 2. Formulário: schema Zod em `features/.../schemas` + React Hook Form; erros do backend (`ApiErrorResponse`) exibidos ao usuário.
 3. Páginas em `app/admin/**` ou `app/(private)/**`; rota protegida em `routes/routes.ts`.
 4. Listas paginadas usam `components/data-tables/Pagination` (sempre mostra primeira e última página; props `currentPage`, `lastPage`, `total`, `from`, `to`, `onPageChange`). Componente só vai para `components/` se for reutilizado de fato. Mantenha loading/skeleton e estado vazio como nos módulos existentes.
-5. Valide: `npx tsc --noEmit`, `npm run lint`, `npm test`. Para runtime, skill `next-dev-loop`.
+5. Valide: `npx tsc --noEmit`, `npm run lint` (deve terminar com 0 avisos), `npm test`. Para runtime, skill `next-dev-loop`. Estado derivado de prop: `useSyncedState`; valor de formulário exibido na tela: `useWatch`, não `watch()` (padrões e exceções em `frontend-arquitetura.md`).
 
 ## 11. Testes
 
 - **Backend (Pest, banco real `testing`, `RefreshDatabase`)**: `tests/Feature/{Dominio}Test.php` exercita rota→banco; cada arquivo define helpers de cenário próprios (`cenarioGr()`, `tokenGr()`…) criando `EntidadeTipo`, empresas, grupos, usuários e um JWT com sessão. Estilo local: `test('frase em português', fn …)`. `tests/Unit` = enums, DTOs, helpers e **guardas arquiteturais** (`RepositoriesEscopoTest`).
 - Dado com dono ⇒ sempre incluir caso cross-tenant (A não vê/altera B) **e** verificar que a resposta de erro não revela se o dado de B existe (mesmo status/mensagem com e sem dado). Escreva **teste de caracterização antes** de refatorar.
-- **Frontend (Vitest)**: `tests/{lib,proxy,domains,components,banner,validations}`; alias `@/`.
+- **Frontend (Vitest)**: `tests/{lib,proxy,domains,features,components,hooks,banner,validations}`; alias `@/`; `tests/setup.ts` limpa DOM/storage e define o *stub* de `ResizeObserver`. Services de domínio são testados com o proxy mockado e os schemas Zod têm testes próprios. Detalhes e inventário em [`testes.md`](./testes.md).
 
 ## 12. Comandos (verificados nesta sessão)
 
@@ -110,7 +110,7 @@ $usuario = $this->usuarios->criarNoGrupo($grupo, [/* nome, email, senha => null,
 |---|---|---|
 | backend | `./vendor/bin/sail artisan test --compact` · `./vendor/bin/pest` | baseline atual: **393 verdes** (1618 asserções) |
 | backend | `pint <arquivo-novo.php>` | não rodar `--dirty` em legado (ver `CLAUDE.md`) |
-| frontend | `npm test` · `npx tsc --noEmit` · `npm run lint` · `npm run build` | baseline: 145 testes (17 arquivos), tsc limpo, `npm run lint` 0 erros / 44 avisos |
+| frontend | `npm test` · `npx tsc --noEmit` · `npm run lint` · `npm run build` | baseline: 183 testes (21 arquivos), tsc limpo, `npm run lint` 0 erros / 0 avisos |
 
 Se `npm test` mostrar uma versão do vitest diferente da do `package-lock.json` (hoje 5.0.3), seu `node_modules` está desatualizado: rode `npm ci`.
 
@@ -136,8 +136,8 @@ Localização e quando usar: tabela em [`../CLAUDE.md`](../CLAUDE.md#skills-leia
 
 ## 15. Limitações conhecidas e pendências
 
-Lista viva em `IMPLEMENTATION_PLAN.md` (seção D). Principais: CI criado mas ainda sem 1ª execução real no GitHub (CI-002); sem teste do frontend para a maioria dos domínios; Pint não aplicado ao legado; docs históricas (`testes.md`, `arquitetura.md`) com contagens desatualizadas; `docs/pentest-avaliacao-seguranca.md` e `docs/pentest/` são citados por `seguranca.md`/`frontend-arquitetura.md`, mas **não existem** em `docs/` neste checkout.
+Lista viva em `IMPLEMENTATION_PLAN.md` (seção D). Principais: o relatório da avaliação de segurança de 2026-09-29 foi removido do repositório e os 10 achados em aberto dela não são mais rastreados (ver `seguranca.md`); o login do BFF ainda devolve o `token` no corpo da resposta (SEC-007); sem testes de ponta a ponta com navegador nem medição de cobertura; Pint não aplicado ao legado; 11 exceções de lint (`eslint-disable-next-line ... -- motivo`) documentadas em `frontend-arquitetura.md`.
 
 ## 16. CI (GitHub Actions)
 
-`.github/workflows/ci.yml`, em `push` na `main` e em `pull_request`: **backend** (PHP 8.3, PostgreSQL 17, `vendor/bin/pest`), **frontend** (`tsc`, `npm run lint`, `npm test`) e **frontend-build** (`npm run build`). Audits: só severidade **alta/crítica** em dependências de produção bloqueia (`composer audit --ignore-severity=low --ignore-severity=medium`, `npm audit --omit=dev --audit-level=high`); o relatório completo roda em passo que não bloqueia. Antes de abrir PR, rode localmente os mesmos comandos da tabela do §12. O filtro de gravidade do `composer audit` é feito por `.github/scripts/composer-audit-grave.php` (lê o JSON; não depende de `--ignore-severity`, que não existe em Composer antigo). **Atenção:** a pasta `.github/` começa com ponto e fica oculta no Finder do macOS — confira com `ls -a` e `git status` que ela entrou no commit. Estado: **primeiro run verde no GitHub** (os 3 jobs bloqueiam); falta ativar a proteção da branch `main` (CI-003).
+`.github/workflows/ci.yml`, em `push` na `main` e em `pull_request`: **backend** (PHP 8.3, PostgreSQL 17, `vendor/bin/pest`), **frontend** (`tsc`, `npm run lint`, `npm test`) e **frontend-build** (`npm run build`); todos bloqueiam. Audits: só severidade **alta ou crítica** bloqueia — no Composer, o script `.github/scripts/composer-audit-grave.php` lê a saída JSON de `composer audit` (a opção `--ignore-severity` não existe em versões antigas do Composer); no npm, `npm audit --omit=dev --audit-level=high` (só produção). O relatório completo de cada audit roda em passo que não bloqueia. Antes de abrir PR, rode localmente os mesmos comandos do §12. A pasta `.github/` começa com ponto e fica oculta no Finder do macOS — confira com `ls -a` e `git status` que ela entrou no commit. Estado: **verde no GitHub**; a proteção da branch `main` (exigir o CI antes do merge) foi **declinada** pelo dono do projeto, que mantém o push direto na `main` (decisão D-021).

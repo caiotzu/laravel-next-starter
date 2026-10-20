@@ -5,7 +5,7 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import {
-  useForm,
+  useForm, useWatch,
   UseFormSetError,
 } from "react-hook-form";
 
@@ -64,7 +64,7 @@ export function UsuarioFormEdit({
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     setError,
     formState: { errors },
   } = useForm<UsuarioFormDataEdicao>({
@@ -77,8 +77,10 @@ export function UsuarioFormEdit({
       status: usuario.status
     },
   });
+  const grupoIdObservado = useWatch({ control, name: "grupo_id" });
+  const statusObservado = useWatch({ control, name: "status" });
 
-  const selectedGrupoId = watch("grupo_id");
+  const selectedGrupoId = grupoIdObservado;
   const canEditStatus = usuario.status !== "convidado" && usuario.status !== "expirado";
   const statusOptions = canEditStatus
     ? USUARIO_STATUS_OPTIONS.filter(
@@ -236,7 +238,7 @@ export function UsuarioFormEdit({
                 items={statusOptions}
                 value={
                   statusOptions.find(
-                    (s) => s.value === watch("status")
+                    (s) => s.value === statusObservado
                   ) ?? null
                 }
                 onValueChange={(s) => {
@@ -251,7 +253,7 @@ export function UsuarioFormEdit({
                   disabled={!canEditStatus}
                   value={
                     statusOptions.find(
-                      (s) => s.value === watch("status")
+                      (s) => s.value === statusObservado
                     )?.label ?? ""
                   }
                   showClear
