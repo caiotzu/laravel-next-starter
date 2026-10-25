@@ -6,6 +6,8 @@ import axios from "axios";
 import { ipsEncaminhados } from "@/lib/client-ip";
 import { validarOrigem } from "@/lib/utils";
 
+import { separarTokenDeSessao } from "@/lib/auth-response";
+
 
 export async function POST(req: Request) {
   try {
@@ -33,8 +35,6 @@ export async function POST(req: Request) {
       }
     );
 
-    const data = response.data.data;
-
     // Se for erro (400+), repassa o erro exatamente como veio
     if (response.status >= 400) {
       return NextResponse.json(response.data, {
@@ -42,7 +42,10 @@ export async function POST(req: Request) {
       });
     }
 
-    if (!data?.token) {
+    // O JWT fica SÓ no cookie httpOnly: o navegador recebe os demais campos, nunca o token.
+    const { token, dadosPublicos } = separarTokenDeSessao(response.data.data);
+
+    if (!token) {
       return NextResponse.json(
         {
           errors: {
@@ -55,7 +58,7 @@ export async function POST(req: Request) {
 
     const cookieStore = await cookies();
 
-    cookieStore.set("private_access_token", data.token, {
+    cookieStore.set("private_access_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax", // cookie lido só pelo próprio BFF (mesmo origin): "none" não é necessário e desliga a proteção SameSite
@@ -65,7 +68,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       status: response.status,
-      data: data,
+      data: dadosPublicos,
     });
 
   } catch {

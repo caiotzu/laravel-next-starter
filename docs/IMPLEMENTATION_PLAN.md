@@ -6,14 +6,14 @@ Só marque `[x]` depois de verificar (teste executado, lint/tsc, leitura do resu
 
 ---
 
-## A. Resumo do estado atual (2026-10-17)
+## A. Resumo do estado atual (2026-10-18)
 
 - **Padronização:** instruções permanentes e docs criadas e já publicadas no `main` (commit `213ed62`); convenções registradas sem alterar a arquitetura existente (ela já era coerente).
 - **Repository Pattern (trilha concluída):** adotado de forma deliberada e restrita. `GrupoRepository` e `UsuarioRepository`; consumidores: `GrupoService`, `UsuarioService`, `GrupoEmpresaService`, `AcessoSuporteService`/`ConcederRequest`, `MensagemService`. Guarda estrutural em `tests/Unit/RepositoriesEscopoTest.php` cobre 5 Services. Não há mais consultas de `Usuario`/`Grupo` soltas em Services, exceto as decididas e justificadas em `repositories.md`.
 - **Auditoria dos demais módulos (REPO-002, concluída):** nenhum precisa de Repository novo; o isolamento já é garantido por outros mecanismos (tabela em `repositories.md`). A auditoria encontrou e corrigiu 3 falhas reais de autorização/escopo (SEC-001..003).
 - **Módulos padronizados:** Grupo, Usuario (Repository); Empresa/Contato/Endereco (`EscopoEntidadeService`); Chamado/Mensagem (dono = usuário passado pelo controller); Banner/Release (audiência por contexto); AcessoSuporte (filtro pelo ator).
-- **Verificação:** backend **393 testes verdes** (1618 asserções; baseline inicial 357); frontend **183 testes verdes** (21 arquivos), `tsc` limpo, `npm run lint` **0 erros / 0 avisos** (eram 70), `npm run build` ✔ (local, com Google Fonts simulado), `npm audit --omit=dev --audit-level=high` sem achados. Documentação conferida contra o código (links, caminhos, classes, permissões, versões e contagens).
-- **CI:** `.github/workflows/ci.yml` está no GitHub, o primeiro run passou e os 3 jobs (`backend`, `frontend`, `frontend-build`) **bloqueiam**. A proteção da branch `main` (exigir CI antes do merge) foi **declinada pelo dono**, que mantém o push direto na `main` (D-021): o CI avisa, não impede.
+- **Verificação:** backend **393 testes verdes** (1618 asserções; baseline inicial 357); frontend **260 testes unitários verdes** (27 arquivos) e **26 testes E2E verdes** em navegador real, `tsc` limpo, `npm run lint` **0 erros / 0 avisos**, `npm run build` ✔ (local, com Google Fonts simulado), `npm audit --omit=dev --audit-level=high` sem achados.
+- **CI:** `.github/workflows/ci.yml` está no GitHub, o primeiro run passou e os jobs `backend`, `frontend` e `frontend-build` **bloqueiam**. Novo job `frontend-e2e` (Playwright): passou localmente, **ainda não rodou no GitHub** e por isso é não bloqueante (CI-004). A proteção da branch `main` foi declinada pelo dono (D-021).
 - **Bloqueios/riscos:** nenhum bloqueio. Não há CI; sem execução via Sail/Docker (verificado com PHP 8.3 + PostgreSQL 16 local — PROJECT_GUIDE §12). Auditoria de segurança **não é completa**: cobriu escopo/tenant, chaves de `authorize()` e fluxo de proxy.
 - **Atenção em produção (SEC-001):** grupos *personalizados* que tinham só `*.empresa.contato.atualizar` deixam de poder editar endereços (corrigido: exige `*.empresa.endereco.atualizar`). Grupos semeados/onboarding recebem ambas e não são afetados.
 
@@ -42,8 +42,11 @@ Só marque `[x]` depois de verificar (teste executado, lint/tsc, leitura do resu
 | F-19 | **P1** | O workflow usava `composer audit --ignore-severity`, opção que **não existe em versões antigas do Composer** (confirmado no Composer do dono); o job de backend falharia | saída do dono: `The "--ignore-severity" option does not exist` | **Resolvido** (CI-001): filtro por script que lê o JSON; também removido `--abandoned` |
 | F-20 | P3 | `node_modules` do dono desatualizado: `npm test` rodou o vitest **3.2.7**, mas o `package-lock.json` fixa **5.0.3** | saída do dono; `package-lock.json` | Aberto: rodar `npm ci` (o CI já usa `npm ci`) |
 | F-21 | P2 | O relatório da avaliação de segurança (2026-09-29) foi apagado no commit `a0a2275` e as evidências nunca foram versionadas; os 10 achados abertos (F-05 a F-14) deixaram de ser rastreados | `git log --diff-filter=D`; `seguranca.md` | Parcial: referências corrigidas e situação documentada (DOC-002); relatório **não** restaurado (D-023); nova avaliação → SEC-008 |
-| F-22 | P2 | O login do BFF (`app/api/auth/{admin,private}/login` e `/2fa`) devolve o `token` JWT também no corpo da resposta, além do cookie `httpOnly` | `frontend/app/api/auth/**/route.ts`; já descrito em `seguranca.md` | Aberto → SEC-007 |
+| F-22 | P2 | O login do BFF devolvia o `token` JWT também no corpo da resposta, além do cookie `httpOnly` | `app/api/auth/**/route.ts`; comprovado em navegador real | **Resolvido** (SEC-007) |
 | F-23 | P3 | Testes do `nav-main` falhavam de forma intermitente: o jsdom não tem `ResizeObserver` e o tooltip do Radix o exige | execução repetida; mensagem `ResizeObserver is not defined` | **Resolvido**: *stub* em `tests/setup.ts` (25/25 execuções estáveis) |
+| F-24 | P3 | No login com 2FA o BFF gravava o cookie de sessão **vazio** (`value=""`), apagando uma sessão válida do mesmo contexto | achado ao ler o handler; comprovado por E2E contra o código antigo | **Resolvido** (SEC-007) |
+| F-25 | P3 | O servidor respondia `X-Powered-By: Next.js` (fingerprinting) | teste E2E de cabeçalhos | **Resolvido** (`poweredByHeader: false`) |
+| F-26 | P3 | Formulário de concessão de Acesso de Suporte mostrava "Invalid input: expected string, received undefined" (inglês técnico do Zod) ao enviar sem escolher administrador | teste de renderização; o campo não tinha valor padrão | **Resolvido** (schema com mensagem para campo ausente). A **classe** do problema (58 campos de schema com mensagem genérica quando ausentes) segue aberta → FRONT-005 |
 
 Verificado e **sem achado**: toda chave usada em `authorize()` existe nos seeders; nenhum controller usa chave de outro recurso (varredura por script); Requests **Admin** têm as mesmas consultas sem escopo, mas o Admin é irrestrito por design (modo de suporte recusa `/admin`).
 
@@ -161,6 +164,23 @@ Verificado e **sem achado**: toda chave usada em `authorize()` existe nos seeder
 - **Decisão importante:** o relatório de pentest **não foi restaurado** (D-023); `seguranca.md` agora explica o que aconteceu, como recuperá-lo e que os 10 achados abertos precisam ser reavaliados.
 - **Verificação:** 0 links quebrados; os números dos docs batem com a execução (393/183, 158 rotas: 106 com `authorize()`, 16 públicas, 36 só JWT).
 
+### SEC-007 — JWT fora do corpo das respostas de login e 2FA (F-22, F-24)
+- **Arquivos:** `frontend/lib/auth-response.ts` (novo, `separarTokenDeSessao`), os 4 handlers `app/api/auth/{admin,private}/{login,2fa}/route.ts`, `tests/api/auth-bff.test.ts` (24) e `tests/lib/auth-response.test.ts` (4).
+- **Resultado:** o token vai só para o cookie `httpOnly`; o navegador recebe os demais campos (o `temp_token` do 2FA continua, pois a tela precisa dele). No login com 2FA o cookie da sessão não é mais gravado vazio.
+- **Verificação:** os testes dos handlers foram executados contra os handlers **originais** do `main` e **6 falharam** (token no corpo; cookie vazio no 2FA); passam com a correção. Os testes E2E reproduzem o mesmo em navegador real (6 de 9 falham no build antigo; 26/26 passam no novo). Confirmado antes de mexer que nenhum código do cliente lia `data.token`.
+
+### TEST-003 — Testes de renderização das telas refatoradas
+- **Arquivos:** `tests/features/two-factor-section.test.tsx` (10, Admin e Private), `auditorias-filters.test.tsx` (10), `perfil-e-senha.test.tsx` (22, Admin e Private), `acesso-suporte-form-conceder.test.tsx` (7); `tests/setup.ts` ganhou *stubs* de `document.elementFromPoint` e das APIs de ponteiro/rolagem (o jsdom não as tem).
+- **Resultado:** cobrem o que foi refatorado na FRONT-003 (`useSyncedState`, `useWatch`, seleção sincronizada com os filtros, `getValues()` no envio). Cada arquivo foi validado com mutações propositais (3 a 4 por arquivo, todas detectadas).
+- **Achado:** o teste do formulário de concessão revelou a mensagem em inglês do Zod (F-26), corrigida.
+- **Verificação:** estáveis em execuções repetidas; Vitest 260/260.
+
+### TEST-004 — Testes de ponta a ponta com navegador (Playwright)
+- **Arquivos:** `frontend/playwright.config.ts`, `frontend/e2e/{mock-backend.mjs,apoio.ts,autenticacao.e2e.ts,sessao-e-rotas.e2e.ts}`, script `npm run e2e`, `@playwright/test` em `devDependencies` (3 pacotes novos no lock), `.gitignore`, job `frontend-e2e` no CI, `next.config.ts` (`poweredByHeader: false`).
+- **Cobertura (26 testes):** login Admin e Private (cookie `httpOnly`, JWT fora da resposta), credenciais inválidas, 2FA (sucesso e código errado), isolamento entre contextos, rotas protegidas, sessão expirada, logout, telas públicas, cabeçalhos de segurança e recusa de origem diferente (CSRF).
+- **Limite assumido:** o backend é **simulado**; o E2E valida frontend e BFF, não a API Laravel real (D-026).
+- **Verificação:** 26/26 em Chromium real, localmente; os testes pegam a regressão da SEC-007 (ver acima). **Não** rodou nos servidores do GitHub.
+
 ## C. Tarefas em andamento
 
 Nenhuma. (Última unidade coerente concluída: REPO-002 + SEC-001..003.)
@@ -171,8 +191,11 @@ Nenhuma. (Última unidade coerente concluída: REPO-002 + SEC-001..003.)
 
 Legenda de prioridade: P1 > P2 > P3. Ordem sugerida = ordem da lista.
 
-- [ ] **SEC-007 (P2) — Remover o `token` do corpo das respostas de login/2FA do BFF (F-22)**: os handlers gravam o JWT no cookie `httpOnly` mas repassam ao navegador o `data` completo, que inclui `token`. Devolver só os demais campos. Antes: conferir que nenhum código do frontend lê `data.token`. Critério: teste do handler provando que a resposta não contém `token` e que o cookie continua sendo gravado. Status: pendente.
+- [ ] **CI-004 (P2) — Promover o job `frontend-e2e` a bloqueante**: depois do primeiro run verde no GitHub (o job instala o Chromium do Playwright, faz o build e roda os 26 testes), remover o `continue-on-error`. Se falhar, enviar o log ou o artefato `playwright-traces`. Status: pendente.
 - [ ] **SEC-008 (P2) — Nova avaliação de segurança (reabrir F-05 a F-14)**: o relatório de 2026-09-29 não está mais no repositório; refazer a revisão white-box contra o código atual (Laravel 13, Next 16.3.8) e arquivar só um **resumo** público. Depende de decisão do dono. Status: pendente.
+- [ ] **FRONT-005 (P3) — Mensagens do Zod em português para campos ausentes**: 58 campos de schema devolvem a mensagem genérica em inglês quando chegam ausentes; só aparece ao usuário se o formulário não define valor padrão (como era o caso de `usuario_admin_id`). Verificar `defaultValues` formulário a formulário, ou definir uma mensagem global para `invalid_type` com `undefined` (`z.config({ customError })`). Status: pendente.
+- [ ] **TEST-005 (P3) — Testes de renderização dos demais formulários**: `UsuarioFormCreate`/`Edit`, `EmpresaFormCreate`/`Edit`, `EmpresaContatosTab`, `MensagemFormCreate`, `BannerForm`, `UsuarioCard` e `chart-area-interactive` (Admin e Private). Status: pendente.
+- [ ] **TEST-006 (P3) — E2E de pilha completa**: Laravel + PostgreSQL + frontend, com fluxos de negócio (ex.: criar usuário, conceder Acesso de Suporte). Maior esforço; depende de decisão do dono. Status: pendente.
 - [ ] **QUAL-001 (P3) — Decidir Pint:** adotar `pint.json` que reflita o estilo atual **ou** formatar tudo em um commit isolado. Hoje: só arquivos novos (D-005). Status: pendente, depende de decisão do dono.
 - [ ] **ARCH-002 (P3) — `infer-conventions` / `.ai/rules`** — somente se o usuário pedir explicitamente (a skill proíbe rodar por conta própria). Status: pendente.
 
@@ -180,8 +203,8 @@ Legenda de prioridade: P1 > P2 > P3. Ordem sugerida = ordem da lista.
 
 ## E. Próxima tarefa recomendada
 
-**SEC-007 — Remover o `token` do corpo das respostas de login e 2FA do BFF.** É a única fraqueza documentada que ainda está aberta e é pequena: o JWT já vai no cookie `httpOnly`; devolvê-lo também no JSON do navegador só amplia a exposição. A mudança fica em 4 handlers (`app/api/auth/{admin,private}/{login,2fa}`) e precisa de um teste que prove que a resposta não traz `token` e que o cookie continua sendo gravado. Antes de mexer, confirmo no código que nada no frontend lê `data.token`.
-Não depende de decisão sua. As demais pendências (QUAL-001 Pint, ARCH-002 `.ai/rules`, SEC-008 nova avaliação) dependem de você.
+**CI-004 — Confirmar o job de E2E no GitHub e torná-lo bloqueante.** Todo o código está pronto e verificado localmente; falta o primeiro run nos servidores do GitHub, que instalam o Chromium do Playwright por conta própria. Depois do envio, a aba Actions mostra o job **Frontend (E2E)**; me diga se ficou verde (ou envie o log). Sendo verde, removo o `continue-on-error`. Se falhar, o artefato `playwright-traces` traz o passo a passo gravado.
+Sem depender de você: **FRONT-005** (mensagens do Zod) ou **TEST-005** (mais testes de formulários). Dependem de decisão sua: **SEC-008** (nova avaliação de segurança), **QUAL-001** (Pint), **ARCH-002** (`.ai/rules`) e **TEST-006** (E2E de pilha completa).
 
 ---
 
@@ -213,6 +236,10 @@ Não depende de decisão sua. As demais pendências (QUAL-001 Pint, ARCH-002 `.a
 | D-022 | FRONT-003: refatorar de verdade onde possível; 10 exceções documentadas só onde o `useEffect` é correto | Reescrever leitura de `sessionStorage` com efeito colateral e a ordem de limpeza do cache mudaria o timing de funcionalidades sensíveis (banner, acesso de suporte) | Suprimir os 44 avisos; reescrever tudo |
 | D-023 | Não restaurar o relatório de pentest de 2026-09-29; corrigir as referências e documentar | Escrito contra Laravel 12/Next 15 e listando vulnerabilidades então abertas; republicar, desatualizado, em repositório público induz a erro e expõe detalhes | Restaurar do histórico (`8180a63`); recriar o conteúdo |
 | D-024 | `testes.md` reescrito do zero a partir dos relatórios JUnit (Pest) e JSON (Vitest) | O arquivo acumulara seções contraditórias (14 testes falhando, "frontend sem testes", "sem CI") | Anexar mais um bloco de atualização |
+| D-025 | SEC-007: helper `separarTokenDeSessao` + cookie só quando há token (nos 4 handlers) | Um ponto de verdade testável; o `temp_token` do 2FA precisa continuar indo ao navegador; corrige de passagem o cookie vazio no login com 2FA | Apagar o campo inline em cada handler |
+| D-026 | E2E com backend simulado e app de produção, em vez de pilha completa | Determinístico, rápido (~50 s) e sem banco; valida frontend + BFF, onde estão cookies, redirecionamentos e cabeçalhos. Pilha completa fica como TEST-006 | Subir Laravel + PostgreSQL no CI |
+| D-027 | Job `frontend-e2e` nasce não bloqueante e é promovido após o primeiro verde | Mesma política do job de build: não bloquear o `main` com algo nunca executado nos servidores do GitHub | Já bloqueante |
+| D-028 | FRONT-005: corrigir só o caso comprovado (concessão de acesso) e deixar a classe no backlog | A varredura mostra 58 campos com mensagem genérica, mas só aparece ao usuário sem valor padrão; mexer em todos às cegas é arriscado | Mensagem global em português para todos os schemas |
 
 ---
 
@@ -227,3 +254,4 @@ Não depende de decisão sua. As demais pendências (QUAL-001 Pint, ARCH-002 `.a
 | 2026-10-17 | CI-001 (correção), SEC-005, TEST-001, FRONT-003 (parcial) | `.github/scripts/composer-audit-grave.php`, `ci.yml`, `PermissoesAuthorizeTest`, `tests/features/schemas.test.ts`, `eslint.config.mjs` + 9 componentes | Pest 393 ✔; Vitest 142 ✔; `tsc` ✔; lint 0 erros / 44 avisos; mutações detectadas; script de audit com 8 cenários | CI-002 (push do `.github/`) |
 | 2026-10-17 (2ª) | CI-002, DEP-002 | `ci.yml` (build bloqueante), `react-query-provider.tsx`, `package.json`, `package-lock.json`, `react-query-provider.test.tsx`, docs | Run 1 do CI verde (GitHub); Vitest 145 ✔; `tsc` ✔; lint 0 erros; build ✔; prune + `next start` HTTP 200 | CI-003 (dono) / FRONT-003 |
 | 2026-10-17 (3ª) | FRONT-003, TEST-002, DOC-002; CI-003 declinada | 19 formulários + ~15 componentes/hooks, `hooks/use-synced-state.ts`, `tests/**` (+4 arquivos), `eslint.config.mjs`, `tests/setup.ts`, `docs/{testes,seguranca,frontend-arquitetura,vantagens,arquitetura,PROJECT_GUIDE,IMPLEMENTATION_PLAN}.md`, `CLAUDE.md` | Vitest 183 ✔ (3 execuções); lint 0/0; `tsc` ✔; build ✔; 0 links quebrados; mutações detectadas; flakiness do `nav-main` corrigida (25/25) | SEC-007 |
+| 2026-10-18 | SEC-007, TEST-003, TEST-004 | `lib/auth-response.ts`, 4 handlers do BFF, `next.config.ts`, `tests/api`, `tests/features` (+4), `tests/setup.ts`, `playwright.config.ts`, `e2e/**`, `ci.yml`, `package.json`/lock, docs, `CLAUDE.md` | Vitest 260 ✔; E2E 26 ✔ (Chromium real); lint 0/0; `tsc` ✔; build ✔; mutações detectadas; testes falham no código antigo (6) | CI-004 |

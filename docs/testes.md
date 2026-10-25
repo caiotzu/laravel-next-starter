@@ -1,6 +1,6 @@
 # Testes e qualidade
 
-Estado verificado em **2026-10-17**. Contagens obtidas pelos relatórios do próprio Pest (JUnit) e do Vitest (JSON);
+Estado verificado em **2026-10-18**. Contagens obtidas pelos relatórios do próprio Pest (JUnit) e do Vitest (JSON);
 para conferir de novo, rode os comandos da seção "Como executar".
 
 ## Visão geral
@@ -8,7 +8,8 @@ para conferir de novo, rode os comandos da seção "Como executar".
 | Camada | Ferramenta | Testes | Resultado |
 |---|---|---|---|
 | Backend | Pest 4 sobre PHPUnit, **PostgreSQL real** (banco `testing`) | **393** em 29 arquivos (1618 asserções) | verde |
-| Frontend | Vitest 5 + Testing Library (jsdom) | **183** em 21 arquivos | verde |
+| Frontend (unitário e de componentes) | Vitest 5 + Testing Library (jsdom) | **260** em 27 arquivos | verde |
+| Frontend (ponta a ponta) | Playwright, Chromium real | **26** em 2 arquivos | verde (local); no CI, ainda não bloqueante |
 | Tipos | `npx tsc --noEmit` | — | sem erros |
 | Lint | `npm run lint` (ESLint 9, flat config) | — | **0 erros, 0 avisos** |
 | CI | GitHub Actions (`.github/workflows/ci.yml`) | os mesmos comandos acima | verde no `main` |
@@ -25,6 +26,7 @@ npm test            # Vitest, uma execução
 npx tsc --noEmit    # tipos
 npm run lint        # ESLint
 npm run build       # build de produção (precisa de internet para o Google Fonts; ver PROJECT_GUIDE §12)
+npm run e2e         # testes de ponta a ponta (exige `npm run build` antes; sobe o app e um backend simulado)
 ```
 
 Sem Docker: PHP 8.3 + PostgreSQL local, `.env` com `DB_HOST=127.0.0.1`, `APP_KEY` e `JWT_SECRET` gerados e o banco `testing` criado
@@ -64,36 +66,54 @@ Cada arquivo define seus próprios helpers de cenário (empresas, grupos, usuár
 
 ## Frontend
 
-Configuração: `vitest.config.mts` (jsdom, alias `@/`) e `tests/setup.ts` (limpa o DOM e o storage a cada teste e define um *stub* de `ResizeObserver`, que o jsdom não tem e o Radix exige).
+Configuração: `vitest.config.mts` (jsdom, alias `@/`) e `tests/setup.ts` (limpa o DOM e o storage a cada teste e define *stubs* para o que o jsdom não implementa e o Radix/`input-otp` exigem: `ResizeObserver`, `document.elementFromPoint` e as APIs de ponteiro/rolagem).
 
 | Área | Arquivos (testes) |
 |---|---|
+| BFF de autenticação (cookie e token) | `api/auth-bff.test.ts` (24: login e 2FA, Admin e Private), `lib/auth-response.test.ts` (4) |
 | Schemas Zod dos domínios críticos | `features/schemas.test.ts` (24: usuário, grupo, empresa, contato, endereço, onboarding; Admin e Private) |
 | Services de domínio (proxy mockado) | `domains/services-crud.test.ts` (16: usuário, grupo, empresa), `services-bff.test.ts` (3), `banner-mappers.test.ts` (3), `constants.test.ts` (3) |
-| BFF e proxy | `lib/proxy-guard.test.ts` (15), `proxy/middleware.test.ts` (10), `proxy/proxy-clients.test.ts` (8), `lib/client-ip.test.ts` (6), `lib/media-url.test.ts` (6), `lib/acesso-suporte-storage.test.ts` (6) |
-| Banner | `banner/banner-provider.test.tsx` (9), `banner/banner-sessao-storage.test.ts` (4), `components/imagens.test.tsx` (4) |
-| Componentes e hooks | `components/paginacao.test.tsx` (9), `components/nav-main.test.tsx` (8), `components/refatoracao-lint.test.tsx` (9), `components/react-query-provider.test.tsx` (3), `hooks/use-synced-state.test.ts` (5) |
+| Telas e formulários | `features/perfil-e-senha.test.tsx` (22: perfil e senha, Admin e Private), `features/two-factor-section.test.tsx` (10), `features/auditorias-filters.test.tsx` (10), `features/acesso-suporte-form-conceder.test.tsx` (7) |
+| Componentes e hooks | `components/paginacao.test.tsx` (9), `components/nav-main.test.tsx` (8), `components/refatoracao-lint.test.tsx` (9: formulários de senha, `useIsMobile`, avatar, carrossel, skeleton), `components/react-query-provider.test.tsx` (3), `components/imagens.test.tsx` (4), `hooks/use-synced-state.test.ts` (5) |
+| Proxy do BFF | `lib/proxy-guard.test.ts` (15), `proxy/middleware.test.ts` (10), `proxy/proxy-clients.test.ts` (8), `lib/client-ip.test.ts` (6), `lib/media-url.test.ts` (6), `lib/acesso-suporte-storage.test.ts` (6) |
+| Banner | `banner/banner-provider.test.tsx` (9), `banner/banner-sessao-storage.test.ts` (4) |
 | Utilitários e validações | `lib/utils.test.ts` (21), `validations/validations.test.ts` (11) |
 
 ### Convenções
 
 - Services de domínio são testados **mockando o proxy** (`@/lib/proxy-admin` / `@/lib/proxy-private`), conferindo URL, método, corpo, serialização de filtros e o mapeamento para camelCase. O service Private de empresa **não** exporta cadastrar/excluir/ativar, e um teste garante isso.
-- Componentes do Radix (menus, tooltips) abrem e fecham de forma assíncrona: use `waitFor`/`findBy*`, nunca assuma o estado logo após o clique.
+- Teste de tela: simule os hooks de mutação/consulta (`vi.mock` + `vi.hoisted`), digite como o usuário (`userEvent`) e confira o que aparece. O estado local que acompanha uma prop (`useSyncedState`) é testado no componente real.
+- Componentes do Radix (menus, tooltips, selects) abrem e fecham de forma assíncrona: use `waitFor`/`findBy*`, nunca assuma o estado logo após o clique.
+- Teste que pode ter sido escrito "para passar": faça uma **mutação proposital** no código (e restaure) e confirme que o teste falha. Assim foram validados os testes desta seção.
 - Erro de lint do React Compiler: corrija a causa. Só use `// eslint-disable-next-line <regra> -- <motivo>` quando o `useEffect` for a forma correta de sincronizar com um sistema externo (hoje há 10 exceções, todas justificadas no próprio código, mais 1 antiga de `<img>` em `AnexoChip.tsx`).
+
+### Ponta a ponta (E2E, Playwright)
+
+Navegador **real** (Chromium) contra o app Next de **produção** (`next start`) e um **backend simulado** (`e2e/mock-backend.mjs`, um servidor Node sem dependências que responde como o Laravel nos fluxos de login e 2FA). Não precisam de Laravel nem de banco; por isso testam o frontend e o BFF, **não** a API real.
+
+| Arquivo | Testes | O que cobre |
+|---|---|---|
+| `e2e/autenticacao.e2e.ts` | 9 | login válido (cookie `httpOnly`, `SameSite=Lax`, **JWT fora do corpo da resposta**), credenciais inválidas, 2FA (só o `temp_token` chega ao navegador e o cookie só nasce após o código), código errado, e usuário Admin recusado no login Private (e vice-versa) |
+| `e2e/sessao-e-rotas.e2e.ts` | 17 | rotas protegidas sem sessão, sessão expirada, sessão válida na tela de login, telas públicas, logout (menu **Sair**), cookies separados Admin × Private, cabeçalhos de segurança (`X-Frame-Options`, CSP `frame-ancestors`, `nosniff`, sem `X-Powered-By`) e recusa de origem diferente (CSRF) |
+
+Como rodar: `npm run build` e depois `npm run e2e` (a configuração em `playwright.config.ts` sobe os dois servidores nas portas 3100 e 4010). A primeira vez, `npx playwright install chromium`. Sem acesso ao download do Playwright, defina `PW_CHROMIUM_PATH` (e opcionalmente `PW_CHROMIUM_ARGS`) apontando para um Chromium instalado. Falhas geram *trace* em `frontend/test-results/` (`npx playwright show-trace <arquivo>`).
+
+**Validação:** os 9 testes de autenticação foram executados contra um build com os handlers **antigos** (antes da SEC-007) e **6 falharam**: o JWT aparecia no corpo da resposta e o cookie de sessão era gravado vazio na etapa do 2FA. Contra o código corrigido, os 26 passam.
 
 ## CI
 
-`.github/workflows/ci.yml` roda em `push` na `main` e em `pull_request`: backend (Pest com PostgreSQL 17), frontend (`tsc`, `npm run lint`, Vitest) e `npm run build`. Os audits (`composer audit`, `npm audit`) só bloqueiam severidade **alta ou crítica**; o relatório completo roda sem bloquear. Detalhes: `PROJECT_GUIDE.md` §16.
+`.github/workflows/ci.yml` roda em `push` na `main` e em `pull_request`: backend (Pest com PostgreSQL 17), frontend (`tsc`, `npm run lint`, Vitest), `npm run build` e os testes E2E (este último ainda **não bloqueante**: passou localmente, mas não rodou nos servidores do GitHub). Os audits (`composer audit`, `npm audit`) só bloqueiam severidade **alta ou crítica**; o relatório completo roda sem bloquear. Detalhes: `PROJECT_GUIDE.md` §16.
 
 ## Lacunas conhecidas
 
-- Não há testes de ponta a ponta com navegador (E2E); a verificação visual é manual.
+- O E2E usa um **backend simulado**: ele valida o frontend e o BFF, mas **não** a integração com a API Laravel real (contrato dos endpoints, banco, permissões). Um E2E de pilha completa (Laravel + PostgreSQL + frontend) continua sem existir.
+- O E2E cobre autenticação, sessão e proteção de rotas; as telas de negócio (usuários, empresas, chamados...) não têm fluxo E2E.
 - Não há medição de cobertura de código (*coverage*).
-- Componentes de formulário e telas de domínio têm testes de **schema** e de **service**, mas poucos testes de renderização (os formulários de senha, o carrossel, o menu lateral e a paginação têm).
-- O modo `next dev` (import dinâmico do devtools) não é exercitado por teste automático.
+- Formulários sem teste de renderização: `UsuarioFormCreate`/`Edit`, `EmpresaFormCreate`/`Edit`, `EmpresaContatosTab`, `MensagemFormCreate`, `BannerForm` e `UsuarioCard` (têm teste de schema e de service); `chart-area-interactive` também não tem.
+- Mensagens genéricas do Zod em inglês ("Invalid input: expected string, received undefined") podem aparecer quando um campo sem valor padrão é enviado vazio; o caso do formulário de concessão de Acesso de Suporte foi corrigido, os demais precisam de verificação formulário a formulário (FRONT-005).
 - Segurança: a suíte comprova controles implementados; **não substitui** um pentest independente (ver [`seguranca.md`](./seguranca.md)).
 
 ## Histórico resumido
 
 Em 2026-10-01 a suíte do backend tinha 153 testes (14 falhavam, depois corrigidos), o frontend não tinha testes e não havia CI.
-Desde então: 357 testes de backend na auditoria de 2026-10-14, 393 hoje; frontend de 0 para 183; CI criado e verde.
+Desde então: 357 testes de backend na auditoria de 2026-10-14, 393 hoje; frontend de 0 para 260 testes unitários e 26 de ponta a ponta; CI criado e verde.

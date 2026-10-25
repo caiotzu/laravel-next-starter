@@ -49,7 +49,7 @@ Erros viram JSON em `bootstrap/app.php`: validação → 422 `{errors}`; sem per
 
 ## 5. Front ↔ back
 
-Navegador → `lib/proxy-admin.ts`/`proxy-private.ts` (axios `POST /api/proxy/{admin|private}` com `{url, method, data, headers}`) → `app/api/proxy/*/route.ts` (valida origem, resolve destino via `lib/proxy-guard.ts`, injeta `Authorization: Bearer` do cookie `httpOnly`) → `BACKEND_URL` (Laravel). Os proxies também normalizam URLs absolutas de `/storage` para relativas (`lib/media-url.ts`); `next.config.ts` faz o rewrite `/storage/*` → backend. `proxy.ts` protege navegação por cookie usando `routes/routes.ts`. Header `X-Acesso-Suporte-Id` só é enviado pelos proxies em modo de suporte.
+Navegador → `lib/proxy-admin.ts`/`proxy-private.ts` (axios `POST /api/proxy/{admin|private}` com `{url, method, data, headers}`) → `app/api/proxy/*/route.ts` (valida origem, resolve destino via `lib/proxy-guard.ts`, injeta `Authorization: Bearer` do cookie `httpOnly`) → `BACKEND_URL` (Laravel). No login e no 2FA (`app/api/auth/{admin,private}/{login,2fa}`) o BFF grava o JWT **só** no cookie `httpOnly` e devolve ao navegador o restante da resposta, sem o `token` (`lib/auth-response.ts`). Os proxies também normalizam URLs absolutas de `/storage` para relativas (`lib/media-url.ts`); `next.config.ts` faz o rewrite `/storage/*` → backend. `proxy.ts` protege navegação por cookie usando `routes/routes.ts`. Header `X-Acesso-Suporte-Id` só é enviado pelos proxies em modo de suporte.
 
 ## 6. Convenções de nomenclatura
 
@@ -103,6 +103,7 @@ $usuario = $this->usuarios->criarNoGrupo($grupo, [/* nome, email, senha => null,
 - **Backend (Pest, banco real `testing`, `RefreshDatabase`)**: `tests/Feature/{Dominio}Test.php` exercita rota→banco; cada arquivo define helpers de cenário próprios (`cenarioGr()`, `tokenGr()`…) criando `EntidadeTipo`, empresas, grupos, usuários e um JWT com sessão. Estilo local: `test('frase em português', fn …)`. `tests/Unit` = enums, DTOs, helpers e **guardas arquiteturais** (`RepositoriesEscopoTest`).
 - Dado com dono ⇒ sempre incluir caso cross-tenant (A não vê/altera B) **e** verificar que a resposta de erro não revela se o dado de B existe (mesmo status/mensagem com e sem dado). Escreva **teste de caracterização antes** de refatorar.
 - **Frontend (Vitest)**: `tests/{lib,proxy,domains,features,components,hooks,banner,validations}`; alias `@/`; `tests/setup.ts` limpa DOM/storage e define o *stub* de `ResizeObserver`. Services de domínio são testados com o proxy mockado e os schemas Zod têm testes próprios. Detalhes e inventário em [`testes.md`](./testes.md).
+- **Frontend (E2E, Playwright)**: `frontend/e2e/*.e2e.ts`, navegador real contra o app de produção e um **backend simulado** (`e2e/mock-backend.mjs`), sem Laravel nem banco. `npm run build && npm run e2e`; na primeira vez, `npx playwright install chromium`. Detalhes em [`testes.md`](./testes.md).
 
 ## 12. Comandos (verificados nesta sessão)
 
@@ -110,7 +111,7 @@ $usuario = $this->usuarios->criarNoGrupo($grupo, [/* nome, email, senha => null,
 |---|---|---|
 | backend | `./vendor/bin/sail artisan test --compact` · `./vendor/bin/pest` | baseline atual: **393 verdes** (1618 asserções) |
 | backend | `pint <arquivo-novo.php>` | não rodar `--dirty` em legado (ver `CLAUDE.md`) |
-| frontend | `npm test` · `npx tsc --noEmit` · `npm run lint` · `npm run build` | baseline: 183 testes (21 arquivos), tsc limpo, `npm run lint` 0 erros / 0 avisos |
+| frontend | `npm test` · `npx tsc --noEmit` · `npm run lint` · `npm run build` · `npm run e2e` (depois do build) | baseline: 260 testes (27 arquivos), tsc limpo, `npm run lint` 0 erros / 0 avisos; E2E: 26 testes |
 
 Se `npm test` mostrar uma versão do vitest diferente da do `package-lock.json` (hoje 5.0.3), seu `node_modules` está desatualizado: rode `npm ci`.
 
@@ -136,8 +137,8 @@ Localização e quando usar: tabela em [`../CLAUDE.md`](../CLAUDE.md#skills-leia
 
 ## 15. Limitações conhecidas e pendências
 
-Lista viva em `IMPLEMENTATION_PLAN.md` (seção D). Principais: o relatório da avaliação de segurança de 2026-09-29 foi removido do repositório e os 10 achados em aberto dela não são mais rastreados (ver `seguranca.md`); o login do BFF ainda devolve o `token` no corpo da resposta (SEC-007); sem testes de ponta a ponta com navegador nem medição de cobertura; Pint não aplicado ao legado; 11 exceções de lint (`eslint-disable-next-line ... -- motivo`) documentadas em `frontend-arquitetura.md`.
+Lista viva em `IMPLEMENTATION_PLAN.md` (seção D). Principais: o relatório da avaliação de segurança de 2026-09-29 foi removido do repositório e os 10 achados em aberto dela não são mais rastreados (ver `seguranca.md`); o E2E usa backend simulado (não valida a API Laravel real) e o job de E2E no CI ainda não é bloqueante; sem medição de cobertura; Pint não aplicado ao legado; mensagens genéricas do Zod em inglês em campos sem valor padrão (FRONT-005); 11 exceções de lint (`eslint-disable-next-line ... -- motivo`) documentadas em `frontend-arquitetura.md`.
 
 ## 16. CI (GitHub Actions)
 
-`.github/workflows/ci.yml`, em `push` na `main` e em `pull_request`: **backend** (PHP 8.3, PostgreSQL 17, `vendor/bin/pest`), **frontend** (`tsc`, `npm run lint`, `npm test`) e **frontend-build** (`npm run build`); todos bloqueiam. Audits: só severidade **alta ou crítica** bloqueia — no Composer, o script `.github/scripts/composer-audit-grave.php` lê a saída JSON de `composer audit` (a opção `--ignore-severity` não existe em versões antigas do Composer); no npm, `npm audit --omit=dev --audit-level=high` (só produção). O relatório completo de cada audit roda em passo que não bloqueia. Antes de abrir PR, rode localmente os mesmos comandos do §12. A pasta `.github/` começa com ponto e fica oculta no Finder do macOS — confira com `ls -a` e `git status` que ela entrou no commit. Estado: **verde no GitHub**; a proteção da branch `main` (exigir o CI antes do merge) foi **declinada** pelo dono do projeto, que mantém o push direto na `main` (decisão D-021).
+`.github/workflows/ci.yml`, em `push` na `main` e em `pull_request`: **backend** (PHP 8.3, PostgreSQL 17, `vendor/bin/pest`), **frontend** (`tsc`, `npm run lint`, `npm test`) **frontend-build** (`npm run build`) e **frontend-e2e** (Playwright); os três primeiros bloqueiam e o E2E ainda é **não bloqueante** até o primeiro run verde nos servidores do GitHub. Audits: só severidade **alta ou crítica** bloqueia — no Composer, o script `.github/scripts/composer-audit-grave.php` lê a saída JSON de `composer audit` (a opção `--ignore-severity` não existe em versões antigas do Composer); no npm, `npm audit --omit=dev --audit-level=high` (só produção). O relatório completo de cada audit roda em passo que não bloqueia. Antes de abrir PR, rode localmente os mesmos comandos do §12. A pasta `.github/` começa com ponto e fica oculta no Finder do macOS — confira com `ls -a` e `git status` que ela entrou no commit. Estado: **verde no GitHub**; a proteção da branch `main` (exigir o CI antes do merge) foi **declinada** pelo dono do projeto, que mantém o push direto na `main` (decisão D-021).

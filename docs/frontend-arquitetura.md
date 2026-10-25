@@ -107,3 +107,7 @@ Comandos (em `frontend/`): `npm run lint`, `npx tsc --noEmit`, `npm test`, `npm 
 **Paginação.** Listas paginadas usam `components/data-tables/Pagination` (props `currentPage`, `lastPage`, `total`, `from`, `to`, `onPageChange`): a barra mostra sempre a primeira e a última página e uma janela ao redor da atual (`1 … 9 10 11 … 20`), então não é preciso avançar de página em página.
 
 **Ambiente de testes.** `tests/setup.ts` limpa o DOM e o storage a cada teste e define um *stub* de `ResizeObserver` (o jsdom não o tem e o Radix o exige). Detalhes e lacunas em [`testes.md`](./testes.md).
+
+**Autenticação no BFF.** Os handlers `app/api/auth/{admin,private}/{login,2fa}` guardam o JWT da sessão **somente** no cookie `httpOnly` (`SameSite=Lax`, `Secure` em produção, 1 hora) e devolvem ao navegador o restante da resposta do backend, sem o `token` (`lib/auth-response.ts`). O `temp_token` da etapa do 2FA continua indo ao navegador, porque a tela o reenvia ao confirmar o código. No login com 2FA o cookie de sessão não é tocado. O servidor não anuncia `X-Powered-By` (`poweredByHeader: false`).
+
+**Testes de ponta a ponta.** `playwright.config.ts` + `e2e/`: navegador real (Chromium) contra o app de produção e um backend simulado (`e2e/mock-backend.mjs`). Cobrem autenticação, sessão, proteção de rotas, logout e cabeçalhos de segurança. `npm run build && npm run e2e`. Os arquivos terminam em `.e2e.ts` para o Vitest não os capturar. Detalhes em [`testes.md`](./testes.md).

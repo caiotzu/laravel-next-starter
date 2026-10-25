@@ -6,11 +6,14 @@ import axios from "axios";
 import { ipsEncaminhados } from "@/lib/client-ip";
 import { validarOrigem } from "@/lib/utils";
 
+import { separarTokenDeSessao } from "@/lib/auth-response";
+
+
 export async function POST(req: Request) {
   try {
     const erroOrigem = validarOrigem(req);
     if (erroOrigem) return erroOrigem;
-    
+
     const body = await req.json();
 
     // Captura headers originais do navegador
@@ -32,8 +35,6 @@ export async function POST(req: Request) {
       }
     );
 
-    const data = response.data.data;
-
     // Se for erro (400+), repassa o erro exatamente como veio
     if (response.status >= 400) {
       return NextResponse.json(
@@ -42,20 +43,26 @@ export async function POST(req: Request) {
       );
     }
 
-    const cookieStore = await cookies();
+    // O JWT fica SÓ no cookie httpOnly: o navegador recebe os demais campos, nunca o token.
+    const { token, dadosPublicos } = separarTokenDeSessao(response.data.data);
 
-    cookieStore.set("private_access_token", data.token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-    //   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      sameSite: "lax", // Só utilizar none em produção se front e back estiverem em domínios diferentes
-      path: "/",
-      maxAge: 60 * 60,
-    });
+    // No login com 2FA a resposta traz apenas `temp_token` (sem `token`): nesse caso o cookie
+    // da sessão NÃO é tocado (antes era gravado vazio, apagando uma sessão válida existente).
+    if (token) {
+      const cookieStore = await cookies();
+
+      cookieStore.set("private_access_token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax", // cookie lido só pelo próprio BFF (mesmo origin): "none" não é necessário e desliga a proteção SameSite
+        path: "/",
+        maxAge: 60 * 60,
+      });
+    }
 
     return NextResponse.json({
       status: response.status,
-      data: data,
+      data: dadosPublicos,
     });
 
   } catch {

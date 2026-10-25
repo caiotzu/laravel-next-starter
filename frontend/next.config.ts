@@ -46,6 +46,9 @@ function origemDoStorage(): string | null {
 }
 
 const nextConfig: NextConfig = {
+  // Não anuncia a tecnologia do servidor no cabeçalho `X-Powered-By: Next.js` (reduz o fingerprinting).
+  poweredByHeader: false,
+
   async rewrites() {
     const origem = origemDoStorage();
 

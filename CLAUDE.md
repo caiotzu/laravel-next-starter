@@ -63,7 +63,7 @@ Backend (sempre via Sail, em `backend/`):
 - Rotas: `./vendor/bin/sail artisan route:list`
 
 Frontend (em `frontend/`, Node ≥ 22.22.2):
-- `npm test` · `npx tsc --noEmit` · `npm run lint` · `npm run build`
+- `npm test` · `npx tsc --noEmit` · `npm run lint` · `npm run build` · `npm run e2e` (precisa do build antes; sobe o app e um backend simulado)
 
 CI: `.github/workflows/ci.yml` roda as mesmas suítes (+ `composer audit`/`npm audit`, que só bloqueiam severidade **alta/crítica**). Antes de concluir uma tarefa, rode localmente o equivalente do que o CI vai rodar. Mudança em `package-lock.json`/`composer.lock` só com justificativa registrada no plano (preferir atualização cirúrgica à regeneração).
 
@@ -86,6 +86,7 @@ CI: `.github/workflows/ci.yml` roda as mesmas suítes (+ `composer audit`/`npm a
 - Uma unidade coerente por vez; pequenas mudanças verificáveis; sem refatorar o que não faz parte da tarefa.
 - **Lint do frontend em 0 avisos.** `npm run lint` deve terminar sem erros nem avisos; corrija a causa (padrões em `docs/frontend-arquitetura.md`: `useSyncedState`, `useWatch`, ajuste de estado na renderização). Exceção só com `// eslint-disable-next-line <regra> -- <motivo>` quando o `useEffect` for a forma correta de sincronizar com um sistema externo.
 - Teste que depende de Radix (menu, tooltip) usa `waitFor`/`findBy*`; teste de ordenação não pode depender da *collation* do PostgreSQL.
+- Mudou o BFF de autenticação, `proxy.ts`, cookies ou cabeçalhos de segurança ⇒ rode `npm run e2e` (o JWT nunca pode aparecer no corpo das respostas nem em `document.cookie`). Teste novo: veja-o falhar sem a correção ou faça uma mutação proposital.
 
 ## Conflitos conhecidos entre instruções (decisões já tomadas — não rediscutir)
 

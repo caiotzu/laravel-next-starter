@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 export const acessoSuporteSchemaConceder = z.object({
-  usuario_admin_id: z.string().uuid("Selecione um administrador."),
+  // z.string("msg") cobre o campo ausente (nenhum administrador escolhido ainda); sem isso o usuário veria
+  // a mensagem genérica em inglês do Zod ("Invalid input: expected string, received undefined").
+  usuario_admin_id: z.string("Selecione um administrador.").uuid("Selecione um administrador."),
   duracao_minutos: z
     .number()
     .int()
