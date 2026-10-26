@@ -8,10 +8,10 @@ para conferir de novo, rode os comandos da seção "Como executar".
 | Camada | Ferramenta | Testes | Resultado |
 |---|---|---|---|
 | Backend | Pest 4 sobre PHPUnit, **PostgreSQL real** (banco `testing`) | **393** em 29 arquivos (1618 asserções) | verde |
-| Frontend (unitário e de componentes) | Vitest 5 + Testing Library (jsdom) | **260** em 27 arquivos | verde |
-| Frontend (ponta a ponta) | Playwright, Chromium real | **26** em 2 arquivos | verde (local); no CI, ainda não bloqueante |
+| Frontend (unitário e de componentes) | Vitest 5 + Testing Library (jsdom) | **270** em 28 arquivos | verde |
+| Frontend (ponta a ponta) | Playwright, Chromium real | **28** em 3 arquivos (os 2 de `responsivo.e2e.ts`, 375 px, verificados contra `next dev`; os 26 anteriores não foram reexecutados em 2026-10-25) | verde (local); no CI, ainda não bloqueante |
 | Tipos | `npx tsc --noEmit` | — | sem erros |
-| Lint | `npm run lint` (ESLint 9, flat config) | — | **0 erros, 0 avisos** |
+| Lint | `npm run lint` (ESLint 9, flat config) | — | 8 erros `import/order` pré-existentes nos handlers `app/api/auth/**` (ver `IMPLEMENTATION_PLAN.md`, TEST-007); 0 avisos |
 | CI | GitHub Actions (`.github/workflows/ci.yml`) | os mesmos comandos acima | verde no `main` |
 
 ## Como executar

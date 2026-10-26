@@ -10,6 +10,7 @@ import { useForm, useWatch } from "react-hook-form";
 
 import { AdminPermissionGuard } from "@/app/admin/_components/guard/AdminPermissionGuard";
 
+import { ABA_GATILHO_CLASSES, abasListaClasses } from "@/components/common/tabs-responsivas";
 import { AppAlert } from "@/components/feedback/AppAlert";
 import { Button } from "@/components/ui/button";
 import {
@@ -129,16 +130,16 @@ export function EmpresaFormCreate({
           )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="w-full justify-start">
-              <TabsTrigger value="dados">
+            <TabsList className={abasListaClasses(3)}>
+              <TabsTrigger value="dados" className={ABA_GATILHO_CLASSES}>
                 <Building2 className="h-4 w-4" />
                 Dados da Empresa
               </TabsTrigger>
-              <TabsTrigger value="enderecos" disabled={true}>
+              <TabsTrigger value="enderecos" disabled={true} className={ABA_GATILHO_CLASSES}>
                 <MapPinned className="h-4 w-4" />
                 Endereços
               </TabsTrigger>
-              <TabsTrigger value="contatos" disabled={true}>
+              <TabsTrigger value="contatos" disabled={true} className={ABA_GATILHO_CLASSES}>
                 <Phone className="h-4 w-4" />
                 Contatos
               </TabsTrigger>

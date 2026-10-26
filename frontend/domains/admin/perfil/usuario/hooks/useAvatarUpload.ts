@@ -10,10 +10,13 @@ import { ApiErrorResponse } from "@/types/errors";
 
 import { useSyncedState } from "@/hooks/use-synced-state";
 
+
 import { atualizarAvatar } from "../services/usuarioService";
 import { Usuario } from "../types/usuario.model";
 import { AtualizarAvatarRequest } from "../types/usuario.requests";
 import { AtualizarAvatarResponse } from "../types/usuario.responses";
+
+import { extrairAvatar } from "@/lib/extrair-avatar";
 
 export function useAvatarUpload(initialAvatar: string | null) {
   // Acompanha o avatar vindo do servidor; o upload atualiza localmente quando a imagem nova carrega.
@@ -37,46 +40,48 @@ export function useAvatarUpload(initialAvatar: string | null) {
     mutationFn: atualizarAvatar,
 
     onSuccess: (response) => {
-      const usuarioAtualizado = response;
-      const newAvatar = usuarioAtualizado.avatar;
+      // O backend devolve o usuário embrulhado em `data`; `extrairAvatar` lida com o formato real.
+      const newAvatar = extrairAvatar(response);
 
       if (!newAvatar) {
+        // Sem avatar utilizável na resposta: busca o usuário de novo para a sidebar não ficar defasada.
+        queryClient.invalidateQueries({ queryKey: ["userAdmin"] });
         toast.success("Avatar atualizado com sucesso.");
         return;
       }
 
+      // Atualiza o cache global (alimenta a foto da sidebar) IMEDIATAMENTE: não pode depender
+      // de a imagem carregar no navegador.
+      queryClient.setQueryData<Usuario>(
+        ["userAdmin"],
+        (oldData) => {
+          if (!oldData) return oldData;
+
+          return {
+            ...oldData,
+            avatar: newAvatar,
+          };
+        }
+      );
+
+      toast.success("Avatar atualizado com sucesso.");
+
       const loadedImage = new window.Image();
 
       loadedImage.onload = () => {
-        // Atualiza estado definitivo só quando a nova imagem estiver carregada
+        // Troca o preview local pela imagem definitiva só quando ela estiver carregada
         setAvatar(newAvatar);
         previousAvatarRef.current = newAvatar;
-
-        // Atualiza cache global tipado
-        queryClient.setQueryData<Usuario>(
-          ["userAdmin"],
-          (oldData) => {
-            if (!oldData) return oldData;
-
-            return {
-              ...oldData,
-              avatar: newAvatar,
-            };
-          }
-        );
 
         // Limpa preview temporário
         if (previewUrlRef.current) {
           URL.revokeObjectURL(previewUrlRef.current);
           previewUrlRef.current = null;
         }
-
-        toast.success("Avatar atualizado com sucesso.");
       };
 
       loadedImage.onerror = () => {
         // Mantém o preview atual para evitar imagem quebrada.
-        toast.success("Avatar atualizado com sucesso.");
       };
 
       loadedImage.src = `${newAvatar}${newAvatar.includes("?") ? "&" : "?"}v=${Date.now()}`;

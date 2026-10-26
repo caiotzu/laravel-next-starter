@@ -27,17 +27,18 @@ export function Pagination({
   if (lastPage <= 1) return null;
 
   return (
-    <Card className="w-full rounded-2xl border shadow-sm p-3">
+    <Card className="w-full min-w-0 rounded-2xl border shadow-sm p-3">
 
-      <div className="flex items-center justify-between">
+      {/* Mobile: resumo em cima e controles embaixo, centralizados; a partir de sm: lado a lado */}
+      <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
         {/* ESQUERDA */}
-        <div className="text-sm text-muted-foreground">
+        <div className="text-center text-sm text-muted-foreground sm:text-left">
           Mostrando <strong>{from}</strong>–<strong>{to}</strong> de{" "}
           <strong>{total}</strong> resultados
         </div>
 
         {/* DIREITA */}
-        <div className="flex items-center gap-2">
+        <div className="flex max-w-full flex-wrap items-center justify-center gap-1 sm:gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -45,8 +46,9 @@ export function Pagination({
             onClick={() => onPageChange(currentPage - 1)}
             className="cursor-pointer"
           >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Anterior
+            <ChevronLeft className="h-4 w-4 sm:mr-1" />
+            {/* No mobile só o ícone; o nome acessível continua "Anterior" */}
+            <span className="sr-only sm:not-sr-only">Anterior</span>
           </Button>
 
           {gerarPaginas(currentPage, lastPage).map((item) =>
@@ -64,12 +66,12 @@ export function Pagination({
                       ? `Ir para a última página (${lastPage})`
                       : `Ir para a página ${item}`
                 }
-                className="cursor-pointer"
+                className="min-w-8 cursor-pointer px-2 sm:px-3"
               >
                 {item}
               </Button>
             ) : (
-              <span key={item} aria-hidden="true" className="px-1 text-muted-foreground select-none">
+              <span key={item} aria-hidden="true" className="px-0.5 sm:px-1 text-muted-foreground select-none">
                 …
               </span>
             )
@@ -82,8 +84,8 @@ export function Pagination({
             onClick={() => onPageChange(currentPage + 1)}
             className="cursor-pointer"
           >
-            Próximo
-            <ChevronRight className="h-4 w-4 ml-1" />
+            <span className="sr-only sm:not-sr-only">Próximo</span>
+            <ChevronRight className="h-4 w-4 sm:ml-1" />
           </Button>
         </div>
       </div>

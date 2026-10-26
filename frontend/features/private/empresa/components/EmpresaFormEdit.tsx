@@ -13,6 +13,7 @@ import { ApiErrorResponse } from "@/types/errors";
 
 import { PrivatePermissionGuard } from "@/app/(private)/_components/guard/PrivatePermissionGuard";
 
+import { ABA_GATILHO_CLASSES, abasListaClasses } from "@/components/common/tabs-responsivas";
 import { AppAlert } from "@/components/feedback/AppAlert";
 import { Button } from "@/components/ui/button";
 import {
@@ -185,16 +186,16 @@ export function EmpresaFormEdit({ empresa }: EmpresaFormEdicaoProps) {
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full justify-start">
-            <TabsTrigger value="dados">
+          <TabsList className={abasListaClasses(3)}>
+            <TabsTrigger value="dados" className={ABA_GATILHO_CLASSES}>
               <Building2 className="h-4 w-4" />
               Dados da Empresa
             </TabsTrigger>
-            <TabsTrigger value="enderecos">
+            <TabsTrigger value="enderecos" className={ABA_GATILHO_CLASSES}>
               <MapPinned className="h-4 w-4" />
               Enderecos
             </TabsTrigger>
-            <TabsTrigger value="contatos">
+            <TabsTrigger value="contatos" className={ABA_GATILHO_CLASSES}>
               <Phone className="h-4 w-4" />
               Contatos
             </TabsTrigger>

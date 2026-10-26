@@ -17,6 +17,8 @@ Só marque `[x]` depois de verificar (teste executado, lint/tsc, leitura do resu
 - **Bloqueios/riscos:** nenhum bloqueio. Não há CI; sem execução via Sail/Docker (verificado com PHP 8.3 + PostgreSQL 16 local — PROJECT_GUIDE §12). Auditoria de segurança **não é completa**: cobriu escopo/tenant, chaves de `authorize()` e fluxo de proxy.
 - **Atenção em produção (SEC-001):** grupos *personalizados* que tinham só `*.empresa.contato.atualizar` deixam de poder editar endereços (corrigido: exige `*.empresa.endereco.atualizar`). Grupos semeados/onboarding recebem ambas e não são afetados.
 
+- **Atualização 2026-10-25 (interface mobile + avatar):** Vitest **270** verdes (28 arquivos), `tsc` ✔; lint com **8 erros pré-existentes** em 4 handlers do BFF (ver TEST-007); E2E: 2 novos verificados em Chromium real contra `next dev`; suíte E2E completa e `next build` **não** reexecutados.
+
 ### Achados da auditoria
 
 | # | Prio | Achado | Evidência | Status |
@@ -47,6 +49,7 @@ Só marque `[x]` depois de verificar (teste executado, lint/tsc, leitura do resu
 | F-24 | P3 | No login com 2FA o BFF gravava o cookie de sessão **vazio** (`value=""`), apagando uma sessão válida do mesmo contexto | achado ao ler o handler; comprovado por E2E contra o código antigo | **Resolvido** (SEC-007) |
 | F-25 | P3 | O servidor respondia `X-Powered-By: Next.js` (fingerprinting) | teste E2E de cabeçalhos | **Resolvido** (`poweredByHeader: false`) |
 | F-26 | P3 | Formulário de concessão de Acesso de Suporte mostrava "Invalid input: expected string, received undefined" (inglês técnico do Zod) ao enviar sem escolher administrador | teste de renderização; o campo não tinha valor padrão | **Resolvido** (schema com mensagem para campo ausente). A **classe** do problema (58 campos de schema com mensagem genérica quando ausentes) segue aberta → FRONT-005 |
+| F-27 | **P1** | O JWT de acesso fica **inteiro** no cookie `httpOnly` (`admin_access_token`/`private_access_token`); `proxy.ts` o lê e decodifica. Não é leitura por JS, mas o BFF não é a única parte que possui o token (cookie = token) | `app/api/auth/**/route.ts`, `app/api/proxy/*/route.ts`, `proxy.ts`, `routes/routes.ts` | Aberto → SEC-009 |
 
 Verificado e **sem achado**: toda chave usada em `authorize()` existe nos seeders; nenhum controller usa chave de outro recurso (varredura por script); Requests **Admin** têm as mesmas consultas sem escopo, mas o Admin é irrestrito por design (modo de suporte recusa `/admin`).
 
@@ -181,6 +184,27 @@ Verificado e **sem achado**: toda chave usada em `authorize()` existe nos seeder
 - **Limite assumido:** o backend é **simulado**; o E2E valida frontend e BFF, não a API Laravel real (D-026).
 - **Verificação:** 26/26 em Chromium real, localmente; os testes pegam a regressão da SEC-007 (ver acima). **Não** rodou nos servidores do GitHub.
 
+### FRONT-006 — Avatar do perfil atualiza a foto da sidebar (Admin e Private)
+- **Causa (reproduzida por teste vermelho):** o backend devolve o usuário embrulhado em `data` (`UsuarioResource`) e o proxy repassa assim; o hook lia `response.avatar` (sempre `undefined`) e saía antes de tocar no cache `["userAdmin"|"userPrivate"]` que alimenta a sidebar. Além disso, mesmo no formato certo o cache só era atualizado no `onload` da imagem. O teste antigo do serviço mockava o formato errado (`data: { avatar }`), por isso nunca pegou.
+- **Arquivos:** `lib/extrair-avatar.ts` (novo), `domains/{admin,private}/perfil/usuario/hooks/useAvatarUpload.ts`, `tests/hooks/use-avatar-upload.test.tsx` (novo, 10 testes).
+- **Correção:** `extrairAvatar()` aceita o formato real e o plano; o cache é atualizado **imediatamente**; sem avatar utilizável, `invalidateQueries` busca o usuário de novo. Erro continua revertendo o preview.
+- **Verificação:** 6 dos 10 testes falharam no código antigo; todos verdes depois.
+
+### FRONT-007 + FRONT-008 — Paginação e listagem de mensagens em mobile
+- **Causa raiz (reproduzida em Chromium 375 px: a página estourava **218 px** na horizontal):** `SidebarInset` é item de um flex horizontal sem `min-w-0`; qualquer conteúdo largo (tabela de 6 colunas, barra de paginação) alargava a **página inteira**, desconfigurando a listagem. A paginação em si também não quebrava linha.
+- **Arquivos:** `components/ui/sidebar.tsx` (`min-w-0` no `SidebarInset`: vale para **todas** as telas Admin/Private), `components/data-tables/Pagination.tsx` (resumo acima e controles abaixo no mobile; `flex-wrap`; "Anterior/Próximo" só com ícone no mobile, nome acessível mantido via `sr-only`).
+- **Efeito colateral positivo:** as demais listagens (usuários, grupos, empresas...) deixam de alargar a página no mobile; a tabela rola dentro do próprio cartão.
+- **Fora de escopo (opcional):** tabelas com muitas colunas continuam com rolagem horizontal no cartão; versão em cartões empilhados não foi feita.
+
+### FRONT-009 — Abas Endereços/Contatos do cadastro e edição de empresa em mobile
+- **Causa:** `TabsList` em uma linha `nowrap` com ícone + texto transbordava (3ª aba passava **72 px** do limite em 375 px) + a causa raiz acima (tabela de 10 colunas de endereços).
+- **Arquivos:** `components/common/tabs-responsivas.ts` (novo), `features/admin/empresa/components/{EmpresaFormCreate,EmpresaFormEdit}.tsx`, `features/private/empresa/components/EmpresaFormEdit.tsx`. Mobile: 3 colunas iguais, ícone em cima e rótulo embaixo; de `sm` em diante, layout horizontal de antes.
+
+### TEST-007 — E2E de layout em 375 px
+- **Arquivos:** `frontend/e2e/responsivo.e2e.ts` (2 testes; interceptam `/api/proxy/admin` com `page.route`, sem alterar o backend simulado). Conferem: página sem rolagem horizontal, botões da paginação dentro do cartão, abas dentro da linha.
+- **Verificação:** falham no código original (218 px de excesso; aba 72 px fora) e passam com as correções. **Rodados contra `next dev`**, não contra `next build` (o build local exige as Google Fonts); a suíte E2E completa (26 + 2) **não foi reexecutada** neste ambiente → rodar `npm run build && npm run e2e` antes de promover o job (CI-004).
+- **Pendência encontrada (não corrigida, fora do escopo):** `npm run lint` acusa **8 erros `import/order`** em `app/api/auth/{admin,private}/{login,2fa}/route.ts` já no `main` (o plano dizia 0/0). Corrigem com `npx eslint --fix` quando o BFF for mexido (SEC-009).
+
 ## C. Tarefas em andamento
 
 Nenhuma. (Última unidade coerente concluída: REPO-002 + SEC-001..003.)
@@ -191,6 +215,7 @@ Nenhuma. (Última unidade coerente concluída: REPO-002 + SEC-001..003.)
 
 Legenda de prioridade: P1 > P2 > P3. Ordem sugerida = ordem da lista.
 
+- [ ] **SEC-009 (P1) — Sessão opaca no BFF: JWT e refresh só no servidor (F-27)**: hoje `admin_access_token`/`private_access_token` guardam o **JWT bruto** em cookie `httpOnly` e `proxy.ts` o decodifica no Edge/Node. `httpOnly` impede leitura por JS, mas o token continua no navegador (exfiltrável por extensão, malware local, backup de perfil, log de proxy reverso) e vale 1 h sem revogação do lado do BFF. Alvo: cookie opaco (`__Host-sid`, 32 bytes aleatórios, `HttpOnly; Secure; SameSite=Lax; Path=/`, sem `Domain`) → *session store* no servidor com `{contexto, jwt, expira_em, criada_em}`; `proxy.ts` e `app/api/proxy/*` passam a resolver o JWT pela sessão; logout destrói a sessão no store, limpa o cookie e chama `/logout` do backend; 401 do backend destrói a sessão. **Decisão do dono (2026-10-25, D-029): usar Redis** como *session store* (TTL nativo = expiração da sessão; compartilhado entre instâncias; sobrevive a reinício). Implica: adicionar `ioredis` ao frontend (aprovação já dada para esta tarefa), um serviço `redis` no `backend/docker-compose.yml` (hoje **não existe**; só há `REDIS_CLIENT` no `.env.example`), variável `REDIS_URL` no `frontend/.env.example`, chaves `bff:sess:<sid>` com `EX`, e `proxy.ts` rodando em Node runtime (padrão do Next 16) para consultar o Redis. Testes com Redis real (serviço no CI) ou um fake em memória atrás da mesma interface `SessionStore`. **Adiada por decisão do dono: a prioridade agora é a interface.** Sem refresh no frontend hoje (backend tem `/refresh`, front não usa) → decidir se entra renovação (rotação do JWT dentro da sessão, com trava contra loop). Escopo: handlers `app/api/auth/{admin,private}/{login,2fa,logout}`, `app/api/proxy/*`, `proxy.ts`, `routes/routes.ts` (trocar `cookieName` por contexto), providers que usam `cookieName`, novo `lib/session/*`, testes Vitest (`tests/api`, `tests/proxy`) e E2E (`e2e/`), docs (`seguranca.md`, `autenticacao-e-autorizacao.md`). Aceite: nenhum JWT em cookie, corpo, HTML ou `document.cookie`; `npm run e2e` verde. Status: pendente (análise concluída).
 - [ ] **CI-004 (P2) — Promover o job `frontend-e2e` a bloqueante**: depois do primeiro run verde no GitHub (o job instala o Chromium do Playwright, faz o build e roda os 26 testes), remover o `continue-on-error`. Se falhar, enviar o log ou o artefato `playwright-traces`. Status: pendente.
 - [ ] **SEC-008 (P2) — Nova avaliação de segurança (reabrir F-05 a F-14)**: o relatório de 2026-09-29 não está mais no repositório; refazer a revisão white-box contra o código atual (Laravel 13, Next 16.3.8) e arquivar só um **resumo** público. Depende de decisão do dono. Status: pendente.
 - [ ] **FRONT-005 (P3) — Mensagens do Zod em português para campos ausentes**: 58 campos de schema devolvem a mensagem genérica em inglês quando chegam ausentes; só aparece ao usuário se o formulário não define valor padrão (como era o caso de `usuario_admin_id`). Verificar `defaultValues` formulário a formulário, ou definir uma mensagem global para `invalid_type` com `undefined` (`z.config({ customError })`). Status: pendente.
@@ -202,6 +227,8 @@ Legenda de prioridade: P1 > P2 > P3. Ordem sugerida = ordem da lista.
 ---
 
 ## E. Próxima tarefa recomendada
+
+**SEC-009 — Sessão opaca no BFF com Redis** (P1, adiada pelo dono; decisão D-029). FRONT-006..009 e TEST-007 concluídos em 2026-10-25. Antes de promover o E2E (CI-004), rodar `npm run build && npm run e2e` (28 testes).
 
 **CI-004 — Confirmar o job de E2E no GitHub e torná-lo bloqueante.** Todo o código está pronto e verificado localmente; falta o primeiro run nos servidores do GitHub, que instalam o Chromium do Playwright por conta própria. Depois do envio, a aba Actions mostra o job **Frontend (E2E)**; me diga se ficou verde (ou envie o log). Sendo verde, removo o `continue-on-error`. Se falhar, o artefato `playwright-traces` traz o passo a passo gravado.
 Sem depender de você: **FRONT-005** (mensagens do Zod) ou **TEST-005** (mais testes de formulários). Dependem de decisão sua: **SEC-008** (nova avaliação de segurança), **QUAL-001** (Pint), **ARCH-002** (`.ai/rules`) e **TEST-006** (E2E de pilha completa).
@@ -240,6 +267,9 @@ Sem depender de você: **FRONT-005** (mensagens do Zod) ou **TEST-005** (mais te
 | D-026 | E2E com backend simulado e app de produção, em vez de pilha completa | Determinístico, rápido (~50 s) e sem banco; valida frontend + BFF, onde estão cookies, redirecionamentos e cabeçalhos. Pilha completa fica como TEST-006 | Subir Laravel + PostgreSQL no CI |
 | D-027 | Job `frontend-e2e` nasce não bloqueante e é promovido após o primeiro verde | Mesma política do job de build: não bloquear o `main` com algo nunca executado nos servidores do GitHub | Já bloqueante |
 | D-028 | FRONT-005: corrigir só o caso comprovado (concessão de acesso) e deixar a classe no backlog | A varredura mostra 58 campos com mensagem genérica, mas só aparece ao usuário sem valor padrão; mexer em todos às cegas é arriscado | Mensagem global em português para todos os schemas |
+| D-029 | SEC-009 usará **Redis** como session store; implementação adiada | Decisão do dono (2026-10-25): TTL nativo, multi-instância, sobrevive a reinício. Prioridade atual é a interface | Memória via `globalThis` (só dev); cookie criptografado (o token continuaria no navegador) |
+| D-030 | `min-w-0` no `SidebarInset` (global) em vez de `min-w-0` tela a tela | A causa é do componente de layout (item de flex horizontal); corrigir na origem resolve todas as telas | Ajustar cada página; `overflow-x-hidden` no body (esconderia o problema) |
+| D-031 | `extrairAvatar()` aceita formato embrulhado e plano; serviços não mudam | Os testes dos serviços já fixam o contrato; o helper isola a tolerância num ponto só | Corrigir o tipo `AtualizarAvatarResponse` (quebra os mocks atuais) |
 
 ---
 
@@ -255,3 +285,4 @@ Sem depender de você: **FRONT-005** (mensagens do Zod) ou **TEST-005** (mais te
 | 2026-10-17 (2ª) | CI-002, DEP-002 | `ci.yml` (build bloqueante), `react-query-provider.tsx`, `package.json`, `package-lock.json`, `react-query-provider.test.tsx`, docs | Run 1 do CI verde (GitHub); Vitest 145 ✔; `tsc` ✔; lint 0 erros; build ✔; prune + `next start` HTTP 200 | CI-003 (dono) / FRONT-003 |
 | 2026-10-17 (3ª) | FRONT-003, TEST-002, DOC-002; CI-003 declinada | 19 formulários + ~15 componentes/hooks, `hooks/use-synced-state.ts`, `tests/**` (+4 arquivos), `eslint.config.mjs`, `tests/setup.ts`, `docs/{testes,seguranca,frontend-arquitetura,vantagens,arquitetura,PROJECT_GUIDE,IMPLEMENTATION_PLAN}.md`, `CLAUDE.md` | Vitest 183 ✔ (3 execuções); lint 0/0; `tsc` ✔; build ✔; 0 links quebrados; mutações detectadas; flakiness do `nav-main` corrigida (25/25) | SEC-007 |
 | 2026-10-18 | SEC-007, TEST-003, TEST-004 | `lib/auth-response.ts`, 4 handlers do BFF, `next.config.ts`, `tests/api`, `tests/features` (+4), `tests/setup.ts`, `playwright.config.ts`, `e2e/**`, `ci.yml`, `package.json`/lock, docs, `CLAUDE.md` | Vitest 260 ✔; E2E 26 ✔ (Chromium real); lint 0/0; `tsc` ✔; build ✔; mutações detectadas; testes falham no código antigo (6) | CI-004 |
+| 2026-10-25 | FRONT-006, FRONT-007, FRONT-008, FRONT-009, TEST-007 | `lib/extrair-avatar.ts`, `domains/{admin,private}/perfil/usuario/hooks/useAvatarUpload.ts`, `components/ui/sidebar.tsx`, `components/data-tables/Pagination.tsx`, `components/common/tabs-responsivas.ts`, 3 formulários de empresa, `tests/hooks/use-avatar-upload.test.tsx`, `e2e/responsivo.e2e.ts`, docs | Vitest 270 ✔; `tsc` ✔; E2E responsivo 2/2 ✔ (vermelho no código antigo); lint: 8 erros pré-existentes no BFF | SEC-009 (Redis), CI-004 |
