@@ -30,7 +30,7 @@ const MensagemContadorContext = createContext<number>(0)
 function exigePermissoesPrivate(pathname: string): boolean {
   return protectedRoutes.some(
     (route) =>
-      route.cookieName === "private_access_token" &&
+      route.contexto === "private" &&
       route.protected &&
       route.regex?.test(pathname)
   )

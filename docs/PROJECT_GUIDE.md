@@ -49,7 +49,7 @@ Erros viram JSON em `bootstrap/app.php`: validação → 422 `{errors}`; sem per
 
 ## 5. Front ↔ back
 
-Navegador → `lib/proxy-admin.ts`/`proxy-private.ts` (axios `POST /api/proxy/{admin|private}` com `{url, method, data, headers}`) → `app/api/proxy/*/route.ts` (valida origem, resolve destino via `lib/proxy-guard.ts`, injeta `Authorization: Bearer` do cookie `httpOnly`) → `BACKEND_URL` (Laravel). No login e no 2FA (`app/api/auth/{admin,private}/{login,2fa}`) o BFF grava o JWT **só** no cookie `httpOnly` e devolve ao navegador o restante da resposta, sem o `token` (`lib/auth-response.ts`). Os proxies também normalizam URLs absolutas de `/storage` para relativas (`lib/media-url.ts`); `next.config.ts` faz o rewrite `/storage/*` → backend. `proxy.ts` protege navegação por cookie usando `routes/routes.ts`. Header `X-Acesso-Suporte-Id` só é enviado pelos proxies em modo de suporte.
+Navegador → `lib/proxy-admin.ts`/`proxy-private.ts` (axios `POST /api/proxy/{admin|private}` com `{url, method, data, headers}`) → `app/api/proxy/*/route.ts` (valida origem, **resolve o JWT pela sessão no Redis**, resolve destino via `lib/proxy-guard.ts`, injeta `Authorization: Bearer`) → `BACKEND_URL` (Laravel). No login e no 2FA (`app/api/auth/{admin,private}/{login,2fa}`) o BFF cria a sessão no Redis (`lib/session/`) e entrega ao navegador **só um cookie opaco** (`sid`); o JWT nunca sai do servidor e o restante da resposta vai sem o `token` (`lib/auth-response.ts`). Os proxies também normalizam URLs absolutas de `/storage` para relativas (`lib/media-url.ts`); `next.config.ts` faz o rewrite `/storage/*` → backend. `proxy.ts` protege a navegação conferindo a sessão no Redis, usando `routes/routes.ts`. Header `X-Acesso-Suporte-Id` só é enviado pelos proxies em modo de suporte. **O frontend precisa de um Redis** (`REDIS_URL`; local: serviço `redis` do `backend/docker-compose.yml`).
 
 ## 6. Convenções de nomenclatura
 
@@ -130,7 +130,7 @@ Localização e quando usar: tabela em [`../CLAUDE.md`](../CLAUDE.md#skills-leia
 | Repository só para dados com dono, sem interface/base | Eloquent não será trocado; testes usam banco real | `repositories.md` |
 | `EscopoEntidade` obrigatório nas leituras | impossível esquecer o filtro de empresa | `repositories.md` |
 | Identidade (`Auth::user`) ≠ contexto (`EscopoEntidadeService::atual`) | modo de suporte | `repositories.md` |
-| Front como BFF + JWT em cookie `httpOnly` | token inacessível a JS | `arquitetura.md`, `seguranca.md` |
+| Front como BFF + JWT só no servidor (Redis), cookie de sessão opaco | token nunca chega ao navegador; vários usuários/PCs com sessões independentes | `arquitetura.md`, `seguranca.md` |
 | Um DTO por caso de uso | normaliza entrada; evita arrays soltos | `app/DTO` |
 | Integrações atrás de `Contracts/` | troca por config | `app/Contracts` |
 | Pint não aplicado ao legado | evitar diff gigante | `CLAUDE.md` |

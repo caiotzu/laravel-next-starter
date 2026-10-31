@@ -1,13 +1,15 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import axios from "axios";
 
-import { ipsEncaminhados } from "@/lib/client-ip";
-import { validarOrigem } from "@/lib/utils";
-
 import { separarTokenDeSessao } from "@/lib/auth-response";
-
+import { ipsEncaminhados } from "@/lib/client-ip";
+import {
+  SessaoIndisponivelError,
+  iniciarSessao,
+  respostaSessaoIndisponivel,
+} from "@/lib/session/sessao";
+import { validarOrigem } from "@/lib/utils";
 
 export async function POST(req: Request) {
   try {
@@ -42,7 +44,8 @@ export async function POST(req: Request) {
       });
     }
 
-    // O JWT fica SÓ no cookie httpOnly: o navegador recebe os demais campos, nunca o token.
+    // O JWT fica SÓ no servidor (Redis): o navegador recebe os demais campos e um cookie de
+    // sessão opaco, nunca o token (SEC-009).
     const { token, dadosPublicos } = separarTokenDeSessao(response.data.data);
 
     if (!token) {
@@ -56,22 +59,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const cookieStore = await cookies();
-
-    cookieStore.set("private_access_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax", // cookie lido só pelo próprio BFF (mesmo origin): "none" não é necessário e desliga a proteção SameSite
-      path: "/",
-      maxAge: 60 * 60, // 1 hora
-    });
+    await iniciarSessao("private", token);
 
     return NextResponse.json({
       status: response.status,
       data: dadosPublicos,
     });
 
-  } catch {
+  } catch (erro) {
+    if (erro instanceof SessaoIndisponivelError) return respostaSessaoIndisponivel();
+
     return NextResponse.json(
       {
         errors: {

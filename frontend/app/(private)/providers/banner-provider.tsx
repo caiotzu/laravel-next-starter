@@ -18,14 +18,14 @@ import { BannerCarouselModal } from "@/features/private/banner/components/Banner
 
 // Ver banner-sessao-storage.ts e app/(private)/page.tsx (marcarNovoLogin).
 const PREFIXO_SESSAO = "private";
-const COOKIE = "private_access_token";
+const CONTEXTO = "private";
 const QUERY_KEY = ["banners-private-disponiveis"];
 
 /** Telas públicas (login/recuperação de senha) desta área. */
 export function ehRotaPublica(pathname: string): boolean {
   return protectedRoutes.some(
     (route) =>
-      route.cookieName === COOKIE &&
+      route.contexto === CONTEXTO &&
       route.isLoginRoute === true &&
       route.regex?.test(pathname)
   );

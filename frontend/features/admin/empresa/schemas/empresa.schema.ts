@@ -6,7 +6,11 @@ import { onlyAlphaNumeric } from "@/lib/utils";
 const UF_VALUES = Object.keys(ESTADOS) as [UF, ...UF[]];
 
 export const empresaSchemaCadastro = z.object({
-  grupo_empresa_id: z.string().min(1, "O grupo da empresa é obrigatório"),
+  // O campo nasce `undefined` no formulário: sem a mensagem no `z.string()` o usuário via
+  // "Invalid input: expected string, received undefined" (em inglês).
+  grupo_empresa_id: z
+    .string({ message: "O grupo da empresa é obrigatório" })
+    .min(1, "O grupo da empresa é obrigatório"),
   matriz_id: z.string().optional(),
   cnpj: z.string().min(1, "O CNPJ é obrigatório").refine((value) => {
     return onlyAlphaNumeric(value).length === 14;

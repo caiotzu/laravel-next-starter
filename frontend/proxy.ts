@@ -2,11 +2,29 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-import jwt from "jsonwebtoken";
-
+import { nomeCookieSessao } from "./lib/session/cookie";
+import type { ContextoSessao } from "./lib/session/tipos";
+import { sessaoEhValida } from "./lib/session/validar";
 import { protectedRoutes } from "./routes/routes";
 
-export function proxy(req: NextRequest) {
+const HOME: Record<ContextoSessao, string> = {
+  admin: "/admin/home",
+  private: "/home",
+};
+
+const LOGIN: Record<ContextoSessao, string> = {
+  admin: "/admin",
+  private: "/",
+};
+
+/**
+ * Quem decide se há sessão é o servidor: o cookie só traz um identificador opaco (`sid`) e a
+ * existência/validade da sessão é conferida no Redis. O navegador não tem JWT para o proxy ler.
+ *
+ * Só consulta o Redis nas rotas listadas em `routes/routes.ts` (as demais passam direto) e, nas
+ * telas de login, só se houver cookie.
+ */
+export async function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
   // Ordena rotas do mais específico para o mais genérico
@@ -18,22 +36,12 @@ export function proxy(req: NextRequest) {
   // Se não for rota definida -> libera
   if (!route) return NextResponse.next();
 
-  // Se tiver token e for rota de login -> redireciona para dashboard correto
+  const sidDe = (contexto: ContextoSessao) => req.cookies.get(nomeCookieSessao(contexto))?.value;
+
+  // Se tiver sessão e for rota de login -> redireciona para dashboard correto
   if (route.isLoginRoute) {
-    const token = route.cookieName ? req.cookies.get(route.cookieName)?.value : null;
-
-    if (token && isTokenValid(token)) {
-      let redirectPath = "/home";
-      switch (route.cookieName) {
-        case "admin_access_token":
-          redirectPath = "/admin/home";
-          break;
-        case "private_access_token":
-          redirectPath = "/home";
-          break;
-      }
-
-      return NextResponse.redirect(new URL(redirectPath, req.url));
+    if (await sessaoEhValida(route.contexto, sidDe(route.contexto))) {
+      return NextResponse.redirect(new URL(HOME[route.contexto], req.url));
     }
 
     // Rota de login pública → libera
@@ -43,45 +51,18 @@ export function proxy(req: NextRequest) {
   // Se rota não for protegida -> libera
   if (!route.protected) return NextResponse.next();
 
-  // Pega o token da área esperada.
-  const token = route.cookieName ? req.cookies.get(route.cookieName)?.value : null;
-
-  if (token && isTokenValid(token)) {
+  if (await sessaoEhValida(route.contexto, sidDe(route.contexto))) {
     return NextResponse.next();
   }
 
   // Uma aba de suporte usa a identidade Admin original para acessar as
   // rotas visuais da área Private. A autorização real continua no backend:
   // sem X-Acesso-Suporte-Id válido, as APIs Private não concedem acesso.
-  if (
-    route.cookieName === "private_access_token" &&
-    isTokenValid(req.cookies.get("admin_access_token")?.value || "")
-  ) {
+  if (route.contexto === "private" && (await sessaoEhValida("admin", sidDe("admin")))) {
     return NextResponse.next();
   }
 
-  let loginPath = "/";
-  switch (route.cookieName) {
-    case "admin_access_token":
-      loginPath = "/admin";
-      break;
-    case "private_access_token":
-      loginPath = "/";
-      break;
-  }
-
-  return NextResponse.redirect(new URL(loginPath, req.url));
-}
-
-// Verifica se o token é valido e não expirou
-function isTokenValid(token: string) {
-  try {
-    const decoded = jwt.decode(token) as { exp?: number };
-    if (!decoded?.exp) return false;
-    return decoded.exp > Date.now() / 1000;
-  } catch {
-    return false;
-  }
+  return NextResponse.redirect(new URL(LOGIN[route.contexto], req.url));
 }
 
 // Define quais rotas passam pelo proxy

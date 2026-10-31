@@ -27,7 +27,7 @@ const AcessoSuporteContext = createContext<AcessoSuporteContextType>({
 
 /**
  * Rota oficial do Dashboard do Admin (a mesma usada pelo proxy.ts ao
- * redirecionar quem já possui admin_access_token válido). Ao terminar o
+ * redirecionar quem já possui sessão Admin válida). Ao terminar o
  * acesso de suporte — por qualquer motivo: expiração, revogação ou
  * encerramento manual — o usuário sempre volta para cá, independente da
  * entidade em que estava (Private, Despachante, ou qualquer futura

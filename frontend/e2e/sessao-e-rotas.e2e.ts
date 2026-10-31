@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 
-import { cookieDaSessao, definirSessao, preencherLogin } from "./apoio";
+import { cookieDaSessao, definirSessao, entregarCookieDeSessao, preencherLogin, sessaoNoServidor } from "./apoio";
 
 const areas = [
-  { nome: "Admin", login: "/admin", home: "/admin/home", protegidas: ["/admin/home", "/admin/usuarios", "/admin/grupos"], cookie: "admin_access_token", usuario: "admin@exemplo.com", publicas: ["/admin/esqueceu-senha", "/admin/primeiro-acesso", "/admin/redefinir-senha"] },
-  { nome: "Private", login: "/", home: "/home", protegidas: ["/home", "/usuarios", "/grupos"], cookie: "private_access_token", usuario: "cliente@exemplo.com", publicas: ["/esqueceu-senha", "/primeiro-acesso", "/redefinir-senha"] },
+  { nome: "Admin", login: "/admin", home: "/admin/home", protegidas: ["/admin/home", "/admin/usuarios", "/admin/grupos"], contexto: "admin" as const, usuario: "admin@exemplo.com", publicas: ["/admin/esqueceu-senha", "/admin/primeiro-acesso", "/admin/redefinir-senha"] },
+  { nome: "Private", login: "/", home: "/home", protegidas: ["/home", "/usuarios", "/grupos"], contexto: "private" as const, usuario: "cliente@exemplo.com", publicas: ["/esqueceu-senha", "/primeiro-acesso", "/redefinir-senha"] },
 ];
 
 const urlDoLogin = (login: string) => new RegExp(login === "/" ? "/(\\?.*)?$" : `${login}(\\?.*)?$`);
@@ -21,7 +21,7 @@ for (const area of areas) {
     }
 
     test("com a sessão expirada, a rota protegida volta para o login", async ({ page, context }) => {
-      await definirSessao(context, area.cookie, -60); // expirou há 1 minuto
+      await definirSessao(context, area.contexto, -60); // expirou há 1 minuto
 
       await page.goto(area.home);
 
@@ -29,7 +29,7 @@ for (const area of areas) {
     });
 
     test("com a sessão válida, a tela de login leva direto para a home", async ({ page, context }) => {
-      await definirSessao(context, area.cookie);
+      await definirSessao(context, area.contexto);
 
       await page.goto(area.login);
 
@@ -49,22 +49,26 @@ for (const area of areas) {
       await preencherLogin(page, area.login, area.usuario);
       await page.getByRole("button", { name: "Entrar" }).click();
       await expect(page).toHaveURL(new RegExp(`${area.home}$`));
-      expect(await cookieDaSessao(context, area.cookie)).toBeDefined();
+      const sid = (await cookieDaSessao(context, area.contexto))!.value;
+      expect(await sessaoNoServidor(sid)).not.toBeNull();
 
       await page.getByRole("button", { name: /m@example\.com/ }).click();
       await page.getByRole("menuitem", { name: "Sair" }).click();
 
       await expect(page).toHaveURL(urlDoLogin(area.login));
-      expect(await cookieDaSessao(context, area.cookie)).toBeUndefined();
+      expect(await cookieDaSessao(context, area.contexto)).toBeUndefined();
+      expect(await sessaoNoServidor(sid)).toBeNull(); // a sessão foi destruída NO SERVIDOR
 
+      // mesmo que alguém reaproveite o sid antigo, ele não vale mais
+      await entregarCookieDeSessao(context, area.contexto, sid);
       await page.goto(area.home);
       await expect(page).toHaveURL(urlDoLogin(area.login));
     });
   });
 }
 
-test("a sessão de uma área não vale na outra (cookies separados Admin x Private)", async ({ page, context }) => {
-  await definirSessao(context, "private_access_token");
+test("a sessão de uma área não vale na outra (sessões separadas Admin x Private)", async ({ page, context }) => {
+  await definirSessao(context, "private");
 
   await page.goto("/admin/home");
 

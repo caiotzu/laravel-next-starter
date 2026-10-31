@@ -8,10 +8,10 @@ para conferir de novo, rode os comandos da seção "Como executar".
 | Camada | Ferramenta | Testes | Resultado |
 |---|---|---|---|
 | Backend | Pest 4 sobre PHPUnit, **PostgreSQL real** (banco `testing`) | **393** em 29 arquivos (1618 asserções) | verde |
-| Frontend (unitário e de componentes) | Vitest 5 + Testing Library (jsdom) | **270** em 28 arquivos | verde |
-| Frontend (ponta a ponta) | Playwright, Chromium real | **28** em 3 arquivos (os 2 de `responsivo.e2e.ts`, 375 px, verificados contra `next dev`; os 26 anteriores não foram reexecutados em 2026-10-25) | verde (local); no CI, ainda não bloqueante |
+| Frontend (unitário e de componentes) | Vitest 5 + Testing Library (jsdom) | **512** em 39 arquivos (a integração com Redis real, `tests/session/redis-real.test.ts`, só roda com `REDIS_URL`) | verde |
+| Frontend (ponta a ponta) | Playwright, Chromium real | **43** em 4 arquivos (contra `next start` de produção, backend simulado e **Redis real**) | verde (local); no CI, job informativo `frontend-e2e` |
 | Tipos | `npx tsc --noEmit` | — | sem erros |
-| Lint | `npm run lint` (ESLint 9, flat config) | — | 8 erros `import/order` pré-existentes nos handlers `app/api/auth/**` (ver `IMPLEMENTATION_PLAN.md`, TEST-007); 0 avisos |
+| Lint | `npm run lint` (ESLint 9, flat config) | — | 0 erros, 0 avisos |
 | CI | GitHub Actions (`.github/workflows/ci.yml`) | os mesmos comandos acima | verde no `main` |
 
 ## Como executar
@@ -70,7 +70,9 @@ Configuração: `vitest.config.mts` (jsdom, alias `@/`) e `tests/setup.ts` (limp
 
 | Área | Arquivos (testes) |
 |---|---|
-| BFF de autenticação (cookie e token) | `api/auth-bff.test.ts` (24: login e 2FA, Admin e Private), `lib/auth-response.test.ts` (4) |
+| BFF de autenticação e sessão (SEC-009) | `api/auth-bff.test.ts` (40: login e 2FA, Admin e Private; cookie opaco, JWT só no Redis, anti fixação, Redis fora do ar, 20 usuários simultâneos), `api/logout-bff.test.ts` (20), `api/proxy-sessao.test.ts` (40: sem sessão, sid forjado, JWT no lugar do sid, sessão vencida, contexto trocado, CSRF, SSRF, acesso de suporte, 25 usuários em paralelo), `proxy/middleware.test.ts` (15), `session/sessao-unidade.test.ts` (34), `session/redis-real.test.ts` (7, Redis real: TTL, 200 usuários simultâneos, queda), `lib/auth-response.test.ts` (4) |
+| Formulários e telas (TEST-005) | `features/usuario-forms.test.tsx` (28), `mensagem-form-create.test.tsx` (12), `banner-form.test.tsx` (12), `empresa-form-create.test.tsx` (9), `empresa-form-edit.test.tsx` (20), `empresa-contatos-tab.test.tsx` (22), `usuario-view-e-graficos.test.tsx` (17) |
+| Avatar (FRONT-006) | `hooks/use-avatar-upload.test.tsx` (10) |
 | Schemas Zod dos domínios críticos | `features/schemas.test.ts` (24: usuário, grupo, empresa, contato, endereço, onboarding; Admin e Private) |
 | Services de domínio (proxy mockado) | `domains/services-crud.test.ts` (16: usuário, grupo, empresa), `services-bff.test.ts` (3), `banner-mappers.test.ts` (3), `constants.test.ts` (3) |
 | Telas e formulários | `features/perfil-e-senha.test.tsx` (22: perfil e senha, Admin e Private), `features/two-factor-section.test.tsx` (10), `features/auditorias-filters.test.tsx` (10), `features/acesso-suporte-form-conceder.test.tsx` (7) |
@@ -93,12 +95,14 @@ Navegador **real** (Chromium) contra o app Next de **produção** (`next start`)
 
 | Arquivo | Testes | O que cobre |
 |---|---|---|
-| `e2e/autenticacao.e2e.ts` | 9 | login válido (cookie `httpOnly`, `SameSite=Lax`, **JWT fora do corpo da resposta**), credenciais inválidas, 2FA (só o `temp_token` chega ao navegador e o cookie só nasce após o código), código errado, e usuário Admin recusado no login Private (e vice-versa) |
-| `e2e/sessao-e-rotas.e2e.ts` | 17 | rotas protegidas sem sessão, sessão expirada, sessão válida na tela de login, telas públicas, logout (menu **Sair**), cookies separados Admin × Private, cabeçalhos de segurança (`X-Frame-Options`, CSP `frame-ancestors`, `nosniff`, sem `X-Powered-By`) e recusa de origem diferente (CSRF) |
+| `e2e/autenticacao.e2e.ts` | 13 | login válido (cookie de sessão **opaco**, `HttpOnly`, `Secure`, `SameSite=Lax`, `__Host-`; **nenhuma resposta, HTML, `document.cookie`, `localStorage` ou `sessionStorage` contém o JWT**; o JWT existe só no Redis), recarregar (F5), fixação de sessão, credenciais inválidas, 2FA (só o `temp_token` chega ao navegador; a sessão só nasce após o código), código errado |
+| `e2e/multiusuario.e2e.ts` | 11 | 2 usuários com tokens próprios, logout de um não derruba o outro, mesmo usuário em casa e no trabalho, Admin × Private no mesmo PC, **20 logins simultâneos** (20 sessões e tokens distintos), sid forjado / JWT no lugar do sid / sessão vencida / contexto trocado, proxy sem sessão não chega ao backend |
+| `e2e/responsivo.e2e.ts` | 2 | 375 px: sem rolagem horizontal, paginação e abas de empresa dentro do cartão |
+| `e2e/sessao-e-rotas.e2e.ts` | 17 | rotas protegidas sem sessão, sessão expirada, sessão válida na tela de login, telas públicas, logout (menu **Sair**: destrói a sessão no Redis e o sid antigo não vale mais), sessões separadas Admin × Private, cabeçalhos de segurança (`X-Frame-Options`, CSP `frame-ancestors`, `nosniff`, sem `X-Powered-By`) e recusa de origem diferente (CSRF) |
 
 Como rodar: `npm run build` e depois `npm run e2e` (a configuração em `playwright.config.ts` sobe os dois servidores nas portas 3100 e 4010). A primeira vez, `npx playwright install chromium`. Sem acesso ao download do Playwright, defina `PW_CHROMIUM_PATH` (e opcionalmente `PW_CHROMIUM_ARGS`) apontando para um Chromium instalado. Falhas geram *trace* em `frontend/test-results/` (`npx playwright show-trace <arquivo>`).
 
-**Validação:** os 9 testes de autenticação foram executados contra um build com os handlers **antigos** (antes da SEC-007) e **6 falharam**: o JWT aparecia no corpo da resposta e o cookie de sessão era gravado vazio na etapa do 2FA. Contra o código corrigido, os 26 passam.
+**Validação:** os testes novos de sessão foram verificados por **mutação**: 6 defeitos injetados de propósito (token = o próprio `sid`, login sem destruir a sessão anterior, `proxy.ts` liberando tudo, store ignorando o contexto, `expiraEm` ignorado, logout sem apagar o cookie) foram **todos detectados**. Os E2E rodam contra `next build` + `next start` (produção), o que também prova que o Chromium aceita o cookie `__Host-` do app. Os E2E precisam de Redis (`REDIS_URL`, ou `redis-server` instalado: a configuração sobe um na porta 6390).
 
 ## CI
 

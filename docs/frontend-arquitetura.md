@@ -39,7 +39,7 @@ App Router com dois agrupamentos:
 - `app/admin/**` — área administrativa (`/admin`, `/admin/home`, `/admin/dashboard`, `/admin/usuarios`, `/admin/grupos`, `/admin/grupos-empresas`, `/admin/empresas`, `/admin/mensagens`, `/admin/banners`, `/admin/chamados`, `/admin/releases`, `/admin/acessos-suporte`, `/admin/auditorias`, `/admin/perfil`, `/admin/(auth)/**`);
 - `app/(private)/**` — área privada, usando um *route group* (`(private)`) para não afetar a URL — páginas ficam acessíveis a partir da raiz (`/`, `/home`, `/dashboard`, `/usuarios`, `/grupos`, `/empresas`, `/chamados`, `/releases`, `/acesso-suporte`, `/perfil`, `/(auth)/**`).
 
-Cada grupo tem seu próprio `layout.tsx` e pasta `providers/`. Rotas protegidas e mapeamento de cookie por rota ficam em `routes/routes.ts`, ordenado da mais específica para a mais genérica — consumido por `proxy.ts` (veja [`autenticacao-e-autorizacao.md`](./autenticacao-e-autorizacao.md#frontend)).
+Cada grupo tem seu próprio `layout.tsx` e pasta `providers/`. Rotas protegidas e mapeamento de contexto (Admin/Private) por rota ficam em `routes/routes.ts`, ordenado da mais específica para a mais genérica — consumido por `proxy.ts` (veja [`autenticacao-e-autorizacao.md`](./autenticacao-e-autorizacao.md#frontend)).
 
 ## Estado
 
@@ -108,6 +108,6 @@ Comandos (em `frontend/`): `npm run lint`, `npx tsc --noEmit`, `npm test`, `npm 
 
 **Ambiente de testes.** `tests/setup.ts` limpa o DOM e o storage a cada teste e define um *stub* de `ResizeObserver` (o jsdom não o tem e o Radix o exige). Detalhes e lacunas em [`testes.md`](./testes.md).
 
-**Autenticação no BFF.** Os handlers `app/api/auth/{admin,private}/{login,2fa}` guardam o JWT da sessão **somente** no cookie `httpOnly` (`SameSite=Lax`, `Secure` em produção, 1 hora) e devolvem ao navegador o restante da resposta do backend, sem o `token` (`lib/auth-response.ts`). O `temp_token` da etapa do 2FA continua indo ao navegador, porque a tela o reenvia ao confirmar o código. No login com 2FA o cookie de sessão não é tocado. O servidor não anuncia `X-Powered-By` (`poweredByHeader: false`).
+**Autenticação no BFF.** Os handlers `app/api/auth/{admin,private}/{login,2fa,logout}` guardam o JWT **somente no servidor (Redis, `lib/session/`)** e entregam ao navegador um cookie de sessão **opaco** (`sid`; `HttpOnly`, `SameSite=Lax`, `Secure` e `__Host-` em produção). O restante da resposta do backend vai ao navegador sem o `token` (`lib/auth-response.ts`). O `temp_token` da etapa do 2FA continua indo ao navegador, porque a tela o reenvia ao confirmar o código. No login com 2FA a sessão não é tocada. O `proxy.ts` e os proxies `app/api/proxy/*` consultam o Redis; `routes/routes.ts` identifica a área pelo campo `contexto` (`admin` | `private`). Exige `REDIS_URL` (ver o `.env.example`). O servidor não anuncia `X-Powered-By` (`poweredByHeader: false`).
 
 **Testes de ponta a ponta.** `playwright.config.ts` + `e2e/`: navegador real (Chromium) contra o app de produção e um backend simulado (`e2e/mock-backend.mjs`). Cobrem autenticação, sessão, proteção de rotas, logout e cabeçalhos de segurança. `npm run build && npm run e2e`. Os arquivos terminam em `.e2e.ts` para o Vitest não os capturar. Detalhes em [`testes.md`](./testes.md).

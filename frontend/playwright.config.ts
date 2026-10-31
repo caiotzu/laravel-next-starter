@@ -8,6 +8,11 @@ import { defineConfig, devices } from "@playwright/test";
 const PORTA_APP = 3100;
 const PORTA_BACKEND = 4010;
 const URL_APP = `http://127.0.0.1:${PORTA_APP}`;
+// Redis das sessões do BFF. No CI vem de um serviço (REDIS_URL); local, sobe um `redis-server` na 6390.
+const PORTA_REDIS = 6390;
+const REDIS_EXTERNO = Boolean(process.env.REDIS_URL);
+const REDIS_URL = process.env.REDIS_URL ?? `redis://127.0.0.1:${PORTA_REDIS}`;
+process.env.REDIS_URL = REDIS_URL; // os testes (e2e/apoio.ts) usam o MESMO Redis do app
 
 // Opcional: usar um Chromium já instalado (ambientes sem acesso ao download do Playwright).
 const executablePath = process.env.PW_CHROMIUM_PATH || undefined;
@@ -31,6 +36,17 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: [
+    // Redis local só quando não há um externo (no CI o serviço `redis` do job cumpre este papel).
+    ...(REDIS_EXTERNO
+      ? []
+      : [
+          {
+            command: `redis-server --port ${PORTA_REDIS} --save "" --appendonly no`,
+            port: PORTA_REDIS,
+            reuseExistingServer: true,
+            timeout: 30_000,
+          },
+        ]),
     {
       command: "node e2e/mock-backend.mjs",
       url: `http://127.0.0.1:${PORTA_BACKEND}/__requests`,
@@ -45,6 +61,7 @@ export default defineConfig({
       env: {
         BACKEND_URL: `http://127.0.0.1:${PORTA_BACKEND}/api`,
         FRONTEND_URL: URL_APP,
+        REDIS_URL,
         NEXT_TELEMETRY_DISABLED: "1",
       },
     },

@@ -9,14 +9,13 @@ import { toast } from "sonner";
 import { ApiErrorResponse } from "@/types/errors";
 
 import { useSyncedState } from "@/hooks/use-synced-state";
-
+import { extrairAvatar } from "@/lib/extrair-avatar";
 
 import { atualizarAvatar } from "../services/usuarioService";
 import { Usuario } from "../types/usuario.model";
 import { AtualizarAvatarRequest } from "../types/usuario.requests";
 import { AtualizarAvatarResponse } from "../types/usuario.responses";
 
-import { extrairAvatar } from "@/lib/extrair-avatar";
 
 export function useAvatarUpload(initialAvatar: string | null) {
   // Acompanha o avatar vindo do servidor; o upload atualiza localmente quando a imagem nova carrega.

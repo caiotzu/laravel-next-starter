@@ -53,9 +53,28 @@ services:
                 - '${DB_USERNAME}'
             retries: 3
             timeout: 5s
+    redis:
+        # Sessões do BFF (frontend): o JWT de acesso fica AQUI, nunca no navegador (SEC-009).
+        # Só no 127.0.0.1: em produção o Redis precisa de senha/TLS e de rede privada.
+        image: 'redis:7-alpine'
+        ports:
+            - '127.0.0.1:${FORWARD_REDIS_PORT:-6379}:6379'
+        volumes:
+            - 'sail-redis:/data'
+        networks:
+            - sail
+        healthcheck:
+            test:
+                - CMD
+                - redis-cli
+                - ping
+            retries: 3
+            timeout: 5s
 networks:
     sail:
         driver: bridge
 volumes:
     sail-pgsql:
+        driver: local
+    sail-redis:
         driver: local

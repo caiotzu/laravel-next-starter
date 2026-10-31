@@ -73,7 +73,7 @@ CI: `.github/workflows/ci.yml` roda as mesmas suítes (+ `composer audit`/`npm a
 - Dado com dono: nunca consultar sem escopo — **inclusive em Form Requests** (`EscopoEntidadeService::empresaVisivel()` antes de checar "já existe…") e em métodos `excluir`/`ativar`/`restaurar`. Resposta de erro não pode distinguir "existe em outra empresa" de "não existe".
 - `authorize('chave')`: use a chave do **recurso e da ação** do próprio método (copiar de um controller irmão e esquecer de trocar já gerou o bug F-10); ao criar rota, teste com um usuário que tenha **só** essa permissão (200) e outro com permissão de recurso vizinho (403). Não aceitar `entidade_id`/`grupo_empresa_id` do payload sem `EscopoEntidadeService::validarPertence`.
 - Usar `validated()`; nunca `$request->all()`. HTML de usuário passa por `HtmlSanitizer`/DOMPurify.
-- JWT só em cookie `httpOnly` via BFF; `lib/proxy-guard.ts` restringe destino/métodos/headers. Não ampliar sem justificativa.
+- JWT **só no servidor** (Redis, `lib/session/`): o navegador recebe apenas um cookie de sessão opaco. `lib/proxy-guard.ts` restringe destino/métodos/headers. Não ampliar sem justificativa; nunca gravar token em cookie, corpo de resposta, log ou storage do navegador.
 - Uploads: somente via `FileStorageInterface`. Anexos de chamado: privados + link assinado.
 - Não alterar `.env`, credenciais, banco ou dados reais sem pedido explícito. Não alterar dependências sem aprovação.
 
@@ -86,7 +86,7 @@ CI: `.github/workflows/ci.yml` roda as mesmas suítes (+ `composer audit`/`npm a
 - Uma unidade coerente por vez; pequenas mudanças verificáveis; sem refatorar o que não faz parte da tarefa.
 - **Lint do frontend em 0 avisos.** `npm run lint` deve terminar sem erros nem avisos; corrija a causa (padrões em `docs/frontend-arquitetura.md`: `useSyncedState`, `useWatch`, ajuste de estado na renderização). Exceção só com `// eslint-disable-next-line <regra> -- <motivo>` quando o `useEffect` for a forma correta de sincronizar com um sistema externo.
 - Teste que depende de Radix (menu, tooltip) usa `waitFor`/`findBy*`; teste de ordenação não pode depender da *collation* do PostgreSQL.
-- Mudou o BFF de autenticação, `proxy.ts`, cookies ou cabeçalhos de segurança ⇒ rode `npm run e2e` (o JWT nunca pode aparecer no corpo das respostas nem em `document.cookie`). Teste novo: veja-o falhar sem a correção ou faça uma mutação proposital.
+- Mudou o BFF de autenticação, `lib/session/`, `proxy.ts`, cookies ou cabeçalhos de segurança ⇒ rode `npm run build && npm run e2e` (precisa de Redis: `REDIS_URL` ou `redis-server` local; o JWT nunca pode aparecer no corpo das respostas nem em `document.cookie`) e `REDIS_URL=... npm test` (o teste `tests/session/redis-real.test.ts` só roda com Redis). Teste novo: veja-o falhar sem a correção ou faça uma mutação proposital.
 
 ## Conflitos conhecidos entre instruções (decisões já tomadas — não rediscutir)
 

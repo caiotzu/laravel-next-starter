@@ -22,7 +22,7 @@ const PermissionContext = createContext<PermissionContextType>({
 /**
  * O layout de (private) é compartilhado por TODAS as rotas do grupo,
  * inclusive as públicas (`/`, `/esqueceu-senha`, `/primeiro-acesso`,
- * `/redefinir-senha`) — que não exigem `private_access_token`. Antes desta
+ * `/redefinir-senha`) — que não exigem sessão Private. Antes desta
  * checagem, este provider chamava `/me` incondicionalmente em toda rota;
  * numa rota pública, sem cookie válido, isso sempre voltava 401 e o
  * proxyPrivateRequest redirecionava para "/", derrubando o usuário de
@@ -36,7 +36,7 @@ const PermissionContext = createContext<PermissionContextType>({
 function exigePermissoesPrivate(pathname: string): boolean {
   return protectedRoutes.some(
     (route) =>
-      route.cookieName === "private_access_token" &&
+      route.contexto === "private" &&
       route.protected &&
       route.regex?.test(pathname)
   )

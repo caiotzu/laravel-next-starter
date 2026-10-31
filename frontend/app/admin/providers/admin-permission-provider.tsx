@@ -24,7 +24,7 @@ const PermissionContext = createContext<PermissionContextType>({
  * app/(private)/providers/private-permission-provider.tsx): o layout do
  * Admin é compartilhado por TODAS as rotas do grupo, inclusive as públicas
  * (`/admin`, `/admin/esqueceu-senha`, `/admin/primeiro-acesso`,
- * `/admin/redefinir-senha`) — que não exigem `admin_access_token`. Chamar
+ * `/admin/redefinir-senha`) — que não exigem sessão Admin. Chamar
  * `/admin/me` incondicionalmente nessas rotas sempre retorna 401, e
  * proxyAdminRequest redireciona para "/admin" (ver lib/proxy-admin.ts),
  * derrubando o usuário de `/admin/primeiro-acesso?token=...` de volta para
@@ -36,7 +36,7 @@ const PermissionContext = createContext<PermissionContextType>({
 function exigePermissoesAdmin(pathname: string): boolean {
   return protectedRoutes.some(
     (route) =>
-      route.cookieName === "admin_access_token" &&
+      route.contexto === "admin" &&
       route.protected &&
       route.regex?.test(pathname)
   )

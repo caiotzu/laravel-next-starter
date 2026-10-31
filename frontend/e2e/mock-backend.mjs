@@ -7,10 +7,13 @@
  *   cliente@exemplo.com     -> login normal (sem 2FA), contexto Private
  *   admin2fa@exemplo.com    -> exige 2FA (código válido: 123456), contexto Admin
  *   cliente2fa@exemplo.com  -> exige 2FA (código válido: 123456), contexto Private
+ *   admin.b@exemplo.com     -> login normal, contexto Admin   (2º usuário: testes de vários usuários)
+ *   cliente.b@exemplo.com   -> login normal, contexto Private (2º usuário: testes de vários usuários)
  *
  * GET /__requests devolve as requisições recebidas (para os testes conferirem o que o BFF enviou);
  * DELETE /__requests zera o registro.
  */
+import { randomUUID } from "node:crypto";
 import { createServer } from "node:http";
 
 const PORTA = Number(process.env.MOCK_BACKEND_PORT ?? 4010);
@@ -23,12 +26,14 @@ const usuarios = {
   "cliente@exemplo.com": { contexto: "private", doisFatores: false },
   "admin2fa@exemplo.com": { contexto: "admin", doisFatores: true },
   "cliente2fa@exemplo.com": { contexto: "private", doisFatores: true },
+  "admin.b@exemplo.com": { contexto: "admin", doisFatores: false },
+  "cliente.b@exemplo.com": { contexto: "private", doisFatores: false },
 };
 
 /** JWT sem assinatura válida: o frontend só decodifica o `exp`; o backend real é quem valida. */
 function jwt(email) {
   const base64 = (obj) => Buffer.from(JSON.stringify(obj)).toString("base64url");
-  return `${base64({ alg: "HS256", typ: "JWT" })}.${base64({ sub: email, exp: Math.floor(Date.now() / 1000) + 3600 })}.assinatura-de-teste`;
+  return `${base64({ alg: "HS256", typ: "JWT" })}.${base64({ sub: email, jti: randomUUID(), exp: Math.floor(Date.now() / 1000) + 3600 })}.assinatura-de-teste`;
 }
 
 const requisicoes = [];

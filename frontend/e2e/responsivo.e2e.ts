@@ -70,7 +70,7 @@ async function larguraExcedente(page: Page) {
 
 test.describe("Telas em 375 px", () => {
   test.beforeEach(async ({ context, page }) => {
-    await definirSessao(context, "admin_access_token");
+    await definirSessao(context, "admin");
     await simularBackend(page);
   });
 

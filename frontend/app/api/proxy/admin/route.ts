@@ -1,8 +1,6 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import axios, { Method } from "axios";
-
 
 import { ipsEncaminhados } from "@/lib/client-ip";
 import {
@@ -10,6 +8,13 @@ import {
   metodoPermitido,
   resolverUrlBackend,
 } from "@/lib/proxy-guard";
+import {
+  SessaoIndisponivelError,
+  encerrarSessao,
+  obterTokenDaSessao,
+  respostaSessaoExpirada,
+  respostaSessaoIndisponivel,
+} from "@/lib/session/sessao";
 import { validarOrigem } from "@/lib/utils";
 
 interface ProxyRequestBody<T = unknown> {
@@ -65,10 +70,11 @@ export async function POST(req: Request): Promise<NextResponse> {
     // Só headers da allowlist (hoje apenas X-Acesso-Suporte-Id, com formato validado).
     const clientHeaders = filtrarHeadersCliente(body.headers);
 
-    const cookieStore = await cookies();
+    // O JWT mora no servidor (Redis); o navegador só apresenta o cookie de sessão opaco.
+    // Sem sessão válida a requisição é recusada AQUI, sem chamar o backend.
+    const token = await obterTokenDaSessao("admin");
 
-    const token =
-      cookieStore.get("admin_access_token")?.value;
+    if (!token) return respostaSessaoExpirada();
 
     // Headers originais do cliente
     const userAgent =
@@ -92,11 +98,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         "X-Forwarded-For": forwardedFor,
         "X-Real-IP": realIp,
 
-        ...(token
-          ? {
-              Authorization: `Bearer ${token}`,
-            }
-          : {}),
+        Authorization: `Bearer ${token}`,
       },
 
       data: ["GET", "HEAD"].includes(
@@ -108,20 +110,9 @@ export async function POST(req: Request): Promise<NextResponse> {
       validateStatus: () => true,
     });
 
-    // Token expirado
+    // Token expirado ou revogado no backend: a sessão não serve mais
     if (backendResponse.status === 401) {
-      cookieStore.set(
-        "admin_access_token",
-        "",
-        {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-        //   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-          sameSite: "lax", // Só utilizar none em produção se front e back estiverem em domínios diferentes
-          path: "/",
-          maxAge: 0,
-        }
-      );
+      await encerrarSessao("admin");
 
       return NextResponse.json(
         {
@@ -148,7 +139,9 @@ export async function POST(req: Request): Promise<NextResponse> {
       data: backendResponse.data,
     });
 
-  } catch {
+  } catch (erro) {
+    if (erro instanceof SessaoIndisponivelError) return respostaSessaoIndisponivel();
+
     return NextResponse.json(
       {
         errors: {

@@ -18,7 +18,7 @@ const CaixaMensagemContadorContext = createContext<number>(0)
 function exigePermissoesAdmin(pathname: string): boolean {
   return protectedRoutes.some(
     (route) =>
-      route.cookieName === "admin_access_token" &&
+      route.contexto === "admin" &&
       route.protected &&
       route.regex?.test(pathname)
   )

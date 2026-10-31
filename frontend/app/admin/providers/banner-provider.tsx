@@ -18,14 +18,14 @@ import { BannerCarouselModal } from "@/features/admin/banner/components/BannerCa
 
 // Ver banner-sessao-storage.ts e app/admin/page.tsx (marcarNovoLogin).
 const PREFIXO_SESSAO = "admin";
-const COOKIE = "admin_access_token";
+const CONTEXTO = "admin";
 const QUERY_KEY = ["banners-admin-disponiveis"];
 
 /** Telas públicas (login/recuperação de senha) desta área. */
 export function ehRotaPublica(pathname: string): boolean {
   return protectedRoutes.some(
     (route) =>
-      route.cookieName === COOKIE &&
+      route.contexto === CONTEXTO &&
       route.isLoginRoute === true &&
       route.regex?.test(pathname)
   );

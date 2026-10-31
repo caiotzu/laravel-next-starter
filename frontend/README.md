@@ -25,7 +25,8 @@ Copie o modelo: `cp .env.example .env` (o arquivo `.env.example` existe em `fron
 |---|---|
 | `BACKEND_URL` | URL da API Laravel (ex.: `http://localhost/api`), usada apenas no servidor (rotas `app/api/**`). Nunca exposta ao navegador. O proxy só aceita caminhos dentro dessa URL. |
 | `FRONTEND_URL` | Origem pública do frontend (ex.: `http://localhost:3000`). Usada por `validarOrigem()` para aceitar somente requisições da própria origem nas rotas `app/api/**` — **sem ela as rotas respondem 403 quando há `Origin`** |
-| `NODE_ENV` | Em `production`: cookies `secure` e cabeçalho HSTS |
+| `REDIS_URL` | **Obrigatória.** Redis das sessões do BFF (o JWT fica aqui, nunca no navegador). Local: `redis://127.0.0.1:6379` (serviço `redis` do `backend/docker-compose.yml`). Produção: Redis privado com senha e TLS (`rediss://:SENHA@host:6380`). Sem ela, login e rotas autenticadas respondem 503 |
+| `NODE_ENV` | Em `production`: cookie de sessão `secure` com prefixo `__Host-` e cabeçalho HSTS |
 | `TRUSTED_PROXY_HOPS` | *(opcional, não consta no `.env.example`)* Quantos proxies reversos ficam na frente do Next e acrescentam ao `X-Forwarded-For`. Padrão `1`; `0` = Next exposto direto (nenhum IP é repassado ao backend) |
 
 ## Scripts
@@ -39,7 +40,7 @@ npm run lint     # eslint
 
 ## Saiba mais
 
-- [Arquitetura BFF (proxy + cookies httpOnly)](../docs/arquitetura.md#frontend-bff)
+- [Arquitetura BFF (proxy + sessão no Redis)](../docs/arquitetura.md#frontend-bff)
 - [Estrutura de pastas: `domains/`, `features/`, `components/`](../docs/frontend-arquitetura.md)
 - [Autenticação no frontend](../docs/autenticacao-e-autorizacao.md#frontend)
 - [Segurança da camada BFF](../docs/seguranca.md#camada-bff-nextjs)

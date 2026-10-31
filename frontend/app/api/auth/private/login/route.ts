@@ -1,13 +1,15 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import axios from "axios";
 
-import { ipsEncaminhados } from "@/lib/client-ip";
-import { validarOrigem } from "@/lib/utils";
-
 import { separarTokenDeSessao } from "@/lib/auth-response";
-
+import { ipsEncaminhados } from "@/lib/client-ip";
+import {
+  SessaoIndisponivelError,
+  iniciarSessao,
+  respostaSessaoIndisponivel,
+} from "@/lib/session/sessao";
+import { validarOrigem } from "@/lib/utils";
 
 export async function POST(req: Request) {
   try {
@@ -24,7 +26,7 @@ export async function POST(req: Request) {
       `${process.env.BACKEND_URL}/login`,
       body,
       {
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "User-Agent": userAgent,
           "X-Forwarded-For": forwardedFor,
@@ -43,21 +45,14 @@ export async function POST(req: Request) {
       );
     }
 
-    // O JWT fica SÓ no cookie httpOnly: o navegador recebe os demais campos, nunca o token.
+    // O JWT fica SÓ no servidor (Redis): o navegador recebe os demais campos e um cookie de
+    // sessão opaco, nunca o token (SEC-009).
     const { token, dadosPublicos } = separarTokenDeSessao(response.data.data);
 
-    // No login com 2FA a resposta traz apenas `temp_token` (sem `token`): nesse caso o cookie
-    // da sessão NÃO é tocado (antes era gravado vazio, apagando uma sessão válida existente).
+    // No login com 2FA a resposta traz apenas `temp_token` (sem `token`): nesse caso nenhuma
+    // sessão é criada nem tocada (antes o cookie era gravado vazio, apagando uma sessão válida).
     if (token) {
-      const cookieStore = await cookies();
-
-      cookieStore.set("private_access_token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax", // cookie lido só pelo próprio BFF (mesmo origin): "none" não é necessário e desliga a proteção SameSite
-        path: "/",
-        maxAge: 60 * 60,
-      });
+      await iniciarSessao("private", token);
     }
 
     return NextResponse.json({
@@ -65,7 +60,9 @@ export async function POST(req: Request) {
       data: dadosPublicos,
     });
 
-  } catch {
+  } catch (erro) {
+    if (erro instanceof SessaoIndisponivelError) return respostaSessaoIndisponivel();
+
     return NextResponse.json(
       {
         errors: {

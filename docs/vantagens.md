@@ -38,9 +38,9 @@ Os atributos OpenAPI vivem nos próprios controllers — quando alguém muda uma
 
 ## Segurança
 
-### O JWT fica em cookie `httpOnly`, fora do alcance de `localStorage`
+### O JWT fica no servidor (Redis); o navegador só guarda um cookie de sessão opaco
 
-O JWT é gravado em cookie `httpOnly` pelas rotas de autenticação do Next.js e as chamadas seguintes o injetam no servidor (BFF). Isso elimina a classe de ataque mais comum contra tokens em SPA: roubo via XSS lendo `localStorage`/`sessionStorage` a qualquer momento. Um script injetado na página não consegue ler o cookie. Ressalva registrada: as respostas de login/2FA ainda repassam o campo `token` no corpo JSON (o cookie é a fonte usada pela aplicação); removê-lo é uma melhoria recomendada — ver [`seguranca.md`](./seguranca.md#camada-bff-nextjs).
+O JWT é guardado no Redis pelas rotas de autenticação do Next.js, associado a um identificador de sessão aleatório (`sid`), e as chamadas seguintes o injetam no servidor (BFF). O navegador só tem o cookie com o `sid` (`HttpOnly`, `SameSite=Lax`, `__Host-` em produção). Isso elimina a classe de ataque mais comum contra tokens em SPA (roubo via XSS lendo `localStorage`/`sessionStorage`) e também o roubo do próprio token por malware que lê os cookies do disco ou por extensão maliciosa: o que se copia é um `sid` sem significado, que o servidor invalida no logout, na expiração ou em um 401. Cada login gera uma sessão independente, então vários usuários (ou a mesma pessoa em vários computadores) usam o sistema ao mesmo tempo sem interferir entre si. Contrapartida: o frontend passa a depender de um Redis (ver [`seguranca.md`](./seguranca.md#camada-bff-nextjs)).
 
 ### Revogação de sessão mesmo com JWT ainda válido
 

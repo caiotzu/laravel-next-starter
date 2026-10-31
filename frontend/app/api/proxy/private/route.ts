@@ -1,8 +1,6 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import axios, { Method } from "axios";
-
 
 import { ipsEncaminhados } from "@/lib/client-ip";
 import {
@@ -10,6 +8,13 @@ import {
   metodoPermitido,
   resolverUrlBackend,
 } from "@/lib/proxy-guard";
+import {
+  SessaoIndisponivelError,
+  encerrarSessao,
+  obterTokenDaSessao,
+  respostaSessaoExpirada,
+  respostaSessaoIndisponivel,
+} from "@/lib/session/sessao";
 import { validarOrigem } from "@/lib/utils";
 
 interface ProxyRequestBody<T = unknown> {
@@ -65,14 +70,16 @@ export async function POST(req: Request): Promise<NextResponse> {
     // Só headers da allowlist (hoje apenas X-Acesso-Suporte-Id, com formato validado).
     const clientHeaders = filtrarHeadersCliente(body.headers);
 
-    const cookieStore = await cookies();
-
+    // Com X-Acesso-Suporte-Id o Admin atua no escopo de uma entidade Private usando a PRÓPRIA
+    // sessão Admin; sem o header vale a sessão Private. O JWT mora no servidor (Redis) e, sem
+    // sessão válida, a requisição é recusada AQUI, sem chamar o backend.
     const acessoSuporteId =
       clientHeaders?.["X-Acesso-Suporte-Id"];
 
-    const token = acessoSuporteId
-      ? cookieStore.get("admin_access_token")?.value
-      : cookieStore.get("private_access_token")?.value;
+    const contextoDaSessao = acessoSuporteId ? "admin" : "private";
+    const token = await obterTokenDaSessao(contextoDaSessao);
+
+    if (!token) return respostaSessaoExpirada();
 
     // Headers originais do cliente
     const userAgent =
@@ -96,11 +103,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         "X-Forwarded-For": forwardedFor,
         "X-Real-IP": realIp,
 
-        ...(token
-          ? {
-              Authorization: `Bearer ${token}`,
-            }
-          : {}),
+        Authorization: `Bearer ${token}`,
       },
 
       data: ["GET", "HEAD"].includes(
@@ -112,24 +115,9 @@ export async function POST(req: Request): Promise<NextResponse> {
       validateStatus: () => true,
     });
 
-    // Token expirado
+    // Token expirado ou revogado no backend: a sessão não serve mais
     if (backendResponse.status === 401) {
-      const cookieName = acessoSuporteId
-        ? "admin_access_token"
-        : "private_access_token";
-
-      cookieStore.set(
-        cookieName,
-        "",
-        {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-        //   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-          sameSite: "lax", // Só utilizar none em produção se front e back estiverem em domínios diferentes
-          path: "/",
-          maxAge: 0,
-        }
-      );
+      await encerrarSessao(contextoDaSessao);
 
       return NextResponse.json(
         {
@@ -156,7 +144,9 @@ export async function POST(req: Request): Promise<NextResponse> {
       data: backendResponse.data,
     });
 
-  } catch {
+  } catch (erro) {
+    if (erro instanceof SessaoIndisponivelError) return respostaSessaoIndisponivel();
+
     return NextResponse.json(
       {
         errors: {
