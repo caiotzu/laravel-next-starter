@@ -20,6 +20,36 @@ const HEADERS_PERMITIDOS: Record<string, string> = {
   "x-acesso-suporte-id": "X-Acesso-Suporte-Id",
 };
 
+/**
+ * Endpoints de autenticação do Laravel que o proxy NUNCA encaminha (sem o prefixo `admin/`).
+ *
+ * `refresh` (e `login`/`2fa/verificar`) devolvem um JWT no corpo da resposta e o proxy repassa o
+ * corpo ao navegador: um script na página poderia pedir um token novo e ficar com ele, anulando
+ * a garantia de que o JWT só existe no servidor (SEC-009). Login, 2FA e logout têm handlers
+ * próprios em `app/api/auth/**` (que guardam o token na sessão); a aplicação também não usa
+ * renovação de token.
+ */
+const ROTAS_DE_AUTENTICACAO = new Set(["login", "2fa/verificar", "refresh", "logout"]);
+
+function ehRotaDeAutenticacao(caminhoRelativo: string): boolean {
+  let decodificado: string;
+
+  try {
+    // O servidor decodifica o path antes de rotear: `/refre%73h` chega como `/refresh`.
+    decodificado = decodeURIComponent(caminhoRelativo);
+  } catch {
+    return true; // percent-encoding malformado: na dúvida, recusa
+  }
+
+  const normalizado = decodificado
+    .toLowerCase()
+    .replace(/\/{2,}/g, "/")
+    .replace(/^\/|\/$/g, "")
+    .replace(/^admin\//, "");
+
+  return ROTAS_DE_AUTENTICACAO.has(normalizado);
+}
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function metodoPermitido(metodo: unknown): Method | null {
@@ -30,7 +60,8 @@ export function metodoPermitido(metodo: unknown): Method | null {
 
 /**
  * Monta a URL final do backend a partir do caminho pedido pelo cliente, ou null se o caminho
- * for suspeito ou resolver para fora de BACKEND_URL (host diferente ou fora do prefixo /api).
+ * for suspeito, resolver para fora de BACKEND_URL (host diferente ou fora do prefixo /api) ou for
+ * um endpoint de autenticação (login, 2FA, refresh, logout).
  */
 export function resolverUrlBackend(caminho: unknown): string | null {
   const base = process.env.BACKEND_URL;
@@ -54,6 +85,8 @@ export function resolverUrlBackend(caminho: unknown): string | null {
 
     if (alvo.origin !== urlBase.origin) return null;
     if (alvo.pathname !== prefixo && !alvo.pathname.startsWith(`${prefixo}/`)) return null;
+
+    if (ehRotaDeAutenticacao(alvo.pathname.slice(prefixo.length))) return null;
 
     return alvo.toString();
   } catch {

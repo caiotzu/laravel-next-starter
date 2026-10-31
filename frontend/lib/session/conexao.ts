@@ -2,7 +2,11 @@ import Redis from "ioredis";
 
 import { SessaoIndisponivelError } from "./tipos";
 
-type GlobalComRedis = typeof globalThis & { __bffRedis?: Redis; __bffRedisUltimoLog?: number };
+type GlobalComRedis = typeof globalThis & {
+  __bffRedis?: Redis;
+  __bffRedisUltimoLog?: number;
+  __bffRedisUltimoAvisoUrl?: number;
+};
 
 const global_ = globalThis as GlobalComRedis;
 
@@ -19,6 +23,19 @@ export function obterConexaoRedis(): Redis {
   const url = process.env.REDIS_URL;
 
   if (!url) {
+    // Sem este aviso o usuário só via o 503 na tela, sem pista do motivo. No máximo a cada 10 s,
+    // para não inundar o terminal (cada requisição autenticada passa por aqui).
+    const agora = Date.now();
+
+    if (agora - (global_.__bffRedisUltimoAvisoUrl ?? 0) >= 10_000) {
+      global_.__bffRedisUltimoAvisoUrl = agora;
+      console.error(
+        "[sessao] REDIS_URL não está definida: login e rotas autenticadas respondem 503. " +
+          "Defina REDIS_URL no frontend/.env (ex.: redis://127.0.0.1:6379), suba o Redis " +
+          "(./vendor/bin/sail up -d, na pasta backend) e reinicie o Next."
+      );
+    }
+
     throw new SessaoIndisponivelError("REDIS_URL não configurada.");
   }
 

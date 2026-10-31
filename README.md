@@ -7,6 +7,7 @@ Starter full stack com back-end em **Laravel 13** (API + JWT + permissões) e fr
 
 **Backend:** PHP 8.3+ (Sail com PHP 8.4), Laravel 13, PostgreSQL 17, JWT (`tymon/jwt-auth`), 2FA (Google2FA), Swagger (`l5-swagger`), Pest 4, Docker (Sail — apenas desenvolvimento).
 **Frontend:** Next.js 16, React 19, TypeScript, Tailwind CSS 4, shadcn/ui, TanStack Query/Table.
+**Sessões:** Redis 7 — o Next.js (BFF) guarda o JWT no Redis e o navegador recebe só um cookie de sessão opaco. **O frontend não funciona sem o Redis** (login e rotas autenticadas respondem 503).
 
 ## Quick start
 
@@ -24,9 +25,22 @@ cp .env.example .env
 # Frontend (em outro terminal)
 cd frontend
 npm install
-cp .env.example .env
+cp .env.example .env   # confira REDIS_URL (padrão: redis://127.0.0.1:6379)
 npm run dev
 ```
+
+O `sail up -d` já sobe o **Redis** (serviço `redis`) junto com o PostgreSQL. Para conferir:
+
+```bash
+cd backend
+./vendor/bin/sail ps                          # redis deve estar "Up"
+./vendor/bin/sail exec redis redis-cli ping   # deve responder PONG
+curl http://localhost:3000/api/health         # {"status":"ok","redis":"ok"} (com o Next rodando)
+```
+
+> **Aparece "Serviço de sessão temporariamente indisponível" ao entrar?** O Redis não está acessível ou o `REDIS_URL` do `frontend/.env` está ausente ou errado. O terminal do Next mostra uma linha `[sessao] …` explicando o motivo. Depois de corrigir, reinicie o Next (ele só lê o `.env` ao iniciar).
+>
+> **O container do Redis sai com "Can't handle RDB format version"?** É um volume antigo (`backend_sail-redis`) de uma versão anterior deste compose ou de outra versão do Redis. Com `./vendor/bin/sail down`, apague só ele: `docker volume rm backend_sail-redis`. Não use `down -v`: isso apaga também o banco.
 
 Front-end em `http://localhost:3000`, API em `http://localhost:8000` (ou porta configurada em `APP_PORT`).
 

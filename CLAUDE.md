@@ -73,7 +73,7 @@ CI: `.github/workflows/ci.yml` roda as mesmas suítes (+ `composer audit`/`npm a
 - Dado com dono: nunca consultar sem escopo — **inclusive em Form Requests** (`EscopoEntidadeService::empresaVisivel()` antes de checar "já existe…") e em métodos `excluir`/`ativar`/`restaurar`. Resposta de erro não pode distinguir "existe em outra empresa" de "não existe".
 - `authorize('chave')`: use a chave do **recurso e da ação** do próprio método (copiar de um controller irmão e esquecer de trocar já gerou o bug F-10); ao criar rota, teste com um usuário que tenha **só** essa permissão (200) e outro com permissão de recurso vizinho (403). Não aceitar `entidade_id`/`grupo_empresa_id` do payload sem `EscopoEntidadeService::validarPertence`.
 - Usar `validated()`; nunca `$request->all()`. HTML de usuário passa por `HtmlSanitizer`/DOMPurify.
-- JWT **só no servidor** (Redis, `lib/session/`): o navegador recebe apenas um cookie de sessão opaco. `lib/proxy-guard.ts` restringe destino/métodos/headers. Não ampliar sem justificativa; nunca gravar token em cookie, corpo de resposta, log ou storage do navegador.
+- JWT **só no servidor** (Redis, `lib/session/`): o navegador recebe apenas um cookie de sessão opaco. `lib/proxy-guard.ts` restringe destino/métodos/headers e **recusa login, 2FA, refresh e logout** (um `/refresh` devolveria um JWT ao navegador). Não ampliar sem justificativa; nunca gravar token em cookie, corpo de resposta, log ou storage do navegador.
 - Uploads: somente via `FileStorageInterface`. Anexos de chamado: privados + link assinado.
 - Não alterar `.env`, credenciais, banco ou dados reais sem pedido explícito. Não alterar dependências sem aprovação.
 

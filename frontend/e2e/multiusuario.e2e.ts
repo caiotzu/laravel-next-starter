@@ -217,3 +217,63 @@ test.describe("Cookie adulterado ou forjado", () => {
     expect(chamadas.some((c) => c.caminho === "/api/admin/sem-sessao")).toBe(false);
   });
 });
+
+test.describe("O JWT não volta ao navegador pelo proxy", () => {
+  for (const { area, rota } of [
+    { area: "admin" as const, rota: "/admin/refresh" },
+    { area: "private" as const, rota: "/refresh" },
+  ]) {
+    test(`${area}: pedir um token novo (${rota}) pelo proxy é recusado e nem chega ao backend`, async ({ context }) => {
+      await definirSessao(context, area);
+
+      const resposta = await context.request.post(`${ORIGEM}/api/proxy/${area}`, {
+        headers: { origin: ORIGEM, "content-type": "application/json" },
+        data: { url: rota, method: "POST" },
+      });
+      const texto = await resposta.text();
+
+      expect(resposta.status()).toBe(400);
+      expect(texto).not.toMatch(/eyJ[A-Za-z0-9_-]{10,}\./); // nenhum JWT na resposta
+      expect((await requisicoesDoBackend()).some((c) => c.caminho.endsWith("/refresh"))).toBe(false);
+    });
+  }
+
+  test("login e 2FA também não passam pelo proxy (só pelos handlers que guardam o token na sessão)", async ({ context }) => {
+    await definirSessao(context, "admin");
+
+    for (const rota of ["/admin/login", "/admin/2fa/verificar", "/admin/logout", "/admin/refre%73h"]) {
+      const resposta = await context.request.post(`${ORIGEM}/api/proxy/admin`, {
+        headers: { origin: ORIGEM, "content-type": "application/json" },
+        data: { url: rota, method: "POST" },
+      });
+
+      expect(resposta.status(), rota).toBe(400);
+    }
+
+    const chamadas = await requisicoesDoBackend();
+    expect(chamadas.filter((c) => /\/(login|logout|refresh|2fa\/verificar)$/.test(c.caminho))).toHaveLength(0);
+  });
+
+  test("uma rota comum continua funcionando pelo proxy", async ({ context }) => {
+    await definirSessao(context, "admin");
+
+    const resposta = await context.request.post(`${ORIGEM}/api/proxy/admin`, {
+      headers: { origin: ORIGEM, "content-type": "application/json" },
+      data: { url: "/admin/usuarios", method: "GET" },
+    });
+
+    expect(resposta.status()).toBe(200);
+  });
+});
+
+test.describe("GET /api/health", () => {
+  test("público, 200 com o Redis de pé, sem cookie e sem detalhes internos", async ({ request }) => {
+    const resposta = await request.get(`${ORIGEM}/api/health`);
+    const texto = await resposta.text();
+
+    expect(resposta.status()).toBe(200);
+    expect(JSON.parse(texto)).toEqual({ status: "ok", redis: "ok" });
+    expect(resposta.headers()["cache-control"]).toBe("no-store");
+    expect(texto).not.toMatch(/6390|127\.0\.0\.1|redis:\/\//);
+  });
+});

@@ -44,3 +44,7 @@ npm run lint     # eslint
 - [Estrutura de pastas: `domains/`, `features/`, `components/`](../docs/frontend-arquitetura.md)
 - [Autenticação no frontend](../docs/autenticacao-e-autorizacao.md#frontend)
 - [Segurança da camada BFF](../docs/seguranca.md#camada-bff-nextjs)
+
+## Verificação de saúde
+
+`GET /api/health` (público, sem cookie) responde `200 {"status":"ok","redis":"ok"}` quando o Redis das sessões responde e `503 {"status":"degradado","redis":"indisponivel"}` quando não responde. Serve para monitoramento, balanceador de carga e healthcheck de container; não expõe host, versão nem mensagens de erro. Exemplo de healthcheck: `curl -fsS http://localhost:3000/api/health`.

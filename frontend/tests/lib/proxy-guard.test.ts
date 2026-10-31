@@ -42,6 +42,38 @@ describe("resolverUrlBackend", () => {
   });
 });
 
+describe("resolverUrlBackend — endpoints de autenticação (o JWT não pode voltar ao navegador pelo proxy)", () => {
+  it("o proxy comum continua funcionando para rotas normais", () => {
+    expect(resolverUrlBackend("/admin/usuarios")).toBe("http://localhost/api/admin/usuarios");
+    expect(resolverUrlBackend("/usuarios/login-historico")).toBe("http://localhost/api/usuarios/login-historico");
+    expect(resolverUrlBackend("/admin/usuarios/refresh")).toBe("http://localhost/api/admin/usuarios/refresh");
+  });
+
+  it.each([
+    "/admin/refresh",
+    "/refresh",
+    "/admin/login",
+    "/login",
+    "/admin/2fa/verificar",
+    "/2fa/verificar",
+    "/admin/logout",
+    "/logout",
+    // variações que o servidor trataria como a mesma rota
+    "/admin/refresh/",
+    "/admin/refresh?x=1",
+    "/admin/refresh#frag",
+    "/ADMIN/Refresh",
+    "/admin//refresh",
+    "/admin/refre%73h", // %73 = "s"
+    "/admin/%72efresh",
+    "/%61dmin/refresh",
+    "/admin/2fa%2Fverificar".replace("%2F", "/"),
+    "/admin/refre%zzsh", // percent-encoding malformado
+  ])("recusa %s", (caminho) => {
+    expect(resolverUrlBackend(caminho)).toBeNull();
+  });
+});
+
 describe("filtrarHeadersCliente", () => {
   const uuid = "123e4567-e89b-12d3-a456-426614174000";
 

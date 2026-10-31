@@ -63,14 +63,20 @@ Principais chaves de `.env.example` — detalhes de cada uma em [`docs/banco-de-
 
 ## Docker
 
-Ambiente gerenciado via **Laravel Sail** (`docker-compose.yml`): serviço `laravel.test` (PHP 8.4) + `pgsql` (PostgreSQL 17).
+Ambiente gerenciado via **Laravel Sail** (`docker-compose.yml`): serviço `laravel.test` (PHP 8.4) + `pgsql` (PostgreSQL 17) + `redis` (Redis 7).
 
 ```bash
 ./vendor/bin/sail up -d
 ./vendor/bin/sail down
 ```
 
-> ⚠️ **Este `docker-compose.yml` é exclusivo para desenvolvimento local.** A porta do PostgreSQL é publicada apenas em `127.0.0.1` (`FORWARD_DB_PORT`, padrão 5432) e a senha vem de `DB_PASSWORD` do `.env` (o `.env.example` sugere `password` — troque-a fora do ambiente local; o compose não define senha de fallback). Mesmo assim, **não reutilize este arquivo como base de deploy em staging/produção**: use uma infraestrutura dedicada (ECS, Kubernetes, VM com orquestração própria, etc.), sem exposição de porta do banco e com segredos em um secret manager. Não foi identificado, no repositório, Dockerfile/manifesto de produção nem pipeline de CI/CD.
+**Redis.** O serviço `redis` guarda as **sessões do frontend** (o JWT de acesso fica no Redis; o navegador só recebe um cookie opaco — ver [`docs/seguranca.md`](../docs/seguranca.md)). O Laravel em si não o usa (cache e fila continuam no banco). Aqui ele roda **sem volume e sem gravar em disco**: reiniciá-lo apenas desloga os usuários de teste. Se o container sair com `Can't handle RDB format version`, há um volume antigo: `./vendor/bin/sail down` e depois `docker volume rm backend_sail-redis` (nunca `down -v`, que apaga o banco).
+
+```bash
+./vendor/bin/sail exec redis redis-cli ping   # PONG
+```
+
+> ⚠️ **Este `docker-compose.yml` é exclusivo para desenvolvimento local.** As portas do PostgreSQL e do Redis são publicadas apenas em `127.0.0.1` (`FORWARD_DB_PORT`, padrão 5432; `FORWARD_REDIS_PORT`, padrão 6379) e a senha vem de `DB_PASSWORD` do `.env` (o `.env.example` sugere `password` — troque-a fora do ambiente local; o compose não define senha de fallback). Mesmo assim, **não reutilize este arquivo como base de deploy em staging/produção**: use uma infraestrutura dedicada (ECS, Kubernetes, VM com orquestração própria, etc.), sem exposição de porta do banco ou do Redis (o Redis de produção precisa de senha, TLS e rede privada) e com segredos em um secret manager. Não foi identificado, no repositório, Dockerfile/manifesto de produção nem pipeline de CI/CD.
 
 ## Saiba mais
 

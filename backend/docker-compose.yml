@@ -55,12 +55,14 @@ services:
             timeout: 5s
     redis:
         # Sessões do BFF (frontend): o JWT de acesso fica AQUI, nunca no navegador (SEC-009).
-        # Só no 127.0.0.1: em produção o Redis precisa de senha/TLS e de rede privada.
+        # Só para desenvolvimento: sem volume e sem gravar em disco (--save "" --appendonly no).
+        # Assim nunca lê um arquivo de dados antigo ou de outra versão do Redis (o que fazia o
+        # container sair com "Can't handle RDB format version") e reiniciar só desloga os usuários
+        # de teste. Porta só em 127.0.0.1. Em produção: senha, TLS, rede privada (docs/seguranca.md).
         image: 'redis:7-alpine'
+        command: ['redis-server', '--save', '', '--appendonly', 'no']
         ports:
             - '127.0.0.1:${FORWARD_REDIS_PORT:-6379}:6379'
-        volumes:
-            - 'sail-redis:/data'
         networks:
             - sail
         healthcheck:
@@ -75,6 +77,4 @@ networks:
         driver: bridge
 volumes:
     sail-pgsql:
-        driver: local
-    sail-redis:
         driver: local

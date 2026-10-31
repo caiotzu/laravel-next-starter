@@ -6,7 +6,11 @@
 import Redis from "ioredis";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
+import { GET as saude } from "@/app/api/health/route";
+
+import { fecharConexaoRedis } from "@/lib/session/conexao";
 import { PREFIXO_CHAVE_SESSAO, RedisSessionStore } from "@/lib/session/redis-store";
+import { redisEstaSaudavel } from "@/lib/session/saude";
 import { SessaoIndisponivelError } from "@/lib/session/tipos";
 
 const URL_REDIS = process.env.REDIS_URL;
@@ -113,5 +117,33 @@ executar("RedisSessionStore com Redis real", () => {
     expect(erro).toBeInstanceOf(SessaoIndisponivelError);
     expect(Date.now() - inicio).toBeLessThan(4000);
     quebrado.disconnect();
+  });
+
+  it("o verificador de saúde e GET /api/health falam com o Redis de verdade", async () => {
+    expect(await redisEstaSaudavel()).toBe(true);
+
+    const resposta = await saude();
+    expect(resposta.status).toBe(200);
+    expect(await resposta.json()).toEqual({ status: "ok", redis: "ok" });
+
+    await fecharConexaoRedis();
+  });
+
+  it("com o Redis inacessível, GET /api/health responde 503 rápido", async () => {
+    const original = process.env.REDIS_URL;
+    process.env.REDIS_URL = "redis://127.0.0.1:1"; // porta onde não há Redis
+    await fecharConexaoRedis();
+
+    try {
+      const inicio = Date.now();
+      const resposta = await saude();
+
+      expect(resposta.status).toBe(503);
+      expect(await resposta.json()).toEqual({ status: "degradado", redis: "indisponivel" });
+      expect(Date.now() - inicio).toBeLessThan(6000);
+    } finally {
+      process.env.REDIS_URL = original;
+      await fecharConexaoRedis();
+    }
   });
 });

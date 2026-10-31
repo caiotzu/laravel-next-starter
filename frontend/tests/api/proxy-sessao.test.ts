@@ -185,6 +185,12 @@ describe.each(casos)("proxy $nome — sessão", ({ POST, contexto, outro, url })
     ["//host (protocol-relative)", "//evil.example/x", "GET", 400],
     ["path traversal", "/../../etc/passwd", "GET", 400],
     ["método fora da lista", "/usuarios", "TRACE", 405],
+    ["refresh do Admin (devolveria um JWT novo ao navegador)", "/admin/refresh", "POST", 400],
+    ["refresh do Private", "/refresh", "POST", 400],
+    ["refresh disfarçado com percent-encoding", "/admin/refre%73h", "POST", 400],
+    ["login pelo proxy (o token voltaria ao navegador)", "/admin/login", "POST", 400],
+    ["2FA pelo proxy", "/2fa/verificar", "POST", 400],
+    ["logout pelo proxy (só os handlers de auth encerram a sessão)", "/admin/logout", "POST", 400],
   ])("mesmo COM sessão válida: %s é recusado e não chega ao backend", async (_nome, destino, metodo, status) => {
     const { sid } = await sessaoDeTeste(contexto, "jwt-do-servidor");
     const jar = new JarDeCookies({ [`${contexto}_sid`]: sid });

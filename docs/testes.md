@@ -8,8 +8,8 @@ para conferir de novo, rode os comandos da seção "Como executar".
 | Camada | Ferramenta | Testes | Resultado |
 |---|---|---|---|
 | Backend | Pest 4 sobre PHPUnit, **PostgreSQL real** (banco `testing`) | **393** em 29 arquivos (1618 asserções) | verde |
-| Frontend (unitário e de componentes) | Vitest 5 + Testing Library (jsdom) | **512** em 39 arquivos (a integração com Redis real, `tests/session/redis-real.test.ts`, só roda com `REDIS_URL`) | verde |
-| Frontend (ponta a ponta) | Playwright, Chromium real | **43** em 4 arquivos (contra `next start` de produção, backend simulado e **Redis real**) | verde (local); no CI, job informativo `frontend-e2e` |
+| Frontend (unitário e de componentes) | Vitest 5 + Testing Library (jsdom) | **551** em 40 arquivos (a integração com Redis real, `tests/session/redis-real.test.ts`, só roda com `REDIS_URL`) | verde |
+| Frontend (ponta a ponta) | Playwright, Chromium real | **48** em 4 arquivos (contra `next start` de produção, backend simulado e **Redis real**) | verde (local); no CI, job informativo `frontend-e2e` |
 | Tipos | `npx tsc --noEmit` | — | sem erros |
 | Lint | `npm run lint` (ESLint 9, flat config) | — | 0 erros, 0 avisos |
 | CI | GitHub Actions (`.github/workflows/ci.yml`) | os mesmos comandos acima | verde no `main` |
@@ -70,7 +70,7 @@ Configuração: `vitest.config.mts` (jsdom, alias `@/`) e `tests/setup.ts` (limp
 
 | Área | Arquivos (testes) |
 |---|---|
-| BFF de autenticação e sessão (SEC-009) | `api/auth-bff.test.ts` (40: login e 2FA, Admin e Private; cookie opaco, JWT só no Redis, anti fixação, Redis fora do ar, 20 usuários simultâneos), `api/logout-bff.test.ts` (20), `api/proxy-sessao.test.ts` (40: sem sessão, sid forjado, JWT no lugar do sid, sessão vencida, contexto trocado, CSRF, SSRF, acesso de suporte, 25 usuários em paralelo), `proxy/middleware.test.ts` (15), `session/sessao-unidade.test.ts` (34), `session/redis-real.test.ts` (7, Redis real: TTL, 200 usuários simultâneos, queda), `lib/auth-response.test.ts` (4) |
+| BFF de autenticação e sessão (SEC-009) | `api/auth-bff.test.ts` (40: login e 2FA, Admin e Private; cookie opaco, JWT só no Redis, anti fixação, Redis fora do ar, 20 usuários simultâneos), `api/logout-bff.test.ts` (20), `api/proxy-sessao.test.ts` (52: sem sessão, sid forjado, JWT no lugar do sid, sessão vencida, contexto trocado, CSRF, SSRF, acesso de suporte, endpoints de autenticação bloqueados, 25 usuários em paralelo), `proxy/middleware.test.ts` (15), `session/sessao-unidade.test.ts` (34), `session/redis-real.test.ts` (9, Redis real: TTL, 200 usuários simultâneos, queda, `/api/health`), `session/saude-e-aviso.test.ts` (6: `/api/health` e aviso de `REDIS_URL` ausente), `lib/proxy-guard.test.ts` (34, inclui o bloqueio de login/2FA/refresh/logout e suas variações), `lib/auth-response.test.ts` (4) |
 | Formulários e telas (TEST-005) | `features/usuario-forms.test.tsx` (28), `mensagem-form-create.test.tsx` (12), `banner-form.test.tsx` (12), `empresa-form-create.test.tsx` (9), `empresa-form-edit.test.tsx` (20), `empresa-contatos-tab.test.tsx` (22), `usuario-view-e-graficos.test.tsx` (17) |
 | Avatar (FRONT-006) | `hooks/use-avatar-upload.test.tsx` (10) |
 | Schemas Zod dos domínios críticos | `features/schemas.test.ts` (24: usuário, grupo, empresa, contato, endereço, onboarding; Admin e Private) |
@@ -96,7 +96,7 @@ Navegador **real** (Chromium) contra o app Next de **produção** (`next start`)
 | Arquivo | Testes | O que cobre |
 |---|---|---|
 | `e2e/autenticacao.e2e.ts` | 13 | login válido (cookie de sessão **opaco**, `HttpOnly`, `Secure`, `SameSite=Lax`, `__Host-`; **nenhuma resposta, HTML, `document.cookie`, `localStorage` ou `sessionStorage` contém o JWT**; o JWT existe só no Redis), recarregar (F5), fixação de sessão, credenciais inválidas, 2FA (só o `temp_token` chega ao navegador; a sessão só nasce após o código), código errado |
-| `e2e/multiusuario.e2e.ts` | 11 | 2 usuários com tokens próprios, logout de um não derruba o outro, mesmo usuário em casa e no trabalho, Admin × Private no mesmo PC, **20 logins simultâneos** (20 sessões e tokens distintos), sid forjado / JWT no lugar do sid / sessão vencida / contexto trocado, proxy sem sessão não chega ao backend |
+| `e2e/multiusuario.e2e.ts` | 16 | 2 usuários com tokens próprios, logout de um não derruba o outro, mesmo usuário em casa e no trabalho, Admin × Private no mesmo PC, **20 logins simultâneos** (20 sessões e tokens distintos), sid forjado / JWT no lugar do sid / sessão vencida / contexto trocado, proxy sem sessão não chega ao backend, **pedir `/refresh` pelo proxy é recusado e não chega ao backend**, `GET /api/health` |
 | `e2e/responsivo.e2e.ts` | 2 | 375 px: sem rolagem horizontal, paginação e abas de empresa dentro do cartão |
 | `e2e/sessao-e-rotas.e2e.ts` | 17 | rotas protegidas sem sessão, sessão expirada, sessão válida na tela de login, telas públicas, logout (menu **Sair**: destrói a sessão no Redis e o sid antigo não vale mais), sessões separadas Admin × Private, cabeçalhos de segurança (`X-Frame-Options`, CSP `frame-ancestors`, `nosniff`, sem `X-Powered-By`) e recusa de origem diferente (CSRF) |
 
