@@ -70,5 +70,7 @@ Front-end em `http://localhost:3000`, API em `http://localhost:8000` (ou porta c
 | [`docs/filas-e-eventos.md`](./docs/filas-e-eventos.md) | Jobs, filas, events/listeners |
 | [`docs/frontend-arquitetura.md`](./docs/frontend-arquitetura.md) | `domains/`, `features/`, componentes, estado |
 | [`docs/testes.md`](./docs/testes.md) | Como rodar os testes |
-| [`docs/seguranca.md`](./docs/seguranca.md) | Controles de segurança por camada, BFF, rate limit, cabeçalhos, uploads e status do pentest |
+| [`docs/seguranca.md`](./docs/seguranca.md) | Controles de segurança por camada, BFF, CSP, rate limit, cabeçalhos, uploads e status do pentest |
+| [`docs/avaliacao-seguranca-2026-11.md`](./docs/avaliacao-seguranca-2026-11.md) | Reavaliação de segurança: situação dos 16 achados e dos novos |
+| [`docs/checklist-producao.md`](./docs/checklist-producao.md) | O que conferir antes de publicar (`.env`, Redis, proxies, limites) |
 | [`docs/vantagens.md`](./docs/vantagens.md) | Por que essa arquitetura — decisões de design e segurança |

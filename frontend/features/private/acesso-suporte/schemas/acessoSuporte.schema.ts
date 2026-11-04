@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 export const acessoSuporteSchemaConceder = z.object({
   // z.string("msg") cobre o campo ausente (nenhum administrador escolhido ainda); sem isso o usuário veria

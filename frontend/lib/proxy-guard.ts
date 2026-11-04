@@ -86,6 +86,10 @@ export function resolverUrlBackend(caminho: unknown): string | null {
     if (alvo.origin !== urlBase.origin) return null;
     if (alvo.pathname !== prefixo && !alvo.pathname.startsWith(`${prefixo}/`)) return null;
 
+    // `;` no caminho (`/..;/admin`) é truque de servidores Java; a API não usa parâmetros de caminho.
+    // Sem impacto no Laravel, mas não há motivo para encaminhar (F-13a da avaliação de 2026-09-29).
+    if (alvo.pathname.includes(";") || /%3b/i.test(alvo.pathname)) return null;
+
     if (ehRotaDeAutenticacao(alvo.pathname.slice(prefixo.length))) return null;
 
     return alvo.toString();

@@ -1,7 +1,7 @@
-import { z } from "zod";
 
 import { ESTADOS, type UF } from "@/constants/estados";
 import { onlyAlphaNumeric } from "@/lib/utils";
+import { z } from "@/lib/zod";
 
 const UF_VALUES = Object.keys(ESTADOS) as [UF, ...UF[]];
 

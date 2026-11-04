@@ -8,8 +8,8 @@ para conferir de novo, rode os comandos da seção "Como executar".
 | Camada | Ferramenta | Testes | Resultado |
 |---|---|---|---|
 | Backend | Pest 4 sobre PHPUnit, **PostgreSQL real** (banco `testing`) | **393** em 29 arquivos (1618 asserções) | verde |
-| Frontend (unitário e de componentes) | Vitest 5 + Testing Library (jsdom) | **551** em 40 arquivos (a integração com Redis real, `tests/session/redis-real.test.ts`, só roda com `REDIS_URL`) | verde |
-| Frontend (ponta a ponta) | Playwright, Chromium real | **48** em 4 arquivos (contra `next start` de produção, backend simulado e **Redis real**) | verde (local); no CI, job informativo `frontend-e2e` |
+| Frontend (unitário e de componentes) | Vitest 5 + Testing Library (jsdom) | **689** em 43 arquivos (a integração com Redis real, `tests/session/redis-real.test.ts`, só roda com `REDIS_URL`) | verde |
+| Frontend (ponta a ponta) | Playwright, Chromium real | **63** em 5 arquivos (contra `next start` de produção, backend simulado e **Redis real**) | verde (local); no CI, job informativo `frontend-e2e` |
 | Tipos | `npx tsc --noEmit` | — | sem erros |
 | Lint | `npm run lint` (ESLint 9, flat config) | — | 0 erros, 0 avisos |
 | CI | GitHub Actions (`.github/workflows/ci.yml`) | os mesmos comandos acima | verde no `main` |
@@ -41,7 +41,7 @@ Cada arquivo define seus próprios helpers de cenário (empresas, grupos, usuár
 | Área | Arquivos (testes) |
 |---|---|
 | Autenticação e sessão | `AuthFluxoTest` (36: login, 2FA, primeiro acesso, redefinição, refresh, logout, nos dois contextos) |
-| Segurança | `SegurancaTest` (12: anti-enumeração, anti-replay do TOTP, sessões, anexos por link assinado, sanitização), `SwaggerTest` (5: CSP e credenciais) |
+| Segurança | `SegurancaTest` (12: anti-enumeração, anti-replay do TOTP, sessões, anexos por link assinado, sanitização), `SwaggerTest` (5: CSP e credenciais), `AvaliacaoSeguranca2026Test` (F-05 lookup de administradores, F-08 exceções em produção, F-12 teto de base64, SEC-012 limite de 2FA por usuário e por IP: **escrito, mas não executado** na revisão de 2026-11-02 por falta de PHP com dependências; rode `composer test`) |
 | Isolamento entre empresas | `EscopoEntidadeTest` (27), `RepositoriesTest` (15), `UsuarioEscopoTest` (14), `UsuarioTest` (12), `GrupoTest` (13) |
 | Autorização por permissão | `EmpresaEnderecoAutorizacaoTest` (4: a permissão do **recurso certo** é exigida) |
 | Acesso de Suporte | `AcessoSuporteTest` (25: concessão só a administrador **ativo**, expiração, revogação, auditoria, escopo) |
@@ -72,12 +72,13 @@ Configuração: `vitest.config.mts` (jsdom, alias `@/`) e `tests/setup.ts` (limp
 |---|---|
 | BFF de autenticação e sessão (SEC-009) | `api/auth-bff.test.ts` (40: login e 2FA, Admin e Private; cookie opaco, JWT só no Redis, anti fixação, Redis fora do ar, 20 usuários simultâneos), `api/logout-bff.test.ts` (20), `api/proxy-sessao.test.ts` (52: sem sessão, sid forjado, JWT no lugar do sid, sessão vencida, contexto trocado, CSRF, SSRF, acesso de suporte, endpoints de autenticação bloqueados, 25 usuários em paralelo), `proxy/middleware.test.ts` (15), `session/sessao-unidade.test.ts` (34), `session/redis-real.test.ts` (9, Redis real: TTL, 200 usuários simultâneos, queda, `/api/health`), `session/saude-e-aviso.test.ts` (6: `/api/health` e aviso de `REDIS_URL` ausente), `lib/proxy-guard.test.ts` (34, inclui o bloqueio de login/2FA/refresh/logout e suas variações), `lib/auth-response.test.ts` (4) |
 | Formulários e telas (TEST-005) | `features/usuario-forms.test.tsx` (28), `mensagem-form-create.test.tsx` (12), `banner-form.test.tsx` (12), `empresa-form-create.test.tsx` (9), `empresa-form-edit.test.tsx` (20), `empresa-contatos-tab.test.tsx` (22), `usuario-view-e-graficos.test.tsx` (17) |
+| CSP, sanitização e `/storage` (SEC-008) | `lib/csp.test.ts` (20), `lib/sanitize-html.test.ts` (56: 50 ataques + conteúdo legítimo + idempotência), `lib/storage-proxy.test.ts` (48: caminhos, cabeçalhos, só imagens inline, sem vazar o backend) |
 | Avatar (FRONT-006) | `hooks/use-avatar-upload.test.tsx` (10) |
 | Schemas Zod dos domínios críticos | `features/schemas.test.ts` (24: usuário, grupo, empresa, contato, endereço, onboarding; Admin e Private) |
 | Services de domínio (proxy mockado) | `domains/services-crud.test.ts` (16: usuário, grupo, empresa), `services-bff.test.ts` (3), `banner-mappers.test.ts` (3), `constants.test.ts` (3) |
 | Telas e formulários | `features/perfil-e-senha.test.tsx` (22: perfil e senha, Admin e Private), `features/two-factor-section.test.tsx` (10), `features/auditorias-filters.test.tsx` (10), `features/acesso-suporte-form-conceder.test.tsx` (7) |
 | Componentes e hooks | `components/paginacao.test.tsx` (9), `components/nav-main.test.tsx` (8), `components/refatoracao-lint.test.tsx` (9: formulários de senha, `useIsMobile`, avatar, carrossel, skeleton), `components/react-query-provider.test.tsx` (3), `components/imagens.test.tsx` (4), `hooks/use-synced-state.test.ts` (5) |
-| Proxy do BFF | `lib/proxy-guard.test.ts` (15), `proxy/middleware.test.ts` (10), `proxy/proxy-clients.test.ts` (8), `lib/client-ip.test.ts` (6), `lib/media-url.test.ts` (6), `lib/acesso-suporte-storage.test.ts` (6) |
+| Proxy do BFF | `lib/proxy-guard.test.ts` (40), `proxy/middleware.test.ts` (23, inclui a CSP com nonce), `proxy/proxy-clients.test.ts` (8), `lib/client-ip.test.ts` (6), `lib/media-url.test.ts` (6), `lib/acesso-suporte-storage.test.ts` (6) |
 | Banner | `banner/banner-provider.test.tsx` (9), `banner/banner-sessao-storage.test.ts` (4) |
 | Utilitários e validações | `lib/utils.test.ts` (21), `validations/validations.test.ts` (11) |
 
@@ -98,6 +99,7 @@ Navegador **real** (Chromium) contra o app Next de **produção** (`next start`)
 | `e2e/autenticacao.e2e.ts` | 13 | login válido (cookie de sessão **opaco**, `HttpOnly`, `Secure`, `SameSite=Lax`, `__Host-`; **nenhuma resposta, HTML, `document.cookie`, `localStorage` ou `sessionStorage` contém o JWT**; o JWT existe só no Redis), recarregar (F5), fixação de sessão, credenciais inválidas, 2FA (só o `temp_token` chega ao navegador; a sessão só nasce após o código), código errado |
 | `e2e/multiusuario.e2e.ts` | 16 | 2 usuários com tokens próprios, logout de um não derruba o outro, mesmo usuário em casa e no trabalho, Admin × Private no mesmo PC, **20 logins simultâneos** (20 sessões e tokens distintos), sid forjado / JWT no lugar do sid / sessão vencida / contexto trocado, proxy sem sessão não chega ao backend, **pedir `/refresh` pelo proxy é recusado e não chega ao backend**, `GET /api/health` |
 | `e2e/responsivo.e2e.ts` | 2 | 375 px: sem rolagem horizontal, paginação e abas de empresa dentro do cartão |
+| `e2e/csp.e2e.ts` | 15 | **CSP imposta pelo Chromium** no build de produção: cabeçalho único com nonce novo a cada resposta; nenhuma violação nas telas públicas e autenticadas (Admin e Private), tema escuro e login funcionando; `<script>` e `onerror` injetados sem nonce **não executam** (o código legítimo com nonce sim); `eval`/`new Function` bloqueados; iframe, `fetch`/imagem/formulário para outro site e `<base>` bloqueados; `/storage` com cabeçalhos de segurança, só imagens inline e sem vazar o backend |
 | `e2e/sessao-e-rotas.e2e.ts` | 17 | rotas protegidas sem sessão, sessão expirada, sessão válida na tela de login, telas públicas, logout (menu **Sair**: destrói a sessão no Redis e o sid antigo não vale mais), sessões separadas Admin × Private, cabeçalhos de segurança (`X-Frame-Options`, CSP `frame-ancestors`, `nosniff`, sem `X-Powered-By`) e recusa de origem diferente (CSRF) |
 
 Como rodar: `npm run build` e depois `npm run e2e` (a configuração em `playwright.config.ts` sobe os dois servidores nas portas 3100 e 4010). A primeira vez, `npx playwright install chromium`. Sem acesso ao download do Playwright, defina `PW_CHROMIUM_PATH` (e opcionalmente `PW_CHROMIUM_ARGS`) apontando para um Chromium instalado. Falhas geram *trace* em `frontend/test-results/` (`npx playwright show-trace <arquivo>`).

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 /**
  * Mesma regra já aplicada pelo backend em CadastrarRequest/AtualizarRequest

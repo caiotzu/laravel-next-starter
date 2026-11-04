@@ -55,9 +55,9 @@ Tailwind CSS 4, tema via variáveis CSS em `app/globals.css` (`baseColor: slate`
 |---|---|
 | Framework | Next.js 16.3.8 (App Router, Turbopack), React 19.1 |
 | Dados/cache de servidor | TanStack Query 5, TanStack Table 8 |
-| Formulários e validação | React Hook Form + Zod 4 (`@hookform/resolvers`) |
+| Formulários e validação | React Hook Form + Zod 4 (`@hookform/resolvers`); o `z` vem de `@/lib/zod` (modo `jitless`, exigido pela CSP) |
 | UI | Tailwind CSS 4, shadcn/ui (Radix UI, `@base-ui/react`), lucide-react, Tabler Icons, sonner, vaul |
-| Editor rich text | Tiptap 3 (starter-kit, link, placeholder) — conteúdo exibido é sanitizado com DOMPurify |
+| Editor rich text | Tiptap 3 (starter-kit, link, placeholder) — conteúdo exibido é sanitizado com DOMPurify (`lib/sanitize-html.ts`, allowlist igual à do backend) |
 | Gráficos | Recharts 2 (dashboard Admin) |
 | Tabelas com arrastar-e-soltar | dnd-kit (`components/data-table.tsx`) |
 | 2FA | `react-qr-code`, `input-otp` |
@@ -111,3 +111,5 @@ Comandos (em `frontend/`): `npm run lint`, `npx tsc --noEmit`, `npm test`, `npm 
 **Autenticação no BFF.** Os handlers `app/api/auth/{admin,private}/{login,2fa,logout}` guardam o JWT **somente no servidor (Redis, `lib/session/`)** e entregam ao navegador um cookie de sessão **opaco** (`sid`; `HttpOnly`, `SameSite=Lax`, `Secure` e `__Host-` em produção). O restante da resposta do backend vai ao navegador sem o `token` (`lib/auth-response.ts`). O `temp_token` da etapa do 2FA continua indo ao navegador, porque a tela o reenvia ao confirmar o código. No login com 2FA a sessão não é tocada. O `proxy.ts` e os proxies `app/api/proxy/*` consultam o Redis; `routes/routes.ts` identifica a área pelo campo `contexto` (`admin` | `private`). Exige `REDIS_URL` (ver o `.env.example`); `GET /api/health` verifica o Redis. O proxy genérico recusa `login`, `2fa/verificar`, `refresh` e `logout`. O servidor não anuncia `X-Powered-By` (`poweredByHeader: false`).
 
 **Testes de ponta a ponta.** `playwright.config.ts` + `e2e/`: navegador real (Chromium) contra o app de produção e um backend simulado (`e2e/mock-backend.mjs`). Cobrem autenticação, sessão, proteção de rotas, logout e cabeçalhos de segurança. `npm run build && npm run e2e`. Os arquivos terminam em `.e2e.ts` para o Vitest não os capturar. Detalhes em [`testes.md`](./testes.md).
+
+**CSP e `/storage`.** `proxy.ts` gera um nonce por requisição de página e define a `Content-Security-Policy` (`lib/security/csp.ts`); os layouts raiz são `force-dynamic` por causa dele, e os layouts Admin/Private repassam o nonce ao `next-themes`. `/storage/*` é um Route Handler (`app/storage/[...caminho]/route.ts`) com cabeçalhos de segurança. Detalhes em [`seguranca.md`](./seguranca.md).

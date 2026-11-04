@@ -6,6 +6,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -43,6 +44,17 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($request->is('api/*')) {
                 // dd('Erro', $e);
+
+                // Rate Limit excedido
+                if ($e instanceof ThrottleRequestsException) {
+                    return response()->json([
+                        'errors' => [
+                            'business' => [
+                                'Muitas requisições. Aguarde alguns instantes antes de tentar novamente.'
+                            ]
+                        ]
+                    ], Response::HTTP_TOO_MANY_REQUESTS);
+                }
 
                 // Validação de formulário (campos)
                 if ($e instanceof ValidationException) {
@@ -98,11 +110,17 @@ return Application::configure(basePath: dirname(__DIR__))
                     ], Response::HTTP_BAD_REQUEST);
                 }
 
+
+
                 // Exception geral
                 if ($e instanceof \RuntimeException || $e instanceof \InvalidArgumentException) {
                     return response()->json([
                         'errors' => [
-                            'business' => [$e->getMessage()]
+                            'business' => [
+                                app()->isProduction()
+                                    ? 'Não foi possível processar sua solicitação.'
+                                    : $e->getMessage()
+                            ]
                         ]
                     ], Response::HTTP_BAD_REQUEST);
                 }

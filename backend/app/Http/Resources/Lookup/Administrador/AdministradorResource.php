@@ -12,7 +12,21 @@ class AdministradorResource extends JsonResource
         return [
             'id' => $this->id,
             'nome' => $this->nome,
-            'email' => $this->email,
+            'email' => $request->attributes->get('mascarar_email', false)
+                ? self::mascararEmail((string) $this->email)
+                : $this->email,
         ];
+    }
+
+    /** `maria.souza@empresa.com` → `ma***@empresa.com` (sem o domínio, nada é revelado). */
+    public static function mascararEmail(string $email): string
+    {
+        $posicao = mb_strrpos($email, '@');
+
+        if ($posicao === false || $posicao === 0) {
+            return '***';
+        }
+
+        return mb_substr($email, 0, min(2, $posicao)).'***'.mb_substr($email, $posicao);
     }
 }

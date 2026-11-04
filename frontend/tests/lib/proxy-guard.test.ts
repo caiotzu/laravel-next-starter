@@ -74,6 +74,16 @@ describe("resolverUrlBackend — endpoints de autenticação (o JWT não pode vo
   });
 });
 
+describe("resolverUrlBackend — ponto e vírgula no caminho (F-13a)", () => {
+  it.each(["/..;/admin/usuarios", "/admin;x=1/usuarios", "/admin/usuarios;jsessionid=1", "/admin/%3Busuarios", "/admin/%3busuarios"])("recusa %s", (caminho) => {
+    expect(resolverUrlBackend(caminho)).toBeNull();
+  });
+
+  it("`;` na QUERY (busca com ponto e vírgula) continua permitido", () => {
+    expect(resolverUrlBackend("/admin/usuarios?busca=a;b")).toBe("http://localhost/api/admin/usuarios?busca=a;b");
+  });
+});
+
 describe("filtrarHeadersCliente", () => {
   const uuid = "123e4567-e89b-12d3-a456-426614174000";
 

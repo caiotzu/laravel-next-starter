@@ -125,6 +125,74 @@ describe("proxy.ts (proteção de rotas, com sessão no servidor)", () => {
   });
 });
 
+describe("proxy.ts — Content-Security-Policy com nonce (F-09)", () => {
+  const csp = (res: Response) => res.headers.get("content-security-policy") ?? "";
+  const nonceDaCsp = (res: Response) => csp(res).match(/'nonce-([^']+)'/)?.[1];
+
+  it("toda página liberada recebe a CSP e o MESMO nonce é repassado ao render (x-nonce)", async () => {
+    const res = await chamar("/admin");
+
+    expect(nonceDaCsp(res)).toBeTruthy();
+    expect(res.headers.get("x-middleware-request-x-nonce")).toBe(nonceDaCsp(res));
+    expect(res.headers.get("x-middleware-request-content-security-policy")).toBe(csp(res));
+    expect(csp(res)).toContain("script-src 'self' 'nonce-");
+    expect(csp(res)).toContain("frame-ancestors 'none'");
+  });
+
+  it("o nonce é novo a cada requisição (nunca reaproveitado entre usuários)", async () => {
+    const nonces = await Promise.all(Array.from({ length: 50 }, async () => nonceDaCsp(await chamar("/admin"))));
+
+    expect(new Set(nonces).size).toBe(50);
+  });
+
+  it("rotas protegidas liberadas pela sessão também recebem a CSP", async () => {
+    const priv = await sessaoDeTeste("private", "jwt-p");
+
+    expect(nonceDaCsp(await chamar("/home", { private_sid: priv.sid }))).toBeTruthy();
+  });
+
+  it("rotas fora da lista (ex.: /perfil, /qualquer-coisa) também recebem", async () => {
+    expect(nonceDaCsp(await chamar("/qualquer-coisa"))).toBeTruthy();
+  });
+
+  it("redirecionamento de quem não tem sessão continua redirecionando", async () => {
+    const res = await chamar("/home");
+
+    expect(res.status).toBeGreaterThanOrEqual(300);
+    expect(res.status).toBeLessThan(400);
+  });
+
+  it("API, assets do Next e /storage NÃO recebem a CSP de página (têm a própria: next.config e Route Handler)", async () => {
+    for (const p of ["/api/health", "/api/proxy/admin", "/_next/static/chunks/a.js", "/storage/avatars/a.png"]) {
+      const res = await chamar(p);
+
+      expect(csp(res), p).toBe("");
+      expect(res.headers.get("x-middleware-request-x-nonce"), p).toBeNull();
+    }
+  });
+
+  it("CSP_MODO=report-only usa o cabeçalho Report-Only (e não o que bloqueia)", async () => {
+    vi.stubEnv("CSP_MODO", "report-only");
+    try {
+      const res = await chamar("/admin");
+
+      expect(res.headers.get("content-security-policy")).toBeNull();
+      expect(res.headers.get("content-security-policy-report-only")).toContain("script-src 'self' 'nonce-");
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it("a origem do backend (BACKEND_URL) entra em img-src, para os anexos assinados", async () => {
+    vi.stubEnv("BACKEND_URL", "https://api.exemplo.com/api");
+    try {
+      expect(csp(await chamar("/admin"))).toContain("img-src 'self' data: blob: https://api.exemplo.com");
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+});
+
 describe("routes.ts", () => {
   it("gera regex para todas as rotas", () => {
     expect(protectedRoutes.every((r) => r.regex instanceof RegExp)).toBe(true);

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 export const grupoEmpresaSchemaCadastro = z.object({
   nome: z.string().min(1, "O nome do grupo é obrigatório"),

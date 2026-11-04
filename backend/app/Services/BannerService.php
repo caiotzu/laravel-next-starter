@@ -45,7 +45,7 @@ class BannerService
     ];
 
     // 5 MB por imagem.
-    private const TAMANHO_MAXIMO_IMAGEM_BYTES = 5 * 1024 * 1024;
+    public const TAMANHO_MAXIMO_IMAGEM_BYTES = 5 * 1024 * 1024;
 
     private const MAXIMO_IMAGENS = 10;
     private const MAXIMO_LINKS = 10;

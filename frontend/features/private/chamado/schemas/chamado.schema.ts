@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 export const chamadoAberturaSchema = z.object({
   tipo: z.enum(["financeiro", "plataforma", "acesso", "duvida", "documentacao", "operacional", "outros"], {

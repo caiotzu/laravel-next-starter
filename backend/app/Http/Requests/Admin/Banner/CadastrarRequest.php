@@ -8,6 +8,9 @@ use Illuminate\Foundation\Http\FormRequest;
 use App\Enums\BannerDirecionamentoTipo;
 use App\Enums\EntidadeTipo;
 
+use App\Services\BannerService;
+use App\Support\LimiteBase64;
+
 class CadastrarRequest extends FormRequest
 {
     public function authorize(): bool
@@ -61,6 +64,8 @@ class CadastrarRequest extends FormRequest
             'imagens.*.conteudo' => [
                 'required',
                 'string',
+                // Teto do TEXTO base64 antes de decodificar (SEC-008 / F-12)
+                'max:'.LimiteBase64::maxCaracteres(BannerService::TAMANHO_MAXIMO_IMAGEM_BYTES),
             ],
 
             'links' => [
@@ -109,6 +114,7 @@ class CadastrarRequest extends FormRequest
             'imagens.max'      => 'O banner permite no máximo 10 imagens',
 
             'imagens.*.conteudo.required' => 'O conteúdo de cada imagem é obrigatório',
+            'imagens.*.conteudo.max' => 'A imagem excede o tamanho máximo de 5MB',
 
             'links.array' => 'Os links informados são inválidos',
             'links.max'   => 'O banner permite no máximo 10 links',

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 export const usuarioSchemaCadastro = z.object({
   nome: z.string().min(1, "O nome do usuário é obrigatório"),

@@ -1,10 +1,10 @@
-import { z } from "zod";
 
 import {
   EMPRESA_ENDERECO_TIPOS,
   type EmpresaEnderecoTipo,
 } from "@/constants/empresa-endereco-tipos";
 import { onlyDigits } from "@/lib/utils";
+import { z } from "@/lib/zod";
 
 
 const EMPRESA_ENDERECO_TIPO_VALUES = Object.keys(EMPRESA_ENDERECO_TIPOS) as [EmpresaEnderecoTipo, ...EmpresaEnderecoTipo[]];

@@ -109,6 +109,30 @@ const eslintConfig = [
       ".claude/**",
     ],
   },
+
+  // SEC-008 / F-09: o zod só pode ser importado por lib/zod.ts, que o configura (jitless) antes
+  // de qualquer schema existir; senão uma CSP sem 'unsafe-eval' reporta violação a cada página.
+  {
+    files: ["**/*.ts", "**/*.tsx"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "zod",
+              message: 'Importe `z` de "@/lib/zod" (configura o zod para funcionar sob a CSP).',
+              allowTypeImports: true,
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["lib/zod.ts"],
+    rules: { "no-restricted-imports": "off" },
+  },
 ];
 
 export default eslintConfig;

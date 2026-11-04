@@ -1,6 +1,6 @@
-import { z } from "zod";
-
 import { createStrongPasswordSchema } from "@/lib/validations/password";
+import { z } from "@/lib/zod";
+
 
 export const usuarioPerfilSchema = z.object({
   nome: z

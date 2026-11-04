@@ -53,6 +53,20 @@ use OpenApi\Attributes as OA;
 
 class AuthController extends Controller
 {
+    /**
+     * Limites do 2FA (SEC-012). Antes havia UM contador por IP (9 falhas): num escritório, onde
+     * todos saem pelo mesmo IP público, as falhas de um colega bloqueavam o 2FA dos outros e o
+     * sucesso de qualquer um zerava o contador de todos.
+     *
+     * - por USUÁRIO: protege a conta de adivinhação de códigos, de qualquer IP (inclusive de um
+     *   atacante que distribua as tentativas por vários IPs). Só zera quando o PRÓPRIO usuário
+     *   acerta o código;
+     * - por IP: apenas teto GENEROSO contra inundação (o IP não prova quem é o usuário). Nunca
+     *   é zerado por um sucesso: só expira.
+     */
+    private const LIMITE_2FA_POR_USUARIO = 9;
+    private const LIMITE_2FA_POR_IP = 60;
+
     public function __construct(
         protected UsuarioService $usuarioService,
         protected UsuarioSessaoService $usuarioSessaoService,
@@ -156,10 +170,11 @@ class AuthController extends Controller
          * Verifica o RateLimit, impossibilitando o usuário
          * de realizar múltiplas tentativas
          */
-        $keyRateLimiter = '2fa:'.$request->ip();
+        $chaveIp = '2fa:ip:'.$request->ip();
+        $chaveUsuario = null;
 
         try {
-            if (RateLimiter::tooManyAttempts($keyRateLimiter, 9)) {
+            if (RateLimiter::tooManyAttempts($chaveIp, self::LIMITE_2FA_POR_IP)) {
                 throw new BusinessException(
                     'Muitas tentativas de login. Tente novamente em alguns minutos.'
                 );
@@ -168,6 +183,14 @@ class AuthController extends Controller
             $userId = Cache::get("2fa_login:{$request->temp_token}");
             if (!$userId)
                 throw new BusinessException('Token inválido ou expirado.');
+
+            $chaveUsuario = '2fa:usuario:'.$userId;
+
+            if (RateLimiter::tooManyAttempts($chaveUsuario, self::LIMITE_2FA_POR_USUARIO)) {
+                throw new BusinessException(
+                    'Muitas tentativas de login. Tente novamente em alguns minutos.'
+                );
+            }
 
 
             $usuario = $this->usuarioService->obterUsuarioAtivoPorId($userId, EntidadeTipo::ADMIN);
@@ -192,11 +215,16 @@ class AuthController extends Controller
 
             Cache::forget("2fa_login:{$request->temp_token}");
 
-            RateLimiter::clear($keyRateLimiter);
+            // Só o contador DESTE usuário é zerado (o do IP continua: é compartilhado).
+            RateLimiter::clear($chaveUsuario);
             return $this->finalizarLogin($usuario, $request);
 
         } catch (BusinessException $e) {
-            RateLimiter::hit($keyRateLimiter, 300);
+            RateLimiter::hit($chaveIp, 300);
+
+            if ($chaveUsuario !== null) {
+                RateLimiter::hit($chaveUsuario, 300);
+            }
 
             return response()->json([
                 'errors' => ['business' => [$e->getMessage()]]
@@ -206,7 +234,7 @@ class AuthController extends Controller
 
     /**
      * O temp_token do 2FA vale 5 minutos, mas sem um teto por token um atacante que já tem
-     * a senha poderia tentar códigos até o rate limit por IP. Após 5 códigos errados o token
+     * a senha poderia tentar códigos até o limite por usuário. Após 5 códigos errados o token
      * é descartado e é preciso autenticar com e-mail e senha novamente.
      */
     private function registrarFalhaTokenTemporario2fa(string $tempToken): void

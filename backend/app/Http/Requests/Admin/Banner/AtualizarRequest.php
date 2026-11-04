@@ -8,6 +8,9 @@ use Illuminate\Foundation\Http\FormRequest;
 use App\Enums\BannerDirecionamentoTipo;
 use App\Enums\EntidadeTipo;
 
+use App\Services\BannerService;
+use App\Support\LimiteBase64;
+
 class AtualizarRequest extends FormRequest
 {
     public function authorize(): bool
@@ -73,6 +76,8 @@ class AtualizarRequest extends FormRequest
             'imagens.*.conteudo' => [
                 'nullable',
                 'string',
+                // Teto do TEXTO base64 antes de decodificar (SEC-008 / F-12)
+                'max:'.LimiteBase64::maxCaracteres(BannerService::TAMANHO_MAXIMO_IMAGEM_BYTES),
             ],
 
             'links' => [
@@ -115,6 +120,7 @@ class AtualizarRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'imagens.*.conteudo.max' => 'A imagem excede o tamanho máximo de 5MB',
             'titulo.required' => 'O título do banner é obrigatório',
             'titulo.string'   => 'O título do banner deve ser um texto',
             'titulo.max'      => 'O título do banner deve ter no máximo 120 caracteres',

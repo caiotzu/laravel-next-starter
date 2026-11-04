@@ -200,15 +200,21 @@ class UsuarioRepository
      */
     public function listarAdministradoresComPermissao(?string $busca, array $chavesDePermissao, int $limite = 20): Collection
     {
+        // `%`, `_` e `\` da busca são texto, não curingas (SEC-008 / F-05): sem isto, `%%%`
+        // listava todos os administradores. O ILIKE do PostgreSQL usa `\` como escape padrão.
+        $termo = ($busca !== null && $busca !== '')
+            ? '%'.addcslashes($busca, '%_\\').'%'
+            : null;
+
         return Usuario::query()
             ->whereHas('grupo.entidadeTipo', fn ($q) =>
                 $q->where('chave', EntidadeTipo::ADMIN->value)
             )
             ->where('status', UsuarioStatus::ATIVO->value)
-            ->when($busca, fn ($q) =>
+            ->when($termo, fn ($q) =>
                 $q->where(fn ($sub) =>
-                    $sub->where('nome', 'ilike', "%{$busca}%")
-                        ->orWhere('email', 'ilike', "%{$busca}%")
+                    $sub->where('nome', 'ilike', $termo)
+                        ->orWhere('email', 'ilike', $termo)
                 )
             )
             ->whereHas('grupo.permissoes', fn ($q) =>

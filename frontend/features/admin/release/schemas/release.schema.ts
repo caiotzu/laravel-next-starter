@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 export const releaseSchemaCadastro = z.object({
   contexto: z.enum(["admin", "private"], {

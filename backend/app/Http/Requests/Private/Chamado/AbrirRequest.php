@@ -7,6 +7,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 use App\Enums\ChamadoTipo;
 
+use App\Support\LimiteBase64;
+
 class AbrirRequest extends FormRequest
 {
     public function authorize(): bool
@@ -45,6 +47,8 @@ class AbrirRequest extends FormRequest
             'anexos.*.conteudo' => [
                 'required_with:anexos',
                 'string',
+                // Teto do TEXTO base64 antes de decodificar (SEC-008 / F-12)
+                'max:'.LimiteBase64::maxCaracteres(config('api.chamados.anexo_tamanho_maximo_kb') * 1024),
             ],
         ];
     }
@@ -73,6 +77,7 @@ class AbrirRequest extends FormRequest
 
             'anexos.*.conteudo.required_with' => 'O conteúdo do anexo é obrigatório',
             'anexos.*.conteudo.string' => 'O conteúdo do anexo deve ser um texto',
+            'anexos.*.conteudo.max' => 'Anexo excede o tamanho máximo permitido.',
         ];
     }
 
@@ -102,6 +107,11 @@ class AbrirRequest extends FormRequest
             $maximoBytes = config('api.chamados.anexo_tamanho_maximo_kb') * 1024;
 
             foreach ($anexos as $index => $anexo) {
+                // Já reprovado pelas regras (texto grande demais): não decodifica.
+                if ($validator->errors()->has("anexos.{$index}.conteudo")) {
+                    continue;
+                }
+
                 $conteudo = $anexo['conteudo'] ?? null;
 
                 if (! $conteudo || base64_decode($conteudo, true) === false) {
