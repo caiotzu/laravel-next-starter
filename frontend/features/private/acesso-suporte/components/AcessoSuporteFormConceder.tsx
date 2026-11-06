@@ -264,13 +264,7 @@ export function AcessoSuporteFormConceder({
                           />
                         </div>
 
-                        {buscaDebounced.trim().length < 3 && (
-                          <div className="px-2 py-2 text-sm text-muted-foreground">
-                            Digite ao menos 3 letras do nome para buscar.
-                          </div>
-                        )}
-
-                        {carregandoAdmins && buscaDebounced.trim().length >= 3 && (
+                        {carregandoAdmins && (
                           <div className="px-2 py-2 text-sm text-muted-foreground">
                             Buscando...
                           </div>

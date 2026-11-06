@@ -65,8 +65,15 @@ class AuthController extends Controller
      *   é zerado por um sucesso: só expira.
      */
     private const LIMITE_2FA_POR_USUARIO = 9;
+
     private const LIMITE_2FA_POR_IP = 60;
 
+    /**
+     * Falhas de login por IP em 5 minutos (qualquer e-mail). Contra "password spraying" (uma senha
+     * comum em muitas contas a partir do mesmo IP), que o limite por IP + e-mail não pega. Conta só
+     * FALHAS e nunca é zerado por um acerto: um escritório inteiro entrando não gasta esta cota.
+     */
+    private const LIMITE_LOGIN_FALHAS_POR_IP = 60;
     public function __construct(
         protected UsuarioService $usuarioService,
         protected UsuarioSessaoService $usuarioSessaoService,
@@ -101,8 +108,15 @@ class AuthController extends Controller
          * de realizar múltiplas tentativas
          */
         $keyRateLimiter = 'login:'.$request->ip().':'.Str::lower($request->email);
+        $chaveIp = 'login:ip:'.$request->ip();
 
         try {
+            if (RateLimiter::tooManyAttempts($chaveIp, self::LIMITE_LOGIN_FALHAS_POR_IP)) {
+                throw new BusinessException(
+                    'Muitas tentativas de login. Tente novamente em alguns minutos.'
+                );
+            }
+
             if (RateLimiter::tooManyAttempts($keyRateLimiter, 5)) {
                 throw new BusinessException(
                     'Muitas tentativas de login. Tente novamente em alguns minutos.'
@@ -141,6 +155,7 @@ class AuthController extends Controller
 
         } catch (BusinessException $e) {
             RateLimiter::hit($keyRateLimiter, 300);
+            RateLimiter::hit($chaveIp, 300);
 
             return response()->json([
                 'errors' => ['business' => [$e->getMessage()]]
@@ -151,7 +166,7 @@ class AuthController extends Controller
     #[OA\Post(
         path: '/admin/2fa/verificar',
         summary: 'Admin — Confirmar código 2FA do login',
-        description: 'Segunda etapa do login quando o usuário tem 2FA habilitado: confirma o código do Google Authenticator usando o temp_token retornado por /admin/login. Sujeito a rate limit (9 tentativas por IP).',
+        description: 'Segunda etapa do login quando o usuário tem 2FA habilitado: confirma o código do Google Authenticator usando o temp_token retornado por /admin/login. Sujeito a rate limit: 9 falhas por usuário e teto de 60 falhas por IP, a cada 5 minutos.',
         security: [],
         tags: ['Admin'],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/Verificar2faRequestBody')),

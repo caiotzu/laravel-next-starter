@@ -6,7 +6,6 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Http\Exceptions\ThrottleRequestsException;
 
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -45,17 +44,6 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->is('api/*')) {
                 // dd('Erro', $e);
 
-                // Rate Limit excedido
-                if ($e instanceof ThrottleRequestsException) {
-                    return response()->json([
-                        'errors' => [
-                            'business' => [
-                                'Muitas requisições. Aguarde alguns instantes antes de tentar novamente.'
-                            ]
-                        ]
-                    ], Response::HTTP_TOO_MANY_REQUESTS);
-                }
-
                 // Validação de formulário (campos)
                 if ($e instanceof ValidationException) {
                     return response()->json([
@@ -92,13 +80,17 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 // HttpException
                 if ($e instanceof HttpExceptionInterface) {
+                    // 429 (rate limit): o Laravel traz "Too Many Attempts." em inglês. A mensagem vai
+                    // em português e os cabeçalhos (Retry-After, X-RateLimit-*) são mantidos.
+                    $mensagem = $e->getStatusCode() === Response::HTTP_TOO_MANY_REQUESTS
+                        ? 'Muitas requisições. Aguarde um instante e tente novamente.'
+                        : ($e->getMessage() ?: 'Erro na requisição.');
+
                     return response()->json([
                         'errors' => [
-                            'business' => [
-                                $e->getMessage() ?: 'Erro na requisição.'
-                            ]
+                            'business' => [$mensagem]
                         ]
-                    ], $e->getStatusCode());
+                    ], $e->getStatusCode(), $e->getHeaders());
                 }
 
                 // QueryException
@@ -110,9 +102,12 @@ return Application::configure(basePath: dirname(__DIR__))
                     ], Response::HTTP_BAD_REQUEST);
                 }
 
-
-
                 // Exception geral
+                //
+                // SEC-008 / F-08: muitas exceções de bibliotecas estendem RuntimeException (Flysystem,
+                // PDO, Redis...) e trazem caminhos de disco, hosts e trechos de SQL na mensagem. Em
+                // produção a mensagem original NUNCA vai ao cliente (continua indo para o log); fora
+                // de produção ela aparece para facilitar o desenvolvimento.
                 if ($e instanceof \RuntimeException || $e instanceof \InvalidArgumentException) {
                     return response()->json([
                         'errors' => [

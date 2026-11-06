@@ -57,12 +57,16 @@ Route::middleware('throttle:api-publica')->group(function () {
     Route::prefix('admin')->group(function() {
         Route::get('/primeiro-acesso/validar', [AuthController::class, 'primeiroAcessoValidar']);
         Route::post('/primeiro-acesso', [AuthController::class, 'primeiroAcesso']);
-        Route::post('/esqueceu-senha', [AuthController::class, 'esqueceuSenha']);
+        Route::post('/esqueceu-senha', [AuthController::class, 'esqueceuSenha'])->middleware('throttle:esqueceu-senha');
         Route::get('/redefinir-senha/validar', [AuthController::class, 'redefinirSenhaValidar']);
         Route::post('/redefinir-senha', [AuthController::class, 'redefinirSenha']);
-        Route::post('/login', [AuthController::class, 'login']);
-        Route::post('/2fa/verificar', [AuthController::class, 'verificar2fa']);
     });
+});
+
+// Login e 2FA têm limitador próprio (teto de inundação por IP): ver AppServiceProvider.
+Route::middleware('throttle:autenticacao')->prefix('admin')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/2fa/verificar', [AuthController::class, 'verificar2fa']);
 });
 // #endregion Admin
 
@@ -70,9 +74,13 @@ Route::middleware('throttle:api-publica')->group(function () {
 Route::middleware('throttle:api-publica')->group(function () {
     Route::get('primeiro-acesso/validar', [PrivateAuthController::class, 'primeiroAcessoValidar']);
     Route::post('primeiro-acesso', [PrivateAuthController::class, 'primeiroAcesso']);
-    Route::post('esqueceu-senha', [PrivateAuthController::class, 'esqueceuSenha']);
+    Route::post('esqueceu-senha', [PrivateAuthController::class, 'esqueceuSenha'])->middleware('throttle:esqueceu-senha');
     Route::get('redefinir-senha/validar', [PrivateAuthController::class, 'redefinirSenhaValidar']);
     Route::post('redefinir-senha', [PrivateAuthController::class, 'redefinirSenha']);
+});
+
+// Login e 2FA têm limitador próprio (teto de inundação por IP): ver AppServiceProvider.
+Route::middleware('throttle:autenticacao')->group(function () {
     Route::post('login', [PrivateAuthController::class, 'login']);
     Route::post('2fa/verificar', [PrivateAuthController::class, 'verificar2fa']);
 });

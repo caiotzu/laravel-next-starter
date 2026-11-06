@@ -56,6 +56,18 @@ describe("AcessoSuporteFormConceder", () => {
     expect(screen.getByRole("combobox", { name: /administrador/i })).toHaveTextContent("Selecione um administrador");
   });
 
+  it("ao abrir o campo, SEM digitar nada, a lista já mostra os administradores (o cliente não sabe quem são)", async () => {
+    montar();
+
+    await userEvent.click(screen.getByRole("combobox", { name: /administrador/i }));
+
+    expect(await screen.findByRole("option", { name: /Ana/ })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /Bruno/ })).toBeInTheDocument();
+    expect(screen.queryByText(/ao menos 3 letras/i)).not.toBeInTheDocument();
+    // a consulta inicial é SEM filtro de busca
+    expect(buscaAdmins.mock.calls[0][0]).toEqual(expect.objectContaining({ busca: undefined }));
+  });
+
   it("sem administrador, mostra o erro de validação e não abre a confirmação nem envia", async () => {
     montar();
 

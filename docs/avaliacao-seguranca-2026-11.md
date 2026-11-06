@@ -18,7 +18,7 @@ Resumo público da reavaliação **white-box** (revisão do código atual, sem a
 | F-02 | alta | axios com avisos | corrigido |
 | F-03 | média | dependências PHP com avisos | corrigido (verificado a cada push por `composer audit` no CI) |
 | F-04 | média | outras dependências do frontend | corrigido; ver "Dependências" abaixo |
-| F-05 | baixa | `/lookup/administradores` expunha nome e e-mail de administradores a qualquer usuário autenticado | **corrigido**: exige permissão para quem não é Admin, mínimo de 3 letras, e-mail mascarado, curingas tratados como texto |
+| F-05 | baixa | `/lookup/administradores` expunha nome e e-mail de administradores a qualquer usuário autenticado | **corrigido**: exige permissão para quem não é Admin (403 sem ela), e-mail mascarado e curingas tratados como texto; a lista aparece sem digitar nada (o cliente não sabe quem são os administradores), limitada a 20 por nome |
 | F-06 | baixa | `middleware.ts` não verificava a assinatura do JWT | **resolvido pela SEC-009**: o `proxy.ts` não lê mais JWT; confere uma sessão opaca no Redis |
 | F-07 | baixa | JWT devolvido também no corpo de login/2FA | corrigido (SEC-007) e o JWT nem existe mais no navegador (SEC-009) |
 | F-08 | baixa | exceções devolviam a mensagem original em produção | **corrigido**: em produção `RuntimeException`/`InvalidArgumentException` devolvem mensagem genérica |
@@ -40,6 +40,7 @@ Resumo público da reavaliação **white-box** (revisão do código atual, sem a
 | N-03 | baixa | Uma correção intermediária (rewrite no `proxy.ts`) vazaria o endereço interno do backend no cabeçalho `x-middleware-rewrite` | evitado: descartada em favor do Route Handler; E2E confere que nenhum cabeçalho traz o endereço do backend |
 | N-04 | alta | **Dependências de produção com CVEs novas** (publicadas depois de 2026-10-17): Next.js 16.3.8 (RCE no otimizador de imagens e em `use cache`, DoS em Server Actions), DOMPurify, zod, follow-redirects, qs, fast-uri | corrigido em 2026-11-02: Next.js 16.4.4 e `npm audit fix`; `npm audit --omit=dev`: 0 críticas, 0 altas |
 | N-05 | baixa | Limite de 2FA por IP prejudicava escritórios (NAT): as falhas de um colega bloqueavam os outros e o sucesso de um zerava o contador de todos | **corrigido** (SEC-012): limite por usuário (9 falhas) + teto generoso por IP (60), sem zerar por sucesso alheio |
+| N-07 | **média** | Login e 2FA dividiam o limitador `api-publica` (**10 req/min por IP**): num escritório, onde todos saem pelo mesmo IP público, a 6ª pessoa a entrar com 2FA no mesmo minuto levava 429 (detectado ao rodar os testes do SEC-012 no ambiente do dono) | **corrigido** (2026-11-04): limitador próprio `autenticacao` (120/min, só inundação), contador de falhas de login por IP (60 em 5 min) para manter a proteção contra *password spraying*, limite por e-mail no `esqueceu-senha`, `api-publica` 30/min, e 429 em português com `Retry-After` |
 | N-06 | info | O zod gerava uma violação de CSP a cada página (sondagem `new Function`) | corrigido: `z.config({ jitless: true })` em `lib/zod.ts`, com regra de lint para todo import passar por ali |
 
 ## Riscos residuais conhecidos

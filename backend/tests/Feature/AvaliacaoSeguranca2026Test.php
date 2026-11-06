@@ -7,13 +7,17 @@
  *  - F-08  exceções de biblioteca não vazam a mensagem original em produção;
  *  - F-12  upload em base64: o tamanho do TEXTO é recusado antes de decodificar;
  *  - SEC-012  limite de tentativas do 2FA por USUÁRIO (e teto generoso por IP), para que os
- *             colegas de um mesmo escritório (mesmo IP público) não se bloqueiem.
+ *             colegas de um mesmo escritório (mesmo IP público) não se bloqueiem;
+ *  - ESCRITÓRIO  login e 2FA não dividem mais o limitador `api-publica` (10 req/min por IP):
+ *             vários usuários atrás do mesmo IP entram juntos; falhas de login por IP continuam
+ *             limitadas; 429 em português com Retry-After.
  *
  * Os helpers têm prefixo `aval26` para não colidirem com os de outros arquivos de teste (as
  * funções do Pest são globais).
  */
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 
 use PragmaRX\Google2FA\Google2FA;
@@ -102,25 +106,23 @@ test('F-05: sem token continua 401', function () {
     $this->getJson('/api/lookup/administradores?busca=administrador')->assertStatus(401);
 });
 
-test('F-05: cliente com a permissão e busca curta (menos de 3 letras) recebe lista vazia', function () {
+test('F-05: cliente com a permissão vê a lista de administradores SEM digitar nada, com o e-mail mascarado', function () {
     $c = aval26CenarioLookup();
     aval26Permissao($c['grupoPrivate'], 'private.acesso_suporte.conceder');
     $token = aval26Token($c['cliente']);
 
-    foreach (['', 'ad', ' a '] as $busca) {
-        $this->withHeader('Authorization', "Bearer {$token}")
-            ->getJson('/api/lookup/administradores?busca=' . urlencode($busca))
-            ->assertOk()
-            ->assertExactJson(['data' => []]);
-    }
+    // o cliente não sabe quem são os administradores: a lista tem de aparecer sem busca
+    foreach (['/api/lookup/administradores', '/api/lookup/administradores?busca=', '/api/lookup/administradores?busca=ad'] as $url) {
+        $resposta = $this->withHeader('Authorization', "Bearer {$token}")->getJson($url)->assertOk();
 
-    $this->withHeader('Authorization', "Bearer {$token}")
-        ->getJson('/api/lookup/administradores')
-        ->assertOk()
-        ->assertExactJson(['data' => []]);
+        expect($resposta->json('data'))->toHaveCount(1);
+        expect($resposta->json('data.0.nome'))->toBe('Administrador Silva');
+        expect($resposta->json('data.0.email'))->toBe('ad***@exemplo.com');
+        expect($resposta->getContent())->not->toContain('administrador.silva@exemplo.com');
+    }
 });
 
-test('F-05: cliente com a permissão e 3+ letras encontra o administrador, com o e-mail MASCARADO', function () {
+test('F-05: cliente com a permissão busca o administrador por parte do nome, com o e-mail MASCARADO', function () {
     $c = aval26CenarioLookup();
     aval26Permissao($c['grupoPrivate'], 'private.acesso_suporte.conceder');
 
@@ -404,3 +406,101 @@ foreach ([['admin', '/api/admin'], ['private', '/api']] as [$audiencia, $base]) 
             ->assertJsonPath('errors.business.0', 'Muitas tentativas de login. Tente novamente em alguns minutos.');
     });
 }
+
+// -------------------------------------------------------------------------------------------
+// ESCRITÓRIO — vários usuários atrás do mesmo IP público (login e 2FA)
+// -------------------------------------------------------------------------------------------
+
+foreach ([['admin', '/api/admin'], ['private', '/api']] as [$audiencia, $base]) {
+    test("ESCRITÓRIO: [{$audiencia}] 20 usuários diferentes entram no mesmo minuto, do mesmo IP, sem tomar 429", function () use ($audiencia, $base) {
+        $c = aval26Cenario();
+        $grupo = $audiencia === 'admin' ? $c['grupoAdmin'] : $c['grupoPrivate'];
+
+        for ($i = 1; $i <= 20; $i++) {
+            $usuario = aval26Usuario($grupo, "colega{$i}.{$audiencia}@exemplo.com", "Colega {$i}");
+
+            // (antes: a 11ª requisição do minuto, de qualquer pessoa, recebia 429)
+            $this->postJson("{$base}/login", ['email' => $usuario->email, 'senha' => 'Senha123@'])
+                ->assertOk()
+                ->assertJsonPath('data.token', fn ($t) => ! empty($t));
+        }
+    });
+
+    test("ESCRITÓRIO: [{$audiencia}] 6 colegas com 2FA entram no mesmo minuto (12 requisições do mesmo IP)", function () use ($audiencia, $base) {
+        $c = aval26Cenario();
+        $grupo = $audiencia === 'admin' ? $c['grupoAdmin'] : $c['grupoPrivate'];
+
+        for ($i = 1; $i <= 6; $i++) {
+            [$usuario, $segredo, $google2fa] = aval26Usuario2fa($grupo, "dois.fatores{$i}.{$audiencia}@exemplo.com");
+
+            $token = aval26LoginParaTempToken($this, $base, $usuario->email);
+
+            $this->postJson("{$base}/2fa/verificar", ['temp_token' => $token, 'codigo' => $google2fa->getCurrentOtp($segredo)])
+                ->assertOk();
+        }
+    });
+
+    test("ESCRITÓRIO: [{$audiencia}] inundação de requisições de um mesmo IP (121 no minuto) leva 429 em português com Retry-After", function () use ($base) {
+        // corpo vazio: a validação responde 422 sem tocar nos limites de falha de login
+        for ($i = 1; $i <= 120; $i++) {
+            expect($this->postJson("{$base}/login", [])->getStatusCode())->not->toBe(429);
+        }
+
+        $resposta = $this->postJson("{$base}/login", [])->assertStatus(429);
+
+        expect($resposta->json('errors.business.0'))->toBe('Muitas requisições. Aguarde um instante e tente novamente.');
+        expect($resposta->headers->has('Retry-After'))->toBeTrue();
+    });
+
+    test("ESCRITÓRIO: [{$audiencia}] 60 falhas de login do mesmo IP bloqueiam o IP; os acertos dos colegas não contam", function () use ($audiencia, $base) {
+        $c = aval26Cenario();
+        $grupo = $audiencia === 'admin' ? $c['grupoAdmin'] : $c['grupoPrivate'];
+
+        // 20 colegas acertam: não consomem a cota de falhas
+        for ($i = 1; $i <= 20; $i++) {
+            $colega = aval26Usuario($grupo, "acerta{$i}.{$audiencia}@exemplo.com");
+            $this->postJson("{$base}/login", ['email' => $colega->email, 'senha' => 'Senha123@'])->assertOk();
+        }
+
+        // 59 falhas (e-mails diferentes: o limite por e-mail nunca dispara; só o do IP conta)
+        for ($i = 1; $i <= 59; $i++) {
+            $this->postJson("{$base}/login", ['email' => "inexistente{$i}.{$audiencia}@exemplo.com", 'senha' => 'qualquer-Senha1@'])->assertStatus(401);
+        }
+
+        // ainda abaixo do limite: um colega com a senha certa entra
+        $ainda = aval26Usuario($grupo, "ainda.entra.{$audiencia}@exemplo.com");
+        $this->postJson("{$base}/login", ['email' => $ainda->email, 'senha' => 'Senha123@'])->assertOk();
+
+        // a 60ª falha fecha o IP: nem a senha certa passa mais
+        $this->postJson("{$base}/login", ['email' => "inexistente60.{$audiencia}@exemplo.com", 'senha' => 'qualquer-Senha1@'])->assertStatus(401);
+
+        $bloqueado = aval26Usuario($grupo, "bloqueado.{$audiencia}@exemplo.com");
+        $this->postJson("{$base}/login", ['email' => $bloqueado->email, 'senha' => 'Senha123@'])
+            ->assertStatus(401)
+            ->assertJsonPath('errors.business.0', 'Muitas tentativas de login. Tente novamente em alguns minutos.');
+    });
+
+    test("ESCRITÓRIO: [{$audiencia}] esqueceu-senha: o MESMO e-mail é limitado a 5 por minuto e outro e-mail do mesmo IP continua livre", function () use ($base) {
+        Event::fake();
+
+        for ($i = 1; $i <= 5; $i++) {
+            expect($this->postJson("{$base}/esqueceu-senha", ['email' => 'vitima@exemplo.com'])->getStatusCode())->not->toBe(429);
+        }
+
+        $this->postJson("{$base}/esqueceu-senha", ['email' => 'vitima@exemplo.com'])->assertStatus(429);
+        $this->postJson("{$base}/esqueceu-senha", ['email' => 'VITIMA@exemplo.com'])->assertStatus(429); // caixa alta não escapa
+
+        // o limite é do e-mail, não do IP: um colega pedindo a própria redefinição não é afetado
+        expect($this->postJson("{$base}/esqueceu-senha", ['email' => 'outra.pessoa@exemplo.com'])->getStatusCode())->not->toBe(429);
+    });
+}
+
+test('429 de rate limit: mensagem em português, sem o texto em inglês do Laravel', function () {
+    for ($i = 1; $i <= 120; $i++) {
+        $this->postJson('/api/login', []);
+    }
+
+    $resposta = $this->postJson('/api/login', [])->assertStatus(429);
+
+    expect($resposta->getContent())->not->toContain('Too Many Attempts');
+});

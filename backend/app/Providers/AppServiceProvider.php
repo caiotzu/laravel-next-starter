@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 
 use App\Services\CepService;
 use App\Services\External\Cep\ViaCepService;
@@ -83,10 +84,30 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(20)->by($request->ip());
         });
 
-        // Limite mais restritivo para os endpoints públicos sensíveis
-        // (esqueceu-senha, primeiro-acesso, redefinir-senha)
+        // Endpoints públicos de recuperação e onboarding (primeiro-acesso, redefinir-senha,
+        // esqueceu-senha, version). Os tokens desses fluxos têm alta entropia, então o limite é só
+        // contra inundação. Era 10 req/min por IP: num escritório (um IP público para todos) a
+        // integração de uma empresa nova, com vários usuários abrindo o primeiro acesso ao mesmo
+        // tempo, recebia 429.
         RateLimiter::for('api-publica', function (Request $request) {
-            return Limit::perMinute(10)->by($request->ip());
+            return Limit::perMinute(30)->by($request->ip());
+        });
+
+        // Login e 2FA (Admin e Private): SÓ um teto de inundação por IP. A proteção contra adivinhar
+        // senha e código está nos controllers e conta apenas FALHAS (login por IP+e-mail e por IP,
+        // 2FA por usuário e por IP). Antes estas rotas dividiam o `api-publica` (10 req/min por IP):
+        // num escritório, a 6ª pessoa a entrar com 2FA no mesmo minuto levava 429 (cada login com
+        // 2FA são 2 requisições), mesmo digitando tudo certo.
+        RateLimiter::for('autenticacao', function (Request $request) {
+            return Limit::perMinute(120)->by($request->ip());
+        });
+
+        // "Esqueceu a senha": além do teto por IP (api-publica), limita por E-MAIL de destino, para
+        // ninguém usar o sistema para inundar a caixa de entrada de outra pessoa (nem de vários IPs).
+        RateLimiter::for('esqueceu-senha', function (Request $request) {
+            $email = Str::lower(trim((string) $request->input('email')));
+
+            return Limit::perMinute(5)->by($email !== '' ? 'email:'.$email : 'ip:'.$request->ip());
         });
     }
 }

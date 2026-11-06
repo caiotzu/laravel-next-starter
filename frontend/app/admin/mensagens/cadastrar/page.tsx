@@ -113,6 +113,14 @@ export default function Page() {
             <PageHeader
               title="Mensagens"
               description="Envie uma nova mensagem para um grupo de empresa ou usuário específico."
+              actions={[
+                {
+                  label: "Voltar",
+                  href: "/admin/mensagens",
+                  icon: null,
+                  variant: "default",
+                },
+              ]}
             />
 
             <AdminPermissionGuard permission="admin.mensagem.cadastrar">
