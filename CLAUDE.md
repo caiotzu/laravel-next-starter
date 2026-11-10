@@ -5,7 +5,7 @@ Se algo aqui contradisser o código real, **o código vence** — investigue e c
 
 ## Stack (verificada em `composer.json`/`package.json`)
 
-- **Backend** (`backend/`): PHP ^8.3 (Sail usa 8.4), Laravel 13, PostgreSQL 17, JWT (`tymon/jwt-auth`), Pest 4, Pint, Swagger (`l5-swagger`).
+- **Backend** (`backend/`): PHP ^8.5 (obrigatório; Sail, CI, homologação e produção usam 8.5), Laravel 13, PostgreSQL 17, JWT (`tymon/jwt-auth`), Pest 4, Pint, Swagger (`l5-swagger`).
 - **Frontend** (`frontend/`): Next.js 16 (App Router, atua como BFF), React 19, TypeScript, Tailwind 4, shadcn/ui, TanStack Query/Table, React Hook Form + Zod 4, Vitest.
 - Dois contextos de acesso espelhados nas duas camadas: **Admin** e **Private** (por empresa).
 

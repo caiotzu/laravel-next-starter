@@ -5,7 +5,7 @@ Starter full stack com back-end em **Laravel 13** (API + JWT + permissões) e fr
 
 ## Stack
 
-**Backend:** PHP 8.3+ (Sail com PHP 8.4), Laravel 13, PostgreSQL 17, JWT (`tymon/jwt-auth`), 2FA (Google2FA), Swagger (`l5-swagger`), Pest 4, Docker (Sail — apenas desenvolvimento).
+**Backend:** PHP 8.5 (obrigatório; Sail, CI, homologação e produção), Laravel 13, PostgreSQL 17, JWT (`tymon/jwt-auth`), 2FA (Google2FA), Swagger (`l5-swagger`), Pest 4, Docker (Sail — apenas desenvolvimento).
 **Frontend:** Next.js 16, React 19, TypeScript, Tailwind CSS 4, shadcn/ui, TanStack Query/Table.
 **Sessões:** Redis 7 — o Next.js (BFF) guarda o JWT no Redis e o navegador recebe só um cookie de sessão opaco. **O frontend não funciona sem o Redis** (login e rotas autenticadas respondem 503).
 

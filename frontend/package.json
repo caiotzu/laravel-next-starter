@@ -12,6 +12,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "e2e": "playwright test",
+    "verificar:producao": "node scripts/verificar-producao.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },

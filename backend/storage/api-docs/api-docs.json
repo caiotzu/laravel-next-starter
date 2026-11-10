@@ -1141,7 +1141,7 @@
                     "Private"
                 ],
                 "summary": "Private — Confirmar código 2FA do login",
-                "description": "Segunda etapa do login quando o usuário tem 2FA habilitado: confirma o código do Google Authenticator usando o temp_token retornado por /login. Sujeito a rate limit (9 tentativas por IP).",
+                "description": "Segunda etapa do login quando o usuário tem 2FA habilitado: confirma o código do Google Authenticator usando o temp_token retornado por /login. Sujeito a rate limit: 9 falhas por usuário e teto de 60 falhas por IP, a cada 5 minutos.",
                 "operationId": "c68a6c977fb960d4dac73924bafa5476",
                 "requestBody": {
                     "required": true,

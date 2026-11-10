@@ -6,7 +6,7 @@ Para arquitetura, autenticação, rotas e demais detalhes, veja [`docs/`](../doc
 
 ## Stack
 
-PHP `^8.3` (container Sail com PHP 8.4) · Laravel `^13.0` · PostgreSQL 17 · `tymon/jwt-auth` · `pragmarx/google2fa` · `darkaonline/l5-swagger` · `laravel/sail` · Pest 4.
+PHP `^8.5` (obrigatório; container Sail com PHP 8.5) · Laravel `^13.0` · PostgreSQL 17 · `tymon/jwt-auth` · `pragmarx/google2fa` · `darkaonline/l5-swagger` · `laravel/sail` · Pest 4.
 
 ## Instalação
 
@@ -63,7 +63,7 @@ Principais chaves de `.env.example` — detalhes de cada uma em [`docs/banco-de-
 
 ## Docker
 
-Ambiente gerenciado via **Laravel Sail** (`docker-compose.yml`): serviço `laravel.test` (PHP 8.4) + `pgsql` (PostgreSQL 17) + `redis` (Redis 7).
+Ambiente gerenciado via **Laravel Sail** (`docker-compose.yml`): serviço `laravel.test` (PHP 8.5) + `pgsql` (PostgreSQL 17) + `redis` (Redis 7).
 
 ```bash
 ./vendor/bin/sail up -d
