@@ -80,7 +80,7 @@ Por que isso evita vazamento:
 | `listarAdministradoresComPermissao` | lookup exclusivo de administradores |
 | `criarNoGrupo(Grupo $grupo, ...)` | recebe um `Grupo` que o Service já validou no escopo |
 
-### Auditoria dos demais módulos (REPO-002, 2026-10-15)
+### Auditoria dos demais módulos
 
 Quem é o "dono" de cada dado e o que garante o isolamento hoje. **Conclusão: nenhum precisa de Repository** — o
 isolamento já existe e um Repository só moveria código. Critério para reavaliar: aparecer a 3ª consulta
@@ -88,9 +88,9 @@ duplicada com dono, ou um bug de escopo que o mecanismo atual não consiga evita
 
 | Módulo | Dono | Garantia atual | Decisão |
 |---|---|---|---|
-| Empresa | `grupo_empresa_id` | `EscopoEntidadeService::aplicar()` em todos os métodos (inclui `excluir`/`ativar`, corrigido em SEC-003) | manter |
-| EmpresaContato / EmpresaEndereco | via `empresa_id` | `validarAcessoEmpresa()` em 100% dos métodos do Service (verificado por script) + guarda `empresaVisivel()` nos Form Requests Private (SEC-002) | manter |
-| Chamado | `usuario_id` (quem abriu) | controller Private passa `Auth::id()`; `visualizarPrivate` filtra por dono; `responder` é precedido dele (fragilidade: SEC-004) | manter |
+| Empresa | `grupo_empresa_id` | `EscopoEntidadeService::aplicar()` em todos os métodos (inclui `excluir`/`ativar`) | manter |
+| EmpresaContato / EmpresaEndereco | via `empresa_id` | `validarAcessoEmpresa()` em 100% dos métodos do Service (verificado por script) + guarda `empresaVisivel()` nos Form Requests Private | manter |
+| Chamado | `usuario_id` (quem abriu) | controller Private passa `Auth::id()`; `visualizarPrivate` filtra por dono; `responder` é precedido dele (fragilidade conhecida: depende dessa ordem) | manter |
 | Mensagem (destinatário) | `usuario_id` | `MensagemDestinatarioService` recebe o usuário e filtra por ele | manter |
 | Banner / Release | não é dado de empresa: **audiência** (`entidade_tipo_id`) | filtro por contexto (`disponiveisPara`, `listarPublicadas`) | manter |
 | AcessoSuporte | ator (concedente / admin) | todo método filtra por `usuario_concedente_id` ou `usuario_admin_id` | manter |
@@ -100,7 +100,7 @@ Regra para **Form Requests** que consultam dados com dono: chamar `EscopoEntidad
 antes e retornar sem validar se a empresa não for visível — assim o Service responde o 400 padrão e a mensagem
 de validação não vira um oráculo sobre dados de outra organização.
 
-### Lookups de Usuario sem escopo (REPO-003, 2026-10-15)
+### Lookups de Usuario sem escopo
 
 Cinco pontos consultavam `Usuario` fora do repository. Decisão por ponto, pelo critério "qual problema concreto
 a abstração resolve":
@@ -112,7 +112,7 @@ a abstração resolve":
 | Listeners `InvalidarSessoesDosUsuariosDoGrupo[Empresa]` | **mantido** | ação de sistema disparada por evento (sem usuário autenticado), um `pluck('id')` de uma linha, um único chamador cada |
 | `PopularDestinatariosMensagemJob` (4 consultas) | **mantido** | job em fila, em lotes (`chunkById`); o fan-out entre empresas é a **função** do job (mensagem geral/por entidade/por permissão, criada só pelo Admin). Mover exigiria um método por modo, sem ganho |
 
-`buscarAdministradorAtivoPorId` devolve **só administrador ativo** (decisão do dono do produto em 2026-10-16): bloqueado, inativo, convidado ou com senha expirada não recebem concessão de Acesso de Suporte, nem pelo Request (422) nem pelo Service (`BusinessException`). Antes, o status nunca era checado.
+`buscarAdministradorAtivoPorId` devolve **só administrador ativo** (decisão de produto): bloqueado, inativo, convidado ou com senha expirada não recebem concessão de Acesso de Suporte, nem pelo Request (422) nem pelo Service (`BusinessException`).
 
 ## Identidade × contexto
 

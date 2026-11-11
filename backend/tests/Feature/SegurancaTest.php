@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Testes de regressão das correções da revisão de segurança (ver docs/relatorio-seguranca).
+ * Testes de regressão das correções da revisão de segurança (ver docs/seguranca.md).
  * Cada teste prova UMA correção e falharia com o comportamento anterior.
  */
 

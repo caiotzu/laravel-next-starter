@@ -1,10 +1,10 @@
 # Checklist de produção
 
-Lista de conferência antes de publicar (F-11 e F-13 da avaliação de segurança). Os `.env.example` trazem valores de **desenvolvimento**; nenhum deles serve em produção.
+Lista de conferência antes de publicar. Os `.env.example` trazem valores de **desenvolvimento**; nenhum deles serve em produção. Para o passo a passo de instalação no servidor, veja [`implantacao-servidor.md`](./implantacao-servidor.md).
 
 ## Passo a passo resumido (ordem recomendada)
 
-1. Copie `backend/.env.production.example` e `frontend/.env.production.example`, preencha tudo que está como `<...>` e injete como variáveis de ambiente (nunca versione o arquivo preenchido).
+1. Defina as variáveis de produção do backend e do frontend (listadas nas seções abaixo e em [`implantacao-servidor.md`](./implantacao-servidor.md)), como variáveis de ambiente ou em um `.env` de produção. Nunca versione o arquivo preenchido.
 2. Suba o Redis de produção seguindo [redis-producao.md](redis-producao.md) (senha + TLS + `noeviction` + AOF).
 3. Backend (**PHP 8.5**: confira com `php -v`), banco **recém-criado**:
    ```
@@ -15,7 +15,7 @@ Lista de conferência antes de publicar (F-11 e F-13 da avaliação de seguranç
    php artisan producao:verificar                       # tem que terminar sem ERRO
    ```
 4. Frontend: `npm run verificar:producao` (confere variáveis, TLS/senha do Redis, `noeviction`, AOF e o `/up` da API). Tem que terminar sem ERRO.
-5. Rode o [roteiro de homologação](roteiro-homologacao.md) antes de abrir para os usuários.
+5. Rode o [roteiro de validação](roteiro-de-validacao.md) (parte de produção) antes de abrir para os usuários.
 
 > **Não rode `php artisan db:seed` (nem `migrate --seed`) em produção.** O `DatabaseSeeder` é de desenvolvimento: cria `admin@admin.com.br` / `Admin123@` e `private@private.com.br` / `Private123@`, senhas públicas no repositório. O `ProducaoSeeder` não cria nenhum usuário. Se essas contas já existirem em algum ambiente, o `producao:verificar` acusa (ERRO `CONTA_PADRAO`); apague-as ou troque a senha.
 > O `ProducaoSeeder` roda **uma vez**, em banco recém-migrado (ele recusa rodar de novo).

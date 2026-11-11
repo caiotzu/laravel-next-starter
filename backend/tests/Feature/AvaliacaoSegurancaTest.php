@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Avaliação de segurança de 2026-10 (SEC-008 / SEC-012): testes dos achados corrigidos no backend.
+ * Avaliação de segurança (ver docs/seguranca.md): testes dos achados corrigidos no backend.
  *
  *  - F-05  `/lookup/administradores` não pode enumerar a equipe interna;
  *  - F-08  exceções de biblioteca não vazam a mensagem original em produção;

@@ -1,6 +1,6 @@
 # Por que essa arquitetura
 
-Este documento resume as decisões de design do starter e o que elas trazem na prática, para quem está avaliando usá-lo como base de um novo projeto.
+Este documento resume as decisões de design do starter e o que elas trazem na prática, para quem está avaliando usá-lo como base de um novo projeto. Tudo o que está aqui existe no código; os trade-offs aparecem em [Limitações](#limitações-a-ter-em-mente).
 
 ## Arquitetura
 
@@ -36,6 +36,18 @@ O Next.js nunca expõe a URL real do backend nem o token ao navegador — só fa
 
 Os atributos OpenAPI vivem nos próprios controllers — quando alguém muda uma rota, a tentação de esquecer de atualizar um YAML separado desaparece, porque a documentação é gerada do mesmo lugar que o código.
 
+### Isolamento entre empresas por construção (multi-tenant)
+
+Quem decide "de quem são os dados" é um único ponto, o `EscopoEntidadeService`, e os repositories de dados com dono **exigem** o escopo como parâmetro: esquecer o filtro de empresa deixa de ser possível. Um teste arquitetural (`RepositoriesEscopoTest`) falha se alguém quebrar a regra, e o erro nunca revela se um dado existe em outra empresa. Ver [`repositories.md`](./repositories.md).
+
+### Acesso de Suporte: impersonação temporária e auditável
+
+Um administrador só entra na empresa de um cliente se o próprio cliente conceder acesso, com duração definida e revogável a qualquer momento. Durante o acesso, o administrador enxerga somente aquela empresa e cada alteração fica na auditoria com o administrador real e o acesso usado. Ver [`autenticacao-e-autorizacao.md`](./autenticacao-e-autorizacao.md).
+
+### Armazenamento de arquivos atrás de um contrato
+
+Todo upload passa por `FileStorageInterface`; trocar o disco local por S3 é configuração (`FILE_STORAGE_DRIVER`), não refatoração. Anexos de chamado ficam em disco privado e só saem por link assinado e expirável. Ver [`armazenamento-de-arquivos.md`](./armazenamento-de-arquivos.md).
+
 ## Segurança
 
 ### O JWT fica no servidor (Redis); o navegador só guarda um cookie de sessão opaco
@@ -58,18 +70,50 @@ Sem `SWAGGER_ADMIN_USERNAME`/`SWAGGER_ADMIN_PASSWORD_HASH` configurados, a docum
 
 2FA (TOTP) já está implementado como parte do fluxo de autenticação, não como um módulo à parte a ser integrado depois.
 
+### Cabeçalhos e CSP com nonce em todo o frontend
+
+As páginas saem com uma Content-Security-Policy com **nonce novo a cada requisição** (`script-src 'self' 'nonce-…' 'strict-dynamic'`, sem `eval`). Um `<script>` injetado sem o nonce não executa, e um teste em navegador real (`e2e/csp.e2e.ts`) falha se alguma tela violar a política. `/storage` (arquivos enviados por usuários) tem cabeçalhos próprios e só exibe imagens inline.
+
+### Rate limiting que não pune escritórios
+
+Login, 2FA, "esqueci minha senha" e a API autenticada têm limites distintos; os de login e 2FA contam **falhas** (por usuário e por IP), então um colega que erra a senha não bloqueia os outros atrás do mesmo IP público. Os limites enxergam o IP real do usuário por meio de `TRUSTED_PROXIES` (backend) e `TRUSTED_PROXY_HOPS` (frontend). Ver [`seguranca.md`](./seguranca.md#rate-limiting).
+
+### Proxy do BFF que não deixa o JWT escapar
+
+O proxy do Next restringe destino, métodos e cabeçalhos (contra SSRF e path traversal) e **recusa** `login`, 2FA, `refresh` e `logout`, que têm handlers próprios. Assim nenhuma rota genérica devolve um token ao navegador.
+
 ### Tratamento de erro que não vaza detalhes internos em produção
 
-O handler central de exceções (`backend/bootstrap/app.php`) formata todos os erros de API em um formato único e, em produção, especificamente evita expor mensagens internas de exceções não tratadas ou de erros de banco — reduzindo a superfície de informação disponível para um atacante.
+O handler central de exceções (`backend/bootstrap/app.php`) formata todos os erros de API em um formato único e, em produção, evita expor mensagens internas de exceções não tratadas, de bibliotecas ou de erros de banco — reduzindo a superfície de informação disponível para um atacante.
 
 ### Trilha de auditoria assíncrona
 
 Alterações em models auditáveis são registradas via job em fila, não de forma síncrona no meio da requisição — isso significa que a auditoria não pode ser burlada por um timeout ou erro que interrompa a resposta antes da gravação, já que o evento já foi despachado.
+
+## Operação e qualidade
+
+### Ambiente local reproduzível
+
+O `docker-compose.yml` do Sail sobe API, PostgreSQL 17 e Redis 7 com um comando, e o `migrate --seed` cria usuários de desenvolvimento. Ver [`instalacao-local.md`](./instalacao-local.md).
+
+### Conferência automática de produção
+
+`php artisan producao:verificar` (backend) e `npm run verificar:producao` (frontend) acusam o que não pode ir para produção: `APP_DEBUG` ligado, segredos ausentes, `TRUSTED_PROXIES` vazio, CORS aberto, Redis sem senha/TLS/`noeviction`, contas de desenvolvimento ainda ativas. O `ProducaoSeeder` cria só catálogos e permissões, sem nenhum usuário, e `admin:criar-inicial` cria o primeiro administrador com a senha que você escolher. Ver [`checklist-producao.md`](./checklist-producao.md).
+
+### CI com testes e auditoria de dependências
+
+A cada push, o GitHub Actions roda Pest (PostgreSQL 17), `tsc`, ESLint, Vitest (com Redis real), build do frontend, `composer audit` e `npm audit`; os audits bloqueiam apenas severidade alta ou crítica. Ver [`testes.md`](./testes.md).
+
+### Monitoramento pronto
+
+`GET /api/health` (frontend) confere o Redis das sessões e responde 200 ou 503, pronto para balanceador e healthcheck; `GET /up` (API) é o healthcheck do Laravel.
 
 ## Limitações a ter em mente
 
 Nenhuma arquitetura é isenta de trade-offs — vale registrar honestamente:
 
 - A duplicação Admin/Private (rotas, controllers, telas) tem custo de manutenção: uma correção pode precisar ser replicada nos dois lados.
-- A cobertura de testes é maior no backend (393 testes de Pest, com foco em autenticação, isolamento entre empresas e segurança) do que na interface: o frontend tem 183 testes (schemas, services, BFF e alguns componentes), mas não há testes de ponta a ponta com navegador nem medição de cobertura. O CI do GitHub executa as duas suítes, o lint, os tipos e o build a cada push — ver [`testes.md`](./testes.md).
-- O `proxy.ts` (antigo `middleware.ts`) do frontend decodifica o JWT apenas para checar expiração, sem validar assinatura — a validação real de assinatura acontece no backend a cada chamada ao proxy, então isso não é uma falha de segurança, mas vale entender a diferença entre "verificação de UX" (middleware) e "verificação de segurança" (backend).
+- A cobertura de testes é maior no backend (Pest com banco real, focado em autenticação, isolamento entre empresas e segurança) do que na interface. O frontend tem testes de schemas, services, BFF e componentes, mais testes de ponta a ponta em navegador real, mas estes usam um **backend simulado**: não existe E2E de pilha completa (Laravel + banco + frontend) nem medição de cobertura. O E2E não roda no CI. Ver [`testes.md`](./testes.md).
+- O frontend depende de um **Redis** (sessões do BFF): sem ele ninguém entra. Em produção ele precisa de rede privada, senha, TLS e persistência ([`redis-producao.md`](./redis-producao.md)).
+- Os controles de segurança foram avaliados por revisão white-box e testes automáticos; **não houve pentest independente** ([`seguranca.md`](./seguranca.md#avaliação-de-segurança)).
+- O `proxy.ts` do frontend só confere se a sessão opaca existe no Redis para decidir redirecionamentos (verificação de UX); a autorização real (assinatura do JWT, sessão e permissão) acontece no backend a cada chamada.

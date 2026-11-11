@@ -1,76 +1,61 @@
 # Laravel Next Starter
 
-Starter full stack com back-end em **Laravel 13** (API + JWT + permissões) e front-end em **Next.js 16** (App Router, atuando como BFF). Inclui domínios de negócio prontos como referência: usuários, grupos/permissões, empresas, mensagens, banners, chamados de suporte (com anexos), releases (novidades da plataforma), Acesso de Suporte (impersonação temporária e auditável), dashboard administrativo e auditoria.
-
+Starter full stack com API em **Laravel 13** (JWT, permissões, multi-tenant) e front-end em **Next.js 16** (App Router, atuando como BFF). Traz domínios de negócio prontos como referência: usuários, grupos e permissões, empresas, mensagens, banners, chamados de suporte (com anexos), releases, Acesso de Suporte (impersonação temporária e auditável), dashboard e auditoria.
 
 ## Stack
 
-**Backend:** PHP 8.5 (obrigatório; Sail, CI, homologação e produção), Laravel 13, PostgreSQL 17, JWT (`tymon/jwt-auth`), 2FA (Google2FA), Swagger (`l5-swagger`), Pest 4, Docker (Sail — apenas desenvolvimento).
-**Frontend:** Next.js 16, React 19, TypeScript, Tailwind CSS 4, shadcn/ui, TanStack Query/Table.
-**Sessões:** Redis 7 — o Next.js (BFF) guarda o JWT no Redis e o navegador recebe só um cookie de sessão opaco. **O frontend não funciona sem o Redis** (login e rotas autenticadas respondem 503).
+- **Backend:** PHP 8.5, Laravel 13, PostgreSQL 17, JWT (`tymon/jwt-auth`), 2FA, Swagger, Pest 4, Docker (Sail, só para desenvolvimento).
+- **Frontend:** Next.js 16, React 19, TypeScript, Tailwind CSS 4, shadcn/ui, TanStack Query/Table.
+- **Sessões:** Redis 7. O Next.js guarda o JWT no Redis e o navegador recebe só um cookie opaco. **Sem Redis o login não funciona.**
 
 ## Quick start
 
+Pré-requisitos: Git, Docker, Node.js 22.22.2+, PHP 8.5 e Composer (passo a passo completo, e a alternativa sem PHP, em [`docs/instalacao-local.md`](./docs/instalacao-local.md)).
+
 ```bash
-# Backend
+git clone https://github.com/caiotzu/laravel-next-starter.git && cd laravel-next-starter
+
+# Backend (API em http://localhost)
 cd backend
-composer install
-cp .env.example .env
+composer install && cp .env.example .env
 ./vendor/bin/sail up -d
-./vendor/bin/sail artisan key:generate
-./vendor/bin/sail artisan jwt:secret
+./vendor/bin/sail artisan key:generate && ./vendor/bin/sail artisan jwt:secret
 ./vendor/bin/sail artisan migrate --seed
-./vendor/bin/sail artisan migrate:fresh --seed # Reiniciar toda base
 
-# Frontend (em outro terminal)
+# Frontend, em outro terminal (http://localhost:3000)
 cd frontend
-npm install
-cp .env.example .env   # confira REDIS_URL (padrão: redis://127.0.0.1:6379)
-npm run dev
+npm ci && cp .env.example .env && npm run dev
 ```
 
-O `sail up -d` já sobe o **Redis** (serviço `redis`) junto com o PostgreSQL. Para conferir:
-
-```bash
-cd backend
-./vendor/bin/sail ps                          # redis deve estar "Up"
-./vendor/bin/sail exec redis redis-cli ping   # deve responder PONG
-curl http://localhost:3000/api/health         # {"status":"ok","redis":"ok"} (com o Next rodando)
-```
-
-> **Aparece "Serviço de sessão temporariamente indisponível" ao entrar?** O Redis não está acessível ou o `REDIS_URL` do `frontend/.env` está ausente ou errado. O terminal do Next mostra uma linha `[sessao] …` explicando o motivo. Depois de corrigir, reinicie o Next (ele só lê o `.env` ao iniciar).
->
-> **O container do Redis sai com "Can't handle RDB format version"?** É um volume antigo (`backend_sail-redis`) de uma versão anterior deste compose ou de outra versão do Redis. Com `./vendor/bin/sail down`, apague só ele: `docker volume rm backend_sail-redis`. Não use `down -v`: isso apaga também o banco.
-
-Front-end em `http://localhost:3000`, API em `http://localhost:8000` (ou porta configurada em `APP_PORT`).
+Admin: <http://localhost:3000/admin> (`admin@admin.com.br` / `Admin123@`). Cliente: <http://localhost:3000/> (`private@private.com.br` / `Private123@`). São contas de desenvolvimento: nunca as use em produção.
 
 ## Estrutura
 
 ```text
-.
-├── backend/    # API Laravel — README.md
-├── frontend/   # App Next.js — README.md
-└── docs/       # Documentação técnica aprofundada (+ apresentações em docs/apresentacoes)
+backend/    # API Laravel (README próprio)
+frontend/   # App Next.js (README próprio)
+docs/       # Documentação técnica
 ```
 
 ## Documentação
 
 | Documento | Conteúdo |
 |---|---|
-| [`backend/README.md`](./backend/README.md) | Instalação, variáveis de ambiente e comandos do backend |
-| [`frontend/README.md`](./frontend/README.md) | Instalação, variáveis de ambiente e comandos do frontend |
-| [`CLAUDE.md`](./CLAUDE.md) | Regras permanentes para o Claude Code (arquitetura aprovada, skills, comandos, critérios de conclusão) |
-| [`docs/PROJECT_GUIDE.md`](./docs/PROJECT_GUIDE.md) | Guia técnico: fluxos, convenções, como criar funcionalidades, testes e comandos |
-| [`docs/IMPLEMENTATION_PLAN.md`](./docs/IMPLEMENTATION_PLAN.md) | Estado atual, backlog priorizado, próxima tarefa e histórico de decisões |
-| [`docs/repositories.md`](./docs/repositories.md) | Padrão de Repository e escopo de entidade (multi-tenant) |
-| [`docs/arquitetura.md`](./docs/arquitetura.md) | Como back-end e front-end se conectam, camadas, diagramas |
+| [`docs/instalacao-local.md`](./docs/instalacao-local.md) | Primeira execução na máquina, passo a passo |
+| [`docs/implantacao-servidor.md`](./docs/implantacao-servidor.md) | Requisitos e passo a passo em servidor |
+| [`docs/checklist-producao.md`](./docs/checklist-producao.md) | Conferência antes de publicar |
+| [`docs/redis-producao.md`](./docs/redis-producao.md) | Redis de produção (senha, TLS, persistência) |
+| [`docs/roteiro-de-validacao.md`](./docs/roteiro-de-validacao.md) | Validação manual: localhost e produção |
+| [`docs/guia-do-projeto.md`](./docs/guia-do-projeto.md) | Fluxos, convenções, como criar funcionalidades |
+| [`docs/arquitetura.md`](./docs/arquitetura.md) | Back-end, front-end e BFF: camadas e diagramas |
 | [`docs/autenticacao-e-autorizacao.md`](./docs/autenticacao-e-autorizacao.md) | JWT, sessões, 2FA, permissões |
-| [`docs/api.md`](./docs/api.md) | Swagger e referência de rotas por recurso |
+| [`docs/api.md`](./docs/api.md) | Swagger e rotas por recurso |
 | [`docs/banco-de-dados.md`](./docs/banco-de-dados.md) | Migrations, seeders, modelo de dados |
-| [`docs/filas-e-eventos.md`](./docs/filas-e-eventos.md) | Jobs, filas, events/listeners |
+| [`docs/filas-e-eventos.md`](./docs/filas-e-eventos.md) | Jobs, filas, eventos e comandos agendados |
+| [`docs/armazenamento-de-arquivos.md`](./docs/armazenamento-de-arquivos.md) | Uploads e discos |
+| [`docs/repositories.md`](./docs/repositories.md) | Repository e escopo de entidade (multi-tenant) |
 | [`docs/frontend-arquitetura.md`](./docs/frontend-arquitetura.md) | `domains/`, `features/`, componentes, estado |
-| [`docs/testes.md`](./docs/testes.md) | Como rodar os testes |
-| [`docs/seguranca.md`](./docs/seguranca.md) | Controles de segurança por camada, BFF, CSP, rate limit, cabeçalhos, uploads e status do pentest |
-| [`docs/avaliacao-seguranca-2026-11.md`](./docs/avaliacao-seguranca-2026-11.md) | Reavaliação de segurança: situação dos 16 achados e dos novos |
-| [`docs/checklist-producao.md`](./docs/checklist-producao.md) | O que conferir antes de publicar (`.env`, Redis, proxies, limites) |
-| [`docs/vantagens.md`](./docs/vantagens.md) | Por que essa arquitetura — decisões de design e segurança |
+| [`docs/testes.md`](./docs/testes.md) | Testes e CI |
+| [`docs/seguranca.md`](./docs/seguranca.md) | Controles de segurança e avaliação |
+| [`docs/vantagens.md`](./docs/vantagens.md) | Por que essa arquitetura |
+| [`CLAUDE.md`](./CLAUDE.md) | Guia para a IA (convenções, comandos, critérios de conclusão) |

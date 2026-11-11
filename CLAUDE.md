@@ -11,11 +11,30 @@ Se algo aqui contradisser o código real, **o código vence** — investigue e c
 
 ## Como começar qualquer tarefa (sem reler o repositório inteiro)
 
-1. Leia `docs/IMPLEMENTATION_PLAN.md` → seção **A (estado)** e **E (próxima tarefa)**.
-2. Leia só as seções relevantes de `docs/PROJECT_GUIDE.md`.
-3. Leia as skills aplicáveis (tabela abaixo) **antes** de editar.
-4. Inspecione apenas os arquivos da tarefa + vizinhos (siga o padrão dos arquivos irmãos).
-5. Amplie a análise só se: mudar arquitetura compartilhada, houver risco de segurança/integridade, a doc contradisse o código, a refatoração tocar vários módulos, ou os testes indicarem problema sistêmico.
+1. Leia só as seções relevantes de `docs/guia-do-projeto.md` e o doc temático do assunto (tabela abaixo).
+2. Leia as skills aplicáveis (tabela de skills) **antes** de editar.
+3. Inspecione apenas os arquivos da tarefa + vizinhos (siga o padrão dos arquivos irmãos).
+4. Amplie a análise só se: mudar arquitetura compartilhada, houver risco de segurança/integridade, a doc contradisse o código, a refatoração tocar vários módulos, ou os testes indicarem problema sistêmico.
+
+## Onde ler cada assunto
+
+| Assunto | Documento |
+|---|---|
+| Visão geral, convenções, fluxos, como criar funcionalidades, comandos | `docs/guia-do-projeto.md` |
+| Rodar o projeto na máquina | `docs/instalacao-local.md` |
+| Publicar em servidor e conferência final | `docs/implantacao-servidor.md`, `docs/checklist-producao.md`, `docs/redis-producao.md` |
+| Camadas, BFF, diagramas | `docs/arquitetura.md` |
+| JWT, sessões, 2FA, permissões, Acesso de Suporte | `docs/autenticacao-e-autorizacao.md` |
+| Repository e escopo de entidade (multi-tenant) | `docs/repositories.md` |
+| Rotas e Swagger | `docs/api.md` |
+| Migrations, seeders, modelo de dados | `docs/banco-de-dados.md` |
+| Jobs, filas, eventos, comandos agendados | `docs/filas-e-eventos.md` |
+| Upload e armazenamento de arquivos | `docs/armazenamento-de-arquivos.md` |
+| `domains/`, `features/`, estado, lint | `docs/frontend-arquitetura.md` |
+| Testes e CI | `docs/testes.md` |
+| Controles de segurança e avaliação | `docs/seguranca.md` |
+| Validação manual (local e produção) | `docs/roteiro-de-validacao.md` |
+| Vantagens e decisões de design | `docs/vantagens.md` |
 
 ## Skills (leia o `SKILL.md` e os arquivos `rules/` que o índice mapear para a tarefa)
 
@@ -65,7 +84,7 @@ Backend (sempre via Sail, em `backend/`):
 Frontend (em `frontend/`, Node ≥ 22.22.2):
 - `npm test` · `npx tsc --noEmit` · `npm run lint` · `npm run build` · `npm run e2e` (precisa do build antes; sobe o app e um backend simulado)
 
-CI: `.github/workflows/ci.yml` roda as mesmas suítes (+ `composer audit`/`npm audit`, que só bloqueiam severidade **alta/crítica**). Antes de concluir uma tarefa, rode localmente o equivalente do que o CI vai rodar. Mudança em `package-lock.json`/`composer.lock` só com justificativa registrada no plano (preferir atualização cirúrgica à regeneração).
+CI: `.github/workflows/ci.yml` roda as mesmas suítes (+ `composer audit`/`npm audit`, que só bloqueiam severidade **alta/crítica**). Antes de concluir uma tarefa, rode localmente o equivalente do que o CI vai rodar. Mudança em `package-lock.json`/`composer.lock` só com justificativa no commit/PR (preferir atualização cirúrgica à regeneração). O E2E (Playwright) não roda no CI.
 
 ## Segurança (não enfraquecer)
 
@@ -90,15 +109,15 @@ CI: `.github/workflows/ci.yml` roda as mesmas suítes (+ `composer audit`/`npm a
 
 ## Conflitos conhecidos entre instruções (decisões já tomadas — não rediscutir)
 
-- `backend/AGENTS.md` diz "só crie docs se pedido" → vale para **docs novas fora do plano**; `CLAUDE.md` e `docs/{PROJECT_GUIDE,IMPLEMENTATION_PLAN}.md` foram pedidos explicitamente e **devem** ser mantidos.
+- `backend/AGENTS.md` diz "só crie docs se pedido" → vale para **docs novas além das existentes**; `CLAUDE.md` e os arquivos de `docs/` fazem parte do projeto e **devem** ser mantidos atualizados.
 - `backend/AGENTS.md` manda `pint --dirty`, mas 340 de 501 arquivos já não seguem o Pint. Reformatar arquivo legado gera diff enorme → **formate só arquivos novos** (`pint caminho/novo.php`); em arquivo existente, siga o estilo local.
 - `backend/AGENTS.md` cita `.ai/rules`, que **não existe** neste repositório; ignore até alguém rodar `infer-conventions`.
 - Skill diz "pergunte ao usuário antes de rodar a suíte completa"; aqui, rode a suíte completa antes de marcar uma tarefa como concluída quando o ambiente permitir.
 
 ## Critério de tarefa concluída
 
-Código implementado seguindo as convenções · skills consultadas · testes relevantes **executados e verdes** (se não der para executar, registre o motivo e use o status "implementada, não verificada") · lint/tsc sem erros novos · sem regressão conhecida · docs afetadas atualizadas · `docs/IMPLEMENTATION_PLAN.md` reflete o estado real (seções A–G).
+Código implementado seguindo as convenções · skills consultadas · testes relevantes **executados e verdes** (se não der para executar, registre o motivo e diga que a tarefa está "implementada, não verificada") · lint/tsc sem erros novos · sem regressão conhecida · docs afetadas atualizadas.
 
-## Ao concluir cada tarefa (obrigatório)
+## Ao concluir cada tarefa
 
-Atualizar `docs/IMPLEMENTATION_PLAN.md` (checkbox, seção B, A, E e G) e, se mudou arquitetura/fluxo/comando, `docs/PROJECT_GUIDE.md` ou o doc específico (`docs/repositories.md`, `docs/testes.md`...). Nunca marcar `[x]` sem ter verificado.
+Se mudou arquitetura, fluxo, variável de ambiente ou comando, atualize `docs/guia-do-projeto.md` ou o doc específico (tabela acima) e os READMEs. Nunca descreva como pronto o que não foi verificado.

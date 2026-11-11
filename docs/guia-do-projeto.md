@@ -3,9 +3,9 @@
 Mapa para trabalhar no repositório **sem releitura global**. Complementa (não substitui) os docs temáticos:
 [`arquitetura.md`](./arquitetura.md), [`repositories.md`](./repositories.md), [`autenticacao-e-autorizacao.md`](./autenticacao-e-autorizacao.md),
 [`frontend-arquitetura.md`](./frontend-arquitetura.md), [`testes.md`](./testes.md), [`seguranca.md`](./seguranca.md).
-Estado e próximas tarefas: [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md). Regras para o agente: [`../CLAUDE.md`](../CLAUDE.md).
+Para instalar e rodar: [`instalacao-local.md`](./instalacao-local.md) e [`implantacao-servidor.md`](./implantacao-servidor.md). Regras para o agente de IA: [`../CLAUDE.md`](../CLAUDE.md).
 
-> Tudo abaixo foi conferido no código em 2026-10-14. Divergiu? O código vence — corrija este arquivo.
+> Tudo abaixo foi conferido no código. Divergiu? O código vence: corrija este arquivo.
 
 ## 1. Visão geral
 
@@ -15,12 +15,12 @@ Starter full stack: API Laravel (JWT + permissões) e front Next.js atuando como
 
 | Item | Versão (fonte) |
 |---|---|
-| PHP | `^8.3` (`composer.json`); Sail roda 8.4 |
-| Laravel | 13.x (instalado: 13.34.0) |
-| Banco | PostgreSQL 17 (Sail); testes usam o banco `testing` |
+| PHP | `^8.5` (`composer.json`, obrigatório); Sail e CI usam 8.5 |
+| Laravel | 13.x (`composer.lock`) |
+| Banco / Redis | PostgreSQL 17 (Sail); testes usam o banco `testing`. Redis 7 para as sessões do frontend |
 | Auth | `tymon/jwt-auth` 2.x, Google2FA, `sanctum` instalado |
 | Testes back | Pest 4 + `pest-plugin-laravel`; Pint 1.x; Boost 2.x |
-| Next.js / React | 16.3.8 / 19.1.0 (`package.json`) |
+| Next.js / React | 16.4.4 / 19.1.0 (`package.json`) |
 | UI | Tailwind 4, shadcn/ui (Radix + `@base-ui/react`), lucide, Tiptap |
 | Dados/form | TanStack Query 5 / Table 8, React Hook Form 7, Zod 4 |
 | Testes front | Vitest 5 + Testing Library (jsdom); Node ≥ 22.22.2 |
@@ -49,7 +49,7 @@ Erros viram JSON em `bootstrap/app.php`: validação → 422 `{errors}`; sem per
 
 ## 5. Front ↔ back
 
-Navegador → `lib/proxy-admin.ts`/`proxy-private.ts` (axios `POST /api/proxy/{admin|private}` com `{url, method, data, headers}`) → `app/api/proxy/*/route.ts` (valida origem, **resolve o JWT pela sessão no Redis**, resolve destino via `lib/proxy-guard.ts`, injeta `Authorization: Bearer`) → `BACKEND_URL` (Laravel). No login e no 2FA (`app/api/auth/{admin,private}/{login,2fa}`) o BFF cria a sessão no Redis (`lib/session/`) e entrega ao navegador **só um cookie opaco** (`sid`); o JWT nunca sai do servidor e o restante da resposta vai sem o `token` (`lib/auth-response.ts`). Os proxies também normalizam URLs absolutas de `/storage` para relativas (`lib/media-url.ts`); `/storage/*` (avatares e banners) é servido por `app/storage/[...caminho]/route.ts` (valida o caminho, só imagens inline, `nosniff` + CSP `sandbox`; antes era um rewrite do `next.config.ts`, que não aplicava cabeçalhos de segurança). `proxy.ts` protege a navegação conferindo a sessão no Redis, usando `routes/routes.ts`. Header `X-Acesso-Suporte-Id` só é enviado pelos proxies em modo de suporte. **O frontend precisa de um Redis** (`REDIS_URL`; local: serviço `redis` do `backend/docker-compose.yml`, sem volume). `GET /api/health` verifica o Redis (200/503). O proxy recusa `login`, `2fa/verificar`, `refresh` e `logout`. A CSP das páginas (com nonce por requisição) é montada em `proxy.ts`.
+Navegador → `lib/proxy-admin.ts`/`proxy-private.ts` (axios `POST /api/proxy/{admin|private}` com `{url, method, data, headers}`) → `app/api/proxy/*/route.ts` (valida origem, **resolve o JWT pela sessão no Redis**, resolve destino via `lib/proxy-guard.ts`, injeta `Authorization: Bearer`) → `BACKEND_URL` (Laravel). No login e no 2FA (`app/api/auth/{admin,private}/{login,2fa}`) o BFF cria a sessão no Redis (`lib/session/`) e entrega ao navegador **só um cookie opaco** (`sid`); o JWT nunca sai do servidor e o restante da resposta vai sem o `token` (`lib/auth-response.ts`). Os proxies também normalizam URLs absolutas de `/storage` para relativas (`lib/media-url.ts`); `/storage/*` (avatares e banners) é servido por `app/storage/[...caminho]/route.ts` (valida o caminho, só imagens inline, `nosniff` + CSP `sandbox`; antes era um rewrite do `next.config.ts`, que não aplicava cabeçalhos de segurança). `proxy.ts` protege a navegação conferindo a sessão no Redis, usando `routes/routes.ts`. Header `X-Acesso-Suporte-Id` só é enviado pelos proxies em modo de suporte. **O frontend precisa de um Redis** (`REDIS_URL`; local: serviço `redis` do `backend/docker-compose.yml`, sem volume; produção: [`redis-producao.md`](./redis-producao.md)). `GET /api/health` verifica o Redis (200/503). O proxy recusa `login`, `2fa/verificar`, `refresh` e `logout`. A CSP das páginas (com nonce por requisição) é montada em `proxy.ts`.
 
 ## 6. Convenções de nomenclatura
 
@@ -102,22 +102,22 @@ $usuario = $this->usuarios->criarNoGrupo($grupo, [/* nome, email, senha => null,
 
 - **Backend (Pest, banco real `testing`, `RefreshDatabase`)**: `tests/Feature/{Dominio}Test.php` exercita rota→banco; cada arquivo define helpers de cenário próprios (`cenarioGr()`, `tokenGr()`…) criando `EntidadeTipo`, empresas, grupos, usuários e um JWT com sessão. Estilo local: `test('frase em português', fn …)`. `tests/Unit` = enums, DTOs, helpers e **guardas arquiteturais** (`RepositoriesEscopoTest`).
 - Dado com dono ⇒ sempre incluir caso cross-tenant (A não vê/altera B) **e** verificar que a resposta de erro não revela se o dado de B existe (mesmo status/mensagem com e sem dado). Escreva **teste de caracterização antes** de refatorar.
-- **Frontend (Vitest)**: `tests/{lib,proxy,domains,features,components,hooks,banner,validations}`; alias `@/`; `tests/setup.ts` limpa DOM/storage e define o *stub* de `ResizeObserver`. Services de domínio são testados com o proxy mockado e os schemas Zod têm testes próprios. Detalhes e inventário em [`testes.md`](./testes.md).
+- **Frontend (Vitest)**: `tests/{lib,proxy,domains,features,components,hooks,banner,validations}`; alias `@/`; `tests/setup.ts` limpa DOM/storage e define o *stub* de `ResizeObserver`. Services de domínio são testados com o proxy mockado e os schemas Zod têm testes próprios. Detalhes em [`testes.md`](./testes.md).
 - **Frontend (E2E, Playwright)**: `frontend/e2e/*.e2e.ts`, navegador real contra o app de produção e um **backend simulado** (`e2e/mock-backend.mjs`), sem Laravel nem banco. `npm run build && npm run e2e`; na primeira vez, `npx playwright install chromium`. Detalhes em [`testes.md`](./testes.md).
 
 ## 12. Comandos (verificados nesta sessão)
 
 | Onde | Comando | Observação |
 |---|---|---|
-| backend | `./vendor/bin/sail artisan test --compact` · `./vendor/bin/pest` | baseline atual: **393 verdes** (1618 asserções) |
+| backend | `./vendor/bin/sail artisan test --compact` · `./vendor/bin/pest` | suíte completa antes de concluir uma tarefa |
 | backend | `pint <arquivo-novo.php>` | não rodar `--dirty` em legado (ver `CLAUDE.md`) |
-| frontend | `npm test` · `npx tsc --noEmit` · `npm run lint` · `npm run build` · `npm run e2e` (depois do build) | baseline: 260 testes (27 arquivos), tsc limpo, `npm run lint` 0 erros / 0 avisos; E2E: 26 testes |
+| frontend | `npm test` · `npx tsc --noEmit` · `npm run lint` · `npm run build` · `npm run e2e` (depois do build) | `tsc` limpo e `npm run lint` com 0 erros e 0 avisos |
 
-Se `npm test` mostrar uma versão do vitest diferente da do `package-lock.json` (hoje 5.0.3), seu `node_modules` está desatualizado: rode `npm ci`.
+Se `npm test` mostrar uma versão do Vitest diferente da do `package-lock.json`, seu `node_modules` está desatualizado: rode `npm ci`.
 
 **Build local sem acesso ao Google Fonts** (`next/font/google` precisa dele): o Next aceita `NEXT_FONT_GOOGLE_MOCKED_RESPONSES=/caminho/mock.js`, um módulo que exporta `{ "https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap": "<css com @font-face apontando para http://127.0.0.1:PORTA/mock.woff2>", ... }` (uma entrada por fonte, incl. `Geist+Mono`) e um servidor HTTP local servindo o `.woff2`. Em ambiente com internet normal isso não é necessário.
 
-Execução fora do Sail (ex.: ambiente sem Docker): PHP 8.3 + PostgreSQL local, `.env` com `DB_HOST=127.0.0.1`, `APP_KEY` e `JWT_SECRET` gerados (`artisan key:generate --force`, `artisan jwt:secret --force`) e banco `testing` criado.
+Execução fora do Sail (ex.: ambiente sem Docker): PHP 8.5 + PostgreSQL local, `.env` com `DB_HOST=127.0.0.1`, `APP_KEY` e `JWT_SECRET` gerados (`artisan key:generate --force`, `artisan jwt:secret --force`) e banco `testing` criado.
 
 ## 13. Skills
 
@@ -135,10 +135,15 @@ Localização e quando usar: tabela em [`../CLAUDE.md`](../CLAUDE.md#skills-leia
 | Integrações atrás de `Contracts/` | troca por config | `app/Contracts` |
 | Pint não aplicado ao legado | evitar diff gigante | `CLAUDE.md` |
 
-## 15. Limitações conhecidas e pendências
+## 15. Limitações conhecidas
 
-Lista viva em `IMPLEMENTATION_PLAN.md` (seção D). Principais: o relatório da avaliação de segurança de 2026-09-29 foi removido do repositório e os 10 achados em aberto dela não são mais rastreados (ver `seguranca.md`); o E2E usa backend simulado (não valida a API Laravel real) e o job de E2E no CI ainda não é bloqueante; sem medição de cobertura; Pint não aplicado ao legado; mensagens genéricas do Zod em inglês em campos sem valor padrão (FRONT-005); 11 exceções de lint (`eslint-disable-next-line ... -- motivo`) documentadas em `frontend-arquitetura.md`.
+- O E2E (Playwright) usa backend simulado: não valida a API Laravel real e não roda no CI.
+- Sem medição de cobertura de código.
+- Pint não é aplicado ao código legado (formate só arquivos novos).
+- Mensagens genéricas do Zod em inglês podem aparecer em campos sem valor padrão enviados vazios.
+- Exceções de lint (`eslint-disable-next-line ... -- motivo`) estão documentadas em [`frontend-arquitetura.md`](./frontend-arquitetura.md).
+- Segurança: revisão white-box e testes automáticos, sem pentest independente (ver [`seguranca.md`](./seguranca.md#avaliação-de-segurança)).
 
 ## 16. CI (GitHub Actions)
 
-`.github/workflows/ci.yml`, em `push` na `main` e em `pull_request`: **backend** (PHP 8.3, PostgreSQL 17, `vendor/bin/pest`), **frontend** (`tsc`, `npm run lint`, `npm test`) **frontend-build** (`npm run build`) e **frontend-e2e** (Playwright); os três primeiros bloqueiam e o E2E ainda é **não bloqueante** até o primeiro run verde nos servidores do GitHub. Audits: só severidade **alta ou crítica** bloqueia — no Composer, o script `.github/scripts/composer-audit-grave.php` lê a saída JSON de `composer audit` (a opção `--ignore-severity` não existe em versões antigas do Composer); no npm, `npm audit --omit=dev --audit-level=high` (só produção). O relatório completo de cada audit roda em passo que não bloqueia. Antes de abrir PR, rode localmente os mesmos comandos do §12. A pasta `.github/` começa com ponto e fica oculta no Finder do macOS — confira com `ls -a` e `git status` que ela entrou no commit. Estado: **verde no GitHub**; a proteção da branch `main` (exigir o CI antes do merge) foi **declinada** pelo dono do projeto, que mantém o push direto na `main` (decisão D-021).
+`.github/workflows/ci.yml`, em `push` na `main` e em `pull_request`: **backend** (PHP 8.5, PostgreSQL 17, `vendor/bin/pest`, `composer audit`), **frontend** (Node 22, Redis 7, `tsc`, `npm run lint`, `npm test`, `npm audit`) e **frontend-build** (`npm run build`). Os audits só bloqueiam severidade **alta ou crítica**: no Composer, o script `.github/scripts/composer-audit-grave.php` lê a saída JSON de `composer audit` (a opção `--ignore-severity` não existe em versões antigas do Composer); no npm, `npm audit --omit=dev --audit-level=high` (só produção). O relatório completo de cada audit roda em passo que não bloqueia. Antes de abrir PR, rode localmente os mesmos comandos do §12. A pasta `.github/` começa com ponto e fica oculta no Finder do macOS: confira com `ls -a` e `git status` que ela entrou no commit.

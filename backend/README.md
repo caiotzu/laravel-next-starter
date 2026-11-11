@@ -1,89 +1,71 @@
-# Backend — API Laravel
+# Backend: API Laravel
 
-API REST em Laravel 13: autenticação JWT com sessão revogável e 2FA, autorização por permissões, isolamento multi-tenant, e os domínios de negócio do starter (empresas, usuários, grupos, mensagens, banners, chamados de suporte, releases, Acesso de Suporte e auditoria).
+API REST em Laravel 13: JWT com sessão revogável e 2FA, autorização por permissões, isolamento multi-tenant e os domínios do starter. Arquitetura, rotas e demais detalhes em [`docs/`](../docs).
 
-Para arquitetura, autenticação, rotas e demais detalhes, veja [`docs/`](../docs).
-
-## Stack
-
-PHP `^8.5` (obrigatório; container Sail com PHP 8.5) · Laravel `^13.0` · PostgreSQL 17 · `tymon/jwt-auth` · `pragmarx/google2fa` · `darkaonline/l5-swagger` · `laravel/sail` · Pest 4.
+**Stack:** PHP `^8.5` (obrigatório) · Laravel `^13.0` · PostgreSQL 17 · `tymon/jwt-auth` · `pragmarx/google2fa` · `darkaonline/l5-swagger` · Pest 4 · Laravel Sail.
 
 ## Instalação
+
+Passo a passo completo (requisitos, portas, problemas comuns): [`docs/instalacao-local.md`](../docs/instalacao-local.md). Resumo:
 
 ```bash
 cd backend
 composer install
 cp .env.example .env
-
 ./vendor/bin/sail up -d
 ./vendor/bin/sail artisan key:generate
 ./vendor/bin/sail artisan jwt:secret
 ./vendor/bin/sail artisan migrate --seed
 ```
 
-Acesso direto ao container:
-
-```bash
-docker exec -it backend-laravel.test-1 /bin/bash
-```
-
-> O seeder `AdminUsuarioSeeder` cria um usuário de desenvolvimento (`admin@admin.com.br`). Use apenas em ambiente local.
+A API responde em `http://localhost` (porta `APP_PORT`, padrão 80). O seeder cria `admin@admin.com.br` / `Admin123@` e `private@private.com.br` / `Private123@`, só para desenvolvimento.
 
 ## Variáveis de ambiente
 
-Principais chaves de `.env.example` — detalhes de cada uma em [`docs/banco-de-dados.md`](../docs/banco-de-dados.md) e [`docs/api.md`](../docs/api.md):
+Principais chaves (modelo em `.env.example`). Produção: [`docs/implantacao-servidor.md`](../docs/implantacao-servidor.md).
 
 | Variável | Descrição |
 |---|---|
 | `APP_URL` / `APP_URL_FRONTEND` | URLs da API e do frontend |
-| `DB_*` | Conexão com PostgreSQL (padrão do Sail) |
-| `QUEUE_CONNECTION` | `database` (produção) ou `sync` (desenvolvimento) |
-| `JWT_SECRET` | Gerado por `php artisan jwt:secret` |
-| `EMAIL_PROVIDER` | `amazon_ses` (padrão do código, `config/api.php`) ou `mailtrap` (valor sugerido no `.env.example` para desenvolvimento) |
-| `CACHE_STORE` | `database` no `.env.example` (permissões, `temp_token` do 2FA, rate limit) |
+| `DB_*` | Conexão com o PostgreSQL (padrão do Sail) |
+| `QUEUE_CONNECTION` | `database` (precisa de `queue:work`) ou `sync` (desenvolvimento) |
+| `CACHE_STORE` | `database` (permissões, `temp_token` do 2FA, rate limit) |
+| `JWT_SECRET` | Gerado por `artisan jwt:secret` |
 | `JWT_TTL` / `JWT_REFRESH_TTL` | Validade do token em minutos (padrão 60) e janela de refresh (padrão 20160) |
-| `TRUSTED_PROXIES` | IPs/CIDRs dos proxies confiáveis (vazio = não confia em nenhum). **Necessário para que os rate limits por IP vejam o IP real do usuário**, já que quem chama a API é o BFF (`config/trustedproxy.php`) |
-| `CORS_ALLOWED_ORIGINS` | Origens cross-site permitidas (vazio por padrão; a comunicação normal passa pelo BFF e não depende de CORS) |
-| `CHAMADO_ANEXO_TAMANHO_MAXIMO_KB` / `CHAMADO_ANEXOS_MAXIMO_POR_MENSAGEM` / `CHAMADO_ANEXO_URL_EXPIRA_MINUTOS` | Limites de anexos de chamado (padrão 10240 KB, 5 por mensagem, links de 30 min) |
+| `EMAIL_PROVIDER` / `MAIL_*` | Envio de e-mails (primeiro acesso, redefinição de senha) |
+| `CORS_ALLOWED_ORIGINS` | Origens cross-site permitidas (a comunicação normal passa pelo BFF) |
+| `L5_SWAGGER_GENERATE_ALWAYS` | Regera a spec a cada request (só em desenvolvimento) |
+| `SWAGGER_ADMIN_USERNAME` / `SWAGGER_ADMIN_PASSWORD_HASH` | Protegem o Swagger Admin (gere com `swagger:admin-hash`) |
+| `FORWARD_DB_PORT` / `FORWARD_REDIS_PORT` / `APP_PORT` | Portas publicadas pelo Sail |
 
-> `TRUSTED_PROXIES`, `CORS_ALLOWED_ORIGINS` e as variáveis `CHAMADO_*` são lidas pelo código, mas não constam no `.env.example`; adicione-as ao seu `.env` quando necessário.
-| `L5_SWAGGER_GENERATE_ALWAYS` | Regera a spec do Swagger a cada request (dev) |
-| `SWAGGER_ADMIN_USERNAME` / `SWAGGER_ADMIN_PASSWORD_HASH` | Protegem a doc Swagger Admin — gerados via `swagger:admin-hash` |
+Lidas pelo código, mas **ausentes do `.env.example`** (acrescente ao seu `.env` quando precisar):
+
+| Variável | Descrição |
+|---|---|
+| `TRUSTED_PROXIES` | IPs/CIDRs dos proxies confiáveis (vazio = nenhum). Necessária para os rate limits verem o IP real, já que quem chama a API é o BFF |
+| `FILE_STORAGE_DRIVER` | Driver de armazenamento (`local` por padrão) |
+| `CHAMADO_ANEXO_TAMANHO_MAXIMO_KB` / `CHAMADO_ANEXOS_MAXIMO_POR_MENSAGEM` / `CHAMADO_ANEXO_URL_EXPIRA_MINUTOS` | Limites de anexos de chamado (padrão 10240 KB, 5 por mensagem, links de 30 min) |
 
 ## Comandos úteis
 
 ```bash
-./vendor/bin/sail artisan test              # roda a suíte de testes (Pest)
-./vendor/bin/sail artisan queue:work        # processa a fila
-./vendor/bin/sail artisan schedule:work     # executa os comandos agendados (sessões e acessos de suporte)
-./vendor/bin/sail artisan swagger:admin-hash "senha"   # credenciais do Swagger Admin
-./vendor/bin/sail artisan l5-swagger:generate          # gera as specs OpenAPI
-./vendor/bin/sail artisan chamados:mover-anexos-privados --dry-run  # migração única de anexos legados para o disco privado
+./vendor/bin/sail artisan test --compact                 # testes (Pest)
+./vendor/bin/sail artisan queue:work                     # processa a fila
+./vendor/bin/sail artisan schedule:work                  # comandos agendados
+./vendor/bin/sail artisan swagger:admin-hash "senha"     # credenciais do Swagger Admin
+./vendor/bin/sail artisan l5-swagger:generate            # gera as specs OpenAPI
+./vendor/bin/sail artisan migrate:fresh --seed           # recria o banco (apaga tudo)
+./vendor/bin/sail shell                                  # terminal no container
 ```
+
+Swagger: <http://localhost/api/documentation> (Admin em `/api/documentation/admin`).
 
 ## Docker
 
-Ambiente gerenciado via **Laravel Sail** (`docker-compose.yml`): serviço `laravel.test` (PHP 8.5) + `pgsql` (PostgreSQL 17) + `redis` (Redis 7).
+O `docker-compose.yml` (Sail) sobe `laravel.test` (PHP 8.5), `pgsql` (PostgreSQL 17) e `redis` (Redis 7, **sem gravar em disco**: reiniciá-lo só desloga os usuários de teste). O Redis guarda as sessões do **frontend**; o Laravel não o usa.
 
-```bash
-./vendor/bin/sail up -d
-./vendor/bin/sail down
-```
-
-**Redis.** O serviço `redis` guarda as **sessões do frontend** (o JWT de acesso fica no Redis; o navegador só recebe um cookie opaco — ver [`docs/seguranca.md`](../docs/seguranca.md)). O Laravel em si não o usa (cache e fila continuam no banco). Aqui ele roda **sem volume e sem gravar em disco**: reiniciá-lo apenas desloga os usuários de teste. Se o container sair com `Can't handle RDB format version`, há um volume antigo: `./vendor/bin/sail down` e depois `docker volume rm backend_sail-redis` (nunca `down -v`, que apaga o banco).
-
-```bash
-./vendor/bin/sail exec redis redis-cli ping   # PONG
-```
-
-> ⚠️ **Este `docker-compose.yml` é exclusivo para desenvolvimento local.** As portas do PostgreSQL e do Redis são publicadas apenas em `127.0.0.1` (`FORWARD_DB_PORT`, padrão 5432; `FORWARD_REDIS_PORT`, padrão 6379) e a senha vem de `DB_PASSWORD` do `.env` (o `.env.example` sugere `password` — troque-a fora do ambiente local; o compose não define senha de fallback). Mesmo assim, **não reutilize este arquivo como base de deploy em staging/produção**: use uma infraestrutura dedicada (ECS, Kubernetes, VM com orquestração própria, etc.), sem exposição de porta do banco ou do Redis (o Redis de produção precisa de senha, TLS e rede privada) e com segredos em um secret manager. Não foi identificado, no repositório, Dockerfile/manifesto de produção nem pipeline de CI/CD.
+> **Uso exclusivo em desenvolvimento local.** As portas do PostgreSQL e do Redis ficam só em `127.0.0.1`. Não reutilize este arquivo em staging ou produção: veja [`docs/implantacao-servidor.md`](../docs/implantacao-servidor.md).
 
 ## Saiba mais
 
-- [Arquitetura em camadas](../docs/arquitetura.md#backend)
-- [Autenticação, 2FA e permissões](../docs/autenticacao-e-autorizacao.md)
-- [Rotas da API e Swagger](../docs/api.md)
-- [Banco de dados: migrations e seeders](../docs/banco-de-dados.md)
-- [Filas, jobs e eventos](../docs/filas-e-eventos.md)
-- [Testes](../docs/testes.md)
-- [Segurança](../docs/seguranca.md)
+[Arquitetura](../docs/arquitetura.md) · [Autenticação e permissões](../docs/autenticacao-e-autorizacao.md) · [API e Swagger](../docs/api.md) · [Banco de dados](../docs/banco-de-dados.md) · [Filas e eventos](../docs/filas-e-eventos.md) · [Testes](../docs/testes.md) · [Segurança](../docs/seguranca.md)

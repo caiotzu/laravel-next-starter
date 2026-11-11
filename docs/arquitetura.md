@@ -17,7 +17,7 @@ flowchart LR
     Worker -->|"e-mail"| Mail["Amazon SES / Mailtrap"]
 ```
 
-O navegador nunca fala diretamente com o Laravel. Toda chamada passa pelo Next.js, que decide o que repassar. **O JWT nunca chega ao navegador (SEC-009):** ele fica no servidor, no Redis, associado a um identificador de sessão aleatório e opaco (`sid`, 256 bits); o navegador guarda apenas o cookie com esse `sid` (`HttpOnly`, `SameSite=Lax`, `Secure` e prefixo `__Host-` em produção). A cada chamada o BFF troca o `sid` pelo JWT e injeta `Authorization: Bearer` na requisição ao backend. Os handlers de login e 2FA devolvem ao navegador o `data` do backend **sem o campo `token`**.
+O navegador nunca fala diretamente com o Laravel. Toda chamada passa pelo Next.js, que decide o que repassar. **O JWT nunca chega ao navegador:** ele fica no servidor, no Redis, associado a um identificador de sessão aleatório e opaco (`sid`, 256 bits); o navegador guarda apenas o cookie com esse `sid` (`HttpOnly`, `SameSite=Lax`, `Secure` e prefixo `__Host-` em produção). A cada chamada o BFF troca o `sid` pelo JWT e injeta `Authorization: Bearer` na requisição ao backend. Os handlers de login e 2FA devolvem ao navegador o `data` do backend **sem o campo `token`**.
 
 O projeto modela dois contextos de acesso, replicados em ambas as camadas:
 
@@ -102,25 +102,8 @@ frontend/
 
 Mais detalhes de cada pasta em [`frontend-arquitetura.md`](./frontend-arquitetura.md).
 
-## Inventário (contagem em 2026-10-17)
-
-| Item | Quantidade |
-|---|---:|
-| Rotas de API declaradas (`routes/api.php`) | 158 (64 GET, 35 POST, 13 PUT, 29 PATCH, 17 DELETE) |
-| Controllers (Admin, Private, Global, Lookup) | 39 |
-| Services / Models / Enums / Repositories | 23 / 23 / 25 / 2 |
-| Form Requests / Resources / DTOs | 77 / 86 / 62 |
-| Migrations | 31 |
-| Jobs / Events / Listeners | 2 / 8 / 7 |
-| Comandos Artisan customizados | 4 (2 agendados) |
-| Testes | 393 no backend (Pest) e 183 no frontend (Vitest), todos verdes e executados pelo CI — ver [`testes.md`](./testes.md) |
-| Páginas Next.js (`page.tsx`) | 65 (40 Admin, 25 Private) |
-| Route handlers do BFF | 18 (16 de auth + 2 de proxy) |
-| Código PHP em `backend/app` | ~25 mil linhas |
-| Código TS/TSX no frontend | ~52 mil linhas |
-
 ## Cache e armazenamento
 
-- **Cache:** `CACHE_STORE=database` no `.env.example` (tabela `cache`). É usado para o cache de permissões por grupo/versão (`Usuario::permissoesCache()`), para os `temp_token` do 2FA, para o controle anti-replay de TOTP e para os contadores do rate limit. Há variáveis de Redis/Memcached no `.env.example`, mas nenhum uso de Redis foi identificado no código;
+- **Cache:** `CACHE_STORE=database` no `.env.example` (tabela `cache`). É usado para o cache de permissões por grupo/versão (`Usuario::permissoesCache()`), para os `temp_token` do 2FA, para o controle anti-replay de TOTP e para os contadores do rate limit. Há variáveis de Redis/Memcached no `.env.example`, mas o backend não usa Redis (o Redis das sessões é do frontend, ver [`redis-producao.md`](./redis-producao.md));
 - **Dados com dono (Usuario, Grupo):** consultas ficam em `GrupoRepository`/`UsuarioRepository` e recebem sempre um `EscopoEntidade` (resolvido por `EscopoEntidadeService::atual()`), o que impede esquecer o filtro de empresa. Detalhes em [`repositories.md`](./repositories.md).
 - **Arquivos:** todo upload passa por `FileStorageInterface` (provider escolhido por `FILE_STORAGE_DRIVER`: `local` por padrão, `s3` preparado). Anexos de chamado ficam no armazenamento privado e só são entregues por link assinado; o comando `chamados:mover-anexos-privados` migra anexos legados do público. Detalhes em [`armazenamento-de-arquivos.md`](./armazenamento-de-arquivos.md).
