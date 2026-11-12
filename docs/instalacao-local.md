@@ -90,7 +90,14 @@ Os valores já funcionam com o Sail. Recomendado em desenvolvimento: troque `QUE
 
 ✅ **Esperado:** `APP_KEY` e `JWT_SECRET` preenchidos no `.env`.
 
-### 3.5 Banco e usuários de teste
+
+### 3.5 Criar link simbólico do storage
+
+```bash
+./vendor/bin/sail artisan storage:link  
+```
+
+### 3.6 Banco e usuários de teste
 
 ```bash
 ./vendor/bin/sail artisan migrate --seed
@@ -98,7 +105,8 @@ Os valores já funcionam com o Sail. Recomendado em desenvolvimento: troque `QUE
 
 ✅ **Esperado:** migrations e seeders terminam sem erro.
 
-### 3.6 Verificar
+
+### 3.7 Verificar
 
 ```bash
 curl -i http://localhost/up
