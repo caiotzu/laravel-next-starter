@@ -117,7 +117,9 @@ test.describe("Vários usuários ao mesmo tempo", () => {
     await page.getByRole("button", { name: /m@example\.com/ }).click();
     await page.getByRole("menuitem", { name: "Sair" }).click();
 
-    expect(await sessaoNoServidor(priv)).toBeNull();
+    // O clique só dispara o logout: a sessão some do Redis quando o servidor termina de tratá-lo.
+    // Por isso se espera (poll) em vez de ler o Redis na hora, o que dependia da velocidade da máquina.
+    await expect.poll(() => sessaoNoServidor(priv), { timeout: 10_000 }).toBeNull();
     expect(await sessaoNoServidor(admin)).not.toBeNull();
 
     await context.close();

@@ -1,0 +1,119 @@
+# Tarefas e atualizações de dependências
+
+Plano para manter o projeto atualizado, em etapas pequenas (um PR por etapa).
+Levantamento feito em **13/11/2026**. Versões conferidas no registro do npm e nas tags dos repositórios.
+
+> Regra do projeto: mudança em `package-lock.json` / `composer.lock` só com justificativa. A justificativa de cada etapa está descrita abaixo.
+
+## Como validar cada etapa
+
+| Onde | Comandos |
+|---|---|
+| Frontend (`frontend/`) | `npx tsc --noEmit` · `npm run lint` · `npm test` · `npm run build` · `npm run e2e` (o E2E **não** roda no CI) |
+| Backend (`backend/`) | `./vendor/bin/sail artisan test --compact` · `./vendor/bin/pint --test` |
+| Levantar o que está desatualizado | Frontend/backend npm: `npm outdated` · Composer: `./vendor/bin/sail composer outdated --direct` |
+
+## Versões que ficam fixas (de propósito)
+
+Os intervalos com `^` já impedem salto de versão maior. Estes itens só mudam na etapa indicada:
+
+| Pacote | Fica em | Motivo | Etapa |
+|---|---|---|---|
+| `recharts` | 2.x | A v3 muda tipos e comportamento (gráficos e `components/ui/chart.tsx`) | 3 |
+| `@tanstack/react-table` | 8.x | A v9 é uma reescrita; só `components/data-table.tsx` usa | 9 |
+| `typescript` | 5.x | A 7.x é incompatível com `typescript-eslint` (exige `<6.1.0`); a 6.x muda padrões do `tsconfig` | 8 |
+| `eslint` | 9.x | `eslint-plugin-import` só declara suporte até o ESLint 9 | 10 |
+| `@types/node` | 22.x | O runtime é Node 22 | — |
+| `jsdom` | 30.x | A 31.0.1 saiu em 13/11/2026; esperar amadurecer | 10 |
+| `lucide-react` | 0.x | A v1 remove ícones de marcas e põe `aria-hidden` por padrão | 2 |
+| `next`, `eslint-config-next`, `react`, `react-dom` | versão exata | Já eram fixas; mantêm-se fixas e sobem juntas | — |
+
+## Etapas
+
+### Etapa 1 — Segurança e atualizações seguras do frontend ✅ feita
+
+Justificativa: o Next.js 16.4.4 está abaixo do patch de segurança de 03/11/2026 (corrigido na 16.4.5: 7 falhas, 1 alta). Uma delas (GHSA-pc58-hwjq-p385) envolve aplicações self-hosted que repassam respostas obtidas via `fetch`, padrão do BFF em `app/api/proxy/*`.
+
+- [x] `next` 16.4.4 → 16.4.6 e `eslint-config-next` 16.4.4 → 16.4.6 (exatas, sobem juntas)
+- [x] `react` e `react-dom` 19.1.0 → 19.3.1 (exatas)
+- [x] `npm update` dentro dos ranges (Tailwind 4.3.5, TanStack Query 5.107, Tiptap 3.33, Vitest 5.1, Playwright 1.65, Radix, Base UI, axios, react-hook-form, jsdom 30.1.3 etc.)
+- [x] Remover `@types/dompurify` (depreciado; o `dompurify` já traz os próprios tipos)
+- [x] `@hookform/resolvers` 5.9.1 → 7.0.6 (o código do `zodResolver` é idêntico ao da 5.9.1)
+
+Validação (13/11/2026, máquina local): `npm ci`, `tsc`, `lint`, `npm test` (701 testes), `npm run build` (Next.js 16.4.6) e `npm run e2e` (63 testes, incluindo CSP com nonce) passaram.
+
+- [x] Correção de um teste E2E instável (`e2e/multiusuario.e2e.ts`, "Admin e Private no mesmo computador…"): ele lia o Redis logo após clicar em "Sair", sem esperar o logout terminar; agora usa `expect.poll`.
+- Requisito local do E2E: `redis-server` instalado (`brew install redis`); ele sobe um Redis próprio na porta 6390.
+
+### Etapa 1b — `npm` do backend (Vite) ✅ feita
+
+Justificativa: `npm audit` apontava 3 críticos e 8 altos (`concurrently`/`shell-quote`, `axios`, `vite`, `tar`, `postcss`, `rollup`…). Esse `package.json` é o esqueleto do Laravel e só o `welcome.blade.php` usa `@vite`.
+
+- [x] `npm update` dentro dos ranges: `vite` 7.3.8, `axios` 1.21.1, `tailwindcss`/`@tailwindcss/vite` 4.3.5, `laravel-vite-plugin` 2.1.0, `concurrently` 9.2.5
+- Resultado: `npm audit` → 0 vulnerabilidades; `npm run build` OK.
+- [ ] Decidir se o pipeline Vite deve continuar no backend (não é usado pelo CI nem pela API).
+
+### Etapa 2 — `lucide-react` 0.546 → 1.x
+
+- [ ] Subir `lucide-react` (124 arquivos importam).
+- [ ] Rodar `npx tsc --noEmit`: qualquer ícone removido (ex.: marcas) aparece como erro de export.
+- [ ] Conferir testes/E2E que localizem ícones por role: a v1 coloca `aria-hidden` por padrão.
+
+### Etapa 3 — `recharts` 2.15 → 3.x
+
+- [ ] Subir `recharts` e instalar `react-is` compatível com o React 19.
+- [ ] Ajustar `components/ui/chart.tsx` (tipos `Tooltip`/`Legend`; guia: `TooltipProps` → `TooltipContentProps` em `content` customizado).
+- [ ] Conferir os 4 gráficos: `chart-area-interactive.tsx`, `data-table.tsx`, `DashboardEvolucaoChamadosChart.tsx`, `DashboardEvolucaoEmpresasChart.tsx`.
+- [ ] Conferir visualmente: `accessibilityLayer` agora é `true` por padrão, ordem de z-index do Tooltip e seletores CSS `.recharts-*`.
+- Guia oficial: https://github.com/recharts/recharts/wiki/3.0-migration-guide
+
+### Etapa 4 — Backend: Composer dentro do range
+
+Atualizar com `composer update` (no Sail), sem mudar o `composer.json`:
+
+- [ ] `laravel/framework` 13.34 → 13.42 · `laravel/sanctum` 4.4 · `laravel/tinker` 3.1 · `laravel/pail` 1.3 · `laravel/sail` 1.70
+- [ ] `laravel/pint` 1.32.3 (rodar `pint --test`: regras de estilo podem mudar) · `laravel/boost` 2.10.4 · `nunomaduro/collision` 8.9.6 · `tymon/jwt-auth` 2.3.1
+- [ ] `laravel-lang/lang` 15.37.7 (testes que comparam mensagens podem mudar)
+- [ ] **Não** atualizar `darkaonline/l5-swagger` nem Pest aqui (etapas 5 e 6): use `composer update` nominal, listando os pacotes.
+- [ ] Rodar `composer audit` e a suíte completa.
+
+### Etapa 5 — Backend: Pest 5
+
+- [ ] `pestphp/pest` `^4.0` → `^5.0` e `pestphp/pest-plugin-laravel` `^4.0` → `^5.0` (exige PHP ≥ 8.4; o projeto usa 8.5). Traz PHPUnit 12 → 13.
+- [ ] Rodar `./vendor/bin/pest --migrate-configuration` se o `phpunit.xml` precisar.
+- [ ] Suíte completa passando; só 1 arquivo referencia `PHPUnit\Framework\TestCase` diretamente.
+- [ ] Atualizar menções a "Pest 4": `CLAUDE.md` (linha 8), `backend/README.md`, `docs/backend.md`, `docs/testes.md`.
+
+### Etapa 6 — Backend: `l5-swagger` 11.1 → 11.3
+
+- [ ] Adicionar `"zircote/swagger-php": "^6.12"` ao `composer.json` **antes** de atualizar o `l5-swagger`. A 11.3.x aceita `^6.12 || ^7.0` e o Composer escolheria a 7.x.
+- [ ] Gerar a documentação antes e depois (`sail artisan l5-swagger:generate`) e comparar o JSON.
+- Motivo do pin: a swagger-php 7 passa a gerar OpenAPI 3.1.0 e remove componentes que nenhuma rota referencia (os schemas de `app/OpenApi/Shared/*` são esse caso).
+
+### Etapa 7 — Backend: `swagger-php` 7 (opcional, depois da 6)
+
+- [ ] Ler https://github.com/zircote/swagger-php (guia `migrating-to-v7`): usar `Builder::setVersion('3.0.0')` e `cleanup.enabled = false` para manter a saída atual, ou migrar de forma planejada.
+
+### Etapa 8 — `typescript` 5.9 → 6.0 (opcional)
+
+- [ ] Subir para `6.0.x` (nunca 7.x enquanto o `typescript-eslint` exigir `<6.1.0`).
+- [ ] No `tsconfig.json`, declarar `"types": ["node"]` (e os tipos do vitest/jest-dom onde os testes são checados): na 6.0 o padrão de `types` é `[]`.
+- [ ] Conferir `noUncheckedSideEffectImports` (agora ligado por padrão) com `tsc`.
+
+### Etapa 9 — `@tanstack/react-table` 8 → 9 (adiar)
+
+- [ ] Verificar se `components/data-table.tsx` (exemplo do dashboard) ainda é necessário; se não, remover a dependência em vez de migrar.
+- [ ] Se for mantido, planejar a migração própria (reescrita da API) com o guia oficial.
+
+### Etapa 10 — Acompanhar (sem ação agora)
+
+- [ ] `eslint` 10: esperar `eslint-config-next` e `eslint-plugin-import` declararem suporte.
+- [ ] `jsdom` 31: reavaliar em algumas semanas.
+- [ ] `vite` 8 + `laravel-vite-plugin` 3 (backend): sobem juntos; só se o pipeline for mantido. `concurrently` 10 exige Node ≥ 22.
+- [ ] Avisos moderados do `npm audit` do frontend (`typescript-eslint`, `minimatch`, `postcss-selector-parser`): ferramentas de build/lint, sem correção publicada. Não usar `npm audit fix --force` (sugere rebaixar o `eslint-config-next`).
+
+## Rotina recorrente
+
+- [ ] Mensalmente: `npm outdated` (frontend e backend) e `composer outdated --direct`.
+- [ ] Acompanhar os avisos de segurança do Next.js (releases programados) e do Laravel.
+- [ ] Atualizar este arquivo a cada etapa concluída.
