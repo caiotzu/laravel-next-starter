@@ -730,7 +730,7 @@
                     "Admin"
                 ],
                 "summary": "Admin — Confirmar código 2FA do login",
-                "description": "Segunda etapa do login quando o usuário tem 2FA habilitado: confirma o código do Google Authenticator usando o temp_token retornado por /admin/login. Sujeito a rate limit (9 tentativas por IP).",
+                "description": "Segunda etapa do login quando o usuário tem 2FA habilitado: confirma o código do Google Authenticator usando o temp_token retornado por /admin/login. Sujeito a rate limit: 9 falhas por usuário e teto de 60 falhas por IP, a cada 5 minutos.",
                 "operationId": "aa4e013cab81b7e8b762f6323e35e0a2",
                 "requestBody": {
                     "required": true,
@@ -1214,11 +1214,11 @@
                                             "entidade_tipo": {
                                                 "description": "Obrigatório quando tipo = 'entidade'.",
                                                 "type": "string",
+                                                "nullable": true,
                                                 "enum": [
                                                     "admin",
                                                     "private"
-                                                ],
-                                                "nullable": true
+                                                ]
                                             }
                                         },
                                         "type": "object"
@@ -1233,8 +1233,8 @@
                                             "properties": {
                                                 "nome": {
                                                     "type": "string",
-                                                    "maxLength": 255,
-                                                    "nullable": true
+                                                    "nullable": true,
+                                                    "maxLength": 255
                                                 },
                                                 "conteudo": {
                                                     "description": "Conteúdo da imagem em base64.",
@@ -1507,11 +1507,11 @@
                                             "entidade_tipo": {
                                                 "description": "Obrigatório quando tipo = 'entidade'.",
                                                 "type": "string",
+                                                "nullable": true,
                                                 "enum": [
                                                     "admin",
                                                     "private"
-                                                ],
-                                                "nullable": true
+                                                ]
                                             }
                                         },
                                         "type": "object"
@@ -1529,8 +1529,8 @@
                                                 },
                                                 "nome": {
                                                     "type": "string",
-                                                    "maxLength": 255,
-                                                    "nullable": true
+                                                    "nullable": true,
+                                                    "maxLength": 255
                                                 },
                                                 "conteudo": {
                                                     "description": "Obrigatório (base64) quando a imagem é nova, ou seja, sem id.",
@@ -1716,6 +1716,58 @@
                 "responses": {
                     "200": {
                         "description": "Banner desativado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminBanner"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/banners/{id}/restaurar": {
+            "patch": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Admin — Restaurar banner excluído",
+                "description": "Restaura (desfaz o soft delete de) um banner previamente excluído. Não deve ser confundido com \"Ativar\" (ver /ativar): aquele altera o campo status de um banner que já existe; este desfaz a exclusão. O banner volta com o mesmo status que tinha antes de ser excluído.",
+                "operationId": "d965db341ac5d25a4328185e15d0f273",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Banner restaurado.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3284,8 +3336,8 @@
                                     },
                                     "complemento": {
                                         "type": "string",
-                                        "maxLength": 50,
-                                        "nullable": true
+                                        "nullable": true,
+                                        "maxLength": 50
                                     }
                                 },
                                 "type": "object"
@@ -3471,8 +3523,8 @@
                                     },
                                     "complemento": {
                                         "type": "string",
-                                        "maxLength": 50,
-                                        "nullable": true
+                                        "nullable": true,
+                                        "maxLength": 50
                                     }
                                 },
                                 "type": "object"
@@ -5217,8 +5269,8 @@
                                     },
                                     "versao": {
                                         "type": "string",
-                                        "maxLength": 30,
-                                        "example": "1.4.0"
+                                        "example": "1.4.0",
+                                        "maxLength": 30
                                     }
                                 },
                                 "type": "object"
@@ -5335,16 +5387,16 @@
                                 "properties": {
                                     "contexto": {
                                         "type": "string",
+                                        "nullable": true,
                                         "enum": [
                                             "admin",
                                             "private"
-                                        ],
-                                        "nullable": true
+                                        ]
                                     },
                                     "titulo": {
                                         "type": "string",
-                                        "maxLength": 150,
-                                        "nullable": true
+                                        "nullable": true,
+                                        "maxLength": 150
                                     },
                                     "conteudo": {
                                         "type": "string",
@@ -5352,19 +5404,19 @@
                                     },
                                     "tipo": {
                                         "type": "string",
+                                        "nullable": true,
                                         "enum": [
                                             "feature",
                                             "improvement",
                                             "fix",
                                             "change"
-                                        ],
-                                        "nullable": true
+                                        ]
                                     },
                                     "versao": {
                                         "type": "string",
-                                        "maxLength": 30,
                                         "example": "1.4.1",
-                                        "nullable": true
+                                        "nullable": true,
+                                        "maxLength": 30
                                     }
                                 },
                                 "type": "object"
@@ -5724,12 +5776,12 @@
                                     },
                                     "status": {
                                         "type": "string",
+                                        "nullable": true,
                                         "enum": [
                                             "ativo",
                                             "inativo",
                                             "bloqueado"
-                                        ],
-                                        "nullable": true
+                                        ]
                                     }
                                 },
                                 "type": "object"
@@ -6156,11 +6208,11 @@
                             },
                             "entidade_tipo": {
                                 "type": "string",
+                                "nullable": true,
                                 "enum": [
                                     "admin",
                                     "private"
-                                ],
-                                "nullable": true
+                                ]
                             }
                         },
                         "type": "object"
@@ -6275,11 +6327,11 @@
                             },
                             "entidade_tipo": {
                                 "type": "string",
+                                "nullable": true,
                                 "enum": [
                                     "admin",
                                     "private"
-                                ],
-                                "nullable": true
+                                ]
                             },
                             "grupo_empresa_id": {
                                 "type": "string",
@@ -6397,13 +6449,13 @@
                     },
                     "encerrado_por": {
                         "type": "string",
+                        "nullable": true,
                         "enum": [
                             "cliente",
                             "admin",
                             "expiracao",
                             "sistema"
-                        ],
-                        "nullable": true
+                        ]
                     },
                     "ativo": {
                         "type": "boolean"
@@ -6465,13 +6517,13 @@
                     },
                     "encerrado_por": {
                         "type": "string",
+                        "nullable": true,
                         "enum": [
                             "cliente",
                             "admin",
                             "expiracao",
                             "sistema"
-                        ],
-                        "nullable": true
+                        ]
                     },
                     "ativo": {
                         "type": "boolean"
@@ -7462,10 +7514,17 @@
                                 "oneOf": [
                                     {
                                         "$ref": "#/components/schemas/Empresa"
+                                    },
+                                    {
+                                        "type": "object",
+                                        "nullable": true,
+                                        "enum": [
+                                            null
+                                        ]
                                     }
                                 ],
-                                "nullable": true,
-                                "type": "object"
+                                "type": "object",
+                                "nullable": true
                             }
                         },
                         "type": "object"
@@ -7593,8 +7652,8 @@
                     },
                     "complemento": {
                         "type": "string",
-                        "maxLength": 50,
-                        "nullable": true
+                        "nullable": true,
+                        "maxLength": 50
                     },
                     "created_at": {
                         "type": "string",

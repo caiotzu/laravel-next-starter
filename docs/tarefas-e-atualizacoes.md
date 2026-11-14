@@ -103,11 +103,21 @@ Comando usado:
 
 Validação (14/11/2026, Sail): `artisan test --compact` → 461 testes (2674 asserções) passaram, igual à etapa 4; `composer audit` → sem vulnerabilidades. O CI continua com `vendor/bin/pest --compact`, sem mudança.
 
-### Etapa 6 — Backend: `l5-swagger` 11.1 → 11.3
+### Etapa 6 — Backend: `l5-swagger` 11.1 → 11.3 ✅ feita
 
-- [ ] Adicionar `"zircote/swagger-php": "^6.12"` ao `composer.json` **antes** de atualizar o `l5-swagger`. A 11.3.x aceita `^6.12 || ^7.0` e o Composer escolheria a 7.x.
-- [ ] Gerar a documentação antes e depois (`sail artisan l5-swagger:generate`) e comparar o JSON.
-- Motivo do pin: a swagger-php 7 passa a gerar OpenAPI 3.1.0 e remove componentes que nenhuma rota referencia (os schemas de `app/OpenApi/Shared/*` são esse caso).
+Comando usado (o `swagger-php` foi fixado em `^6.12` no mesmo comando, para o Composer não escolher a 7.x):
+
+```bash
+./vendor/bin/sail composer require zircote/swagger-php:^6.12 darkaonline/l5-swagger:^11.3 --with-all-dependencies
+```
+
+- [x] `darkaonline/l5-swagger` 11.1.0 → 11.3.1 · `zircote/swagger-php` 6.11.0 → 6.20.4 (série 6, por causa da trava) · `swagger-api/swagger-ui` 5.33.1 → 5.35.0 · `symfony/type-info` 7.4.20 → 8.1.11 · `radebatz/type-info-extras` 1.0.14.
+- [x] `composer.json` agora declara `"zircote/swagger-php": "^6.12"` em `require`. **Não remova essa linha** enquanto a etapa 7 não for feita: sem ela o Composer pode subir para a 7.x.
+- [x] Documentação gerada antes e depois (`l5-swagger:generate --all`) e comparada com `diff`: o documento **admin** ficou idêntico; no documento **público** só mudou a representação de duas propriedades `nullable` que apontam para outro schema (a 6.20 passou a incluir uma alternativa `{ "type": "object", "nullable": true, "enum": [null] }` dentro do `oneOf`). Nenhuma rota, schema ou componente foi removido.
+
+Validação (14/11/2026, Sail): `artisan test --compact` → 461 testes (2674 asserções) passaram; `composer audit` → sem vulnerabilidades.
+
+- [ ] Conferir visualmente em `/api/documentation` (público) e `/api/documentation/admin` que o Swagger UI abre e que as duas propriedades acima aparecem como "nullable".
 
 ### Etapa 7 — Backend: `swagger-php` 7 (opcional, depois da 6)
 

@@ -5509,10 +5509,17 @@
                                 "oneOf": [
                                     {
                                         "$ref": "#/components/schemas/Empresa"
+                                    },
+                                    {
+                                        "type": "object",
+                                        "nullable": true,
+                                        "enum": [
+                                            null
+                                        ]
                                     }
                                 ],
-                                "nullable": true,
-                                "type": "object"
+                                "type": "object",
+                                "nullable": true
                             }
                         },
                         "type": "object"

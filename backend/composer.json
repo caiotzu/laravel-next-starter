@@ -10,14 +10,15 @@
     "license": "MIT",
     "require": {
         "php": "^8.5",
-        "darkaonline/l5-swagger": "^11.0",
+        "darkaonline/l5-swagger": "^11.3",
         "jenssegers/agent": "^2.6",
         "laravel/framework": "^13.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "pragmarx/google2fa": "^9.0",
         "simplesoftwareio/simple-qrcode": "^4.2",
-        "tymon/jwt-auth": "^2.2"
+        "tymon/jwt-auth": "^2.2",
+        "zircote/swagger-php": "^6.12"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

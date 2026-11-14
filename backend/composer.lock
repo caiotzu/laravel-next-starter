@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "469e29e05aca67902d5528ed4b4892b1",
+    "content-hash": "0d7a14254dabed1b3593926495da244a",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -192,16 +192,16 @@
         },
         {
             "name": "darkaonline/l5-swagger",
-            "version": "11.1.0",
+            "version": "11.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/DarkaOnLine/L5-Swagger.git",
-                "reference": "110b59478c9417c13794cef62a82b019433d642a"
+                "reference": "e01ec3ff575f1ef081be5207be6962dcb06c84ae"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DarkaOnLine/L5-Swagger/zipball/110b59478c9417c13794cef62a82b019433d642a",
-                "reference": "110b59478c9417c13794cef62a82b019433d642a",
+                "url": "https://api.github.com/repos/DarkaOnLine/L5-Swagger/zipball/e01ec3ff575f1ef081be5207be6962dcb06c84ae",
+                "reference": "e01ec3ff575f1ef081be5207be6962dcb06c84ae",
                 "shasum": ""
             },
             "require": {
@@ -210,40 +210,35 @@
                 "php": "^8.2",
                 "swagger-api/swagger-ui": ">=5.18.3",
                 "symfony/yaml": "^5.0 || ^6.0 || ^7.0 || ^8.0",
-                "zircote/swagger-php": "^6.0"
+                "zircote/swagger-php": "^6.12 || ^7.0"
+            },
+            "require-dev": {
+                "mockery/mockery": "1.*",
+                "orchestra/testbench": "^11.0 || ^10.0 || ^9.0 || ^8.0 || 7.* || ^6.15 || 5.*",
+                "php-coveralls/php-coveralls": "^2.0",
+                "phpstan/phpstan": "^2.1",
+                "phpunit/phpunit": "^11.0"
             },
             "type": "library",
             "extra": {
                 "laravel": {
-                    "providers": [
-                        "L5Swagger\\L5SwaggerServiceProvider"
-                    ],
                     "aliases": {
                         "L5Swagger": "L5Swagger\\L5SwaggerFacade"
-                    }
+                    },
+                    "providers": [
+                        "L5Swagger\\L5SwaggerServiceProvider"
+                    ]
                 }
             },
             "autoload": {
-                "psr-4": {
-                    "L5Swagger\\": "src"
-                },
                 "files": [
                     "src/helpers.php"
-                ]
-            },
-            "autoload-dev": {
+                ],
                 "psr-4": {
-                    "Tests\\": "tests"
+                    "L5Swagger\\": "src"
                 }
             },
-            "scripts": {
-                "phpunit": [
-                    "vendor/bin/phpunit --testdox"
-                ],
-                "analyse": [
-                    "vendor/bin/phpstan analyse --memory-limit=256M"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -255,15 +250,26 @@
             ],
             "description": "OpenApi or Swagger integration to Laravel",
             "keywords": [
-                "API",
-                "OpenApi",
-                "UI",
                 "api",
                 "documentation",
                 "laravel",
+                "openapi",
                 "specification",
-                "swagger"
-            ]
+                "swagger",
+                "ui"
+            ],
+            "support": {
+                "issues": "https://github.com/DarkaOnLine/L5-Swagger/issues",
+                "source": "https://github.com/DarkaOnLine/L5-Swagger/tree/11.3.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/DarkaOnLine",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-11-09T07:11:09+00:00",
+            "published-time": "2026-11-09T07:15:57+00:00"
         },
         {
             "name": "dasprid/enum",
@@ -3823,16 +3829,16 @@
         },
         {
             "name": "radebatz/type-info-extras",
-            "version": "1.0.9",
+            "version": "1.0.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/DerManoMann/type-info-extras.git",
-                "reference": "2d9f01d60d642f890d9f170c0d8fde1f75ab17fb"
+                "reference": "08ac334a97e92c890eec6f644a6555fdf225fa8d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DerManoMann/type-info-extras/zipball/2d9f01d60d642f890d9f170c0d8fde1f75ab17fb",
-                "reference": "2d9f01d60d642f890d9f170c0d8fde1f75ab17fb",
+                "url": "https://api.github.com/repos/DerManoMann/type-info-extras/zipball/08ac334a97e92c890eec6f644a6555fdf225fa8d",
+                "reference": "08ac334a97e92c890eec6f644a6555fdf225fa8d",
                 "shasum": ""
             },
             "require": {
@@ -3840,10 +3846,16 @@
                 "phpstan/phpdoc-parser": "^2.0",
                 "symfony/type-info": "^7.3.8 || ^7.4.1 || ^8.0 || ^8.1-@dev"
             },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.70",
+                "phpstan/phpstan": "^2.1",
+                "phpunit/phpunit": "^11.0",
+                "rector/rector": "^2.0"
+            },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.x-dev"
+                    "dev-main": "1.x-dev"
                 }
             },
             "autoload": {
@@ -3854,26 +3866,7 @@
                     "/tests/"
                 ]
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Radebatz\\TypeInfoExtras\\Tests\\": "tests/"
-                }
-            },
-            "scripts": {
-                "cs": [
-                    "export XDEBUG_MODE=off && php-cs-fixer fix --allow-risky=yes"
-                ],
-                "lint": [
-                    "@cs --dry-run"
-                ],
-                "test": [
-                    "export XDEBUG_MODE=off && phpunit",
-                    "@lint"
-                ],
-                "analyse": [
-                    "export XDEBUG_MODE=off && phpstan analyse --memory-limit=2G"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -3890,7 +3883,13 @@
                 "symfony",
                 "type-info",
                 "types"
-            ]
+            ],
+            "support": {
+                "issues": "https://github.com/DerManoMann/type-info-extras/issues",
+                "source": "https://github.com/DerManoMann/type-info-extras/tree/1.0.14"
+            },
+            "time": "2026-11-12T03:41:43+00:00",
+            "published-time": "2026-11-12T03:43:08+00:00"
         },
         {
             "name": "ramsey/collection",
@@ -4113,19 +4112,20 @@
         },
         {
             "name": "swagger-api/swagger-ui",
-            "version": "v5.33.1",
+            "version": "v5.35.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/swagger-api/swagger-ui.git",
-                "reference": "cac3d136b5e37bfbe3288c8591f6f4fcf9870599"
+                "reference": "bc207af2a9c79d33f8af1899555f3e4ec67fbf89"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/swagger-api/swagger-ui/zipball/cac3d136b5e37bfbe3288c8591f6f4fcf9870599",
-                "reference": "cac3d136b5e37bfbe3288c8591f6f4fcf9870599",
+                "url": "https://api.github.com/repos/swagger-api/swagger-ui/zipball/bc207af2a9c79d33f8af1899555f3e4ec67fbf89",
+                "reference": "bc207af2a9c79d33f8af1899555f3e4ec67fbf89",
                 "shasum": ""
             },
             "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "Apache-2.0"
             ],
@@ -4158,13 +4158,19 @@
             "description": " Swagger UI is a collection of HTML, Javascript, and CSS assets that dynamically generate beautiful documentation from a Swagger-compliant API.",
             "homepage": "http://swagger.io",
             "keywords": [
-                "API",
-                "OpenAPI",
-                "Swagger",
-                "UI",
+                "api",
                 "documentation",
-                "specification"
-            ]
+                "openapi",
+                "specification",
+                "swagger",
+                "ui"
+            ],
+            "support": {
+                "issues": "https://github.com/swagger-api/swagger-ui/issues",
+                "source": "https://github.com/swagger-api/swagger-ui/tree/v5.35.0"
+            },
+            "time": "2026-11-13T11:27:08+00:00",
+            "published-time": "2026-11-13T11:28:16+00:00"
         },
         {
             "name": "symfony/clock",
@@ -6676,25 +6682,27 @@
         },
         {
             "name": "symfony/type-info",
-            "version": "v7.4.20",
+            "version": "v8.1.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/type-info.git",
-                "reference": "84f669e796d3144e4d62de3e0a3e4359480df339"
+                "reference": "9fd1414061c4bbf953bcfc183b133cbfa0a73c73"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/type-info/zipball/84f669e796d3144e4d62de3e0a3e4359480df339",
-                "reference": "84f669e796d3144e4d62de3e0a3e4359480df339",
+                "url": "https://api.github.com/repos/symfony/type-info/zipball/9fd1414061c4bbf953bcfc183b133cbfa0a73c73",
+                "reference": "9fd1414061c4bbf953bcfc183b133cbfa0a73c73",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.2",
-                "psr/container": "^1.1|^2.0",
-                "symfony/deprecation-contracts": "^2.5|^3"
+                "php": ">=8.4.1",
+                "psr/container": "^1.1|^2.0"
             },
             "conflict": {
                 "phpstan/phpdoc-parser": "<1.30"
+            },
+            "require-dev": {
+                "phpstan/phpdoc-parser": "^1.30|^2.0"
             },
             "type": "library",
             "autoload": {
@@ -6705,6 +6713,7 @@
                     "/Tests/"
                 ]
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -6725,11 +6734,34 @@
             "description": "Extracts PHP types information.",
             "homepage": "https://symfony.com",
             "keywords": [
+                "PHPStan",
                 "phpdoc",
-                "phpstan",
                 "symfony",
                 "type"
-            ]
+            ],
+            "support": {
+                "source": "https://github.com/symfony/type-info/tree/v8.1.11"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2026-11-02T10:58:30+00:00",
+            "published-time": "2026-11-04T11:31:29+00:00"
         },
         {
             "name": "symfony/uid",
@@ -7272,16 +7304,16 @@
         },
         {
             "name": "zircote/swagger-php",
-            "version": "6.11.0",
+            "version": "6.20.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/zircote/swagger-php.git",
-                "reference": "f998f7e712658fba61f86fccbdcf8e301a982175"
+                "reference": "52063c0fbcc4067c037c05c85378f0b954d099aa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/zircote/swagger-php/zipball/f998f7e712658fba61f86fccbdcf8e301a982175",
-                "reference": "f998f7e712658fba61f86fccbdcf8e301a982175",
+                "url": "https://api.github.com/repos/zircote/swagger-php/zipball/52063c0fbcc4067c037c05c85378f0b954d099aa",
+                "reference": "52063c0fbcc4067c037c05c85378f0b954d099aa",
                 "shasum": ""
             },
             "require": {
@@ -7290,13 +7322,23 @@
                 "phpstan/phpdoc-parser": "^2.0",
                 "psr/log": "^1.1 || ^2.0 || ^3.0",
                 "radebatz/type-info-extras": "^1.0.2",
-                "symfony/console": "^6.4 || ^7.0 || ^8.0",
+                "symfony/console": "^5.4 || ^6.4 || ^7.0 || ^8.0",
                 "symfony/deprecation-contracts": "^2 || ^3",
                 "symfony/finder": "^5.0 || ^6.0 || ^7.0 || ^8.0",
                 "symfony/yaml": "^5.4 || ^6.0 || ^7.0 || ^8.0"
             },
             "conflict": {
-                "symfony/process": ">=6, <6.4.14"
+                "symfony/console": "<5.4.35",
+                "symfony/finder": "<5.3.7",
+                "symfony/process": ">=6, <6.4.14",
+                "symfony/string": "<5.4.41"
+            },
+            "require-dev": {
+                "doctrine/annotations": "^2.0",
+                "friendsofphp/php-cs-fixer": "3.95.27",
+                "phpstan/phpstan": "2.3.1",
+                "phpunit/phpunit": "^11.5 || >=12.5.22",
+                "rector/rector": "2.7.0"
             },
             "bin": [
                 "bin/openapi"
@@ -7309,57 +7351,11 @@
             },
             "autoload": {
                 "psr-4": {
-                    "OpenApi\\": "src"
+                    "OpenApi\\": "src",
+                    "OpenApi\\Rector\\": "rector/src"
                 }
             },
-            "autoload-dev": {
-                "exclude-from-classmap": [
-                    "/tests/Fixtures"
-                ],
-                "psr-4": {
-                    "OpenApi\\Tools\\": "tools/src/",
-                    "OpenApi\\Tools\\Tests\\": "tools/tests/",
-                    "OpenApi\\Tests\\": "tests/",
-                    "AnotherNamespace\\": "tests/Fixtures/AnotherNamespace"
-                }
-            },
-            "scripts": {
-                "cs": [
-                    "export XDEBUG_MODE=off && php-cs-fixer fix --allow-risky=yes"
-                ],
-                "rector": [
-                    "rector process src tests docs/examples"
-                ],
-                "lint": [
-                    "@cs --dry-run",
-                    "@rector --dry-run"
-                ],
-                "test": [
-                    "export XDEBUG_MODE=off && phpunit --display-all-issues @additional_args"
-                ],
-                "performance": [
-                    "export XDEBUG_MODE=off && phpunit --group performance"
-                ],
-                "analyse": [
-                    "export XDEBUG_MODE=off && phpstan clear-result-cache -q && phpstan analyse --memory-limit=3G"
-                ],
-                "redocly": [
-                    "npm run redocly -- lint 'docs/examples/specs/**/*.yaml' 'docs/snippets/guide/extension-points/*.yaml' 'tests/Fixtures/Scratch/*.yaml'"
-                ],
-                "docs:check": [
-                    "export XDEBUG_MODE=off && phpunit --filter DocsAccuracyTest"
-                ],
-                "docs:gen": [
-                    "@php tools/docgen.php"
-                ],
-                "docs:dev": [
-                    "cd docs && npm run dev"
-                ],
-                "docs:build": [
-                    "@docs:gen",
-                    "cd docs && npm run build"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "Apache-2.0"
             ],
@@ -7386,7 +7382,19 @@
                 "json",
                 "rest",
                 "service discovery"
-            ]
+            ],
+            "support": {
+                "issues": "https://github.com/zircote/swagger-php/issues",
+                "source": "https://github.com/zircote/swagger-php/tree/6.20.4"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/zircote",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-11-11T21:52:50+00:00",
+            "published-time": "2026-11-11T21:56:14+00:00"
         }
     ],
     "packages-dev": [
