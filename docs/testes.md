@@ -8,7 +8,7 @@ Os testes validam o **comportamento do código**. Nenhum deles lê arquivos de d
 
 | Camada | Ferramenta | Observação |
 |---|---|---|
-| Backend | Pest 4 | PostgreSQL **real** (banco `testing`) |
+| Backend | Pest 5 | PostgreSQL **real** (banco `testing`) |
 | Frontend | Vitest 5 + Testing Library | `tests/session/redis-real.test.ts` só roda com `REDIS_URL` |
 | Frontend (E2E) | Playwright (Chromium) | app de produção + **backend simulado** + Redis real |
 | Tipos e lint | `tsc` e ESLint | 0 erros e 0 avisos |

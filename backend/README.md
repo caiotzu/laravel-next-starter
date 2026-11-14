@@ -2,7 +2,7 @@
 
 API REST com JWT, 2FA, permissões, multi-empresa e os módulos do starter.
 
-**Stack:** PHP `^8.5` · Laravel 13 · PostgreSQL 17 · `tymon/jwt-auth` · `google2fa` · `l5-swagger` · Pest 4 · Laravel Sail.
+**Stack:** PHP `^8.5` · Laravel 13 · PostgreSQL 17 · `tymon/jwt-auth` · `google2fa` · `l5-swagger` · Pest 5 · Laravel Sail.
 
 📚 Arquitetura, autenticação, banco e filas: [`docs/backend.md`](../docs/backend.md)
 

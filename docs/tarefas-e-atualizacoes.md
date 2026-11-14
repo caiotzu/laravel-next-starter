@@ -69,22 +69,39 @@ Justificativa: `npm audit` apontava 3 críticos e 8 altos (`concurrently`/`shell
 - [ ] Conferir no navegador: gráficos do dashboard (`/admin/dashboard` e `/dashboard`), tooltip ao passar o mouse, legenda e o gráfico de área do `data-table`. Pontos de atenção: `accessibilityLayer` agora é `true` por padrão (borda de foco ao navegar por teclado), ordem de sobreposição do Tooltip e os seletores `.recharts-*` do `chart.tsx`.
 - Guia oficial: https://github.com/recharts/recharts/wiki/3.0-migration-guide
 
-### Etapa 4 — Backend: Composer dentro do range
+### Etapa 4 — Backend: Composer dentro do range ✅ feita
 
-Atualizar com `composer update` (no Sail), sem mudar o `composer.json`:
+Comando usado (nominal, para não mexer no Pest nem no `l5-swagger`):
 
-- [ ] `laravel/framework` 13.34 → 13.42 · `laravel/sanctum` 4.4 · `laravel/tinker` 3.1 · `laravel/pail` 1.3 · `laravel/sail` 1.70
-- [ ] `laravel/pint` 1.32.3 (rodar `pint --test`: regras de estilo podem mudar) · `laravel/boost` 2.10.4 · `nunomaduro/collision` 8.9.6 · `tymon/jwt-auth` 2.3.1
-- [ ] `laravel-lang/lang` 15.37.7 (testes que comparam mensagens podem mudar)
-- [ ] **Não** atualizar `darkaonline/l5-swagger` nem Pest aqui (etapas 5 e 6): use `composer update` nominal, listando os pacotes.
-- [ ] Rodar `composer audit` e a suíte completa.
+```bash
+./vendor/bin/sail composer update laravel/framework laravel/sanctum laravel/tinker laravel/pail laravel/sail laravel/pint laravel/boost nunomaduro/collision tymon/jwt-auth laravel-lang/lang --with-all-dependencies
+```
 
-### Etapa 5 — Backend: Pest 5
+- [x] `laravel/framework` 13.34.0 → 13.42.0 · `laravel/sanctum` 4.4.0 · `laravel/tinker` 3.1.0 · `laravel/pail` 1.3.0 · `laravel/sail` 1.70.0
+- [x] `laravel/pint` 1.32.3 · `laravel/boost` 2.10.4 · `nunomaduro/collision` 8.9.6 · `tymon/jwt-auth` 2.3.1 · `laravel-lang/lang` 15.38.0
+- [x] Só o `composer.lock` mudou (`composer.json` e o `content-hash` ficaram iguais): 44 pacotes atualizados, 2 adicionados (`symfony/polyfill-php82`, `symfony/polyfill-time`) e 3 removidos (`ralouphie/getallheaders`, `symfony/polyfill-php83`, `dragon-code/pretty-array`).
+- Dependências indiretas que subiram de versão maior (permitidas pelo `laravel/framework` 13.42): **Guzzle 7.15 → 8.5** (e `guzzlehttp/promises` 3, `psr7` 3) e **Symfony 7.4 → 8.1** (`console`, `translation`, `mailer`, `process`…).
+- Não mudaram, de propósito: `pestphp/pest` 4.7.8, `phpunit/phpunit` 12.5.33, `darkaonline/l5-swagger` 11.1.0 e `zircote/swagger-php` 6.11.0 (etapas 5 e 6).
 
-- [ ] `pestphp/pest` `^4.0` → `^5.0` e `pestphp/pest-plugin-laravel` `^4.0` → `^5.0` (exige PHP ≥ 8.4; o projeto usa 8.5). Traz PHPUnit 12 → 13.
-- [ ] Rodar `./vendor/bin/pest --migrate-configuration` se o `phpunit.xml` precisar.
-- [ ] Suíte completa passando; só 1 arquivo referencia `PHPUnit\Framework\TestCase` diretamente.
-- [ ] Atualizar menções a "Pest 4": `CLAUDE.md` (linha 8), `backend/README.md`, `docs/backend.md`, `docs/testes.md`.
+Validação (13/11/2026, Sail): `artisan test --compact` → 461 testes (2674 asserções) passaram; `pint --test` → 513 arquivos PASS; `composer audit` → sem vulnerabilidades. Chamadas reais ao ViaCEP e à BrasilAPI (`Http::` sobre o Guzzle 8) funcionaram.
+
+- Avisos esperados, sem ação: `dragon-code/contracts` e `dragon-code/support` aparecem como abandonados (dependências indiretas do `laravel-lang/publisher`, de dev); avisos de PSR-4 em `app/OpenApi/Shared/*.php` (várias classes por arquivo, só para o Swagger); `storage:link ... already exists` no `post-update-cmd`.
+- Não validado: `AmazonSesService` (usa `Http::` sobre o Guzzle 8) exige credenciais reais da AWS.
+
+### Etapa 5 — Backend: Pest 5 ✅ feita
+
+Comando usado:
+
+```bash
+./vendor/bin/sail composer require pestphp/pest:^5.0 pestphp/pest-plugin-laravel:^5.0 --dev --with-all-dependencies
+```
+
+- [x] `pestphp/pest` `^4.0` → `^5.0` (4.7.8 → 5.3.5) e `pestphp/pest-plugin-laravel` `^4.0` → `^5.0` (4.1.0 → 5.0.1). Exige PHP ≥ 8.4; o projeto usa 8.5.
+- [x] PHPUnit 12.5.33 → **13.4.5**, `php-code-coverage` 12 → 14, `paratest` 7.28 e os plugins `arch`, `mutate` e `profanity` na série 5. Removidos: `composer/pcre`, `composer/xdebug-handler`, `theseer/tokenizer`.
+- [x] `phpunit.xml` não precisou de ajuste (não foi necessário rodar `pest --migrate-configuration`).
+- [x] Menções a "Pest 4" trocadas por "Pest 5": `CLAUDE.md`, `backend/README.md`, `docs/backend.md` e `docs/testes.md`.
+
+Validação (14/11/2026, Sail): `artisan test --compact` → 461 testes (2674 asserções) passaram, igual à etapa 4; `composer audit` → sem vulnerabilidades. O CI continua com `vendor/bin/pest --compact`, sem mudança.
 
 ### Etapa 6 — Backend: `l5-swagger` 11.1 → 11.3
 

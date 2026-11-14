@@ -2,7 +2,7 @@
 
 Como a API funciona e como evoluí-la. Para rodar: [`instalacao-local.md`](./instalacao-local.md). Para segurança: [`seguranca.md`](./seguranca.md).
 
-**Stack:** PHP 8.5 · Laravel 13 · PostgreSQL 17 · JWT (`tymon/jwt-auth`) · 2FA (`google2fa`) · Swagger (`l5-swagger`) · Pest 4.
+**Stack:** PHP 8.5 · Laravel 13 · PostgreSQL 17 · JWT (`tymon/jwt-auth`) · 2FA (`google2fa`) · Swagger (`l5-swagger`) · Pest 5.
 
 ---
 

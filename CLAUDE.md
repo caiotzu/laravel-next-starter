@@ -5,7 +5,7 @@ Se algo aqui contradisser o código, **o código vence**: investigue e corrija a
 
 ## Stack
 
-- **Backend** (`backend/`): PHP ^8.5, Laravel 13, PostgreSQL 17, JWT (`tymon/jwt-auth`), Pest 4, Pint, Swagger.
+- **Backend** (`backend/`): PHP ^8.5, Laravel 13, PostgreSQL 17, JWT (`tymon/jwt-auth`), Pest 5, Pint, Swagger.
 - **Frontend** (`frontend/`): Next.js 16 (App Router, BFF), React 19, TypeScript, Tailwind 4, shadcn/ui, TanStack Query/Table, React Hook Form + Zod 4, Vitest.
 - Dois contextos espelhados nas duas camadas: **Admin** e **Private** (por empresa).
 
