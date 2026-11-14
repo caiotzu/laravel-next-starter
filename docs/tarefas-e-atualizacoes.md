@@ -112,16 +112,30 @@ Comando usado (o `swagger-php` foi fixado em `^6.12` no mesmo comando, para o Co
 ```
 
 - [x] `darkaonline/l5-swagger` 11.1.0 → 11.3.1 · `zircote/swagger-php` 6.11.0 → 6.20.4 (série 6, por causa da trava) · `swagger-api/swagger-ui` 5.33.1 → 5.35.0 · `symfony/type-info` 7.4.20 → 8.1.11 · `radebatz/type-info-extras` 1.0.14.
-- [x] `composer.json` agora declara `"zircote/swagger-php": "^6.12"` em `require`. **Não remova essa linha** enquanto a etapa 7 não for feita: sem ela o Composer pode subir para a 7.x.
+- [x] `composer.json` agora declara `"zircote/swagger-php": "^6.12"` em `require`. Com a etapa 7 feita, essa linha virou `^7.0` (veja abaixo) e continua sendo a trava que impede o Composer de subir para a 8.x.
 - [x] Documentação gerada antes e depois (`l5-swagger:generate --all`) e comparada com `diff`: o documento **admin** ficou idêntico; no documento **público** só mudou a representação de duas propriedades `nullable` que apontam para outro schema (a 6.20 passou a incluir uma alternativa `{ "type": "object", "nullable": true, "enum": [null] }` dentro do `oneOf`). Nenhuma rota, schema ou componente foi removido.
 
 Validação (14/11/2026, Sail): `artisan test --compact` → 461 testes (2674 asserções) passaram; `composer audit` → sem vulnerabilidades.
 
 - [ ] Conferir visualmente em `/api/documentation` (público) e `/api/documentation/admin` que o Swagger UI abre e que as duas propriedades acima aparecem como "nullable".
 
-### Etapa 7 — Backend: `swagger-php` 7 (opcional, depois da 6)
+### Etapa 7 — Backend: `swagger-php` 6 → 7 ✅ feita
 
-- [ ] Ler https://github.com/zircote/swagger-php (guia `migrating-to-v7`): usar `Builder::setVersion('3.0.0')` e `cleanup.enabled = false` para manter a saída atual, ou migrar de forma planejada.
+Comando usado:
+
+```bash
+./vendor/bin/sail composer require zircote/swagger-php:^7.0 --with-all-dependencies
+```
+
+- [x] `zircote/swagger-php` 6.20.4 → **7.6.0** (só esse pacote mudou no `composer.lock`). O `composer.json` agora declara `"zircote/swagger-php": "^7.0"`.
+- [x] Sem mudança de configuração: o `config/l5-swagger.php` não define `mode` nem `open_api_spec_version`, então o `l5-swagger` 11.3 continua usando o modo `classic` e o OpenAPI `3.0.0`. Por isso os padrões novos da 7 (modo híbrido, OpenAPI 3.1.0 e remoção de componentes não referenciados) **não** se aplicam.
+- [x] Documentação gerada antes (6.20.4) e depois (7.6.0) e comparada com `diff`: **idêntica** nos dois documentos (público e admin).
+
+Validação (14/11/2026, Sail): `artisan test --compact` → 461 testes (2674 asserções) passaram; `composer audit` → sem vulnerabilidades.
+
+- [ ] Conferir visualmente em `/api/documentation` e `/api/documentation/admin`.
+- **Atenção para o futuro:** o modo `classic` e os atributos `OpenApi\Attributes` (usados em ~50 arquivos, ~2.500 atributos) ficam depreciados na 7 e **são removidos na 8**. A trava `^7.0` impede a subida automática para a 8. Quando a 8 for considerada, será necessário migrar para os atributos `OpenApi\Spec` (o guia oficial indica um conjunto de regras do Rector para reescrevê-los); isso deve ser uma tarefa própria, com revisão.
+- Não definir `L5_SWAGGER_SCAN_MODE` nem `L5_SWAGGER_OPEN_API_SPEC_VERSION` no `.env`: eles mudariam a saída (modo híbrido e OpenAPI 3.1.0 trazem as diferenças descritas no guia de migração do `swagger-php`).
 
 ### Etapa 8 — `typescript` 5.9 → 6.0 (opcional)
 
