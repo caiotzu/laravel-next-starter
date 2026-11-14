@@ -21,7 +21,7 @@ Os intervalos com `^` já impedem salto de versão maior. Estes itens só mudam 
 |---|---|---|---|
 | `react-is` | 19.3.1 (exata) | O Recharts 3 usa o `react-is`; ele precisa acompanhar a versão do React (sobe junto com `react`/`react-dom`) | — |
 | `@tanstack/react-table` | 8.x | A v9 é uma reescrita; só `components/data-table.tsx` usa | 9 |
-| `typescript` | 5.x | A 7.x é incompatível com `typescript-eslint` (exige `<6.1.0`); a 6.x muda padrões do `tsconfig` | 8 |
+| `typescript` | `~6.0.3` (só patches da 6.0) | O `typescript-eslint` 8.72 exige TypeScript `<6.1.0`, e a 7.x (compilador nativo) é incompatível com ele; minors do TypeScript costumam trazer mudanças de comportamento, então não usar `^` | 8 |
 | `eslint` | 9.x | `eslint-plugin-import` só declara suporte até o ESLint 9 | 10 |
 | `@types/node` | 22.x | O runtime é Node 22 | — |
 | `jsdom` | 30.x | A 31.0.1 saiu em 13/11/2026; esperar amadurecer | 10 |
@@ -137,11 +137,14 @@ Validação (14/11/2026, Sail): `artisan test --compact` → 461 testes (2674 as
 - **Atenção para o futuro:** o modo `classic` e os atributos `OpenApi\Attributes` (usados em ~50 arquivos, ~2.500 atributos) ficam depreciados na 7 e **são removidos na 8**. A trava `^7.0` impede a subida automática para a 8. Quando a 8 for considerada, será necessário migrar para os atributos `OpenApi\Spec` (o guia oficial indica um conjunto de regras do Rector para reescrevê-los); isso deve ser uma tarefa própria, com revisão.
 - Não definir `L5_SWAGGER_SCAN_MODE` nem `L5_SWAGGER_OPEN_API_SPEC_VERSION` no `.env`: eles mudariam a saída (modo híbrido e OpenAPI 3.1.0 trazem as diferenças descritas no guia de migração do `swagger-php`).
 
-### Etapa 8 — `typescript` 5.9 → 6.0 (opcional)
+### Etapa 8 — `typescript` 5.9 → 6.0 ✅ feita
 
-- [ ] Subir para `6.0.x` (nunca 7.x enquanto o `typescript-eslint` exigir `<6.1.0`).
-- [ ] No `tsconfig.json`, declarar `"types": ["node"]` (e os tipos do vitest/jest-dom onde os testes são checados): na 6.0 o padrão de `types` é `[]`.
-- [ ] Conferir `noUncheckedSideEffectImports` (agora ligado por padrão) com `tsc`.
+- [x] `typescript` `^5` → `~6.0.3` (instalado 6.0.3). O `~` é intencional: mantém só patches da 6.0, porque o `typescript-eslint` 8.72.2 aceita no máximo `<6.1.0`. **Não usar a 7.x** enquanto o `typescript-eslint`/`eslint-config-next` não a suportarem.
+- [x] `tsconfig.json` **sem alteração**: o `tsc --noEmit` passou direto na 6.0.3 (o novo padrão `types: []` não afetou, porque os tipos de Node/Next/React chegam por `next-env.d.ts` e pelos imports).
+- [x] `npx tsc --noEmit` (com o cache `tsconfig.tsbuildinfo` removido), `npm run lint`, `next typegen` e `npm test` (701 testes) passaram.
+- [x] Build: o passo "Running TypeScript" do Next 16.4.6 terminou sem erros com a 6.0.3 (build conferido com `next build --webpack`, o passo de tipos é o mesmo do `--turbopack`).
+- Observação (já existia no TypeScript 5.9.3): a pasta `tests/` é excluída do `tsconfig.json` e tem 5 erros de tipo (`nav-main.test.tsx:85`, `services-crud.test.ts:121-122`, `usuario-forms.test.tsx:170` e um `@ts-expect-error` sem uso em `verificar-producao.test.ts:3`). Não vêm da atualização; podem ser corrigidos numa limpeza separada.
+- [ ] Conferir localmente: `npm run build` (Turbopack) e `npm run e2e`.
 
 ### Etapa 9 — `@tanstack/react-table` 8 → 9 (adiar)
 
