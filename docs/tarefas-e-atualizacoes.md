@@ -19,13 +19,12 @@ Os intervalos com `^` já impedem salto de versão maior. Estes itens só mudam 
 
 | Pacote | Fica em | Motivo | Etapa |
 |---|---|---|---|
-| `recharts` | 2.x | A v3 muda tipos e comportamento (gráficos e `components/ui/chart.tsx`) | 3 |
+| `react-is` | 19.3.1 (exata) | O Recharts 3 usa o `react-is`; ele precisa acompanhar a versão do React (sobe junto com `react`/`react-dom`) | — |
 | `@tanstack/react-table` | 8.x | A v9 é uma reescrita; só `components/data-table.tsx` usa | 9 |
 | `typescript` | 5.x | A 7.x é incompatível com `typescript-eslint` (exige `<6.1.0`); a 6.x muda padrões do `tsconfig` | 8 |
 | `eslint` | 9.x | `eslint-plugin-import` só declara suporte até o ESLint 9 | 10 |
 | `@types/node` | 22.x | O runtime é Node 22 | — |
 | `jsdom` | 30.x | A 31.0.1 saiu em 13/11/2026; esperar amadurecer | 10 |
-| `lucide-react` | 0.x | A v1 remove ícones de marcas e põe `aria-hidden` por padrão | 2 |
 | `next`, `eslint-config-next`, `react`, `react-dom` | versão exata | Já eram fixas; mantêm-se fixas e sobem juntas | — |
 
 ## Etapas
@@ -53,18 +52,21 @@ Justificativa: `npm audit` apontava 3 críticos e 8 altos (`concurrently`/`shell
 - Resultado: `npm audit` → 0 vulnerabilidades; `npm run build` OK.
 - [ ] Decidir se o pipeline Vite deve continuar no backend (não é usado pelo CI nem pela API).
 
-### Etapa 2 — `lucide-react` 0.546 → 1.x
+### Etapa 2 — `lucide-react` 0.546 → 1.72 ✅ feita
 
-- [ ] Subir `lucide-react` (124 arquivos importam).
-- [ ] Rodar `npx tsc --noEmit`: qualquer ícone removido (ex.: marcas) aparece como erro de export.
-- [ ] Conferir testes/E2E que localizem ícones por role: a v1 coloca `aria-hidden` por padrão.
+- [x] `lucide-react` `^0.546.0` → `^1.72.0` (124 arquivos importam).
+- [x] `npx tsc --noEmit` sem erros: nenhum ícone usado foi removido na v1.
+- [x] `lint` e `npm test` (701 testes) passaram.
+- [ ] Conferir no navegador (visual): ícones do menu lateral, botões e tabelas.
 
-### Etapa 3 — `recharts` 2.15 → 3.x
+### Etapa 3 — `recharts` 2.15 → 3.10 ✅ feita (conferir visualmente)
 
-- [ ] Subir `recharts` e instalar `react-is` compatível com o React 19.
-- [ ] Ajustar `components/ui/chart.tsx` (tipos `Tooltip`/`Legend`; guia: `TooltipProps` → `TooltipContentProps` em `content` customizado).
-- [ ] Conferir os 4 gráficos: `chart-area-interactive.tsx`, `data-table.tsx`, `DashboardEvolucaoChamadosChart.tsx`, `DashboardEvolucaoEmpresasChart.tsx`.
-- [ ] Conferir visualmente: `accessibilityLayer` agora é `true` por padrão, ordem de z-index do Tooltip e seletores CSS `.recharts-*`.
+- [x] `recharts` `^2.15.4` → `^3.10.1`.
+- [x] `react-is` 19.3.1 adicionado como dependência exata (o Recharts 3 usa o `react-is`; sem isso ele resolvia o 17.0.2 vindo do Testing Library).
+- [x] `components/ui/chart.tsx`: `ChartTooltipContent` agora usa `Partial<TooltipContentProps>` e `ChartLegendContent` usa `DefaultLegendContentProps`; a `key` do item do tooltip aceita `dataKey` em função.
+- [x] `components/chart-area-interactive.tsx`: `labelFormatter` recebe `ReactNode` na v3, então o valor passa por `String(...)` antes do `new Date`.
+- [x] `tsc`, `lint` e `npm test` (701 testes) passaram.
+- [ ] Conferir no navegador: gráficos do dashboard (`/admin/dashboard` e `/dashboard`), tooltip ao passar o mouse, legenda e o gráfico de área do `data-table`. Pontos de atenção: `accessibilityLayer` agora é `true` por padrão (borda de foco ao navegar por teclado), ordem de sobreposição do Tooltip e os seletores `.recharts-*` do `chart.tsx`.
 - Guia oficial: https://github.com/recharts/recharts/wiki/3.0-migration-guide
 
 ### Etapa 4 — Backend: Composer dentro do range
