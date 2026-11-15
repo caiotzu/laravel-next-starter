@@ -19,6 +19,7 @@ Teste manual para confirmar que tudo funciona. Marque cada item; falha em item *
 - [ ] `curl -i http://localhost/up` → `200`
 - [ ] `curl http://localhost:3000/api/health` → `{"status":"ok","redis":"ok"}`
 - [ ] <http://localhost/api/documentation> abre o Swagger
+- [ ] `./vendor/bin/sail artisan api-docs:gerar scalar` e <http://localhost/api/documentation> abre o Scalar (sem erros de CSP no console); `api-docs:gerar swagger` volta ao Swagger UI
 
 ### A2 ★ Login
 

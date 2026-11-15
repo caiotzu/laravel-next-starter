@@ -1,0 +1,12 @@
+Scalar API Reference (bundle autônomo, servido localmente)
+
+Pacote ....: @scalar/api-reference
+Versão ....: 1.78.1
+Licença ...: MIT
+Origem ....: https://github.com/scalar/scalar
+Arquivo ...: standalone.js (dist/browser/standalone.js do pacote npm)
+
+Fica em public/ (e não em CDN) para funcionar com a CSP restrita da documentação
+(`script-src 'self' 'nonce-...'`) e sem depender de internet.
+
+Para atualizar, veja "Atualizar o Scalar" em docs/backend.md.

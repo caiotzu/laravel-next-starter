@@ -56,6 +56,7 @@ O `.env.example` é de **desenvolvimento**; não serve aqui. Principais variáve
 | `TRUSTED_PROXIES` | IPs dos proxies reais ⚠️ **crítico**: sem isso todos os usuários dividem o mesmo limite de requisições |
 | `CORS_ALLOWED_ORIGINS` | só a origem pública do frontend |
 | `L5_SWAGGER_GENERATE_ALWAYS` | `false` |
+| `API_DOCS_UI` | `swagger` (padrão) ou `scalar`; em produção o comando `api-docs:gerar` não altera o `.env` |
 | `SWAGGER_ADMIN_USERNAME` / `_PASSWORD_HASH` | gere com `php artisan swagger:admin-hash`, ou deixe vazio (Swagger Admin fechado) |
 | `EMAIL_PROVIDER` / `MAIL_*` | provedor de e-mail (primeiro acesso, recuperação de senha) |
 

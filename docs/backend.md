@@ -154,7 +154,7 @@ A trait `Auditavel` registra as alterações dos models automaticamente.
 | `usuario-sessao:limpar-expiradas` | a cada 10 min |
 | `acesso-suporte:expirar-vencidos` | a cada minuto |
 
-**Outros comandos:** `swagger:admin-hash` · `chamados:mover-anexos-privados [--dry-run]` · `producao:verificar` · `admin:criar-inicial`.
+**Outros comandos:** `api-docs:gerar [swagger|scalar]` · `swagger:admin-hash` · `chamados:mover-anexos-privados [--dry-run]` · `producao:verificar` · `admin:criar-inicial`.
 
 Em produção, `QUEUE_CONNECTION=database` exige um worker (`queue:work`). Em desenvolvimento use `sync` ou rode o worker.
 
@@ -171,6 +171,31 @@ Em produção, `QUEUE_CONNECTION=database` exige um worker (`queue:work`). Em de
 - **Paginação:** `por_pagina` (padrão 10, máximo 100).
 - **Health check:** `GET /up`.
 - Mudou um endpoint? Atualize os atributos OpenAPI do controller.
+
+### Interface da documentação: Swagger UI ou Scalar
+
+As duas interfaces leem o **mesmo JSON** (gerado pelo `l5-swagger` a partir dos atributos OpenAPI) e usam as **mesmas URLs**, os mesmos middlewares (limite de requisições, HTTP Basic do Admin, cabeçalhos de segurança) e a mesma CSP com nonce. Só a tela muda. O padrão é o **Swagger UI**, como sempre foi.
+
+```bash
+./vendor/bin/sail artisan api-docs:gerar            # regera o JSON e mantém a interface atual
+./vendor/bin/sail artisan api-docs:gerar swagger    # regera o JSON e passa a usar o Swagger UI
+./vendor/bin/sail artisan api-docs:gerar scalar     # regera o JSON e passa a usar o Scalar
+./vendor/bin/sail artisan api-docs:gerar scalar --sem-gerar   # só troca a interface
+```
+
+- A escolha é gravada em `API_DOCS_UI` no `.env` (`swagger` ou `scalar`; qualquer outro valor cai em `swagger`).
+- **Em produção** o comando não altera o `.env`: defina `API_DOCS_UI` nas variáveis de ambiente e rode `config:cache`.
+- Opções do Scalar em `config/api_docs.php`: `API_DOCS_SCALAR_THEME` (`default`, `moon`, `purple`, `kepler`…) e `API_DOCS_SCALAR_LAYOUT` (`modern` ou `classic`).
+- O bundle do Scalar fica em `public/vendor/scalar/standalone.js` (servido localmente, sem CDN, por causa da CSP). Telemetria, fontes do Google, agente de IA e MCP do Scalar ficam **desligados**.
+- Arquivos: `config/api_docs.php`, `app/Support/ApiDocsUi.php`, `app/Console/Commands/ApiDocsGerarCommand.php`, `resources/views/api-docs/scalar.blade.php` (a view `vendor/l5-swagger/index.blade.php` escolhe a interface).
+
+**Atualizar o Scalar** (opcional, a cada alguns meses; a versão atual está em `public/vendor/scalar/LEIA-ME.txt`):
+
+```bash
+cd /tmp && npm pack @scalar/api-reference@VERSAO && tar xzf scalar-api-reference-*.tgz
+cp package/dist/browser/standalone.js <projeto>/backend/public/vendor/scalar/standalone.js
+# atualize a versão no LEIA-ME.txt, abra /api/documentation com API_DOCS_UI=scalar e confira o console do navegador
+```
 
 | Código | Quando |
 |---|---|

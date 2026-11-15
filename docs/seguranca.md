@@ -70,7 +70,8 @@ Tudo o que o sistema tem hoje para proteger usuários e dados, **confirmado no c
 
 - **Verificadores de produção** — `producao:verificar` (backend) e `verificar:producao` (frontend) acusam configuração insegura.
 - **Seeder de produção sem usuários** — contas de desenvolvimento não vão para produção; o primeiro admin é criado com senha escolhida.
-- **Swagger Admin fechado por padrão** — exige senha (HTTP Basic) e tem limite de requisições.
+- **Swagger Admin fechado por padrão** — exige senha (HTTP Basic) e tem limite de requisições. Vale também com o Scalar: a interface só muda a tela, não as proteções.
+- **Scalar servido localmente** — sem CDN, com a mesma CSP restrita (scripts só da própria origem ou com nonce, sem `unsafe-eval`) e com telemetria, fontes externas, agente de IA e MCP desligados.
 - **CORS fechado por padrão** — nenhuma origem externa é aceita até ser configurada.
 - **Redis protegido** — rede privada, senha, TLS, `noeviction` e persistência.
 - **Healthchecks** — `/api/health` (frontend) e `/up` (API).

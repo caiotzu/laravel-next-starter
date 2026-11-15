@@ -187,6 +187,13 @@ Para testar tudo com calma: [`roteiro-de-validacao.md`](./roteiro-de-validacao.m
 
 Copie as duas linhas para o `backend/.env` e rode `./vendor/bin/sail artisan config:clear`. Acesso: HTTP Basic, usuário `admin`.
 
+**Interface da documentação (Swagger UI ou Scalar):** as mesmas URLs podem exibir o Swagger UI (padrão) ou o Scalar. Para trocar, regerando a documentação:
+
+```bash
+./vendor/bin/sail artisan api-docs:gerar scalar    # Scalar
+./vendor/bin/sail artisan api-docs:gerar swagger   # Swagger UI (como antes)
+```
+
 ---
 
 ## Problemas comuns

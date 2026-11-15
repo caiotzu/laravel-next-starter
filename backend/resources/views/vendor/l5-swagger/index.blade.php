@@ -1,3 +1,7 @@
+{{-- API_DOCS_UI=scalar troca a tela por resources/views/api-docs/scalar.blade.php (config/api_docs.php). --}}
+@if (\App\Support\ApiDocsUi::ativa() === \App\Support\ApiDocsUi::SCALAR)
+    @include('api-docs.scalar')
+@else
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -172,3 +176,4 @@
 </script>
 </body>
 </html>
+@endif
