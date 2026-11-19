@@ -71,6 +71,7 @@ npm ci && cp .env.example .env && npm run dev
 | Testar se tudo funciona | [`roteiro-de-validacao.md`](./docs/roteiro-de-validacao.md) |
 | Entender / evoluir o backend | [`backend.md`](./docs/backend.md) |
 | Entender / evoluir o frontend | [`frontend.md`](./docs/frontend.md) |
+| Configurar / estender o login social (Google, Microsoft, GitHub) | [`login-social.md`](./docs/login-social.md) |
 | Ver os dispositivos de segurança | [`seguranca.md`](./docs/seguranca.md) |
 | Escrever e rodar testes | [`testes.md`](./docs/testes.md) |
 | Saber por que essa arquitetura | [`vantagens.md`](./docs/vantagens.md) |

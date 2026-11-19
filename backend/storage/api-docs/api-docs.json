@@ -1079,6 +1079,156 @@
                 ]
             }
         },
+        "/login/social/provedores": {
+            "get": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Provedores de login social disponíveis",
+                "description": "Lista os provedores de login social ativos e configurados (ex.: Google). O frontend usa a lista para exibir os botões.",
+                "operationId": "40e5dc9cb301e0cf52ebb5c91570b4b8",
+                "responses": {
+                    "200": {
+                        "description": "Provedores disponíveis (pode ser lista vazia).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProvedoresSociaisResponse"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
+        "/login/social/{provedor}/iniciar": {
+            "post": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Iniciar login social",
+                "description": "Registra o state/PKCE e devolve a URL de autorização do provedor, para a qual o navegador deve ser redirecionado. O `binding` é um valor aleatório que o BFF também guarda em cookie httpOnly e reenvia no callback.",
+                "operationId": "24dc18cac938c811de8b02f63d1b4056",
+                "parameters": [
+                    {
+                        "name": "provedor",
+                        "in": "path",
+                        "description": "Chave do provedor (ex.: google).",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginSocialIniciarRequestBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "URL de autorização.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LoginSocialIniciarResponse"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/BusinessError"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/login/social/{provedor}/callback": {
+            "post": {
+                "tags": [
+                    "Private"
+                ],
+                "summary": "Private — Concluir login social",
+                "description": "Valida state/binding, troca o code pela identidade do provedor e autentica SOMENTE um usuário Private já cadastrado e ativo (nunca cria usuário). Se o usuário tem 2FA habilitado, retorna um temp_token para /2fa/verificar; caso contrário, retorna o token JWT.",
+                "operationId": "80ef7764f2b3faadfb0962ff040767ae",
+                "parameters": [
+                    {
+                        "name": "provedor",
+                        "in": "path",
+                        "description": "Chave do provedor (ex.: google).",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginSocialCallbackRequestBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login concluído ou 2FA solicitado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/LoginResponse"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/Login2faRequiredResponse"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/BusinessError"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                },
+                "security": []
+            }
+        },
         "/login": {
             "post": {
                 "tags": [
@@ -4794,6 +4944,75 @@
                         "type": "string",
                         "format": "password",
                         "example": "SenhaForte@123"
+                    }
+                },
+                "type": "object"
+            },
+            "ProvedoresSociaisResponse": {
+                "properties": {
+                    "provedores": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "chave": {
+                                    "type": "string",
+                                    "example": "google"
+                                },
+                                "nome": {
+                                    "type": "string",
+                                    "example": "Google"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "LoginSocialIniciarRequestBody": {
+                "required": [
+                    "binding"
+                ],
+                "properties": {
+                    "binding": {
+                        "description": "Valor aleatório gerado pelo BFF (também guardado em cookie httpOnly) que amarra o fluxo ao navegador.",
+                        "type": "string",
+                        "maxLength": 128,
+                        "minLength": 32
+                    }
+                },
+                "type": "object"
+            },
+            "LoginSocialIniciarResponse": {
+                "properties": {
+                    "url": {
+                        "description": "URL de autorização do provedor, para redirecionar o navegador.",
+                        "type": "string",
+                        "format": "uri"
+                    }
+                },
+                "type": "object"
+            },
+            "LoginSocialCallbackRequestBody": {
+                "required": [
+                    "codigo",
+                    "state",
+                    "binding"
+                ],
+                "properties": {
+                    "codigo": {
+                        "description": "Código de autorização devolvido pelo provedor.",
+                        "type": "string"
+                    },
+                    "state": {
+                        "description": "State devolvido pelo provedor.",
+                        "type": "string"
+                    },
+                    "binding": {
+                        "description": "Mesmo valor enviado em /iniciar.",
+                        "type": "string",
+                        "maxLength": 128,
+                        "minLength": 32
                     }
                 },
                 "type": "object"

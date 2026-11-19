@@ -54,3 +54,28 @@ export function consumirBannerPendente(prefixo: string): void {
     // ignora
   }
 }
+
+/** Parâmetro que o BFF anexa ao redirecionar de um login social concluído. */
+export const PARAM_LOGIN_SOCIAL = "login_social";
+
+/**
+ * Login social: o retorno é um redirect do SERVIDOR, então a tela de login não chega a chamar
+ * `marcarNovoLogin`. O BFF redireciona para a home com `?login_social=1`; aqui o sinal é armado
+ * e o parâmetro é removido da URL (um reload não rearma o Banner).
+ */
+export function marcarNovoLoginSocial(prefixo: string): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    const url = new URL(window.location.href);
+
+    if (url.searchParams.get(PARAM_LOGIN_SOCIAL) !== "1") return;
+
+    marcarNovoLogin(prefixo);
+
+    url.searchParams.delete(PARAM_LOGIN_SOCIAL);
+    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+  } catch {
+    // URL/History indisponível: o Banner simplesmente não é exibido.
+  }
+}

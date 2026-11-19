@@ -180,3 +180,61 @@ class RedefinirSenhaValidarResponseSchema
 class RedefinirSenhaRequestBodySchema
 {
 }
+
+#[OA\Schema(
+    schema: 'ProvedoresSociaisResponse',
+    properties: [
+        new OA\Property(
+            property: 'provedores',
+            type: 'array',
+            items: new OA\Items(
+                properties: [
+                    new OA\Property(property: 'chave', type: 'string', example: 'google'),
+                    new OA\Property(property: 'nome', type: 'string', example: 'Google'),
+                ],
+                type: 'object'
+            )
+        ),
+    ],
+    type: 'object'
+)]
+class ProvedoresSociaisResponseSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'LoginSocialIniciarRequestBody',
+    required: ['binding'],
+    properties: [
+        new OA\Property(property: 'binding', type: 'string', minLength: 32, maxLength: 128, description: 'Valor aleatório gerado pelo BFF (também guardado em cookie httpOnly) que amarra o fluxo ao navegador.'),
+    ],
+    type: 'object'
+)]
+class LoginSocialIniciarRequestBodySchema
+{
+}
+
+#[OA\Schema(
+    schema: 'LoginSocialIniciarResponse',
+    properties: [
+        new OA\Property(property: 'url', type: 'string', format: 'uri', description: 'URL de autorização do provedor, para redirecionar o navegador.'),
+    ],
+    type: 'object'
+)]
+class LoginSocialIniciarResponseSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'LoginSocialCallbackRequestBody',
+    required: ['codigo', 'state', 'binding'],
+    properties: [
+        new OA\Property(property: 'codigo', type: 'string', description: 'Código de autorização devolvido pelo provedor.'),
+        new OA\Property(property: 'state', type: 'string', description: 'State devolvido pelo provedor.'),
+        new OA\Property(property: 'binding', type: 'string', minLength: 32, maxLength: 128, description: 'Mesmo valor enviado em /iniciar.'),
+    ],
+    type: 'object'
+)]
+class LoginSocialCallbackRequestBodySchema
+{
+}

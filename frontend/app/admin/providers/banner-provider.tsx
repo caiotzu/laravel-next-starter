@@ -11,6 +11,7 @@ import { BannerDisponivel as Banner } from "@/domains/admin/banner/types/banner.
 import {
   consumirBannerPendente,
   existeBannerPendente,
+  marcarNovoLoginSocial,
 } from "@/lib/banner/banner-sessao-storage";
 import { protectedRoutes } from "@/routes/routes";
 
@@ -51,6 +52,9 @@ export function BannerProvider({ children }: { children: React.ReactNode }) {
   // Detecta o login recém-concluído (somente em telas autenticadas).
   useEffect(() => {
     if (pendente || ehRotaPublica(pathname)) return;
+
+    // Login social: o redirect do servidor traz `?login_social=1` (ver banner-sessao-storage.ts).
+    marcarNovoLoginSocial(PREFIXO_SESSAO);
 
     if (existeBannerPendente(PREFIXO_SESSAO)) {
       // Garante dados novos do login atual, nunca um cache de login anterior.

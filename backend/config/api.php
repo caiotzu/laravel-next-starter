@@ -50,4 +50,23 @@ return [
             ],
         ],
     ],
+    /*
+     | Login social (Google e futuros provedores).
+     |
+     | Só autentica usuários JÁ cadastrados e ativos; nunca cria conta. Cada provedor é uma classe
+     | que implementa App\Contracts\AutenticacaoSocial\ProvedorSocialInterface.
+     |
+     | Para um novo provedor: crie a classe, adicione uma entrada abaixo (+ credenciais em
+     | config/services.php) e ligue-o por env. O frontend lê a lista da API: não muda.
+     | Ver docs/login-social.md.
+     */
+    'autenticacao_social' => [
+        'provedores' => [
+            'google' => [
+                'adapter' => \App\Services\External\AutenticacaoSocial\GoogleService::class,
+                'nome' => 'Google',
+                'ativo' => env('AUTENTICACAO_SOCIAL_GOOGLE_ATIVO', false),
+            ],
+        ],
+    ],
 ];

@@ -21,6 +21,8 @@ Navegador ──cookie opaco──▶ Next.js (app/api/*) ──JWT──▶ Lar
 2. O Next valida a origem, chama o Laravel e guarda o **JWT no Redis**.
 3. O navegador recebe **só um cookie opaco** (`HttpOnly`, `SameSite=Lax`).
 
+O **login social** (`app/api/auth/{admin|private}/social/**`, lógica em `lib/social/`) segue o mesmo princípio: ver [`login-social.md`](./login-social.md).
+
 **Chamadas seguintes**
 
 1. A tela chama `lib/proxy-admin.ts` ou `lib/proxy-private.ts` (nunca o Laravel direto).

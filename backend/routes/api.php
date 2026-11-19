@@ -17,6 +17,7 @@ use App\Http\Controllers\Lookup\ {
 
 use App\Http\Controllers\Admin\ {
     AuthController,
+    AutenticacaoSocialController,
     GrupoController,
     PerfilController,
     EmpresaController,
@@ -38,6 +39,7 @@ use App\Http\Controllers\Admin\ {
 
 use App\Http\Controllers\Private\ {
     AuthController as PrivateAuthController,
+    AutenticacaoSocialController as PrivateAutenticacaoSocialController,
     GrupoController as PrivateGrupoController,
     PerfilController as PrivatePerfilController,
     EmpresaController as PrivateEmpresaController,
@@ -60,6 +62,7 @@ Route::middleware('throttle:api-publica')->group(function () {
         Route::post('/esqueceu-senha', [AuthController::class, 'esqueceuSenha'])->middleware('throttle:esqueceu-senha');
         Route::get('/redefinir-senha/validar', [AuthController::class, 'redefinirSenhaValidar']);
         Route::post('/redefinir-senha', [AuthController::class, 'redefinirSenha']);
+        Route::get('/login/social/provedores', [AutenticacaoSocialController::class, 'provedores']);
     });
 });
 
@@ -67,6 +70,10 @@ Route::middleware('throttle:api-publica')->group(function () {
 Route::middleware('throttle:autenticacao')->prefix('admin')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/2fa/verificar', [AuthController::class, 'verificar2fa']);
+
+    // Login social: nunca cria usuário (ver AutenticacaoSocialService).
+    Route::post('/login/social/{provedor}/iniciar', [AutenticacaoSocialController::class, 'iniciar'])->where('provedor', '[a-z0-9_-]+');
+    Route::post('/login/social/{provedor}/callback', [AutenticacaoSocialController::class, 'callback'])->where('provedor', '[a-z0-9_-]+');
 });
 // #endregion Admin
 
@@ -77,12 +84,17 @@ Route::middleware('throttle:api-publica')->group(function () {
     Route::post('esqueceu-senha', [PrivateAuthController::class, 'esqueceuSenha'])->middleware('throttle:esqueceu-senha');
     Route::get('redefinir-senha/validar', [PrivateAuthController::class, 'redefinirSenhaValidar']);
     Route::post('redefinir-senha', [PrivateAuthController::class, 'redefinirSenha']);
+    Route::get('login/social/provedores', [PrivateAutenticacaoSocialController::class, 'provedores']);
 });
 
 // Login e 2FA têm limitador próprio (teto de inundação por IP): ver AppServiceProvider.
 Route::middleware('throttle:autenticacao')->group(function () {
     Route::post('login', [PrivateAuthController::class, 'login']);
     Route::post('2fa/verificar', [PrivateAuthController::class, 'verificar2fa']);
+
+    // Login social: nunca cria usuário (ver AutenticacaoSocialService).
+    Route::post('login/social/{provedor}/iniciar', [PrivateAutenticacaoSocialController::class, 'iniciar'])->where('provedor', '[a-z0-9_-]+');
+    Route::post('login/social/{provedor}/callback', [PrivateAutenticacaoSocialController::class, 'callback'])->where('provedor', '[a-z0-9_-]+');
 });
 // #endregion Private
 

@@ -12,6 +12,7 @@ import { toast } from "sonner"
 
 import { AppAlert } from "@/components/feedback/AppAlert"
 import { LoginForm } from "@/components/forms/login-form"
+import { SocialLoginButtons } from "@/components/forms/social-login-buttons"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import {
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/input-otp"
 
 import { marcarNovoLogin } from "@/lib/banner/banner-sessao-storage"
+import { mensagemErroSocial } from "@/lib/social/social"
 import { type LoginData } from "@/lib/validations/auth/login-schema"
 
 type BackendErrorResponse = {
@@ -54,6 +56,34 @@ function LoginPageConteudo() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const toastShownRef = useRef(false)
+
+  // Erro de um login social (?erro=social_...): só códigos conhecidos viram mensagem.
+  const [erroSocial, setErroSocial] = useState<string | null>(
+    () => mensagemErroSocial(searchParams.get("erro"))
+  )
+
+  useEffect(() => {
+    if (searchParams.get("erro")) router.replace("/admin")
+  }, [router, searchParams])
+
+  // Login social com 2FA: o BFF devolve o temp_token no FRAGMENTO da URL (nunca vai ao servidor).
+  // Move para o estado em memória e limpa a URL.
+  useEffect(() => {
+    const prefixo = "#social-2fa="
+    const hash = window.location.hash
+
+    if (!hash.startsWith(prefixo)) return
+
+    const token = decodeURIComponent(hash.slice(prefixo.length))
+
+    window.history.replaceState(null, "", window.location.pathname + window.location.search)
+
+    if (!token) return
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Lê o fragmento da URL (só existe no navegador, após a hidratação) e o move para o estado do 2FA; ler no render causaria divergência de hidratação.
+    setTempToken(token)
+    setRequires2FA(true)
+  }, [])
 
   useEffect(() => {
     if (toastShownRef.current) return
@@ -149,7 +179,7 @@ function LoginPageConteudo() {
     }
   }
 
-  const businessErrors = fieldErrors.business ?? []
+  const businessErrors = [...(erroSocial ? [erroSocial] : []), ...(fieldErrors.business ?? [])]
 
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
@@ -171,7 +201,10 @@ function LoginPageConteudo() {
                   variant="error"
                   subtitle="Ocorreu um erro durante a autenticação"
                   messages={businessErrors}
-                  onClose={() => setFieldErrors({})}
+                  onClose={() => {
+                    setFieldErrors({})
+                    setErroSocial(null)
+                  }}
                   className="mb-6"
                 />
               )}
@@ -181,6 +214,11 @@ function LoginPageConteudo() {
                   <LoginForm
                     onSubmit={handleSubmit}
                     fieldErrors={fieldErrors}
+                  />
+
+                  <SocialLoginButtons
+                    contexto="admin"
+                    onError={(mensagem) => setFieldErrors({ business: [mensagem] })}
                   />
 
                   <div className="flex justify-end">

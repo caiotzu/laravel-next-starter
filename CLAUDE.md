@@ -23,6 +23,7 @@ Se algo aqui contradisser o código, **o código vence**: investigue e corrija a
 | Publicar e conferir produção | `docs/implantacao-servidor.md`, `docs/checklist-producao.md` |
 | Backend: camadas, auth, permissões, multi-tenant, banco, filas, API | `docs/backend.md` |
 | Frontend: BFF, pastas, convenções, lint | `docs/frontend.md` |
+| Login social (Google e novos provedores) | `docs/login-social.md` |
 | Dispositivos de segurança | `docs/seguranca.md` |
 | Upload de arquivos (disco/S3) | `docs/armazenamento-de-arquivos.md` |
 | Testes e CI | `docs/testes.md` |

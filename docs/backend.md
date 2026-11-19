@@ -46,6 +46,7 @@ Route → Controller → Form Request → DTO → Service → (Repository) → M
 - **JWT** (HS256) com validade `JWT_TTL` (padrão **60 min**).
 - **Sessão em banco** (`usuario_sessoes`): permite revogar uma sessão mesmo com o JWT ainda válido.
 - **Inatividade:** sessões paradas há mais de **30 min** são encerradas (comando agendado a cada 10 min).
+- **Login social (Google):** opcional, só para quem **já tem cadastro** (nunca cria conta); respeita o 2FA. Ver [`login-social.md`](./login-social.md).
 - **2FA (TOTP):** habilitar, confirmar com o 1º código e desabilitar no perfil; cada código só vale uma vez.
 - **Primeiro acesso e recuperação de senha:** por token enviado por e-mail, com expiração e uso único.
 - **Refresh:** a rota existe no backend, mas o frontend **não a usa**; ao expirar, o usuário entra de novo.
