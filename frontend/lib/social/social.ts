@@ -39,9 +39,27 @@ export function opcoesCookieSocial(maxAgeSegundos: number = TTL_BINDING_SEGUNDOS
   };
 }
 
+/**
+ * Cookie do binding do VÍNCULO (aba "Login social" do perfil). É separado do binding de login: o
+ * callback é o mesmo para os dois, e é a presença de UM ou OUTRO cookie que diz qual fluxo foi
+ * iniciado neste navegador. O backend confere de novo (o state guarda a finalidade).
+ */
+export function nomeCookieVinculo(contexto: ContextoSessao): string {
+  const base = `${contexto}_social_vinculo`;
+
+  return producao() ? `__Host-${base}` : base;
+}
+
 /** 256 bits em base64url (43 caracteres; o backend exige 32 a 128). */
 export function gerarBinding(): string {
   return randomBytes(32).toString("base64url");
+}
+
+/** Caminho no BACKEND do perfil → login social (vínculo). */
+export function caminhoBackendPerfilSocial(contexto: ContextoSessao, resto: string): string {
+  const prefixo = contexto === "admin" ? "/admin" : "";
+
+  return `${prefixo}/perfil/login-social/${resto}`;
 }
 
 /** Caminho no BACKEND (Admin tem prefixo `/admin`; Private não). */
@@ -113,6 +131,44 @@ export function urlAposLogin(req: Request, contexto: ContextoSessao): URL {
  */
 export function urlSegundoFator(req: Request, contexto: ContextoSessao, tempToken: string): URL {
   return new URL(`${LOGIN[contexto]}#social-2fa=${encodeURIComponent(tempToken)}`, origemDoFrontend(req));
+}
+
+const PERFIL: Record<ContextoSessao, string> = { admin: "/admin/perfil", private: "/perfil" };
+
+/** Resultado do vínculo que o BFF passa à aba (`?vinculo=`). Nunca texto vindo de fora. */
+export type ResultadoVinculo = "ok" | "cancelado" | "invalido" | "limite" | "indisponivel";
+
+const MENSAGENS_VINCULO: Record<Exclude<ResultadoVinculo, "ok">, string> = {
+  cancelado: "A vinculação foi cancelada.",
+  invalido:
+    "Não foi possível vincular a conta. Ela pode já estar vinculada a outro usuário, ter o e-mail não verificado ou a tentativa pode ter expirado. Tente novamente.",
+  limite: "Muitas tentativas. Tente novamente em alguns minutos.",
+  indisponivel: "O login social está indisponível no momento. Tente novamente em instantes.",
+};
+
+/** Interpreta `?vinculo=`; `null` se não for um resultado conhecido. */
+export function interpretarResultadoVinculo(
+  valor: string | null
+): { tipo: "sucesso" | "erro"; mensagem: string } | null {
+  if (valor === "ok") return { tipo: "sucesso", mensagem: "Conta vinculada com sucesso!" };
+
+  if (valor && Object.hasOwn(MENSAGENS_VINCULO, valor)) {
+    return { tipo: "erro", mensagem: MENSAGENS_VINCULO[valor as Exclude<ResultadoVinculo, "ok">] };
+  }
+
+  return null;
+}
+
+export function resultadoVinculoPorStatus(status: number): ResultadoVinculo {
+  if (status === 429) return "limite";
+  if (status >= 500) return "indisponivel";
+
+  return "invalido";
+}
+
+/** Volta para a aba "Login social" do perfil com o resultado do vínculo. */
+export function urlPerfilComVinculo(req: Request, contexto: ContextoSessao, resultado: ResultadoVinculo): URL {
+  return new URL(`${PERFIL[contexto]}?aba=login-social&vinculo=${resultado}`, origemDoFrontend(req));
 }
 
 /** Só segue para o provedor uma URL https (http só fora de produção, para ambientes locais). */

@@ -34,9 +34,42 @@ Navegador          Next (BFF)                    Laravel                     Pro
 | Enumerar contas | Todas as recusas devolvem a mesma mensagem; o motivo real vai só para o log (`login_social.recusado`, e-mail em hash). |
 | Burlar o 2FA | Usuário com 2FA recebe `temp_token` e conclui em `/2fa/verificar`, como no login por senha. |
 | Token no navegador | Igual ao login por senha: o JWT fica no Redis; o `temp_token` vai no fragmento da URL (não chega a servidor, log ou `Referer`). |
+| Plantar uma "porta dos fundos" com sessão roubada | Vincular exige a **senha atual** (com teto de 5 falhas / 5 min por usuário) e o `state` fica preso ao usuário autenticado. |
+| Misturar fluxos | O `state` guarda a finalidade: um state de **login** não vale para **vincular**, nem o contrário; no BFF, um cookie de binding por fluxo e só um deles fica ativo. |
 | Força bruta | `throttle:autenticacao` + teto de 30 falhas por IP / 5 min. |
 
 O primeiro login cria um vínculo em `usuario_identidades_sociais` (auditado, aparece no histórico do usuário). Um usuário tem **uma** conta por provedor; uma conta do provedor pertence a **um** usuário.
+
+## Vincular e desvincular (perfil → aba "Login social")
+
+Cada usuário gerencia as próprias contas em **Perfil → Login social** (Admin e Private).
+
+- **Vincular:** o usuário informa a **senha atual**, é levado ao provedor e volta para a mesma aba. A conta do provedor pode ter **e-mail diferente** do cadastro (o usuário provou as duas coisas), mas o e-mail precisa estar **verificado** no provedor. Uma conta do provedor só pode pertencer a **um** usuário, e um usuário tem **uma** conta por provedor.
+- **Desvincular:** remove o vínculo; o login por e-mail e senha não é afetado. Funciona mesmo que o provedor tenha sido desativado depois (aparece como "Indisponível no momento").
+- Vincular e desvincular ficam no histórico de auditoria do usuário.
+
+```
+Navegador          Next (BFF)                              Laravel (JWT da sessão)
+   │ Vincular + senha
+   ├─ POST /api/auth/{ctx}/social/google/vincular ──► POST /perfil/login-social/google/vincular/iniciar
+   │      (sessão → JWT do Redis)                          confere senha, state preso ao usuário
+   │ ◄── cookie {ctx}_social_vinculo + { url }
+   ├──────────────────────────────────────────────────────────────────────────► provedor
+   │ ◄──── GET /api/auth/{ctx}/social/google/callback (MESMA URL do login) ────┘
+   ├─ cookie {ctx}_social_vinculo presente ► POST /perfil/login-social/google/vincular/callback
+   │ ◄── 303 /{perfil}?aba=login-social&vinculo=ok
+```
+
+O retorno do provedor usa a **mesma URI de callback do login**: não há nada novo para cadastrar no Google. O resultado volta por códigos fixos (`?vinculo=ok|invalido|cancelado|limite|indisponivel`), nunca por texto livre na URL.
+
+Rotas (todas do próprio usuário autenticado; `/admin/...` na área Admin):
+
+| Método | Rota | O que faz |
+|---|---|---|
+| GET | `/perfil/login-social` | Provedores e vínculos do usuário |
+| POST | `/perfil/login-social/{provedor}/vincular/iniciar` | Confere a senha e devolve a URL do provedor |
+| POST | `/perfil/login-social/{provedor}/vincular/callback` | Associa a conta ao usuário |
+| DELETE | `/perfil/login-social/{provedor}` | Desvincula |
 
 ## Configurar o Google
 
@@ -74,6 +107,7 @@ Cuidados por provedor:
 
 ## Limitações atuais
 
-- Não há tela no perfil para vincular/desvincular contas: o vínculo nasce no primeiro login (e-mail verificado coincidente). Para exigir vínculo explícito, desative o vínculo automático em `AutenticacaoSocialService::resolverUsuario` e crie a tela de perfil.
-- `Admin\AuthController` e `Private\AuthController` ainda têm a própria cópia de `finalizarLogin`; o login social usa `LoginService` (mesma regra). Unificar é uma refatoração futura, com teste de caracterização.
-- O e-mail é comparado em minúsculas; o login por senha compara exatamente o digitado (comportamento já existente).
+- O vínculo **automático** no primeiro login (pelo e-mail verificado coincidente) continua existindo, além do vínculo explícito pelo perfil. Para exigir só o explícito, remova o ramo de "primeiro login" de `AutenticacaoSocialService::resolverUsuario`.
+- Redefinir a senha **não** remove contas sociais vinculadas. Se a política exigir isso (conta possivelmente comprometida), é um ponto a decidir em `UsuarioService`.
+- O e-mail do login social é comparado em minúsculas; o login por senha compara exatamente o digitado (comportamento já existente).
+- O fim do 2FA e a emissão de sessão/JWT de **todos** os logins (senha, 2FA e social) passam por `LoginService`; os dois `AuthController` não têm mais cópia própria.

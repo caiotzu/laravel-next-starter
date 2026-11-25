@@ -395,3 +395,318 @@ test('um usuário Admin não entra pela área Private (e vice-versa)', function 
 
     expect(UsuarioIdentidadeSocial::count())->toBe(0);
 });
+
+/*
+|--------------------------------------------------------------------------
+| Perfil → aba "Login social": vincular e desvincular (Admin e Private)
+|--------------------------------------------------------------------------
+*/
+
+/** Login por senha (helper de cenário: todos os usuários usam Senha123@). */
+function social26Token($teste, string $base, string $email): string
+{
+    return $teste->postJson("{$base}/login", ['email' => $email, 'senha' => 'Senha123@'])
+        ->assertOk()
+        ->json('data.token');
+}
+
+function social26Autenticado($teste, string $token)
+{
+    return $teste->withHeader('Authorization', 'Bearer ' . $token);
+}
+
+/** /vincular/iniciar → devolve o state da URL do provedor. */
+function social26VincularIniciar($teste, string $base, string $token, string $senha = 'Senha123@', string $binding = SOCIAL26_BINDING): string
+{
+    $url = social26Autenticado($teste, $token)
+        ->postJson("{$base}/perfil/login-social/google/vincular/iniciar", ['senha' => $senha, 'binding' => $binding])
+        ->assertOk()
+        ->json('data.url');
+
+    parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+
+    return $query['state'];
+}
+
+function social26VincularCallback($teste, string $base, string $token, string $state, string $binding = SOCIAL26_BINDING)
+{
+    return social26Autenticado($teste, $token)->postJson("{$base}/perfil/login-social/google/vincular/callback", [
+        'codigo' => 'codigo-de-autorizacao',
+        'state' => $state,
+        'binding' => $binding,
+    ]);
+}
+
+foreach ([EntidadeTipo::ADMIN->value, EntidadeTipo::PRIVATE->value] as $entidade) {
+
+    test("[{$entidade}] perfil: exige autenticação", function () use ($entidade) {
+        $c = social26Cenario($entidade);
+        social26Configurar();
+
+        $this->getJson("{$c['base']}/perfil/login-social")->assertStatus(401);
+        $this->postJson("{$c['base']}/perfil/login-social/google/vincular/iniciar", ['senha' => 'x', 'binding' => SOCIAL26_BINDING])->assertStatus(401);
+        $this->postJson("{$c['base']}/perfil/login-social/google/vincular/callback", [])->assertStatus(401);
+        $this->deleteJson("{$c['base']}/perfil/login-social/google")->assertStatus(401);
+    });
+
+    test("[{$entidade}] perfil: lista o Google como não vinculado e depois vinculado", function () use ($entidade) {
+        $c = social26Cenario($entidade);
+        social26Configurar();
+        $usuario = social26Usuario($c['grupo'], "pessoa.{$entidade}@exemplo.com");
+        $token = social26Token($this, $c['base'], $usuario->email);
+
+        social26Autenticado($this, $token)->getJson("{$c['base']}/perfil/login-social")
+            ->assertOk()
+            ->assertJsonPath('data.0.chave', 'google')
+            ->assertJsonPath('data.0.nome', 'Google')
+            ->assertJsonPath('data.0.disponivel', true)
+            ->assertJsonPath('data.0.vinculado', false)
+            ->assertJsonPath('data.0.email', null);
+
+        social26FakeGoogle('sub-1', 'outro.email@gmail.com');
+        social26VincularCallback($this, $c['base'], $token, social26VincularIniciar($this, $c['base'], $token))
+            ->assertOk()
+            ->assertJsonPath('data.vinculado', true)
+            ->assertJsonPath('data.email', 'outro.email@gmail.com');
+
+        social26Autenticado($this, $token)->getJson("{$c['base']}/perfil/login-social")
+            ->assertJsonPath('data.0.vinculado', true);
+    });
+
+    test("[{$entidade}] perfil: vincular exige a senha atual e limita tentativas", function () use ($entidade) {
+        $c = social26Cenario($entidade);
+        social26Configurar();
+        $usuario = social26Usuario($c['grupo'], "pessoa.{$entidade}@exemplo.com");
+        $token = social26Token($this, $c['base'], $usuario->email);
+        $url = "{$c['base']}/perfil/login-social/google/vincular/iniciar";
+
+        social26Autenticado($this, $token)->postJson($url, ['binding' => SOCIAL26_BINDING])->assertStatus(422);
+
+        for ($i = 0; $i < 5; $i++) {
+            social26Autenticado($this, $token)
+                ->postJson($url, ['senha' => 'SenhaErrada@1', 'binding' => SOCIAL26_BINDING])
+                ->assertStatus(422)
+                ->assertJsonPath('errors.business.0', 'A senha está incorreta.');
+        }
+
+        // Bloqueado: nem a senha CERTA passa até o limite expirar.
+        social26Autenticado($this, $token)
+            ->postJson($url, ['senha' => 'Senha123@', 'binding' => SOCIAL26_BINDING])
+            ->assertStatus(429);
+    });
+
+    test("[{$entidade}] perfil: vincular com provedor inexistente ou desativado é 404", function () use ($entidade) {
+        $c = social26Cenario($entidade);
+        social26Configurar();
+        $usuario = social26Usuario($c['grupo'], "pessoa.{$entidade}@exemplo.com");
+        $token = social26Token($this, $c['base'], $usuario->email);
+        $corpo = ['senha' => 'Senha123@', 'binding' => SOCIAL26_BINDING];
+
+        social26Autenticado($this, $token)
+            ->postJson("{$c['base']}/perfil/login-social/inexistente/vincular/iniciar", $corpo)->assertStatus(404);
+
+        social26Configurar(ativo: false);
+
+        social26Autenticado($this, $token)
+            ->postJson("{$c['base']}/perfil/login-social/google/vincular/iniciar", $corpo)->assertStatus(404);
+    });
+
+    test("[{$entidade}] perfil: conta vinculada com OUTRO e-mail entra pelo login social", function () use ($entidade) {
+        $c = social26Cenario($entidade);
+        social26Configurar();
+        $usuario = social26Usuario($c['grupo'], "pessoa.{$entidade}@exemplo.com");
+        $token = social26Token($this, $c['base'], $usuario->email);
+
+        social26FakeGoogle('sub-pessoal', 'pessoal.diferente@gmail.com');
+        social26VincularCallback($this, $c['base'], $token, social26VincularIniciar($this, $c['base'], $token))->assertOk();
+
+        $login = social26Callback($this, $c['base'], social26Iniciar($this, $c['base']))->assertOk();
+
+        social26Autenticado($this, $login->json('data.token'))->getJson("{$c['base']}/me")
+            ->assertJsonPath('data.email', $usuario->email);
+    });
+
+    test("[{$entidade}] perfil: já vinculado, não aceita iniciar outro vínculo do mesmo provedor", function () use ($entidade) {
+        $c = social26Cenario($entidade);
+        social26Configurar();
+        $usuario = social26Usuario($c['grupo'], "pessoa.{$entidade}@exemplo.com");
+        $token = social26Token($this, $c['base'], $usuario->email);
+
+        social26FakeGoogle('sub-1', 'a@gmail.com');
+        social26VincularCallback($this, $c['base'], $token, social26VincularIniciar($this, $c['base'], $token))->assertOk();
+
+        social26Autenticado($this, $token)
+            ->postJson("{$c['base']}/perfil/login-social/google/vincular/iniciar", ['senha' => 'Senha123@', 'binding' => SOCIAL26_BINDING])
+            ->assertStatus(422);
+    });
+
+    test("[{$entidade}] perfil: conta já vinculada a OUTRO usuário é recusada", function () use ($entidade) {
+        $c = social26Cenario($entidade);
+        social26Configurar();
+        $a = social26Usuario($c['grupo'], "a.{$entidade}@exemplo.com");
+        $b = social26Usuario($c['grupo'], "b.{$entidade}@exemplo.com");
+
+        social26FakeGoogle('sub-compartilhado', 'a@gmail.com');
+
+        $tokenA = social26Token($this, $c['base'], $a->email);
+        social26VincularCallback($this, $c['base'], $tokenA, social26VincularIniciar($this, $c['base'], $tokenA))->assertOk();
+
+        $tokenB = social26Token($this, $c['base'], $b->email);
+        social26VincularCallback($this, $c['base'], $tokenB, social26VincularIniciar($this, $c['base'], $tokenB))
+            ->assertStatus(422)
+            ->assertJsonPath('errors.business.0', 'Esta conta Google já está vinculada a outro usuário.');
+
+        expect(UsuarioIdentidadeSocial::where('usuario_id', $b->id)->count())->toBe(0);
+    });
+
+    test("[{$entidade}] perfil: e-mail não verificado no provedor é recusado", function () use ($entidade) {
+        $c = social26Cenario($entidade);
+        social26Configurar();
+        $usuario = social26Usuario($c['grupo'], "pessoa.{$entidade}@exemplo.com");
+        $token = social26Token($this, $c['base'], $usuario->email);
+
+        social26FakeGoogle('sub-1', 'a@gmail.com', verificado: false);
+
+        social26VincularCallback($this, $c['base'], $token, social26VincularIniciar($this, $c['base'], $token))->assertStatus(422);
+
+        expect(UsuarioIdentidadeSocial::count())->toBe(0);
+    });
+
+    test("[{$entidade}] perfil: state de login não serve para vincular, nem o de vínculo para login", function () use ($entidade) {
+        $c = social26Cenario($entidade);
+        social26Configurar();
+        $usuario = social26Usuario($c['grupo'], "pessoa.{$entidade}@exemplo.com");
+        $token = social26Token($this, $c['base'], $usuario->email);
+
+        social26FakeGoogle('sub-1', $usuario->email);
+
+        // state de LOGIN usado no callback de VÍNCULO
+        social26VincularCallback($this, $c['base'], $token, social26Iniciar($this, $c['base']))->assertStatus(422);
+
+        // state de VÍNCULO usado no callback de LOGIN
+        social26Callback($this, $c['base'], social26VincularIniciar($this, $c['base'], $token))->assertStatus(422);
+
+        expect(UsuarioIdentidadeSocial::count())->toBe(0);
+    });
+
+    test("[{$entidade}] perfil: o state de vínculo é do usuário que o iniciou", function () use ($entidade) {
+        $c = social26Cenario($entidade);
+        social26Configurar();
+        $a = social26Usuario($c['grupo'], "a.{$entidade}@exemplo.com");
+        $b = social26Usuario($c['grupo'], "b.{$entidade}@exemplo.com");
+        $tokenA = social26Token($this, $c['base'], $a->email);
+        $tokenB = social26Token($this, $c['base'], $b->email);
+
+        social26FakeGoogle('sub-1', 'a@gmail.com');
+
+        $stateDeA = social26VincularIniciar($this, $c['base'], $tokenA);
+
+        social26VincularCallback($this, $c['base'], $tokenB, $stateDeA)->assertStatus(422);
+
+        expect(UsuarioIdentidadeSocial::count())->toBe(0);
+    });
+
+    test("[{$entidade}] perfil: binding diferente e state repetido são recusados", function () use ($entidade) {
+        $c = social26Cenario($entidade);
+        social26Configurar();
+        $usuario = social26Usuario($c['grupo'], "pessoa.{$entidade}@exemplo.com");
+        $token = social26Token($this, $c['base'], $usuario->email);
+
+        social26FakeGoogle('sub-1', 'a@gmail.com');
+
+        $state = social26VincularIniciar($this, $c['base'], $token);
+        social26VincularCallback($this, $c['base'], $token, $state, binding: str_repeat('x', 40))->assertStatus(422);
+        social26VincularCallback($this, $c['base'], $token, $state)->assertStatus(422); // consumido
+
+        $state = social26VincularIniciar($this, $c['base'], $token);
+        social26VincularCallback($this, $c['base'], $token, $state)->assertOk();
+        social26VincularCallback($this, $c['base'], $token, $state)->assertStatus(422);
+    });
+
+    test("[{$entidade}] perfil: desvincular remove o vínculo, o login social deixa de funcionar e a senha continua", function () use ($entidade) {
+        $c = social26Cenario($entidade);
+        social26Configurar();
+        $usuario = social26Usuario($c['grupo'], "pessoa.{$entidade}@exemplo.com");
+        $token = social26Token($this, $c['base'], $usuario->email);
+
+        social26FakeGoogle('sub-1', $usuario->email);
+        social26VincularCallback($this, $c['base'], $token, social26VincularIniciar($this, $c['base'], $token))->assertOk();
+
+        social26Autenticado($this, $token)->deleteJson("{$c['base']}/perfil/login-social/google")->assertNoContent();
+
+        expect(UsuarioIdentidadeSocial::count())->toBe(0);
+
+        // Sem vínculo, uma conta Google de e-mail NÃO cadastrado não entra.
+        social26FakeGoogle('sub-2', 'qualquer.outro@gmail.com');
+        social26Callback($this, $c['base'], social26Iniciar($this, $c['base']))->assertStatus(401);
+
+        // Login por senha segue funcionando.
+        social26Token($this, $c['base'], $usuario->email);
+
+        // E dá para vincular de novo.
+        social26FakeGoogle('sub-3', 'novo@gmail.com');
+        social26VincularCallback($this, $c['base'], $token, social26VincularIniciar($this, $c['base'], $token))->assertOk();
+    });
+
+    test("[{$entidade}] perfil: desvincular sem vínculo é 404 e só atinge o próprio usuário", function () use ($entidade) {
+        $c = social26Cenario($entidade);
+        social26Configurar();
+        $a = social26Usuario($c['grupo'], "a.{$entidade}@exemplo.com");
+        $b = social26Usuario($c['grupo'], "b.{$entidade}@exemplo.com");
+
+        social26FakeGoogle('sub-a', 'a@gmail.com');
+        $tokenA = social26Token($this, $c['base'], $a->email);
+        social26VincularCallback($this, $c['base'], $tokenA, social26VincularIniciar($this, $c['base'], $tokenA))->assertOk();
+
+        $tokenB = social26Token($this, $c['base'], $b->email);
+        social26Autenticado($this, $tokenB)->deleteJson("{$c['base']}/perfil/login-social/google")->assertStatus(404);
+
+        expect(UsuarioIdentidadeSocial::where('usuario_id', $a->id)->count())->toBe(1);
+    });
+
+    test("[{$entidade}] perfil: provedor desativado depois do vínculo aparece como indisponível e ainda pode ser removido", function () use ($entidade) {
+        $c = social26Cenario($entidade);
+        social26Configurar();
+        $usuario = social26Usuario($c['grupo'], "pessoa.{$entidade}@exemplo.com");
+        $token = social26Token($this, $c['base'], $usuario->email);
+
+        social26FakeGoogle('sub-1', 'a@gmail.com');
+        social26VincularCallback($this, $c['base'], $token, social26VincularIniciar($this, $c['base'], $token))->assertOk();
+
+        social26Configurar(ativo: false);
+
+        social26Autenticado($this, $token)->getJson("{$c['base']}/perfil/login-social")
+            ->assertOk()
+            ->assertJsonPath('data.0.chave', 'google')
+            ->assertJsonPath('data.0.disponivel', false)
+            ->assertJsonPath('data.0.vinculado', true);
+
+        social26Autenticado($this, $token)->deleteJson("{$c['base']}/perfil/login-social/google")->assertNoContent();
+    });
+}
+
+test('perfil: um usuário Admin não acessa o login social do perfil Private (e vice-versa)', function () {
+    $admin = social26Cenario(EntidadeTipo::ADMIN->value);
+    $private = social26Cenario(EntidadeTipo::PRIVATE->value);
+    social26Configurar();
+
+    social26Usuario($admin['grupo'], 'admin@exemplo.com');
+    social26Usuario($private['grupo'], 'cliente@exemplo.com');
+
+    $tokenAdmin = social26Token($this, $admin['base'], 'admin@exemplo.com');
+    $tokenPrivate = social26Token($this, $private['base'], 'cliente@exemplo.com');
+
+    social26Autenticado($this, $tokenAdmin)->getJson("{$private['base']}/perfil/login-social")->assertStatus(403);
+    social26Autenticado($this, $tokenPrivate)->getJson("{$admin['base']}/perfil/login-social")->assertStatus(403);
+});
+
+test('login (e-mail e senha) e 2FA seguem emitindo o mesmo JWT após a unificação no LoginService', function () {
+    $c = social26Cenario(EntidadeTipo::ADMIN->value);
+    $usuario = social26Usuario($c['grupo'], 'pessoa@exemplo.com');
+
+    $resposta = $this->postJson("{$c['base']}/login", ['email' => $usuario->email, 'senha' => 'Senha123@'])->assertOk();
+
+    expect($resposta->json('data.2fa_enable'))->toBeFalse();
+    expect($resposta->json('data.token'))->not->toBeEmpty();
+    expect($resposta->json('data.expires_in'))->toBeInt()->toBeGreaterThan(0);
+});

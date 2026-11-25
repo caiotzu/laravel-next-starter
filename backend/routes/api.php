@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\ {
     AutenticacaoSocialController,
     GrupoController,
     PerfilController,
+    PerfilLoginSocialController,
     EmpresaController,
     UsuarioController,
     MensagemController,
@@ -42,6 +43,7 @@ use App\Http\Controllers\Private\ {
     AutenticacaoSocialController as PrivateAutenticacaoSocialController,
     GrupoController as PrivateGrupoController,
     PerfilController as PrivatePerfilController,
+    PerfilLoginSocialController as PrivatePerfilLoginSocialController,
     EmpresaController as PrivateEmpresaController,
     UsuarioController as PrivateUsuarioController,
     PermissaoController as PrivatePermissaoController,
@@ -152,6 +154,12 @@ Route::middleware(['throttle:api-autenticada', 'jwt', 'suporte.contexto'])->grou
             Route::patch('/avatar', [PerfilController::class, 'atualizarAvatarBase64']);
             Route::patch('/senha', [PerfilController::class, 'atualizarSenha']);
             Route::get('/sessoes', [PerfilController::class, 'sessoes']);
+
+            // Login social do próprio usuário (vincular / desvincular).
+            Route::get('/login-social', [PerfilLoginSocialController::class, 'listar']);
+            Route::post('/login-social/{provedor}/vincular/iniciar', [PerfilLoginSocialController::class, 'iniciarVinculo'])->where('provedor', '[a-z0-9_-]+');
+            Route::post('/login-social/{provedor}/vincular/callback', [PerfilLoginSocialController::class, 'concluirVinculo'])->where('provedor', '[a-z0-9_-]+');
+            Route::delete('/login-social/{provedor}', [PerfilLoginSocialController::class, 'desvincular'])->where('provedor', '[a-z0-9_-]+');
             Route::patch('/', [PerfilController::class, 'atualizar']);
         });
 
@@ -286,6 +294,12 @@ Route::middleware(['throttle:api-autenticada', 'jwt', 'suporte.contexto'])->grou
             Route::patch('/avatar', [PrivatePerfilController::class, 'atualizarAvatarBase64']);
             Route::patch('/senha', [PrivatePerfilController::class, 'atualizarSenha']);
             Route::get('/sessoes', [PrivatePerfilController::class, 'sessoes']);
+
+            // Login social do próprio usuário (vincular / desvincular).
+            Route::get('/login-social', [PrivatePerfilLoginSocialController::class, 'listar']);
+            Route::post('/login-social/{provedor}/vincular/iniciar', [PrivatePerfilLoginSocialController::class, 'iniciarVinculo'])->where('provedor', '[a-z0-9_-]+');
+            Route::post('/login-social/{provedor}/vincular/callback', [PrivatePerfilLoginSocialController::class, 'concluirVinculo'])->where('provedor', '[a-z0-9_-]+');
+            Route::delete('/login-social/{provedor}', [PrivatePerfilLoginSocialController::class, 'desvincular'])->where('provedor', '[a-z0-9_-]+');
             Route::patch('/', [PrivatePerfilController::class, 'atualizar']);
         });
 

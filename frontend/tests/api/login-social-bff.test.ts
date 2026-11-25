@@ -111,8 +111,10 @@ describe.each(casos)("login social BFF $nome", (c) => {
       expect(url).toBe(`http://backend/api${c.prefixoBackend}/login/social/google/iniciar`);
       expect(corpo.binding).toMatch(/^[A-Za-z0-9_-]{43}$/);
 
-      expect(jar.gravacoes).toHaveLength(1);
-      const [{ nome, valor, opcoes }] = jar.gravacoes;
+      // Grava o binding do login (e apaga um eventual vínculo pendente: ver login-social-vinculo-bff).
+      const gravados = jar.gravacoes.filter((g) => g.valor !== "");
+      expect(gravados).toHaveLength(1);
+      const [{ nome, valor, opcoes }] = gravados;
       expect(nome).toBe(`${c.contexto}_social`);
       expect(valor).toBe(corpo.binding);
       expect(opcoes).toEqual(expect.objectContaining({ httpOnly: true, sameSite: "lax", path: "/", maxAge: 600 }));

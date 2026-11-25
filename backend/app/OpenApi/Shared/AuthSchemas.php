@@ -238,3 +238,33 @@ class LoginSocialIniciarResponseSchema
 class LoginSocialCallbackRequestBodySchema
 {
 }
+
+#[OA\Schema(
+    schema: 'VinculoSocial',
+    properties: [
+        new OA\Property(property: 'chave', type: 'string', example: 'google'),
+        new OA\Property(property: 'nome', type: 'string', example: 'Google'),
+        new OA\Property(property: 'disponivel', type: 'boolean', description: 'Provedor ativo e configurado. Se false, o vínculo só pode ser removido.'),
+        new OA\Property(property: 'vinculado', type: 'boolean'),
+        new OA\Property(property: 'email', type: 'string', nullable: true, description: 'E-mail da conta no provedor (informativo).'),
+        new OA\Property(property: 'vinculado_em', type: 'string', format: 'date-time', nullable: true),
+        new OA\Property(property: 'ultimo_login_em', type: 'string', format: 'date-time', nullable: true),
+    ],
+    type: 'object'
+)]
+class VinculoSocialSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'LoginSocialVincularIniciarRequestBody',
+    required: ['senha', 'binding'],
+    properties: [
+        new OA\Property(property: 'senha', type: 'string', format: 'password', description: 'Senha atual do usuário (confirmação).'),
+        new OA\Property(property: 'binding', type: 'string', minLength: 32, maxLength: 128, description: 'Valor aleatório gerado pelo BFF (também guardado em cookie httpOnly).'),
+    ],
+    type: 'object'
+)]
+class LoginSocialVincularIniciarRequestBodySchema
+{
+}

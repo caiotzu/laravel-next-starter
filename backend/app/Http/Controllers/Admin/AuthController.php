@@ -11,8 +11,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 
-use Jenssegers\Agent\Agent;
-
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
@@ -20,12 +18,12 @@ use App\Models\Usuario;
 
 use App\Services\UsuarioService;
 use App\Services\UsuarioSessaoService;
+use App\Services\LoginService;
 use App\Services\TokenResetSenhaService;
 use App\Services\AutenticacaoDoisFatoresService;
 
 use App\DTO\Usuario\UsuarioPrimeiroAcessoDTO;
 use App\DTO\Usuario\UsuarioRedefinirSenhaDTO;
-use App\DTO\UsuarioSessao\UsuarioSessaoCadastroDTO;
 use App\DTO\UsuarioSessao\UsuarioSessaoAtualizacaoDTO;
 
 use App\Http\Requests\Auth\LoginRequest;
@@ -77,6 +75,7 @@ class AuthController extends Controller
     public function __construct(
         protected UsuarioService $usuarioService,
         protected UsuarioSessaoService $usuarioSessaoService,
+        protected LoginService $loginService,
         protected TokenResetSenhaService $tokenResetSenhaService,
         protected AutenticacaoDoisFatoresService $autenticacaoDoisFatoresService
     ) {}
@@ -136,17 +135,9 @@ class AuthController extends Controller
             }
 
             if ($usuario->google2fa_enable) {
-                $tempToken = Str::uuid()->toString();
-
-                Cache::put(
-                    "2fa_login:{$tempToken}",
-                    $usuario->id,
-                    now()->addMinutes(5)
-                );
-
                 return LoginGoogle2FaEnableResource::make([
                     '2fa_enable' => true,
-                    'temp_token' => $tempToken
+                    'temp_token' => $this->loginService->iniciarSegundoFator($usuario)
                 ])->response()->setStatusCode(200);
             }
 
@@ -266,31 +257,9 @@ class AuthController extends Controller
 
     private function finalizarLogin(Usuario $usuario, $request): JsonResponse
     {
-        $agent = new Agent();
-        $agent->setUserAgent($request->userAgent());
-
-        $sessao = $this->usuarioSessaoService->cadastrar(
-            UsuarioSessaoCadastroDTO::criarParaCadastro(
-                $usuario->id,
-                $request->ip(),
-                $request->userAgent(),
-                $agent->browser(),
-                $agent->platform(),
-                $agent->device()
-            )
-        );
-
-        $customClaims = ['session_id' => $sessao->id];
-
-        $token = JWTAuth::claims($customClaims)->fromUser($usuario);
-
-        $this->usuarioService->registrarLogin($usuario, $request->ip());
-
-        return LoginResource::make([
-            '2fa_enable' => $usuario->google2fa_enable,
-            'token' => $token,
-            'expires_in' => JWTAuth::factory()->getTTL() * 60,
-        ])->response()->setStatusCode(200);
+        return LoginResource::make(
+            $this->loginService->emitirToken($usuario, $request)
+        )->response()->setStatusCode(200);
     }
 
     #[OA\Post(

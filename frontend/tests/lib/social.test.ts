@@ -83,3 +83,29 @@ describe("marcarNovoLoginSocial", () => {
     expect(existeBannerPendente("admin")).toBe(false);
   });
 });
+
+describe("vínculo (perfil)", () => {
+  it("interpreta só resultados conhecidos de ?vinculo=", async () => {
+    const { interpretarResultadoVinculo } = await import("@/lib/social/social");
+
+    expect(interpretarResultadoVinculo("ok")).toEqual({ tipo: "sucesso", mensagem: "Conta vinculada com sucesso!" });
+    expect(interpretarResultadoVinculo("invalido")?.tipo).toBe("erro");
+    expect(interpretarResultadoVinculo("cancelado")?.tipo).toBe("erro");
+    expect(interpretarResultadoVinculo("<script>")).toBeNull();
+    expect(interpretarResultadoVinculo("constructor")).toBeNull();
+    expect(interpretarResultadoVinculo("__proto__")).toBeNull();
+    expect(interpretarResultadoVinculo(null)).toBeNull();
+  });
+
+  it("mapeia status em resultado e monta caminhos", async () => {
+    const m = await import("@/lib/social/social");
+
+    expect(m.resultadoVinculoPorStatus(429)).toBe("limite");
+    expect(m.resultadoVinculoPorStatus(502)).toBe("indisponivel");
+    expect(m.resultadoVinculoPorStatus(422)).toBe("invalido");
+    expect(m.resultadoVinculoPorStatus(400)).toBe("invalido");
+    expect(m.caminhoBackendPerfilSocial("admin", "google/vincular/iniciar")).toBe("/admin/perfil/login-social/google/vincular/iniciar");
+    expect(m.caminhoBackendPerfilSocial("private", "google")).toBe("/perfil/login-social/google");
+    expect(m.nomeCookieVinculo("admin")).toBe("admin_social_vinculo");
+  });
+});

@@ -126,12 +126,8 @@ class AutenticacaoSocialController extends Controller
             ])->response()->setStatusCode(200);
         }
 
-        $sessao = $this->loginService->emitirToken($usuario, $request);
-
-        return LoginResource::make([
-            '2fa_enable' => false,
-            'token' => $sessao['token'],
-            'expires_in' => $sessao['expires_in'],
-        ])->response()->setStatusCode(200);
+        return LoginResource::make(
+            $this->loginService->emitirToken($usuario, $request)
+        )->response()->setStatusCode(200);
     }
 }
